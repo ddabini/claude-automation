@@ -28,5 +28,9 @@ yarn-error.log
 # iCloud 관련
 .icloud
 
+# Claude Code 로컬 전용 설정 (MCP 서버 권한 등 — GitHub Actions에서 실행 불가)
+.claude/settings.json
+.claude/settings.local.json
+
 # Firebase 빌드 캐시 (배포 시 자동 생성되는 임시 파일)
 .firebase/
