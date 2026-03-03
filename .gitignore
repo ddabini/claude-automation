@@ -32,5 +32,13 @@ yarn-error.log
 .claude/settings.json
 .claude/settings.local.json
 
+# Claude Code 에이전트/명령어/메모리 (로컬 전용 — GitHub Actions 불필요, MCP 참조 포함)
+.claude/agents/
+.claude/commands/
+.claude/skills/
+.claude/scripts/
+.claude/references/
+.claude/agent-memory/
+
 # Firebase 빌드 캐시 (배포 시 자동 생성되는 임시 파일)
 .firebase/
