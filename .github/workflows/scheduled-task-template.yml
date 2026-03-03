@@ -1,0 +1,76 @@
+# =========================================================
+# 범용 예약 작업 템플릿
+# 새로운 반복 작업이 생기면 이 파일을 복사하여 사용하세요.
+#
+# 사용법:
+# 1. 이 파일을 복사 → 새 파일명으로 저장 (예: weekly-market-summary.yml)
+# 2. name, cron, prompt 수정
+# 3. git push하면 자동으로 스케줄 등록됨
+# =========================================================
+name: "작업 이름 여기 입력"  # ← 수정
+
+on:
+  schedule:
+    # 실행 시간 설정 (UTC 기준, KST = UTC+9)
+    # 예시:
+    #   매일 오전 10시(KST) → "0 1 * * *"
+    #   매주 월요일 오전 9시(KST) → "0 0 * * 1"
+    #   매주 금요일 오후 6시(KST) → "0 9 * * 5"
+    #   매월 1일 오전 9시(KST) → "0 0 1 * *"
+    - cron: "0 1 * * 1"  # ← 수정 (현재: 매주 월요일 KST 10:00)
+  workflow_dispatch:       # 수동 실행 버튼 유지
+
+jobs:
+  scheduled-task:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 날짜 설정 (KST 기준)
+        id: date
+        run: |
+          export TZ='Asia/Seoul'
+          echo "today=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "month=$(date +%-m)" >> $GITHUB_OUTPUT
+          echo "day=$(date +%-d)" >> $GITHUB_OUTPUT
+          echo "file_date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "week=$(date +%V)주차" >> $GITHUB_OUTPUT
+
+      # ↓ 필요한 도구 설치 (Firebase 배포가 없으면 이 블록 삭제 가능)
+      - name: Firebase CLI 설치 (배포가 필요한 경우)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install -g firebase-tools
+
+      - name: Claude 작업 실행
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 필요한 도구만 활성화 (WebSearch는 인터넷 검색, Bash는 명령 실행)
+          claude_args: "--allowedTools WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep --max-turns 40"
+          prompt: |
+            # ↓↓↓ 여기에 Claude에게 시킬 작업을 자세히 적어줘 ↓↓↓
+
+            오늘(${{ steps.date.outputs.today }}) 주간 시장 요약을 작성해줘.
+
+            ## 작업 내용
+            1. 이번 주 한국/미국 주식시장 주간 성과 조사 (WebSearch)
+            2. 주간 요약 보고서 HTML 작성
+               - 저장: 04_deepdig/[적절한폴더]/report/weekly-YYYYWW.html
+            3. registry.js 업데이트
+            4. git 커밋 & 푸시
+            5. Firebase 배포 (필요시):
+               firebase deploy --only hosting:deepdig --token "$FIREBASE_TOKEN" --project did-ads --non-interactive
+
+            # ↑↑↑ 여기까지 수정 ↑↑↑
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
