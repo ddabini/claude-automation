@@ -1,0 +1,83 @@
+<!-- 황금 열쇠 메인 비주얼: 부동산 매수/소유권 취득을 상징 -->
+<!-- 용도: DID 광고 헤더 또는 메인 비주얼 대형 장식 요소 -->
+<!-- 크기: 200x200px, 다크 배경(#0D1B2A)에 최적화 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5E6C4"/>
+      <stop offset="40%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#8A6A35"/>
+    </linearGradient>
+    <!-- 골드 밝은 하이라이트 -->
+    <linearGradient id="goldHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFAED"/>
+      <stop offset="100%" style="stop-color:#E8D5A3"/>
+    </linearGradient>
+    <!-- 열쇠 자루 방향 그라디언트 -->
+    <linearGradient id="keyShaft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 원형 빛 그라디언트: 열쇠 헤드 내부 -->
+    <radialGradient id="keyHead" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#F5E6C4"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#8A6A35"/>
+    </radialGradient>
+    <!-- 그림자/광채 효과 -->
+    <filter id="keyGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#C9A96E" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#C9A96E" flood-opacity="0.3"/>
+    </filter>
+    <!-- 부드러운 그림자 -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 원형: 은은한 골드 후광 -->
+  <circle cx="100" cy="100" r="90" fill="#0D1B2A" opacity="0.5"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#goldMain)" stroke-width="2" opacity="0.5"/>
+  <!-- 배경 글로우: 열쇠 뒤 빛 번짐 효과 -->
+  <circle cx="75" cy="78" r="42" fill="#C9A96E" opacity="0.06"/>
+
+  <!-- ===== 열쇠 헤드 (원형 부분) ===== -->
+  <!-- 외부 링: 골드 두꺼운 원 -->
+  <circle cx="72" cy="75" r="38" fill="url(#keyHead)" filter="url(#keyGlow)"/>
+  <!-- 내부 구멍: 열쇠 구멍 효과 -->
+  <circle cx="72" cy="75" r="22" fill="#0D1B2A"/>
+  <!-- 내부 링 테두리 -->
+  <circle cx="72" cy="75" r="22" fill="none" stroke="url(#goldMain)" stroke-width="2.5"/>
+  <!-- 내부 중앙 작은 원: 열쇠 구멍 중심 -->
+  <circle cx="72" cy="75" r="10" fill="url(#goldMain)" opacity="0.25"/>
+  <!-- 키홀 아래 직사각형 부분 -->
+  <rect x="67" y="87" width="10" height="14" rx="2" fill="#0D1B2A"/>
+  <!-- 광택 하이라이트: 왼쪽 상단 빛 반사 -->
+  <circle cx="58" cy="60" r="10" fill="url(#goldHighlight)" opacity="0.4"/>
+  <circle cx="55" cy="57" r="5" fill="white" opacity="0.2"/>
+
+  <!-- ===== 열쇠 자루 (직선 부분) ===== -->
+  <!-- 자루 메인: 두꺼운 막대 -->
+  <rect x="106" y="96" width="72" height="18" rx="9" fill="url(#keyShaft)" transform="rotate(35, 142, 105)" filter="url(#softShadow)"/>
+  <!-- 자루 하이라이트 -->
+  <rect x="106" y="96" width="72" height="8" rx="6" fill="url(#goldHighlight)" transform="rotate(35, 142, 100)" opacity="0.6"/>
+
+  <!-- ===== 열쇠 톱니 (3개): 자루 끝 부분 ===== -->
+  <!-- 톱니 1: 위쪽 -->
+  <rect x="134" y="118" width="18" height="12" rx="4" fill="url(#goldMain)" transform="rotate(35, 143, 124)" filter="url(#softShadow)"/>
+  <!-- 톱니 2: 중간 -->
+  <rect x="148" y="130" width="16" height="12" rx="4" fill="url(#goldMain)" transform="rotate(35, 156, 136)" filter="url(#softShadow)"/>
+  <!-- 톱니 3: 아래쪽 작은 것 -->
+  <rect x="161" y="141" width="13" height="10" rx="3" fill="url(#goldMain)" transform="rotate(35, 167.5, 146)" filter="url(#softShadow)"/>
+
+  <!-- 열쇠 자루 끝 마감: 둥근 팁 -->
+  <circle cx="160" cy="154" r="8" fill="url(#goldMain)" filter="url(#softShadow)"/>
+
+  <!-- 장식 별: 열쇠 주변 반짝임 표현 -->
+  <!-- 좌상단 별 -->
+  <polygon points="28,36 30,28 32,36 40,38 32,40 30,48 28,40 20,38" fill="#C9A96E" opacity="0.6" transform="scale(0.7) translate(10, 5)"/>
+  <!-- 우하단 별 -->
+  <polygon points="160,158 162,152 164,158 170,160 164,162 162,168 160,162 154,160" fill="#C9A96E" opacity="0.5" transform="scale(0.6) translate(100, 105)"/>
+</svg>

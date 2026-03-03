@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<!--
+  파일명: investment-daily-20260228.html
+  역할: 2026년 2월 28일 투자 데일리 브리핑 보고서
+       한국주식·미국주식·부동산투자·글로벌 이슈 종합 분석
+  작성일: 2026-02-28
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준: 2026년 2월 27일 마감 기준 (2/28 아침 발행)
+  본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[2월28일]투자 데일리 브리핑</title>
+
+  <!-- 구글 폰트에서 Noto Sans KR 웹폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       01_소비자앱서비스트렌드조사 보고서와 동일한 CSS (브런치 스타일)
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 전체 페이지 배경과 폰트 설정 */
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 보고서 본문 최대 너비를 900px로 설정하고 가운데 정렬 */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* ===================================================
+       표지 (Cover) 영역
+    =================================================== */
+    .cover {
+      padding: 60px 0 56px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 56px;
+    }
+
+    /* 카테고리 레이블 */
+    .cover-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    /* 보고서 날짜 뱃지 */
+    .cover-year {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* 메인 타이틀 */
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #111;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 서브 타이틀 */
+    .cover-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    /* 보고서 메타 정보 */
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ===================================================
+       목차 (Table of Contents) 영역
+    =================================================== */
+    .toc {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 28px 32px;
+      margin-bottom: 56px;
+      border-radius: 2px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+
+    .toc li {
+      counter-increment: toc-counter;
+      padding: 5px 0;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      gap: 12px;
+    }
+
+    .toc li:last-child { border-bottom: none; }
+
+    .toc li::before {
+      content: counter(toc-counter, decimal-leading-zero);
+      font-size: 11px;
+      font-weight: 600;
+      color: #bbb;
+      min-width: 22px;
+      padding-top: 2px;
+    }
+
+    /* ===================================================
+       섹션 공통 스타일
+    =================================================== */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    /* 섹션 헤더 */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* 섹션 번호 */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      padding-top: 6px;
+      min-width: 24px;
+    }
+
+    /* 섹션 제목 */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    /* 섹션 부제목 */
+    .section-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===================================================
+       본문 텍스트 스타일
+    =================================================== */
+    p {
+      margin-bottom: 16px;
+      color: #333;
+      font-weight: 400;
+    }
+
+    /* 소제목 */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin: 20px 0 8px;
+    }
+
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ===================================================
+       핵심 수치 강조 카드
+    =================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 540px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    .stat-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 16px 14px;
+      border-radius: 2px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-unit {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* ===================================================
+       테이블 스타일
+    =================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: #f5f5f5;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ebebeb;
+      color: #333;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-caption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===================================================
+       분석 노트 박스
+    =================================================== */
+    .note-box {
+      padding: 16px 18px;
+      margin: 20px 0;
+      border-radius: 2px;
+      border-left: 3px solid;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* 인사이트 (파란 계열) */
+    .note-insight {
+      background: #f7f9ff;
+      border-color: #4a6cf7;
+      color: #2d3a6b;
+    }
+
+    /* 주의점 (주황 계열) */
+    .note-warning {
+      background: #fff8f3;
+      border-color: #e07b1a;
+      color: #6b3a10;
+    }
+
+    /* 전망 (초록 계열) */
+    .note-forecast {
+      background: #f4faf6;
+      border-color: #2a9d5c;
+      color: #1a4a30;
+    }
+
+    /* 제언 (회색 계열) */
+    .note-suggest {
+      background: #f9f9f9;
+      border-color: #888;
+      color: #333;
+    }
+
+    /* 원문 인용 블록 */
+    blockquote {
+      border-left: 3px solid #ddd;
+      padding: 10px 16px;
+      margin: 16px 0;
+      color: #555;
+      font-size: 13.5px;
+      background: #fafafa;
+    }
+
+    /* ===================================================
+       출처 목록
+    =================================================== */
+    .source-list {
+      list-style: none;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .source-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .source-list li:last-child { border-bottom: none; }
+
+    /* 신뢰도 등급 뱃지 */
+    .grade {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+    }
+
+    .grade-a { background: #e8f5e9; color: #2e7d32; }
+    .grade-b { background: #e3f2fd; color: #1565c0; }
+    .grade-c { background: #fce4ec; color: #880e4f; }
+
+    /* 등락률 색상 */
+    .up { color: #c0392b; }
+    .down { color: #2471a3; }
+    .neutral { color: #555; }
+
+    /* ===================================================
+       푸터
+    =================================================== */
+    .footer {
+      border-top: 1px solid #e5e5e5;
+      padding-top: 32px;
+      margin-top: 64px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    /* ===================================================
+       인쇄 스타일 — 브라우저에서 Ctrl+P 시 PDF로 저장 가능
+    =================================================== */
+    @media print {
+      body { font-size: 13px; }
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===================== 표지 ===================== -->
+  <div class="cover">
+    <div class="cover-category">DeepDig Research · Investment Daily Briefing</div>
+    <div class="cover-year">2026년 2월 28일 (토)</div>
+    <h1 class="cover-title">투자 데일리 브리핑</h1>
+    <p class="cover-subtitle">
+      2월 27일(금) 마감 기준 · 한국 주식 · 미국 주식 · 부동산 · 글로벌 이슈 종합
+    </p>
+    <div class="cover-meta">
+      <span>발행일: 2026-02-28</span>
+      <span>데이터 기준: 2026-02-27 마감</span>
+      <span>작성: research-crawler 에이전트</span>
+    </div>
+  </div>
+
+  <!-- ===================== 오늘의 핵심 요약 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">00</div>
+      <div>
+        <div class="section-title">오늘의 핵심 요약</div>
+        <div class="section-desc">3분 만에 읽는 오늘 시장의 핵심</div>
+      </div>
+    </div>
+
+    <!-- 5대 핵심 포인트 -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>핵심 포인트</th>
+            <th>중요도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>코스피 6,244 마감(-1.00%)</strong> — 외국인 7.4조원 역대 최대 순매도, 개인 7조원으로 맞받아 사상 최대 거래대금 기록</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>엔비디아 -5.46% 급락</strong> — 681억달러 어닝서프라이즈에도 AI 성장 피크아웃 우려로 나스닥 -1.18% 동반 하락</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>WTI 2.77% 급등($67.02)</strong> — 트럼프 "이란 협상 불만족" 발언 + 중국·미국 자국민 대피령으로 중동 긴장 고조</td>
+            <td><span style="color:#c0392b;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>원/달러 환율 1,439.7원</strong> — 외국인 대규모 순매도에 13.9원 급등, 외환시장 압박</td>
+            <td><span style="color:#e07b1a;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>서울 아파트 매매 상승 둔화</strong> — 53주 연속 오름세이나 상승폭 2주 연속 축소(0.27%→0.22%), 전세는 52주 연속 상승</td>
+            <td><span style="color:#e07b1a;">★★★☆☆</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 주요 지수 스냅샷 -->
+    <h3>주요 지수 스냅샷 (2/27 마감)</h3>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">코스피</div>
+        <div class="stat-value down">6,244</div>
+        <div class="stat-unit">-63.14p (-1.00%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">코스닥</div>
+        <div class="stat-value up">1,192.78</div>
+        <div class="stat-unit">+4.63p (+0.39%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">S&P 500</div>
+        <div class="stat-value down">-0.54%</div>
+        <div class="stat-unit">나스닥 -1.18% / 다우 +0.03%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">WTI 유가</div>
+        <div class="stat-value up">$67.02</div>
+        <div class="stat-unit">+2.77% 급등</div>
+      </div>
+    </div>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">원/달러 환율</div>
+        <div class="stat-value down">1,439.7원</div>
+        <div class="stat-unit">+13.9원 (원화 약세)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">미 국채 10년물</div>
+        <div class="stat-value down">4.00%</div>
+        <div class="stat-unit">연초 이후 최저 (안전자산 수요)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 목차 ===================== -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li>한국 주식 — 코스피·코스닥 마감 & 수급</li>
+      <li>미국 주식 — 뉴욕증시 마감 & 빅테크·AI</li>
+      <li>부동산 — 매매·전세 동향 & 정책</li>
+      <li>글로벌 이슈 — 환율·유가·금리·국제 정세</li>
+      <li>종합 분석 및 시사점</li>
+      <li>출처 목록</li>
+    </ol>
+  </div>
+
+  <!-- ===================== 섹션 1: 한국 주식 ===================== -->
+  <div class="section" id="sec1">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">한국 주식</div>
+        <div class="section-desc">2026년 2월 27일(금) 코스피·코스닥 마감 기준</div>
+      </div>
+    </div>
+
+    <h3>지수 마감</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>지수</th>
+            <th>종가</th>
+            <th>등락</th>
+            <th>등락률</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>코스피 (KOSPI)</strong></td>
+            <td><strong>6,244.13</strong></td>
+            <td class="down">-63.14p</td>
+            <td class="down"><strong>-1.00%</strong></td>
+          </tr>
+          <tr>
+            <td><strong>코스닥 (KOSDAQ)</strong></td>
+            <td><strong>1,192.78</strong></td>
+            <td class="up">+4.63p</td>
+            <td class="up"><strong>+0.39%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>수급 동향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>투자자</th>
+            <th>코스피 순매수</th>
+            <th>코스닥 순매수</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>외국인</strong></td>
+            <td class="down"><strong>-7조4,552억원</strong></td>
+            <td class="up">+633억원</td>
+            <td class="down">역대 최대 순매도 [1]</td>
+          </tr>
+          <tr>
+            <td><strong>기관</strong></td>
+            <td class="up">+5,330억원</td>
+            <td class="up">+4,445억원</td>
+            <td>외국인 매도 일부 흡수</td>
+          </tr>
+          <tr>
+            <td><strong>개인</strong></td>
+            <td class="up">+7조602억원</td>
+            <td class="down">-4,705억원</td>
+            <td>역대 최대 순매수 도전</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 이투데이, 서울신문 [1][2] · 코스닥 수급: 이투데이 [3]</p>
+
+    <blockquote>
+      "코스피, 7거래일 만에 하락 마감…개인 7조 '사자'·외국인 7.4조 '팔자'" — 이투데이, 2026.02.27 [2]
+      <br>→ 해석: 7거래일 연속 상승하던 코스피가 외국인의 사상 최대 규모 투매로 반락. 개인도 맞매수로 역대급 거래량 형성.
+    </blockquote>
+
+    <h3>주요 종목 이슈</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>종목</th>
+            <th>등락률</th>
+            <th>주요 내용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>삼성전자</strong></td>
+            <td class="down">-0.69%</td>
+            <td>216,500원 마감 (장중 217,000원). 외국인 매도 주도 [4]</td>
+          </tr>
+          <tr>
+            <td><strong>SK하이닉스</strong></td>
+            <td class="down">-3.46%</td>
+            <td>1,061,000원 마감. 엔비디아발 AI 쇼크로 낙폭 확대 [5]</td>
+          </tr>
+          <tr>
+            <td><strong>서울반도체</strong></td>
+            <td class="down">-12.34%</td>
+            <td>11,580원 장중 기록. 반도체 업황 우려 집중 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>에코프로</strong></td>
+            <td class="up">+0.71%</td>
+            <td>185,500원 장중. 이차전지 상대적 강세 [7]</td>
+          </tr>
+          <tr>
+            <td><strong>알테오젠</strong></td>
+            <td class="down">-0.12%</td>
+            <td>402,500원 장중. 코스닥 대형주 보합권 [8]</td>
+          </tr>
+          <tr>
+            <td><strong>HPSP</strong></td>
+            <td class="up">+2.89%</td>
+            <td>44,550원 장중. 반도체 장비주 중 상대적 강세 [9]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>거래대금</h3>
+    <p>코스닥에서는 <strong>삼표시멘트</strong>가 거래량 1위를 기록하며 거래대금 <strong>6,533억원</strong>을 돌파했습니다 [10]. 코스피·코스닥 합산 거래대금은 외국인-개인 양방향 대규모 거래로 인해 사상 최대 수준에 근접한 것으로 추정됩니다.</p>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 외국인 역대 최대 순매도(7.4조원)에도 코스닥이 플러스 마감한 것은 주목할 만합니다. 외국인이 코스피 대형주(삼성전자·SK하이닉스)를 집중 매도하는 동안, 코스닥 중소형주에는 기관과 외국인 일부가 순매수로 전환했습니다. 이는 대형 반도체주 중심의 외국인 Exit이지, 한국 증시 전반에 대한 이탈로 해석하기는 이릅니다.
+    </div>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 외국인의 코스피 7.4조원 순매도는 단순 차익실현을 넘어 구조적 신호일 수 있습니다. 코스피가 단기에 6,300선을 돌파한 이후 첫 대규모 조정 — 향후 2~3거래일 외국인 수급 방향이 지수 향방의 결정적 변수입니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 2: 미국 주식 ===================== -->
+  <div class="section" id="sec2">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">미국 주식</div>
+        <div class="section-desc">2026년 2월 27일(금) 뉴욕 마감 기준 (한국시간 2/28 새벽)</div>
+      </div>
+    </div>
+
+    <h3>3대 지수 마감</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">다우존스 (DJIA)</div>
+        <div class="stat-value up">+0.03%</div>
+        <div class="stat-unit">금융주가 방어</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">S&P 500</div>
+        <div class="stat-value down">-0.54%</div>
+        <div class="stat-unit">기술·반도체 집중 하락</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">나스닥</div>
+        <div class="stat-value down">-1.18%</div>
+        <div class="stat-unit">AI주 전반 약세</div>
+      </div>
+    </div>
+
+    <blockquote>
+      "S&P 500, Nasdaq on track for biggest monthly drop in a year as AI worries bite" — The Spokesman-Review, 2026.02.27 [11]
+      <br>→ 해석: S&P500·나스닥이 2025년 3월 이후 1년 만에 최대 월간 낙폭을 향해 가고 있음. AI 투자 회수 불확실성이 핵심 원인.
+    </blockquote>
+
+    <h3>엔비디아(NVDA) 실적 분석</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>실제</th>
+            <th>시장 예상</th>
+            <th>평가</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>4분기 매출</td>
+            <td><strong>$681억</strong></td>
+            <td>$662억</td>
+            <td class="up">예상 상회</td>
+          </tr>
+          <tr>
+            <td>4분기 EPS</td>
+            <td><strong>$1.62</strong></td>
+            <td>약 $1.56</td>
+            <td class="up">예상 상회</td>
+          </tr>
+          <tr>
+            <td>1분기 매출 가이던스</td>
+            <td><strong>$780억</strong></td>
+            <td>$760억</td>
+            <td class="up">예상 상회</td>
+          </tr>
+          <tr>
+            <td>주가 반응</td>
+            <td class="down"><strong>-5.46%</strong></td>
+            <td>-</td>
+            <td class="down">실망 매물</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote>
+      "Nvidia leads chip stocks lower, investors worry about AI buildout plans" — Seeking Alpha, 2026.02.27 [12]
+      <br>→ 해석: 실적 자체는 어닝서프라이즈였지만, AI 데이터센터 투자 지속 여부에 대한 시장의 회의감이 매도 심리를 자극. "결과보다 기대치"가 더 높았음.
+    </blockquote>
+
+    <h3>빅테크 및 AI 관련주 동향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>종목</th>
+            <th>등락률</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>NVIDIA (NVDA)</strong></td>
+            <td class="down">-5.46%</td>
+            <td>실적 어닝서프라이즈에도 차익실현 [12]</td>
+          </tr>
+          <tr>
+            <td><strong>Micron (MU)</strong></td>
+            <td class="down">-3.13%</td>
+            <td>HBM 수요 우려 동반 하락 [13]</td>
+          </tr>
+          <tr>
+            <td><strong>Broadcom (AVGO)</strong></td>
+            <td class="down">-3.19%</td>
+            <td>AI 인프라 투자 축소 우려 [13]</td>
+          </tr>
+          <tr>
+            <td><strong>AMD</strong></td>
+            <td class="down">-3.41%</td>
+            <td>반도체 전반 투자심리 위축 [13]</td>
+          </tr>
+          <tr>
+            <td><strong>금융주</strong></td>
+            <td class="up">+소폭</td>
+            <td>다우 방어 역할 (JP모건 등) [13]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>연준 동향 및 주요 경제지표</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>지표</th>
+            <th>수치</th>
+            <th>의미</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>미 국채 10년물 금리</strong></td>
+            <td><strong>4.00%</strong></td>
+            <td>연초 이후 최저 — 안전자산 수요 급증 [13]</td>
+          </tr>
+          <tr>
+            <td><strong>신규 실업수당 청구</strong></td>
+            <td><strong>212,000건</strong></td>
+            <td>시장 예상치 하회 — 고용 견조 [13]</td>
+          </tr>
+          <tr>
+            <td><strong>연준 기준금리</strong></td>
+            <td><strong>3.50~3.75%</strong></td>
+            <td>1월 FOMC 이후 동결 유지 중 [14]</td>
+          </tr>
+          <tr>
+            <td><strong>핵심 PCE 목표</strong></td>
+            <td><strong>2.5% 근접</strong></td>
+            <td>다음 금리 인하 조건 — 시기 불확실 [14]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 엔비디아 실적이 "좋은데 충분히 좋지 않다"는 반응은 AI 투자 사이클의 전환점을 시사합니다. 2023~2025년이 AI 인프라 투자 1라운드(GPU·데이터센터 구축)였다면, 시장은 이제 AI 수익화(ROI)를 증명할 2라운드를 요구하고 있습니다. 이 구간에서는 AI 인프라주(엔비디아·반도체)보다 AI 소프트웨어·응용 서비스주가 상대적으로 강세일 가능성이 높습니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>전망:</strong> 미 국채 10년물이 4.00%까지 하락한 것은 "경기 둔화·안전자산 선호" 신호입니다. 연준이 상반기 금리를 동결한다면, 성장주보다 가치주·배당주로의 자금 이동이 점진적으로 나타날 수 있습니다. 2026년 첫 금리 인하 시점은 6~9월로 시장 컨센서스가 형성 중입니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 3: 부동산 ===================== -->
+  <div class="section" id="sec3">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">부동산</div>
+        <div class="section-desc">2026년 2월 기준 서울·수도권 매매·전세 동향</div>
+      </div>
+    </div>
+
+    <h3>서울 아파트 매매 주간 동향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>기준 주차</th>
+            <th>서울 매매 변동률</th>
+            <th>서울 전세 변동률</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1월 4주</td>
+            <td class="up">+0.31%</td>
+            <td>-</td>
+            <td>고점 기록</td>
+          </tr>
+          <tr>
+            <td>2월 1주</td>
+            <td class="up">+0.27%</td>
+            <td>-</td>
+            <td>상승 둔화 시작</td>
+          </tr>
+          <tr>
+            <td><strong>2월 2주</strong></td>
+            <td class="up"><strong>+0.22%</strong></td>
+            <td class="up"><strong>+0.11%</strong></td>
+            <td><strong>53주 연속 상승, 2주 연속 둔화</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 한국부동산원 주간 아파트가격 동향 [15]</p>
+
+    <blockquote>
+      "서울 아파트 매매가격은 전주 대비 0.22% 상승해 53주 연속 오름세를 이어갔으나, 상승폭은 2주 연속 축소" — 한국부동산원, 2026.02 [15]
+      <br>→ 해석: 53주(약 1년) 연속 상승이라는 기록을 유지하고 있으나, 고점 대비 상승 모멘텀이 약해지는 중. 매수심리 위축과 매물 증가가 복합 작용.
+    </blockquote>
+
+    <h3>전세 동향</h3>
+    <p>서울 아파트 전세가격은 <strong>2월 2주 기준 +0.11%</strong>로, 전주(+0.13%) 대비 상승폭이 소폭 줄었습니다. 주요 상승 지역은 <strong>노원구(+0.28%), 서초구(+0.22%), 성북구(+0.21%)</strong>로, 역세권·대단지 중심의 상승세가 유지되고 있습니다 [15].</p>
+
+    <p>2026년 연간 전망으로는 서울 전세 상승률 <strong>+4.7%</strong>, 수도권 전세 상승률 <strong>+3.8%</strong>가 예측되며, 이는 매매가 상승률을 웃도는 수준입니다 [16].</p>
+
+    <h3>서울 매물·매수심리 동향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>현황</th>
+            <th>방향</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>서울 아파트 매물</td>
+            <td>6만건 이상 (1월 초 5.7만건 → 증가)</td>
+            <td class="down">공급 증가</td>
+          </tr>
+          <tr>
+            <td>매수심리</td>
+            <td>고점 대비 위축</td>
+            <td class="down">관망세 강화</td>
+          </tr>
+          <tr>
+            <td>전세 수요</td>
+            <td>역세권·대단지 집중</td>
+            <td class="up">지속 강세</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 2026년 주택시장 전망 분석 [17]</p>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 매매 상승 둔화와 전세 강세가 동시에 나타나는 현재 구간은 "갭투자 위험"이 높은 구간입니다. 전세가가 매매가를 뒤쫓는 상황에서 역전세·전세사기 위험도 함께 주의해야 합니다. 스트레스 DSR 3단계가 본격 시행되면 매수 여력이 추가 제한될 수 있습니다.
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>제언:</strong> 현 시점은 매수보다 관망이 유리한 구간입니다. 매물 증가와 금리 부담이 복합 작용 중이며, 향후 2~3개월간 서울 매매가 상승폭 추이를 확인하며 진입 여부를 결정하는 전략이 바람직합니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 4: 글로벌 이슈 ===================== -->
+  <div class="section" id="sec4">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">글로벌 이슈</div>
+        <div class="section-desc">환율·유가·금리·국제 정세 주요 변수</div>
+      </div>
+    </div>
+
+    <h3>환율</h3>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">원/달러 (2/27 마감)</div>
+        <div class="stat-value down">1,439.7원</div>
+        <div class="stat-unit">+13.9원 · 외국인 대규모 순매도 영향</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">달러인덱스</div>
+        <div class="stat-value neutral">소폭 상승</div>
+        <div class="stat-unit">안전자산 달러 수요 소폭 증가</div>
+      </div>
+    </div>
+
+    <blockquote>
+      "코스피 하락세, 달러/원 환율 상승세 마감" — 뉴스핌, 2026.02.27 [18]
+      <br>→ 해석: 외국인 7.4조원 코스피 순매도 → 달러 매수/원화 매도 → 원/달러 환율 급등. 환율이 1,440원을 넘어설 경우 추가 원화 약세 심리가 강화될 수 있음.
+    </blockquote>
+
+    <h3>국제유가</h3>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">WTI (4월물, 2/27)</div>
+        <div class="stat-value up">$67.02</div>
+        <div class="stat-unit">+$1.81 (+2.77%) 급등</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">브렌트유 (4월물)</div>
+        <div class="stat-value up">$72.48</div>
+        <div class="stat-unit">중동 긴장 프리미엄 반영</div>
+      </div>
+    </div>
+
+    <h4>유가 급등 배경 — 트럼프·이란 긴장 고조</h4>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>이슈</th>
+            <th>내용</th>
+            <th>출처</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>트럼프 "이란 협상 불만족"</strong></td>
+            <td>"이란은 우리가 반드시 가져야 할 것을 주지 않으려 한다는 사실에 만족스럽지 않다" (핵 프로그램 폐기 요구)</td>
+            <td>[19]</td>
+          </tr>
+          <tr>
+            <td><strong>중국, 이란 자국민 철수 권고</strong></td>
+            <td>중국 외교부 "이란의 외부 안전 위험 현저히 상승" — 자국민 대피령 발령</td>
+            <td>[19]</td>
+          </tr>
+          <tr>
+            <td><strong>미국·영국 외교관 철수</strong></td>
+            <td>미 대사관 직원 일부·가족 철수 승인. 캐나다·인도도 경계 강화</td>
+            <td>[19]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote>
+      "국제유가, 트럼프 '이란 협상 불만족'에 급등...WTI 2.77%↑" — 이투데이, 2026.02.27 [19]
+      <br>→ 해석: 미-이란 핵협상이 결렬 위기에 놓이며 공급 차질 우려가 유가를 즉각 끌어올림. 중동 긴장이 현실화될 경우 WTI $70 돌파 가능성도 있음.
+    </blockquote>
+
+    <h3>글로벌 금리 및 미 연준</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>현황</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>미 연준 기준금리</td>
+            <td><strong>3.50~3.75%</strong></td>
+            <td>2026년 1월 FOMC 이후 동결 [14]</td>
+          </tr>
+          <tr>
+            <td>미 국채 10년물</td>
+            <td><strong>4.00%</strong></td>
+            <td>연초 이후 최저. 안전자산 수요 증가 [13]</td>
+          </tr>
+          <tr>
+            <td>한국은행 기준금리</td>
+            <td><strong>2.50%</strong></td>
+            <td>시장 컨센서스: 상반기 추가 인하 가능성 탐색 중</td>
+          </tr>
+          <tr>
+            <td>첫 인하 예상 시점</td>
+            <td>2026년 6~9월</td>
+            <td>PCE 2.5% 근접이 조건 [14]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>트럼프 관세 이슈</h3>
+    <p>트럼프 행정부의 <strong>15% 보편 관세</strong> 유지 기조가 지속되는 가운데, 미국 대법원의 '상호관세 위법' 판결 소식이 전해지며 무역 불확실성이 여전히 현재진행형입니다. 캐나다·EU 등 주요국의 보복 관세 여부가 향후 핵심 변수입니다 [20].</p>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 이번 주 글로벌 시장의 핵심 리스크는 "AI 기대 조정"과 "중동 지정학 리스크"의 동시 발화입니다. 두 변수가 모두 에너지·반도체 섹터에 직접 영향을 미친다는 점에서, 단기 변동성은 높아질 가능성이 큽니다. 다만 미 국채 금리 하락(안전자산 수요)이 주식 시장의 하방을 일부 지지하고 있습니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 5: 종합 분석 ===================== -->
+  <div class="section" id="sec5">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">종합 분석 및 시사점</div>
+        <div class="section-desc">전체 조사 결과 종합 · 오늘 투자자가 주목해야 할 포인트</div>
+      </div>
+    </div>
+
+    <h3>세 가지 핵심 흐름</h3>
+
+    <div class="note-box note-insight">
+      <strong>첫째 — AI 사이클 전환:</strong> 엔비디아의 681억달러 어닝서프라이즈에도 주가가 -5.46% 급락한 것은 AI 인프라 투자 1라운드(구축)가 마무리되고, 시장이 2라운드(수익화 증명)를 요구하기 시작했음을 알립니다. 한국 반도체주(SK하이닉스, 삼성전자)도 이 사이클 변화에서 자유롭지 않습니다. 단기 변동성 확대 구간에서는 AI 소프트웨어·응용 서비스주의 상대적 강세에 주목할 필요가 있습니다.
+    </div>
+
+    <div class="note-box note-warning">
+      <strong>둘째 — 환율·외국인 수급 압박:</strong> 외국인이 코스피에서 역대 최대 규모(7.4조원)를 하루 만에 순매도하고, 원/달러 환율이 1,440원에 근접했습니다. 이 구간에서 환율 추가 상승(원화 약세)은 수입물가 상승→인플레이션 자극→한국은행 금리 인하 지연의 부정적 연쇄를 만들 수 있습니다. 월요일 외국인 수급 방향이 이번 주 코스피의 핵심 변수입니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>셋째 — 중동 긴장의 유가 변수:</strong> 트럼프-이란 핵협상 결렬 위기가 WTI를 단기에 2.77% 끌어올렸습니다. 만약 중동 긴장이 실제 군사 충돌로 확산된다면 WTI $70 이상은 물론, 글로벌 리스크오프(안전자산 선호) 심화로 주식 시장 전반에 추가 하방 압력이 생길 수 있습니다. 반면 협상이 재개된다면 유가는 즉각 반락할 것입니다.
+    </div>
+
+    <h3>투자자별 시사점</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>투자 성향</th>
+            <th>주목 포인트</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>주식 단기 트레이더</strong></td>
+            <td>월요일 외국인 수급 방향 우선 확인. 6,200선 이탈 여부가 단기 추세 전환 신호</td>
+          </tr>
+          <tr>
+            <td><strong>주식 중장기 투자자</strong></td>
+            <td>AI 인프라주 비중 점검 → AI 소프트웨어·서비스 업종 비중 확대 검토</td>
+          </tr>
+          <tr>
+            <td><strong>부동산 투자자</strong></td>
+            <td>매물 증가·매수심리 위축 구간 — 서두르지 말고 2분기 DSR 3단계 영향 확인 후 판단</td>
+          </tr>
+          <tr>
+            <td><strong>글로벌 자산 배분</strong></td>
+            <td>미 국채(금리 하락 수혜), 금·에너지주(중동 리스크 헤지) 비중 점검</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>제언:</strong> 오늘은 크게 세 가지를 체크하세요. ① 월요일 외국인 수급이 순매수 전환 여부(코스피 반등 신호), ② 미-이란 협상 관련 뉴스(유가·리스크 방향), ③ 미국 PCE 인플레이션 지표 발표 결과(연준 금리 방향). 단기 변동성이 높은 구간이므로, 리스크 관리가 수익 추구보다 우선입니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 6: 출처 목록 ===================== -->
+  <div class="section" id="sec6">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">출처 목록</div>
+        <div class="section-desc">본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.</div>
+      </div>
+    </div>
+
+    <ul class="source-list">
+      <li>
+        <span class="grade grade-b">B급</span>
+        [1] 이투데이 — "코스피 오후들어 낙폭 줄여 6300선 근접…개인 5.2조 순매수·외국인 5.6조 순매도" (2026.02.27)
+        <a href="https://www.etoday.co.kr/news/view/2560489" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [2] 이투데이 — "코스피, 7거래일 만에 하락 마감…개인 7조 '사자'·외국인 7.4조 '팔자'" (2026.02.27)
+        <a href="https://www.etoday.co.kr/news/view/2560583" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [3] 이투데이 — "[속보] 코스닥 4.63p(0.39%) 오른 1192.78(마감)" (2026.02.27)
+        <a href="https://www.etoday.co.kr/news/view/2560567" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [4] 중앙이코노미뉴스 — "삼성전자 주가, 2월 27일 장중 217,000원 0.46% 하락" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498414" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [5] 중앙이코노미뉴스 — "SK하이닉스 주가, 2월 27일 장중 1,072,000원 2.46% 하락" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498416" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [6] 중앙이코노미뉴스 — "서울반도체 주가, 2월 27일 장중 11,580원 12.34% 하락" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498434" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [7] 중앙이코노미뉴스 — "에코프로 주가, 2월 27일 장중 185,500원 0.71% 상승" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498424" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [8] 중앙이코노미뉴스 — "알테오젠 주가, 2월 27일 장중 402,500원 0.12% 하락" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498435" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [9] 중앙이코노미뉴스 — "HPSP 주가, 2월 27일 장중 44,550원 2.89% 상승" (2026.02.27)
+        <a href="https://www.joongangenews.com/news/articleView.html?idxno=498441" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [10] 서울신문 — "[서울데이터랩]금일 코스닥 거래량 1위 삼표시멘트 거래대금 6533억 돌파" (2026.02.27)
+        <a href="https://www.seoul.co.kr/news/economy/securities/2026/02/27/20260227500203" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [11] The Spokesman-Review — "S&P 500, Nasdaq on track for biggest monthly drop in a year as AI worries bite" (2026.02.27)
+        <a href="https://www.spokesman.com/stories/2026/feb/27/sp-500-nasdaq-on-track-for-biggest-monthly-drop-in/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [12] Seeking Alpha — "Nvidia leads chip stocks lower, investors worry about AI buildout plans" (2026.02.27)
+        <a href="https://seekingalpha.com/news/4557937-nvidia-leads-chip-stocks-lower-investors-worry-about-ai-buildout-plans" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-a">A급</span>
+        [13] KB의 생각 — "[2월 27일] 금융시장 동향 및 전망" (2026.02.27)
+        <a href="https://kbthink.com/investment/trend/daily/260227.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [14] EBC Financial Group — "2026년 연준 금리 인하 시점 로드맵"
+        <a href="https://www.ebc.com/kr/forex/283502.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-a">A급</span>
+        [15] 한국부동산원 — 주간 아파트가격 동향 (2026년 2월 2주)
+        <a href="https://www.reb.or.kr/reb/cm/cntnts/cntntsView.do?mi=10001&cntntsId=1308" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [16] Daum 뉴스 — "집값 2% 오르고, 전세는 5% 뛴다… 2026년 주택시장" (2025.12.27)
+        <a href="https://v.daum.net/v/20251227163004870" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-c">C급</span>
+        [17] 2026년 주택시장 전망: 서울 아파트 매물 급증과 매수 심리 위축 분석 (블로그)
+        <a href="https://bd-notes2155.com/korea-housing-market-outlook-2026/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [18] 뉴스핌 — "코스피 하락세, 달러/원 환율 상승세 마감" (2026.02.27)
+        <a href="https://www.newspim.com/news/view/20260227000848" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [19] 이투데이 — "국제유가, 트럼프 '이란 협상 불만족'에 급등...WTI 2.77%↑" (2026.02.27)
+        <a href="https://www.etoday.co.kr/news/view/2560690" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [20] 인포스탁데일리 — "[0223개장체크] 美 증시, 대법원 '트럼프 상호관세 위법' 판결 소식에 상승" (2026.02.23)
+        <a href="https://www.infostockdaily.co.kr/news/articleView.html?idxno=214256" target="_blank">링크</a>
+      </li>
+    </ul>
+
+    <div class="table-wrap" style="margin-top:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>출처 등급</th>
+            <th>건수</th>
+            <th>비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="grade grade-a">A급</span> 공식·금융기관</td>
+            <td>3건</td>
+            <td>15%</td>
+          </tr>
+          <tr>
+            <td><span class="grade grade-b">B급</span> 주요 언론</td>
+            <td>16건</td>
+            <td>80%</td>
+          </tr>
+          <tr>
+            <td><span class="grade grade-c">C급</span> 블로그·참고</td>
+            <td>1건</td>
+            <td>5%</td>
+          </tr>
+          <tr>
+            <td><strong>전체</strong></td>
+            <td><strong>20건</strong></td>
+            <td><strong>100%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== 푸터 ===================== -->
+  <div class="footer">
+    <p>본 보고서는 research-crawler 에이전트가 공개된 출처를 수집·분석하여 자동 생성한 투자 정보 브리핑입니다.</p>
+    <p>투자 의사결정에 활용 시 반드시 추가적인 개인 조사와 전문가 상담을 병행하시기 바랍니다.</p>
+    <p>데이터 기준: 2026년 2월 27일 마감 · 발행: 2026년 2월 28일 · DeepDig Research Archive</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- DeepDig — 좌측 사이드바 카테고리 + 메인 보고서 레이아웃 -->
+  <title>DeepDig</title>
+
+  <!-- Pretendard: 깔끔한 한국어 산세리프 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <!-- registry.js: 보고서 메타데이터 (research-crawler가 자동 갱신) -->
+  <!-- 캐시 방지: firebase.json에서 registry.js에 no-cache 헤더 설정됨 -->
+  <script src="registry.js?v=20260303"></script>
+
+  <style>
+    /* ===========================================
+       전체 초기화
+    =========================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont,
+                   'Apple SD Gothic Neo', sans-serif;
+      background: #F7F8FA;
+      color: #1a1a2e;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: rgba(26, 26, 46, 0.08);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ===========================================
+       상단 네비게이션
+    =========================================== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 왼쪽: 메뉴 버튼 + 로고 */
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* 카테고리 메뉴 토글 버튼 — 햄버거 아이콘 */
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .menu-btn:hover {
+      border-color: #1a1a2e;
+      background: #f8fafc;
+    }
+
+    /* 메뉴 버튼이 활성 상태일 때 */
+    .menu-btn.active {
+      background: #1a1a2e;
+      border-color: #1a1a2e;
+    }
+
+    .menu-btn.active .menu-line {
+      background: #fff;
+    }
+
+    .menu-line {
+      width: 16px;
+      height: 1.5px;
+      background: #64748b;
+      border-radius: 1px;
+      transition: all 0.2s;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 로고 아이콘 — 작은 블랙 사각형 */
+    .nav-logo::before {
+      content: '';
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #1a1a2e;
+      flex-shrink: 0;
+    }
+
+    /* 오른쪽: 통계 + 검색 */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-stat {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .nav-stat strong {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .nav-search-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      color: #94a3b8;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-search-btn:hover {
+      border-color: #1a1a2e;
+      color: #1a1a2e;
+      box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.04);
+    }
+
+    .nav-search-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .nav-search-btn kbd {
+      font-family: inherit;
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-left: 16px;
+      padding: 1px 5px;
+      background: #f8fafc;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ===========================================
+       좌측 카테고리 사이드바
+    =========================================== */
+    /* 사이드바 배경 오버레이 — 클릭하면 닫힘 */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.15);
+      z-index: 90;
+      backdrop-filter: blur(2px);
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+      animation: fadeIn 0.15s ease;
+    }
+
+    /* 사이드바 패널 */
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+      background: #fff;
+      border-right: 1px solid #f1f5f9;
+      z-index: 95;
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 8px 0 24px rgba(0, 0, 0, 0.06);
+    }
+
+    /* 사이드바 내부 */
+    .sidebar-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-stat {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-top: 4px;
+    }
+
+    /* 카테고리 리스트 */
+    .sidebar-list {
+      padding: 8px 12px 24px;
+    }
+
+    .sidebar-cat {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .sidebar-cat:hover {
+      background: #f8fafc;
+    }
+
+    .sidebar-cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+      background: #1a1a2e;
+      flex-shrink: 0;
+    }
+
+    .sidebar-cat-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-cat-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a2e;
+      line-height: 1.3;
+    }
+
+    .sidebar-cat-meta {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .sidebar-cat-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    /* 사이드바 빈 상태 */
+    .sidebar-empty {
+      padding: 48px 24px;
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    /* ===========================================
+       검색 오버레이
+    =========================================== */
+    .search-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 200;
+      padding-top: 120px;
+    }
+
+    .search-overlay.active {
+      display: block;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .search-overlay-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .search-overlay-input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid #1a1a2e;
+      font-family: inherit;
+      font-size: 28px;
+      font-weight: 300;
+      color: #1a1a2e;
+      padding: 16px 0;
+      outline: none;
+      background: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .search-overlay-input::placeholder {
+      color: #cbd5e1;
+    }
+
+    .search-close {
+      position: absolute;
+      top: 16px;
+      right: 32px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 20px;
+      transition: all 0.15s;
+    }
+
+    .search-close:hover {
+      background: #e2e8f0;
+      color: #1a1a2e;
+    }
+
+    /* 검색 필터 칩 */
+    .search-filter-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .search-filter-chip {
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .search-filter-chip:hover {
+      border-color: #1a1a2e;
+      color: #1a1a2e;
+    }
+
+    .search-filter-chip.active {
+      background: #1a1a2e;
+      color: #fff;
+      border-color: #1a1a2e;
+    }
+
+    .search-results {
+      margin-top: 24px;
+    }
+
+    .search-results-count {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    /* ===========================================
+       레이아웃
+    =========================================== */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===========================================
+       홈 히어로
+    =========================================== */
+    .hero {
+      padding: 48px 0 40px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -1.5px;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+      font-size: 15px;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    /* 통계 카드 */
+    .hero-stats {
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .hero-stat {
+      text-align: center;
+      padding: 16px 24px;
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 14px;
+      min-width: 90px;
+      transition: all 0.2s;
+    }
+
+    .hero-stat:hover {
+      border-color: #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .hero-stat-number {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -1px;
+    }
+
+    .hero-stat-label {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* ===========================================
+       필터/정렬 바
+    =========================================== */
+    .filter-sort-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    /* 카테고리 필터 칩 */
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .filter-chip {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .filter-chip:hover {
+      border-color: #1a1a2e;
+      color: #1a1a2e;
+      background: #f8fafc;
+    }
+
+    .filter-chip.active {
+      background: #1a1a2e;
+      color: #fff;
+      border-color: #1a1a2e;
+    }
+
+    /* 정렬 셀렉트 */
+    .sort-select {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #64748b;
+      font-family: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: #1a1a2e;
+    }
+
+    /* 구분선 */
+    .filter-sep {
+      width: 1px;
+      height: 20px;
+      background: #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    /* ===========================================
+       카테고리 컬러 — 블랙/화이트 통일
+    =========================================== */
+    [class*="cat-color-"] { --cat-color: #1a1a2e; --cat-bg: #f1f5f9; }
+
+    /* ===========================================
+       보고서 카드
+    =========================================== */
+    .article-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .article-card {
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 14px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .article-card:hover {
+      border-color: #e2e8f0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    /* 카드 상단: 카테고리 라벨 */
+    .article-card-cat {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cat-color, #1a1a2e);
+      background: var(--cat-bg, #f1f5f9);
+      padding: 3px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 14px;
+      width: fit-content;
+    }
+
+    .article-card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a2e;
+      letter-spacing: -0.3px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .article-card-summary {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    /* 출처 품질 바 */
+    .source-bar {
+      display: flex;
+      gap: 3px;
+      height: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      background: #f1f5f9;
+    }
+
+    .source-bar-a { background: #1a1a2e; border-radius: 2px; }
+    .source-bar-b { background: #94a3b8; }
+    .source-bar-c { background: #e2e8f0; }
+
+    .article-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .article-card-date {
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .article-card-sources {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .source-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-weight: 500;
+    }
+
+    .source-dot::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .source-dot.grade-a::before { background: #1a1a2e; }
+    .source-dot.grade-b::before { background: #94a3b8; }
+    .source-dot.grade-c::before { background: #e2e8f0; }
+
+    .article-card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .article-tag {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .article-tag:hover {
+      color: #1a1a2e;
+    }
+
+    .article-tag::before {
+      content: '#';
+      color: #cbd5e1;
+    }
+
+    /* 빈 상태 */
+    .empty {
+      text-align: center;
+      padding: 100px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.8;
+    }
+
+    /* ===========================================
+       보고서 섹션
+    =========================================== */
+    .section-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 16px;
+    }
+
+    .section-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .section-count {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .recent-section {
+      padding-bottom: 80px;
+    }
+
+    /* ===========================================
+       타임라인 (카테고리 내 보고서 목록)
+    =========================================== */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 32px 0 0;
+      transition: color 0.2s;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      color: #1a1a2e;
+    }
+
+    .timeline-header {
+      padding: 28px 0 40px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .timeline-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timeline-color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .timeline-meta {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 32px;
+      padding: 32px 0;
+      border-bottom: 1px solid #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 12px;
+    }
+
+    .timeline-item:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-item:hover {
+      background: #fafbfd;
+      padding-left: 16px;
+      padding-right: 16px;
+      margin: 0 -16px;
+    }
+
+    .timeline-item-date {
+      width: 110px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+
+    .timeline-item-period {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .timeline-item-day {
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .timeline-item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .timeline-item-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a2e;
+      letter-spacing: -0.3px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .timeline-item-summary {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.8;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .timeline-item-footer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* ===========================================
+       보고서 뷰어
+    =========================================== */
+    .viewer-header {
+      padding: 32px 0 28px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 0;
+    }
+
+    .viewer-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -0.5px;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .viewer-meta {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    /* 리포트 요약 박스 — 리포트 열 때 최상단에 표시 */
+    .viewer-summary {
+      background: #f8f9fb;
+      border: 1px solid #e8ecf1;
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .viewer-summary-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    .viewer-summary-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .viewer-summary-list li {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      color: #1a1a2e;
+      line-height: 1.65;
+    }
+
+    /* 요약 넘버링 */
+    .viewer-summary-list li .sum-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .report-iframe {
+      width: 100%;
+      height: calc(100vh - 180px);
+      min-height: 600px;
+      border: none;
+      background: #fff;
+      display: block;
+    }
+
+    /* ===========================================
+       푸터
+    =========================================== */
+    .footer {
+      text-align: center;
+      padding: 48px 0 32px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    /* ===========================================
+       반응형
+    =========================================== */
+    @media (max-width: 860px) {
+      .nav-inner { padding: 0 20px; }
+      .nav-stat { display: none; }
+      .nav-search-btn kbd { display: none; }
+      .main { padding: 0 20px; }
+
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 24px;
+        padding: 32px 0;
+      }
+
+      .hero-title { font-size: 26px; }
+      .article-grid { grid-template-columns: 1fr; }
+
+      .timeline-item {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .timeline-item-date {
+        width: auto;
+        display: flex;
+        gap: 8px;
+      }
+
+      .filter-sort-bar { gap: 8px; }
+      .sidebar { width: 280px; }
+    }
+
+    @media (max-width: 600px) {
+      .hero-stats {
+        gap: 8px;
+        width: 100%;
+      }
+
+      .hero-stat {
+        flex: 1;
+        padding: 12px 16px;
+      }
+
+      .hero-stat-number { font-size: 22px; }
+
+      .filter-chips {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .filter-chips::-webkit-scrollbar { display: none; }
+      .sidebar { width: 260px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===========================================
+       상단 네비게이션
+  =========================================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <!-- 카테고리 사이드바 토글 버튼 -->
+        <button class="menu-btn" id="menuBtn" title="카테고리 메뉴">
+          <span class="menu-line"></span>
+          <span class="menu-line"></span>
+          <span class="menu-line"></span>
+        </button>
+        <div class="nav-logo" id="navLogo">DeepDig</div>
+      </div>
+      <div class="nav-right">
+        <span class="nav-stat" id="navStat"></span>
+        <button class="nav-search-btn" id="searchToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
+          검색
+          <kbd>/</kbd>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===========================================
+       좌측 카테고리 사이드바
+  =========================================== -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">카테고리</div>
+      <div class="sidebar-stat" id="sidebarStat"></div>
+    </div>
+    <div class="sidebar-list" id="sidebarList">
+      <!-- JS로 동적 생성 -->
+    </div>
+  </aside>
+
+  <!-- ===========================================
+       검색 오버레이
+  =========================================== -->
+  <div class="search-overlay" id="searchOverlay">
+    <button class="search-close" id="searchClose">&times;</button>
+    <div class="search-overlay-inner">
+      <input
+        type="text"
+        class="search-overlay-input"
+        id="searchInput"
+        placeholder="보고서 검색"
+        autocomplete="off"
+      >
+      <!-- 검색 내 카테고리 필터 칩 -->
+      <div class="search-filter-bar" id="searchFilterBar"></div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- ===========================================
+       메인 콘텐츠
+  =========================================== -->
+  <main class="main">
+
+    <!-- 뷰 1: 홈 -->
+    <div id="viewHome" class="view active">
+
+      <!-- 히어로 -->
+      <div class="hero">
+        <div class="hero-text">
+          <p class="hero-subtitle">출처가 검증된 리서치 보고서 아카이브</p>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number" id="statCategories">0</div>
+            <div class="hero-stat-label">카테고리</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number" id="statReports">0</div>
+            <div class="hero-stat-label">보고서</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number" id="statSources">0</div>
+            <div class="hero-stat-label">검증된 출처</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 필터/정렬 바 -->
+      <div class="filter-sort-bar" id="filterSortBar">
+        <span class="filter-label">필터</span>
+        <div class="filter-chips" id="filterChips">
+          <!-- 카테고리 필터 칩이 JS로 동적 생성됨 -->
+        </div>
+        <div class="filter-sep"></div>
+        <select class="sort-select" id="sortSelect" onchange="handleSort(this.value)">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+          <option value="sources">출처 많은순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
+
+      <!-- 보고서 섹션 -->
+      <div class="recent-section" id="recentSection">
+        <div class="section-bar">
+          <span class="section-label" id="recentLabel">최근 보고서</span>
+          <span class="section-count" id="recentCount"></span>
+        </div>
+        <div class="article-grid" id="recentList"></div>
+      </div>
+
+      <div class="footer">research-crawler가 자동으로 수집한 조사 보고서</div>
+    </div>
+
+    <!-- 뷰 2: 타임라인 -->
+    <div id="viewTimeline" class="view">
+      <button class="back-link" id="backToHome">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 5l-7 7 7 7"></path>
+        </svg>
+        전체 목록
+      </button>
+
+      <div class="timeline-header">
+        <h2 class="timeline-name" id="timelineName"></h2>
+        <div class="timeline-meta" id="timelineMeta"></div>
+      </div>
+
+      <div class="timeline-list" id="timelineList"></div>
+      <div class="footer"></div>
+    </div>
+
+    <!-- 뷰 3: 보고서 뷰어 -->
+    <div id="viewReport" class="view">
+      <button class="back-link" id="backFromReport">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 5l-7 7 7 7"></path>
+        </svg>
+        <span id="backFromReportText">목록으로</span>
+      </button>
+
+      <div class="viewer-header">
+        <h2 class="viewer-title" id="viewerTitle"></h2>
+        <div class="viewer-meta" id="viewerMeta"></div>
+      </div>
+
+      <!-- 리포트 요약 — 주요 포인트 넘버링 -->
+      <div class="viewer-summary" id="viewerSummary"></div>
+
+      <iframe id="reportIframe" class="report-iframe" title="보고서 뷰어" sandbox="allow-same-origin allow-scripts"></iframe>
+      <div class="footer"></div>
+    </div>
+
+  </main>
+
+  <script>
+    // ===========================================
+    // DeepDig 앱 로직
+    // ===========================================
+
+    // 현재 선택된 카테고리
+    let currentCategoryId = null;
+    // 보고서를 검색에서 열었는지 타임라인에서 열었는지 기억
+    let openedFromSearch = false;
+    // 현재 필터 상태
+    let activeFilter = 'all';      // 카테고리 필터 ('all' 또는 카테고리 ID)
+    let currentSortMode = 'newest'; // 정렬 모드
+    // 검색 내 카테고리 필터
+    let searchCategoryFilter = 'all';
+
+    // -----------------------------------------------
+    // registry.js 데이터 가져오기
+    // -----------------------------------------------
+    function getData() {
+      if (!window.ARCHIVE_REGISTRY) {
+        return { categories: [], reports: [] };
+      }
+      return window.ARCHIVE_REGISTRY;
+    }
+
+    // 카테고리 컬러 — 블랙 통일
+    function getCatColorClass() { return 'cat-color-default'; }
+    function getCatColorValue() { return '#1a1a2e'; }
+
+    // -----------------------------------------------
+    // 화면 전환 — 브라우저 뒤로가기 지원
+    // -----------------------------------------------
+    let pushHistoryState = true;
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      const el = document.getElementById(viewId);
+      if (el) {
+        requestAnimationFrame(() => {
+          el.classList.add('active');
+          window.scrollTo(0, 0);
+        });
+      }
+    }
+
+    // 브라우저 뒤로가기/앞으로가기
+    window.addEventListener('popstate', (e) => {
+      pushHistoryState = false;
+      const state = e.state;
+      if (!state || state.view === 'home') {
+        currentCategoryId = null;
+        activeFilter = 'all';
+        showView('viewHome');
+        renderHome();
+      } else if (state.view === 'timeline') {
+        openTimeline(state.categoryId);
+      } else if (state.view === 'report') {
+        const data = getData();
+        const report = data.reports.find(r => r.id === state.reportId);
+        if (report) openReport(report, false);
+      }
+      pushHistoryState = true;
+    });
+
+    // 날짜 포맷
+    function fmtDate(d) {
+      return d ? d.replace(/-/g, '.') : '';
+    }
+
+    // 출처 통계 HTML
+    function sourcesHtml(sources) {
+      if (!sources) return '';
+      const parts = [];
+      if (sources.gradeA > 0) parts.push('<span class="source-dot grade-a">A ' + sources.gradeA + '</span>');
+      if (sources.gradeB > 0) parts.push('<span class="source-dot grade-b">B ' + sources.gradeB + '</span>');
+      if (sources.gradeC > 0) parts.push('<span class="source-dot grade-c">C ' + sources.gradeC + '</span>');
+      return '<div class="article-card-sources">' + parts.join('') + '</div>';
+    }
+
+    // 출처 품질 프로그레스 바
+    function sourceBarHtml(sources) {
+      if (!sources || !sources.total) return '';
+      const total = sources.total;
+      const aWidth = Math.round((sources.gradeA / total) * 100);
+      const bWidth = Math.round((sources.gradeB / total) * 100);
+      const cWidth = Math.round((sources.gradeC / total) * 100);
+      return '<div class="source-bar" title="출처 ' + total + '개 (A:' + sources.gradeA + ' B:' + sources.gradeB + ' C:' + sources.gradeC + ')">' +
+        (aWidth > 0 ? '<div class="source-bar-a" style="flex:' + aWidth + '"></div>' : '') +
+        (bWidth > 0 ? '<div class="source-bar-b" style="flex:' + bWidth + '"></div>' : '') +
+        (cWidth > 0 ? '<div class="source-bar-c" style="flex:' + cWidth + '"></div>' : '') +
+      '</div>';
+    }
+
+    // -----------------------------------------------
+    // 사이드바 토글
+    // -----------------------------------------------
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const btn = document.getElementById('menuBtn');
+      const isOpen = sidebar.classList.contains('open');
+
+      if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        btn.classList.remove('active');
+      } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        btn.classList.add('active');
+      }
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+      document.getElementById('menuBtn').classList.remove('active');
+    }
+
+    // 사이드바 카테고리 렌더링
+    function renderSidebar() {
+      const data = getData();
+      const cats = data.categories || [];
+      const reports = data.reports || [];
+      const container = document.getElementById('sidebarList');
+      const stat = document.getElementById('sidebarStat');
+
+      stat.textContent = cats.length + '개 카테고리 · ' + reports.length + '편 보고서';
+
+      if (cats.length === 0) {
+        container.innerHTML = '<div class="sidebar-empty">아직 카테고리가 없습니다</div>';
+        return;
+      }
+
+      container.innerHTML = cats.map((cat, idx) => {
+        const catReports = reports.filter(r => r.categoryId === cat.id);
+        const sorted = [...catReports].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const lastDate = sorted.length > 0 ? fmtDate(sorted[0].date) : '';
+
+        return '<button class="sidebar-cat" data-id="' + cat.id + '">' +
+          '<span class="sidebar-cat-dot"></span>' +
+          '<div class="sidebar-cat-info">' +
+            '<div class="sidebar-cat-name">' + cat.name + '</div>' +
+            (lastDate ? '<div class="sidebar-cat-meta">최근 ' + lastDate + '</div>' : '') +
+          '</div>' +
+          '<span class="sidebar-cat-count">' + catReports.length + '</span>' +
+        '</button>';
+      }).join('');
+
+      // 카테고리 클릭 → 타임라인 열기
+      container.querySelectorAll('.sidebar-cat').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeSidebar();
+          openTimeline(btn.getAttribute('data-id'));
+        });
+      });
+    }
+
+    // -----------------------------------------------
+    // 보고서 정렬
+    // -----------------------------------------------
+    function sortReports(reports, mode) {
+      const sorted = [...reports];
+      switch (mode) {
+        case 'newest':
+          return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+        case 'oldest':
+          return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+        case 'sources':
+          return sorted.sort((a, b) => (b.sources?.total || 0) - (a.sources?.total || 0));
+        case 'name':
+          return sorted.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+        default:
+          return sorted;
+      }
+    }
+
+    // -----------------------------------------------
+    // 홈 화면 렌더링
+    // -----------------------------------------------
+    function renderHome() {
+      const data = getData();
+      const cats = data.categories || [];
+      const reports = data.reports || [];
+
+      // 통계 업데이트
+      document.getElementById('statCategories').textContent = cats.length;
+      document.getElementById('statReports').textContent = reports.length;
+      const totalSources = reports.reduce((sum, r) => sum + (r.sources?.total || 0), 0);
+      document.getElementById('statSources').textContent = totalSources;
+
+      // 네비게이션 통계
+      document.getElementById('navStat').innerHTML =
+        '<strong>' + cats.length + '</strong>개 카테고리 · <strong>' + reports.length + '</strong>편';
+
+      // 사이드바 렌더링
+      renderSidebar();
+
+      // 필터 칩 생성
+      renderFilterChips(cats);
+
+      // 보고서 렌더링
+      renderFilteredReports();
+    }
+
+    // 필터 칩 렌더링
+    function renderFilterChips(cats) {
+      const container = document.getElementById('filterChips');
+      let html = '<button class="filter-chip ' + (activeFilter === 'all' ? 'active' : '') + '" data-filter="all">전체</button>';
+      cats.forEach(cat => {
+        html += '<button class="filter-chip ' + (activeFilter === cat.id ? 'active' : '') + '" data-filter="' + cat.id + '">' + cat.name + '</button>';
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          activeFilter = chip.getAttribute('data-filter');
+          container.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          renderFilteredReports();
+        });
+      });
+    }
+
+    // 필터 + 정렬 적용된 보고서 렌더링
+    function renderFilteredReports() {
+      const data = getData();
+      let reports = data.reports || [];
+
+      // 카테고리 필터
+      if (activeFilter !== 'all') {
+        reports = reports.filter(r => r.categoryId === activeFilter);
+      }
+
+      // 정렬
+      reports = sortReports(reports, currentSortMode);
+
+      // 보고서 섹션 업데이트
+      const label = document.getElementById('recentLabel');
+      const count = document.getElementById('recentCount');
+
+      if (activeFilter !== 'all') {
+        const cat = data.categories.find(c => c.id === activeFilter);
+        label.textContent = (cat ? cat.name : '') + ' 보고서';
+      } else {
+        label.textContent = '최근 보고서';
+      }
+
+      const displayReports = (activeFilter !== 'all') ? reports : reports.slice(0, 12);
+      count.textContent = reports.length + '편';
+
+      if (reports.length > 0) {
+        document.getElementById('recentSection').style.display = 'block';
+        renderArticleCards('recentList', displayReports, activeFilter === 'all');
+      } else {
+        document.getElementById('recentSection').style.display = 'block';
+        document.getElementById('recentList').innerHTML =
+          '<div class="empty" style="padding:60px 20px;">' +
+            '<div class="empty-icon">📋</div>' +
+            '<div class="empty-title">아직 보고서가 없습니다</div>' +
+            '<div class="empty-desc">research-crawler에게 조사를 요청하면<br>자동으로 여기에 기록됩니다.</div>' +
+          '</div>';
+      }
+    }
+
+    // 정렬 변경
+    function handleSort(value) {
+      currentSortMode = value;
+      renderFilteredReports();
+    }
+
+    // -----------------------------------------------
+    // 보고서 카드 렌더링
+    // -----------------------------------------------
+    function renderArticleCards(containerId, reports, showCategory) {
+      const data = getData();
+      const container = document.getElementById(containerId);
+
+      if (!reports || reports.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="empty-title">보고서가 없습니다</div></div>';
+        return;
+      }
+
+      container.innerHTML = reports.map(r => {
+        const cat = data.categories.find(c => c.id === r.categoryId);
+        const colorClass = cat ? getCatColorClass() : '';
+
+        const catHtml = showCategory && cat
+          ? '<div class="article-card-cat ' + colorClass + '">' + cat.name + '</div>'
+          : '';
+
+        const tagsHtml = r.tags && r.tags.length > 0
+          ? '<div class="article-card-tags">' +
+              r.tags.slice(0, 4).map(t =>
+                '<span class="article-tag">' + t + '</span>'
+              ).join('') +
+            '</div>'
+          : '';
+
+        return '<div class="article-card" data-id="' + r.id + '" data-filename="' + r.fileName + '">' +
+          catHtml +
+          '<div class="article-card-title">' + r.title + '</div>' +
+          '<div class="article-card-summary">' + (r.summary || '') + '</div>' +
+          sourceBarHtml(r.sources) +
+          '<div class="article-card-footer">' +
+            '<span class="article-card-date">' + fmtDate(r.date) + '</span>' +
+            sourcesHtml(r.sources) +
+          '</div>' +
+          tagsHtml +
+        '</div>';
+      }).join('');
+
+      // 카드 클릭 → 보고서 열기
+      container.querySelectorAll('.article-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const report = reports.find(r => r.id === card.getAttribute('data-id'));
+          openReport(report, showCategory);
+        });
+      });
+    }
+
+    // -----------------------------------------------
+    // 타임라인
+    // -----------------------------------------------
+    function openTimeline(categoryId) {
+      const data = getData();
+      const cat = data.categories.find(c => c.id === categoryId);
+      if (!cat) return;
+
+      currentCategoryId = categoryId;
+      openedFromSearch = false;
+
+      if (pushHistoryState) {
+        history.pushState({ view: 'timeline', categoryId: categoryId }, '', '#cat/' + categoryId);
+      }
+
+      const colorValue = getCatColorValue();
+
+      document.getElementById('timelineName').innerHTML =
+        '<span class="timeline-color-dot" style="background:' + colorValue + '"></span>' +
+        cat.name;
+
+      const catReports = data.reports
+        .filter(r => r.categoryId === categoryId)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      document.getElementById('timelineMeta').textContent = catReports.length + '편의 보고서';
+
+      const container = document.getElementById('timelineList');
+
+      if (catReports.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="empty-title">보고서가 없습니다</div></div>';
+      } else {
+        container.innerHTML = catReports.map(r => {
+          return '<div class="timeline-item" data-id="' + r.id + '">' +
+            '<div class="timeline-item-date">' +
+              '<div class="timeline-item-period">' + (r.period || '') + '</div>' +
+              '<div class="timeline-item-day">' + fmtDate(r.date) + '</div>' +
+            '</div>' +
+            '<div class="timeline-item-body">' +
+              '<div class="timeline-item-title">' + r.title + '</div>' +
+              '<div class="timeline-item-summary">' + (r.summary || '') + '</div>' +
+              '<div class="timeline-item-footer">' +
+                sourcesHtml(r.sources) +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        container.querySelectorAll('.timeline-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const report = catReports.find(r => r.id === item.getAttribute('data-id'));
+            openReport(report, false);
+          });
+        });
+      }
+
+      showView('viewTimeline');
+    }
+
+    // -----------------------------------------------
+    // 보고서 뷰어
+    // -----------------------------------------------
+    function openReport(report, fromSearch) {
+      if (!report) return;
+      openedFromSearch = fromSearch;
+
+      if (pushHistoryState) {
+        history.pushState({ view: 'report', reportId: report.id }, '', '#report/' + report.id);
+      }
+
+      const data = getData();
+      const cat = data.categories.find(c => c.id === report.categoryId);
+
+      document.getElementById('viewerTitle').textContent = report.title;
+      document.getElementById('viewerMeta').textContent =
+        fmtDate(report.date) + (cat ? ' · ' + cat.name : '') +
+        (report.sources ? ' · 출처 ' + report.sources.total + '개' : '');
+
+      document.getElementById('backFromReportText').textContent =
+        fromSearch ? '검색 결과로' : '목록으로';
+
+      // 요약 포인트 렌더링 — summaryPoints 배열이 있으면 넘버링 리스트로 표시
+      const summaryEl = document.getElementById('viewerSummary');
+      if (report.summaryPoints && report.summaryPoints.length > 0) {
+        let sumHtml = '<div class="viewer-summary-label">Summary</div>';
+        sumHtml += '<ul class="viewer-summary-list">';
+        report.summaryPoints.forEach((point, i) => {
+          sumHtml += '<li><span class="sum-num">' + (i + 1) + '</span><span>' + point + '</span></li>';
+        });
+        sumHtml += '</ul>';
+        summaryEl.innerHTML = sumHtml;
+        summaryEl.style.display = '';
+      } else {
+        summaryEl.style.display = 'none';
+      }
+
+      // 보고서 폴더 경로가 있으면 해당 경로 사용, 없으면 기본 reports/ 경로 사용
+      const reportPath = report.folderPath ? report.folderPath + report.fileName : 'reports/' + report.fileName;
+      document.getElementById('reportIframe').src = reportPath;
+      showView('viewReport');
+    }
+
+    // -----------------------------------------------
+    // 검색
+    // -----------------------------------------------
+    function renderSearchFilterBar() {
+      const data = getData();
+      const cats = data.categories || [];
+      const bar = document.getElementById('searchFilterBar');
+
+      let html = '<button class="search-filter-chip ' + (searchCategoryFilter === 'all' ? 'active' : '') + '" data-filter="all">전체</button>';
+      cats.forEach(cat => {
+        html += '<button class="search-filter-chip ' + (searchCategoryFilter === cat.id ? 'active' : '') + '" data-filter="' + cat.id + '">' + cat.name + '</button>';
+      });
+      bar.innerHTML = html;
+
+      bar.querySelectorAll('.search-filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          searchCategoryFilter = chip.getAttribute('data-filter');
+          bar.querySelectorAll('.search-filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          handleSearch(document.getElementById('searchInput').value);
+        });
+      });
+    }
+
+    function handleSearch(query) {
+      const resultsEl = document.getElementById('searchResults');
+
+      if (!query || query.trim() === '') {
+        resultsEl.innerHTML = '';
+        return;
+      }
+
+      const data = getData();
+      const kw = query.trim().toLowerCase();
+
+      let results = data.reports.filter(r => {
+        const cat = data.categories.find(c => c.id === r.categoryId);
+        return r.title.toLowerCase().includes(kw)
+          || (r.summary || '').toLowerCase().includes(kw)
+          || (r.tags || []).some(t => t.toLowerCase().includes(kw))
+          || (cat && cat.name.toLowerCase().includes(kw));
+      });
+
+      if (searchCategoryFilter !== 'all') {
+        results = results.filter(r => r.categoryId === searchCategoryFilter);
+      }
+
+      if (results.length === 0) {
+        resultsEl.innerHTML = '<div class="search-results-count">검색 결과가 없습니다</div>';
+        return;
+      }
+
+      resultsEl.innerHTML =
+        '<div class="search-results-count">' + results.length + '개의 보고서</div>' +
+        '<div class="article-grid" id="searchArticleList"></div>';
+
+      renderArticleCards('searchArticleList', results, true);
+    }
+
+    // -----------------------------------------------
+    // 이벤트 리스너
+    // -----------------------------------------------
+
+    // 메뉴 버튼 → 사이드바 토글
+    document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
+
+    // 오버레이 클릭 → 사이드바 닫기
+    document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+    // 로고 클릭 → 홈
+    document.getElementById('navLogo').addEventListener('click', () => {
+      currentCategoryId = null;
+      activeFilter = 'all';
+      closeSidebar();
+      history.pushState({ view: 'home' }, '', '#');
+      showView('viewHome');
+      renderHome();
+    });
+
+    // 검색 열기
+    document.getElementById('searchToggle').addEventListener('click', () => {
+      closeSidebar();
+      document.getElementById('searchOverlay').classList.add('active');
+      document.getElementById('searchInput').focus();
+      renderSearchFilterBar();
+    });
+
+    // 검색 닫기
+    document.getElementById('searchClose').addEventListener('click', () => {
+      document.getElementById('searchOverlay').classList.remove('active');
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+      searchCategoryFilter = 'all';
+    });
+
+    // ESC / 키보드 단축키
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('searchOverlay').classList.remove('active');
+        closeSidebar();
+      }
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        closeSidebar();
+        document.getElementById('searchOverlay').classList.add('active');
+        document.getElementById('searchInput').focus();
+        renderSearchFilterBar();
+      }
+    });
+
+    // 검색 입력
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      handleSearch(e.target.value);
+    });
+
+    // 뒤로가기
+    document.getElementById('backToHome').addEventListener('click', () => {
+      currentCategoryId = null;
+      showView('viewHome');
+    });
+
+    document.getElementById('backFromReport').addEventListener('click', () => {
+      document.getElementById('reportIframe').src = '';
+      if (openedFromSearch) {
+        document.getElementById('searchOverlay').classList.add('active');
+      } else if (currentCategoryId) {
+        showView('viewTimeline');
+      } else {
+        showView('viewHome');
+      }
+    });
+
+    // -----------------------------------------------
+    // 초기화
+    // -----------------------------------------------
+    function init() {
+      // URL 해시가 있으면 해당 뷰로 바로 이동 (뒤로가기·직접 링크 지원)
+      const hash = window.location.hash;
+      if (hash.startsWith('#report/')) {
+        const reportId = hash.replace('#report/', '');
+        const data = getData();
+        const report = data.reports.find(r => r.id === reportId);
+        if (report) {
+          renderHome();
+          pushHistoryState = false;
+          openReport(report, false);
+          pushHistoryState = true;
+          history.replaceState({ view: 'report', reportId: report.id }, '', hash);
+          return;
+        }
+      }
+      history.replaceState({ view: 'home' }, '', window.location.pathname);
+      renderHome();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      init();
+    }
+  </script>
+
+</body>
+</html>

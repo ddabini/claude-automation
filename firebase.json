@@ -1,0 +1,48 @@
+{
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "hosting": [
+    {
+      "target": "deepdig",
+      "public": "04_deepdig",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "scripts/**", "raw-data/**"],
+      "headers": [
+        {
+          "source": "**/*.html",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+        },
+        {
+          "source": "registry.js",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+        }
+      ]
+    },
+    {
+      "target": "pikbox",
+      "public": "02_pikbox/개발/파일",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+        }
+      ],
+      "rewrites": [
+        { "source": "/", "destination": "/pikbox.html" },
+        { "source": "**", "destination": "/pikbox.html" }
+      ]
+    },
+    {
+      "target": "didadmin",
+      "public": "03_did-ad-manager/개발/파일",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "headers": [
+        {
+          "source": "**/*.html",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+        }
+      ]
+    }
+  ]
+}

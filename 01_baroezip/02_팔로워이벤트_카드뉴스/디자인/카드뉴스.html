@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<!--
+  파일 목적: 바로이집 인스타그램 팔로우 유도 카드뉴스 3장
+  각 카드는 1080x1350px 고정 크기 (인스타그램 세로 비율 4:5)
+  브라우저에서 열어 각 카드를 캡처하거나 인쇄하여 사용
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바로이집 카드뉴스 — 팔로우 이벤트</title>
+
+  <!-- Figma 캡처용 스크립트 (캡처 완료 후 제거 예정) -->
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+
+  <!-- 구글 폰트에서 한국어 폰트(Noto Sans KR)를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* =============================================
+       CSS 변수: 브랜드 색상을 한 곳에 모아 관리합니다
+       나중에 색상을 바꾸려면 이 부분만 수정하면 됩니다
+    ============================================= */
+    :root {
+      --color-bg: #FFFFFF;           /* 기본 배경: 흰색 */
+      --color-bg-sub: #F5F7FA;       /* 보조 배경: 밝은 회청색 */
+      --color-main: #2563EB;         /* 메인 컬러: 로열 블루 */
+      --color-sub: #60A5FA;          /* 서브 컬러: 라이트 블루 */
+      --color-accent: #F59E0B;       /* 강조 컬러: 앰버/골드 */
+      --color-text: #1E293B;         /* 본문 텍스트: 다크 네이비 */
+      --color-text-sub: #64748B;     /* 보조 텍스트: 미디엄 그레이 */
+      --color-main-light: #EFF6FF;   /* 메인 컬러의 연한 버전 */
+      --color-accent-light: #FFFBEB; /* 강조 컬러의 연한 버전 */
+
+      /* 폰트 기본값 */
+      --font: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    }
+
+    /* 페이지 전체 기본 설정 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* 패딩이 크기에 포함되도록 설정 */
+    }
+
+    body {
+      font-family: var(--font);
+      background: #E8EDF3; /* 카드 바깥 영역은 연회색 배경 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 40px;
+      gap: 80px; /* 카드와 카드 사이 간격 */
+    }
+
+    /* =============================================
+       카드 공통 스타일
+       모든 카드에 적용되는 기본 박스 설정
+    ============================================= */
+    .card {
+      width: 1080px;
+      height: 1350px;
+      background: var(--color-bg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      /* 인쇄/캡처 시 그림자 제거되지 않도록 box-shadow 대신 outline 사용 */
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    /* 카드 번호 안내 텍스트 (캡처 범위 안내용) */
+    .card-label {
+      font-family: var(--font);
+      font-size: 14px;
+      color: #94A3B8;
+      text-align: center;
+      margin-top: -40px;
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
+    }
+
+
+    /* =============================================
+       1번 카드 — 표지/훅
+       "지금 부동산 살 때 맞아요?"
+    ============================================= */
+    .card-1 {
+      background: var(--color-bg);
+    }
+
+    /* 카드1 상단 장식 줄 */
+    .card-1 .top-bar {
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--color-main) 0%, var(--color-sub) 100%);
+      flex-shrink: 0;
+    }
+
+    /* 카드1 내용 영역 */
+    .card-1 .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 70px 80px 60px;
+    }
+
+    /* 카드1 상단 로고 영역 */
+    .card-1 .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-1 .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-main);
+      letter-spacing: -0.02em;
+    }
+
+    /* 카드1 중앙 메인 일러스트/아이콘 영역 */
+    .card-1 .hero-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+    }
+
+    /* AI 브레인 + 집 아이콘 조합 그래픽 */
+    .card-1 .hero-graphic {
+      width: 280px;
+      height: 280px;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    /* 카드1 배경 장식 원 */
+    .card-1 .bg-circle-1 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: var(--color-main-light);
+      top: -80px;
+      right: -120px;
+      opacity: 0.5;
+    }
+
+    .card-1 .bg-circle-2 {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: var(--color-accent-light);
+      bottom: 200px;
+      left: -80px;
+      opacity: 0.6;
+    }
+
+    /* 카드1 메인 헤드라인 */
+    .card-1 .headline {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-1 .headline .question {
+      font-size: 68px;
+      font-weight: 900;
+      color: var(--color-text);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    /* "AI가" 부분을 메인 블루로 강조 */
+    .card-1 .headline .question .highlight-blue {
+      color: var(--color-main);
+    }
+
+    .card-1 .headline .sub-headline {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--color-text-sub);
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+      margin-top: 16px;
+      display: block;
+    }
+
+    /* 카드1 팔로우 유도 배너 */
+    .card-1 .follow-banner {
+      background: var(--color-main);
+      border-radius: 20px;
+      padding: 32px 60px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    .card-1 .follow-banner .follow-text {
+      font-size: 30px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+    }
+
+    .card-1 .follow-banner .follow-text span {
+      color: var(--color-accent);
+    }
+
+    /* 카드1 하단 스와이프 유도 화살표 */
+    .card-1 .swipe-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-1 .swipe-hint .swipe-text {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--color-text-sub);
+      letter-spacing: 0.02em;
+    }
+
+
+    /* =============================================
+       2번 카드 — 혜택 소개
+       "팔로우해야 하는 이유 3가지"
+    ============================================= */
+    .card-2 {
+      background: var(--color-bg);
+    }
+
+    /* 카드2 상단 장식 줄 */
+    .card-2 .top-bar {
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--color-main) 0%, var(--color-sub) 100%);
+      flex-shrink: 0;
+    }
+
+    /* 카드2 전체 내용 영역 */
+    .card-2 .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 70px 80px 60px;
+      gap: 0;
+    }
+
+    /* 카드2 섹션 제목 */
+    .card-2 .section-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-main);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .card-2 .main-title {
+      font-size: 52px;
+      font-weight: 900;
+      color: var(--color-text);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 50px;
+    }
+
+    .card-2 .main-title span {
+      color: var(--color-main);
+    }
+
+    /* 카드2 혜택 목록 영역 */
+    .card-2 .benefits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex: 1;
+    }
+
+    /* 카드2 혜택 항목 하나 */
+    .card-2 .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 28px;
+      padding: 32px 36px;
+      background: var(--color-bg-sub);
+      border-radius: 20px;
+      border-left: 5px solid var(--color-main);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 혜택 항목 배경 장식 */
+    .card-2 .benefit-item::after {
+      content: '';
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--color-main);
+      opacity: 0.05;
+    }
+
+    /* 큰 넘버 (01, 02, 03) */
+    .card-2 .benefit-num {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--color-main);
+      line-height: 1;
+      min-width: 72px;
+      padding-top: 2px;
+      letter-spacing: -0.03em;
+    }
+
+    /* 혜택 내용 텍스트 영역 */
+    .card-2 .benefit-body {
+      flex: 1;
+    }
+
+    .card-2 .benefit-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+
+    /* 혜택 제목 뒤 대시(—) 구분자 색상 */
+    .card-2 .benefit-title .divider {
+      color: var(--color-sub);
+    }
+
+    .card-2 .benefit-desc {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--color-text-sub);
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+
+    /* 카드2 하단 마무리 카피 */
+    .card-2 .closing {
+      margin-top: 36px;
+      text-align: center;
+      padding: 28px;
+      background: var(--color-main);
+      border-radius: 16px;
+    }
+
+    .card-2 .closing-text {
+      font-size: 26px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.6;
+      letter-spacing: -0.02em;
+    }
+
+    .card-2 .closing-text span {
+      color: var(--color-accent);
+    }
+
+    /* 카드2 하단 스와이프 유도 */
+    .card-2 .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 28px;
+    }
+
+    .card-2 .brand-tag {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-main);
+    }
+
+    .card-2 .swipe-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-text-sub);
+    }
+
+
+    /* =============================================
+       3번 카드 — CTA / 이벤트
+       "팔로우 이벤트 — 무료 수강권 증정"
+    ============================================= */
+    .card-3 {
+      background: var(--color-bg);
+    }
+
+    /* 카드3 상단 장식 줄 */
+    .card-3 .top-bar {
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--color-main) 0%, var(--color-sub) 100%);
+      flex-shrink: 0;
+    }
+
+    /* 카드3 전체 내용 영역 */
+    .card-3 .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 80px 55px;
+    }
+
+    /* 이벤트 배지 */
+    .card-3 .event-badge {
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 10px 28px;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+    }
+
+    /* 카드3 메인 타이틀 */
+    .card-3 .main-title {
+      font-size: 64px;
+      font-weight: 900;
+      color: var(--color-text);
+      text-align: center;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    /* 카드3 서브타이틀 */
+    .card-3 .sub-title {
+      font-size: 30px;
+      font-weight: 500;
+      color: var(--color-text-sub);
+      text-align: center;
+      margin-bottom: 44px;
+      letter-spacing: -0.02em;
+    }
+
+    .card-3 .sub-title strong {
+      color: var(--color-main);
+      font-weight: 700;
+    }
+
+    /* 참여 방법 섹션 */
+    .card-3 .how-to {
+      width: 100%;
+      margin-bottom: 36px;
+    }
+
+    .card-3 .how-to-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text-sub);
+      text-align: center;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+    }
+
+    /* 참여 방법 스텝 두 개를 가로로 배치 */
+    .card-3 .steps {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+    }
+
+    /* 참여 방법 스텝 하나 */
+    .card-3 .step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px 24px;
+      background: var(--color-bg-sub);
+      border-radius: 20px;
+    }
+
+    /* 스텝 번호 원형 */
+    .card-3 .step-num {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--color-main);
+      color: #FFFFFF;
+      font-size: 32px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 스텝 설명 텍스트 */
+    .card-3 .step-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text);
+      text-align: center;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+    }
+
+    /* 추첨 혜택 강조 박스 */
+    .card-3 .prize-box {
+      width: 100%;
+      background: var(--color-accent-light);
+      border: 2.5px solid var(--color-accent);
+      border-radius: 20px;
+      padding: 28px 36px;
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .card-3 .prize-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-accent);
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+
+    .card-3 .prize-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+    }
+
+    .card-3 .prize-title span {
+      color: var(--color-accent);
+    }
+
+    /* 마무리 카피 영역 */
+    .card-3 .cta-area {
+      width: 100%;
+      background: var(--color-main);
+      border-radius: 20px;
+      padding: 28px 40px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .card-3 .cta-main {
+      font-size: 28px;
+      font-weight: 900;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+
+    .card-3 .cta-sub {
+      font-size: 20px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: -0.01em;
+    }
+
+    .card-3 .cta-sub strong {
+      color: var(--color-accent);
+      font-weight: 700;
+    }
+
+    /* 하단 계정 태그 */
+    .card-3 .account-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .card-3 .account-handle {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-main);
+      letter-spacing: -0.01em;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- =============================================
+       1번 카드 — 표지 / 훅
+       목적: 첫 눈에 관심을 끌어 스크롤을 멈추게 함
+  ============================================= -->
+  <p class="card-label">카드 1 / 3 — 표지 · 훅 (1080 × 1350 px)</p>
+  <div class="card card-1">
+    <!-- 상단 그라데이션 포인트 줄 -->
+    <div class="top-bar"></div>
+
+    <!-- 장식용 배경 원 (흐릿하게) -->
+    <div class="bg-circle-1"></div>
+    <div class="bg-circle-2"></div>
+
+    <!-- 카드 본문 내용 -->
+    <div class="content">
+
+      <!-- 상단 로고 영역 -->
+      <div class="logo-area">
+        <!-- 집 아이콘 SVG — 직접 그린 인라인 SVG -->
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 집 지붕 삼각형 -->
+          <path d="M18 4L33 17H3L18 4Z" fill="#2563EB"/>
+          <!-- 집 몸체 사각형 -->
+          <rect x="7" y="17" width="22" height="15" rx="1" fill="#2563EB"/>
+          <!-- 현관문 -->
+          <rect x="14" y="24" width="8" height="8" rx="1" fill="white"/>
+          <!-- 문 손잡이 -->
+          <circle cx="20.5" cy="28" r="1" fill="#2563EB"/>
+        </svg>
+        <span class="logo-text">바로이집</span>
+      </div>
+
+      <!-- 중앙 히어로 그래픽 + 헤드라인 -->
+      <div class="hero-area">
+
+        <!-- AI 부동산 일러스트 SVG -->
+        <div class="hero-graphic">
+          <svg width="280" height="280" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- 배경 원 -->
+            <circle cx="140" cy="140" r="130" fill="#EFF6FF"/>
+
+            <!-- 집 아이콘 (크게) -->
+            <path d="M140 52L210 112H70L140 52Z" fill="#2563EB"/>
+            <rect x="82" y="112" width="116" height="88" rx="4" fill="#2563EB" opacity="0.9"/>
+            <!-- 현관문 -->
+            <rect x="118" y="148" width="44" height="52" rx="3" fill="white"/>
+            <!-- 문 손잡이 -->
+            <circle cx="148" cy="174" r="4" fill="#60A5FA"/>
+            <!-- 왼쪽 창문 -->
+            <rect x="94" y="128" width="28" height="24" rx="3" fill="white" opacity="0.9"/>
+            <!-- 오른쪽 창문 -->
+            <rect x="158" y="128" width="28" height="24" rx="3" fill="white" opacity="0.9"/>
+
+            <!-- AI 뇌 아이콘 (집 위에 오버레이) -->
+            <circle cx="196" cy="88" r="36" fill="white" stroke="#2563EB" stroke-width="3"/>
+            <!-- 뇌 회로 선 패턴 -->
+            <circle cx="196" cy="88" r="18" fill="#EFF6FF" stroke="#60A5FA" stroke-width="2"/>
+            <!-- 뇌 중앙 점 -->
+            <circle cx="196" cy="88" r="5" fill="#2563EB"/>
+            <!-- AI 회로선 -->
+            <line x1="196" y1="70" x2="196" y2="62" stroke="#2563EB" stroke-width="2"/>
+            <line x1="178" y1="88" x2="170" y2="88" stroke="#2563EB" stroke-width="2"/>
+            <line x1="214" y1="88" x2="222" y2="88" stroke="#2563EB" stroke-width="2"/>
+            <line x1="196" y1="106" x2="196" y2="114" stroke="#2563EB" stroke-width="2"/>
+            <!-- 대각선 -->
+            <line x1="183" y1="75" x2="177" y2="69" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="209" y1="75" x2="215" y2="69" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="183" y1="101" x2="177" y2="107" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="209" y1="101" x2="215" y2="107" stroke="#60A5FA" stroke-width="1.5"/>
+            <!-- AI 글자 -->
+            <text x="189" y="93" font-family="Arial" font-size="11" font-weight="bold" fill="#2563EB">AI</text>
+
+            <!-- 차트 상승 그래프 (집 오른쪽 아래) -->
+            <circle cx="84" cy="176" r="32" fill="white" stroke="#F59E0B" stroke-width="3"/>
+            <!-- 차트 선 -->
+            <polyline points="68,186 76,180 84,171 92,168 100,163" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- 최고점 강조 점 -->
+            <circle cx="100" cy="163" r="4" fill="#F59E0B"/>
+
+            <!-- 상단 별 장식 -->
+            <circle cx="60" cy="68" r="8" fill="#F59E0B" opacity="0.7"/>
+            <circle cx="220" cy="170" r="6" fill="#F59E0B" opacity="0.5"/>
+            <circle cx="50" cy="160" r="5" fill="#60A5FA" opacity="0.6"/>
+          </svg>
+        </div>
+
+        <!-- 오버사이즈 메인 헤드라인 -->
+        <div class="headline">
+          <span class="question">
+            지금 부동산<br>살 때 맞아요?
+          </span>
+          <span class="sub-headline">
+            <span style="color: var(--color-main); font-weight: 900;">AI</span>가 매일 답해드립니다.
+          </span>
+        </div>
+      </div>
+
+      <!-- 팔로우 유도 배너 -->
+      <div class="follow-banner">
+        <p class="follow-text">
+          팔로우하면 <span>제일 먼저</span> 알려드려요.
+        </p>
+      </div>
+
+      <!-- 스와이프 유도 화살표 -->
+      <div class="swipe-hint">
+        <span class="swipe-text">다음 카드 보기</span>
+        <!-- 아래 방향 화살표 SVG -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="15" stroke="#CBD5E1" stroke-width="1.5"/>
+          <path d="M10 14L16 20L22 14" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /card-1 -->
+
+
+  <!-- =============================================
+       2번 카드 — 혜택 소개
+       목적: 팔로우 시 얻을 수 있는 가치를 구체적으로 설명
+  ============================================= -->
+  <p class="card-label">카드 2 / 3 — 혜택 소개 (1080 × 1350 px)</p>
+  <div class="card card-2">
+    <!-- 상단 그라데이션 포인트 줄 -->
+    <div class="top-bar"></div>
+
+    <div class="content">
+      <!-- 섹션 라벨 -->
+      <p class="section-label">WHY FOLLOW</p>
+
+      <!-- 메인 제목 -->
+      <h2 class="main-title">
+        바로이집을<br>팔로우해야 하는<br><span>이유 3가지</span>
+      </h2>
+
+      <!-- 혜택 목록 3개 -->
+      <div class="benefits-list">
+
+        <!-- 혜택 1: AI 인사이트 -->
+        <div class="benefit-item">
+          <span class="benefit-num">01</span>
+          <div class="benefit-body">
+            <p class="benefit-title">
+              AI 부동산 인사이트
+              <span class="divider"> —</span>
+              매주 무료 제공
+            </p>
+            <p class="benefit-desc">
+              시장 흐름, 입지 분석, 갭투자 타이밍을<br>
+              AI가 정리해 드립니다.
+            </p>
+          </div>
+          <!-- 뇌/AI 아이콘 SVG -->
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0; margin-top:2px;">
+            <circle cx="26" cy="26" r="24" fill="#EFF6FF"/>
+            <circle cx="26" cy="26" r="11" fill="none" stroke="#2563EB" stroke-width="2"/>
+            <circle cx="26" cy="26" r="4" fill="#2563EB"/>
+            <line x1="26" y1="15" x2="26" y2="10" stroke="#2563EB" stroke-width="1.5"/>
+            <line x1="15" y1="26" x2="10" y2="26" stroke="#2563EB" stroke-width="1.5"/>
+            <line x1="37" y1="26" x2="42" y2="26" stroke="#2563EB" stroke-width="1.5"/>
+            <line x1="26" y1="37" x2="26" y2="42" stroke="#2563EB" stroke-width="1.5"/>
+            <line x1="18" y1="18" x2="14" y2="14" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="34" y1="18" x2="38" y2="14" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="18" y1="34" x2="14" y2="38" stroke="#60A5FA" stroke-width="1.5"/>
+            <line x1="34" y1="34" x2="38" y2="38" stroke="#60A5FA" stroke-width="1.5"/>
+          </svg>
+        </div>
+
+        <!-- 혜택 2: 정보 요약 -->
+        <div class="benefit-item">
+          <span class="benefit-num">02</span>
+          <div class="benefit-body">
+            <p class="benefit-title">
+              복잡한 부동산 정보
+              <span class="divider"> —</span>
+              한 장으로 정리
+            </p>
+            <p class="benefit-desc">
+              공시가·실거래가·전세가율,<br>
+              헷갈리지 않게 핵심만.
+            </p>
+          </div>
+          <!-- 문서/정리 아이콘 SVG -->
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0; margin-top:2px;">
+            <circle cx="26" cy="26" r="24" fill="#EFF6FF"/>
+            <rect x="16" y="13" width="20" height="26" rx="3" fill="white" stroke="#2563EB" stroke-width="2"/>
+            <line x1="20" y1="21" x2="32" y2="21" stroke="#2563EB" stroke-width="1.8"/>
+            <line x1="20" y1="26" x2="32" y2="26" stroke="#60A5FA" stroke-width="1.8"/>
+            <line x1="20" y1="31" x2="27" y2="31" stroke="#60A5FA" stroke-width="1.8"/>
+          </svg>
+        </div>
+
+        <!-- 혜택 3: 팔로워 한정 혜택 -->
+        <div class="benefit-item">
+          <span class="benefit-num">03</span>
+          <div class="benefit-body">
+            <p class="benefit-title">
+              팔로워 한정 강의 혜택
+            </p>
+            <p class="benefit-desc">
+              무료 수강 이벤트, 할인 정보<br>
+              — 팔로워에게만 드립니다.
+            </p>
+          </div>
+          <!-- 선물/혜택 아이콘 SVG -->
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0; margin-top:2px;">
+            <circle cx="26" cy="26" r="24" fill="#FFFBEB"/>
+            <!-- 선물 상자 본체 -->
+            <rect x="14" y="24" width="24" height="16" rx="2" fill="white" stroke="#F59E0B" stroke-width="2"/>
+            <!-- 선물 상자 뚜껑 -->
+            <rect x="12" y="20" width="28" height="6" rx="2" fill="#F59E0B" opacity="0.3" stroke="#F59E0B" stroke-width="2"/>
+            <!-- 리본 세로선 -->
+            <line x1="26" y1="20" x2="26" y2="40" stroke="#F59E0B" stroke-width="2"/>
+            <!-- 리본 가로선 -->
+            <line x1="14" y1="23" x2="38" y2="23" stroke="#F59E0B" stroke-width="2"/>
+            <!-- 리본 매듭 -->
+            <path d="M22 20 Q26 16 30 20" stroke="#F59E0B" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+
+      </div><!-- /benefits-list -->
+
+      <!-- 하단 마무리 카피 -->
+      <div class="closing">
+        <p class="closing-text">
+          혼자 공부하지 마세요.<br>
+          <span>바로이집</span>이 옆에 있습니다.
+        </p>
+      </div>
+
+      <!-- 브랜드 태그 + 스와이프 유도 -->
+      <div class="bottom-bar">
+        <span class="brand-tag">@baroezip</span>
+        <div class="swipe-hint">
+          <span>이벤트 보기</span>
+          <!-- 오른쪽 화살표 SVG -->
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="13" stroke="#CBD5E1" stroke-width="1.5"/>
+            <path d="M11 8L17 14L11 20" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /card-2 -->
+
+
+  <!-- =============================================
+       3번 카드 — CTA / 이벤트 참여
+       목적: 팔로우+저장 행동을 유도하는 최종 카드
+  ============================================= -->
+  <p class="card-label">카드 3 / 3 — CTA · 이벤트 (1080 × 1350 px)</p>
+  <div class="card card-3">
+    <!-- 상단 그라데이션 포인트 줄 -->
+    <div class="top-bar"></div>
+
+    <div class="content">
+
+      <!-- 이벤트 배지 (앰버 색상) -->
+      <div class="event-badge">LIMITED EVENT</div>
+
+      <!-- 메인 타이틀 -->
+      <h2 class="main-title">팔로우 이벤트</h2>
+      <p class="sub-title">
+        강의 <strong>무료 수강권</strong>을 드립니다.
+      </p>
+
+      <!-- 참여 방법 섹션 -->
+      <div class="how-to" style="width:100%;">
+        <p class="how-to-title">— 참여 방법 —</p>
+
+        <!-- 두 가지 참여 스텝 (가로 배열) -->
+        <div class="steps">
+
+          <!-- 스텝 1: 팔로우 -->
+          <div class="step">
+            <!-- 원형 번호 -->
+            <div class="step-num">①</div>
+            <!-- 팔로우 아이콘 SVG -->
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 사람 아이콘 -->
+              <circle cx="30" cy="24" r="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.5"/>
+              <path d="M10 58 C10 44 50 44 50 58" stroke="#2563EB" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <!-- 플러스 표시 (팔로우) -->
+              <circle cx="54" cy="22" r="14" fill="#2563EB"/>
+              <line x1="54" y1="15" x2="54" y2="29" stroke="white" stroke-width="3" stroke-linecap="round"/>
+              <line x1="47" y1="22" x2="61" y2="22" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <p class="step-text">바로이집<br>팔로우</p>
+          </div>
+
+          <!-- 스텝 2: 저장 -->
+          <div class="step">
+            <!-- 원형 번호 -->
+            <div class="step-num">②</div>
+            <!-- 저장(북마크) 아이콘 SVG -->
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 북마크 모양 -->
+              <path d="M18 12 H54 Q58 12 58 16 V62 L36 50 L14 62 V16 Q14 12 18 12 Z" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.5" stroke-linejoin="round"/>
+              <!-- 체크 표시 -->
+              <path d="M26 35 L33 42 L46 28" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="step-text">이 게시물<br>저장</p>
+          </div>
+
+        </div><!-- /steps -->
+      </div><!-- /how-to -->
+
+      <!-- 추첨 혜택 강조 박스 (앰버/골드 테두리) -->
+      <div class="prize-box">
+        <!-- 추첨 인원을 앰버 색으로 강조 -->
+        <p class="prize-num">추첨 3명</p>
+        <p class="prize-title">
+          바로이집 부동산 투자 강의<br>
+          <span>무료 수강권 증정</span>
+        </p>
+      </div>
+
+      <!-- 최종 CTA 버튼형 배너 -->
+      <div class="cta-area">
+        <p class="cta-main">지금 팔로우하고 저장하세요.</p>
+        <p class="cta-sub">부동산은 <strong>타이밍</strong>입니다.</p>
+      </div>
+
+      <!-- 하단 계정 태그 + 집 로고 -->
+      <div class="account-area">
+        <!-- 작은 집 아이콘 -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="15" fill="#EFF6FF"/>
+          <path d="M16 6L27 15H5L16 6Z" fill="#2563EB"/>
+          <rect x="8" y="15" width="16" height="11" rx="1" fill="#2563EB"/>
+          <rect x="12" y="19" width="8" height="7" rx="1" fill="white"/>
+          <circle cx="18" cy="23" r="1" fill="#2563EB"/>
+        </svg>
+        <span class="account-handle">@baroezip</span>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /card-3 -->
+
+</body>
+</html>

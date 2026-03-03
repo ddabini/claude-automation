@@ -1,0 +1,129 @@
+<!-- 집/건물 실루엣 메인 비주얼: DID 광고 배경 장식용 대형 비주얼 -->
+<!-- 용도: DID 광고 배경 또는 섹션 배경 장식 (반투명 레이어로 사용) -->
+<!-- 크기: 600x500px — 대형 배경 비주얼 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="600" height="500">
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 건물 본체 그라디언트: 아래로 갈수록 어두워짐 -->
+    <linearGradient id="buildingBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E3A5F; stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#0A1828; stop-opacity:0.9"/>
+    </linearGradient>
+    <!-- 지붕 그라디언트 -->
+    <linearGradient id="roofGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C9A96E; stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#8A6A35; stop-opacity:0.9"/>
+    </linearGradient>
+    <!-- 창문 빛: 내부 조명 느낌 -->
+    <radialGradient id="windowLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#E8D5A3; stop-opacity:0.7"/>
+      <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0.2"/>
+    </radialGradient>
+    <!-- 야간 빛 효과 -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#C9A96E" flood-opacity="0.3"/>
+    </filter>
+    <!-- 건물 그림자 -->
+    <filter id="buildShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="4" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- ===== 메인 주택 (중앙) ===== -->
+  <!-- 주택 몸체: 2층 구조 -->
+  <rect x="160" y="220" width="280" height="220" fill="url(#buildingBody)" filter="url(#buildShadow)"/>
+  <rect x="160" y="220" width="280" height="220" fill="none" stroke="url(#goldMain)" stroke-width="2" opacity="0.7"/>
+
+  <!-- 지붕: 가파른 삼각형 -->
+  <polygon points="300,60 120,222 480,222" fill="url(#roofGrad)" filter="url(#glow)"/>
+  <!-- 지붕 테두리 -->
+  <polygon points="300,60 120,222 480,222" fill="none" stroke="#A8854A" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- 지붕 꼭대기 장식 -->
+  <polygon points="300,44 312,62 300,80 288,62" fill="url(#goldMain)" filter="url(#glow)"/>
+  <!-- 지붕 2겹 효과: 밝은 하이라이트 -->
+  <polygon points="300,60 120,222 480,222" fill="#E8D5A3" opacity="0.08"/>
+
+  <!-- 주택 현관문: 중앙 -->
+  <rect x="268" y="332" width="64" height="108" rx="6" fill="#0A1522"/>
+  <rect x="268" y="332" width="64" height="108" rx="6" fill="none" stroke="url(#goldMain)" stroke-width="2.5"/>
+  <!-- 문 아치 장식 -->
+  <path d="M268,340 Q300,318 332,340" fill="url(#goldMain)" opacity="0.25"/>
+  <!-- 문 손잡이 -->
+  <circle cx="320" cy="390" r="5" fill="url(#goldMain)"/>
+  <circle cx="320" cy="390" r="2.5" fill="#0D1B2A"/>
+  <!-- 문 창살 장식 -->
+  <line x1="300" y1="332" x2="300" y2="440" stroke="url(#goldMain)" stroke-width="1" opacity="0.4"/>
+
+  <!-- 1층 왼쪽 창문 -->
+  <rect x="178" y="280" width="68" height="58" rx="5" fill="url(#windowLight)"/>
+  <rect x="178" y="280" width="68" height="58" rx="5" fill="none" stroke="url(#goldMain)" stroke-width="2"/>
+  <!-- 창문 분할 -->
+  <line x1="212" y1="280" x2="212" y2="338" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="178" y1="309" x2="246" y2="309" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <!-- 창문 커튼 효과 -->
+  <path d="M178,280 Q195,295 212,280" fill="url(#goldMain)" opacity="0.2"/>
+  <path d="M212,280 Q229,295 246,280" fill="url(#goldMain)" opacity="0.2"/>
+
+  <!-- 1층 오른쪽 창문 -->
+  <rect x="354" y="280" width="68" height="58" rx="5" fill="url(#windowLight)"/>
+  <rect x="354" y="280" width="68" height="58" rx="5" fill="none" stroke="url(#goldMain)" stroke-width="2"/>
+  <line x1="388" y1="280" x2="388" y2="338" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="354" y1="309" x2="422" y2="309" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <path d="M354,280 Q371,295 388,280" fill="url(#goldMain)" opacity="0.2"/>
+  <path d="M388,280 Q405,295 422,280" fill="url(#goldMain)" opacity="0.2"/>
+
+  <!-- 2층 왼쪽 창문 -->
+  <rect x="192" y="232" width="54" height="42" rx="4" fill="url(#windowLight)" opacity="0.8"/>
+  <rect x="192" y="232" width="54" height="42" rx="4" fill="none" stroke="url(#goldMain)" stroke-width="1.5"/>
+  <line x1="219" y1="232" x2="219" y2="274" stroke="url(#goldMain)" stroke-width="1" opacity="0.5"/>
+
+  <!-- 2층 오른쪽 창문 -->
+  <rect x="354" y="232" width="54" height="42" rx="4" fill="url(#windowLight)" opacity="0.8"/>
+  <rect x="354" y="232" width="54" height="42" rx="4" fill="none" stroke="url(#goldMain)" stroke-width="1.5"/>
+  <line x1="381" y1="232" x2="381" y2="274" stroke="url(#goldMain)" stroke-width="1" opacity="0.5"/>
+
+  <!-- ===== 왼쪽 작은 집 (원근감) ===== -->
+  <rect x="30" y="320" width="130" height="122" fill="#0D1E30" opacity="0.85"/>
+  <rect x="30" y="320" width="130" height="122" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="95,240 14,322 176,322" fill="url(#roofGrad)" opacity="0.75"/>
+  <!-- 왼쪽 집 창문 -->
+  <rect x="50" y="342" width="40" height="34" rx="3" fill="url(#windowLight)" opacity="0.6"/>
+  <rect x="50" y="342" width="40" height="34" rx="3" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <!-- 왼쪽 집 문 -->
+  <rect x="105" y="378" width="36" height="64" rx="3" fill="#0A1522" opacity="0.9"/>
+  <rect x="105" y="378" width="36" height="64" rx="3" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- ===== 오른쪽 작은 집 (원근감) ===== -->
+  <rect x="440" y="320" width="130" height="122" fill="#0D1E30" opacity="0.85"/>
+  <rect x="440" y="320" width="130" height="122" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="505,240 424,322 586,322" fill="url(#roofGrad)" opacity="0.75"/>
+  <!-- 오른쪽 집 창문 -->
+  <rect x="510" y="342" width="40" height="34" rx="3" fill="url(#windowLight)" opacity="0.6"/>
+  <rect x="510" y="342" width="40" height="34" rx="3" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+  <!-- 오른쪽 집 문 -->
+  <rect x="459" y="378" width="36" height="64" rx="3" fill="#0A1522" opacity="0.9"/>
+  <rect x="459" y="378" width="36" height="64" rx="3" fill="none" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- ===== 지면 라인 ===== -->
+  <rect x="0" y="438" width="600" height="8" rx="4" fill="url(#goldMain)" opacity="0.35"/>
+  <!-- 지면 반사 그라디언트 -->
+  <rect x="60" y="446" width="480" height="3" rx="1.5" fill="url(#goldMain)" opacity="0.15"/>
+
+  <!-- ===== 배경 별 장식: 야경 느낌 ===== -->
+  <circle cx="80" cy="60" r="2.5" fill="#E8D5A3" opacity="0.7"/>
+  <circle cx="140" cy="30" r="1.5" fill="#E8D5A3" opacity="0.5"/>
+  <circle cx="200" cy="50" r="2" fill="#E8D5A3" opacity="0.6"/>
+  <circle cx="400" cy="25" r="1.5" fill="#E8D5A3" opacity="0.5"/>
+  <circle cx="480" cy="45" r="2" fill="#E8D5A3" opacity="0.6"/>
+  <circle cx="540" cy="70" r="2.5" fill="#E8D5A3" opacity="0.7"/>
+  <circle cx="560" cy="30" r="1.5" fill="#E8D5A3" opacity="0.4"/>
+
+  <!-- 달/조명 효과: 오른쪽 상단 -->
+  <circle cx="540" cy="80" r="28" fill="#C9A96E" opacity="0.06"/>
+  <circle cx="540" cy="80" r="18" fill="#C9A96E" opacity="0.1"/>
+</svg>

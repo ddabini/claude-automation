@@ -1,0 +1,75 @@
+<!-- 4명 전담팀 아이콘: 전문가 팀 실루엣, 면채움 스타일 -->
+<!-- 용도: DID 광고 "4인 전담팀 구성" 강조 요소 (200x200px) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 골드 밝은 버전 -->
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5E6C4"/>
+      <stop offset="100%" style="stop-color:#D4B97A"/>
+    </linearGradient>
+    <!-- 골드 어두운 버전: 옆 인물 -->
+    <linearGradient id="goldDim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#8A6A35"/>
+    </linearGradient>
+    <!-- 배지 빛 효과 -->
+    <radialGradient id="badgeGlow" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#F5E6C4"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </radialGradient>
+    <!-- 그림자 효과 -->
+    <filter id="personGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#C9A96E" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 원형 -->
+  <circle cx="100" cy="100" r="90" fill="#0D1B2A" opacity="0.6"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#goldMain)" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- ===== 왼쪽 끝 인물 (4번째 팀원) ===== -->
+  <!-- 머리 -->
+  <circle cx="28" cy="72" r="14" fill="url(#goldDim)" opacity="0.7"/>
+  <!-- 어깨/몸통 -->
+  <path d="M6,106 Q6,86 28,86 Q50,86 50,106 L50,116 L6,116 Z" fill="url(#goldDim)" opacity="0.7"/>
+
+  <!-- ===== 왼쪽 인물 (3번째 팀원) ===== -->
+  <circle cx="62" cy="68" r="16" fill="url(#goldDim)" opacity="0.85" filter="url(#personGlow)"/>
+  <path d="M36,108 Q36,86 62,86 Q88,86 88,108 L88,120 L36,120 Z" fill="url(#goldDim)" opacity="0.85"/>
+
+  <!-- ===== 중앙 메인 인물 (1번째 팀원 - 리더) ===== -->
+  <!-- 머리: 가장 크고 밝음 -->
+  <circle cx="100" cy="64" r="22" fill="url(#goldMain)" filter="url(#personGlow)"/>
+  <!-- 머리 하이라이트 -->
+  <circle cx="92" cy="56" r="8" fill="url(#goldLight)" opacity="0.5"/>
+  <!-- 어깨/몸통: 가장 넓음 -->
+  <path d="M64,112 Q64,86 100,86 Q136,86 136,112 L136,128 L64,128 Z" fill="url(#goldMain)"/>
+  <!-- 몸통 옷깃/넥타이 표현 -->
+  <polygon points="100,86 94,100 100,108 106,100" fill="#0D1B2A" opacity="0.3"/>
+
+  <!-- ===== 오른쪽 인물 (2번째 팀원) ===== -->
+  <circle cx="138" cy="68" r="16" fill="url(#goldDim)" opacity="0.85" filter="url(#personGlow)"/>
+  <path d="M112,108 Q112,86 138,86 Q164,86 164,108 L164,120 L112,120 Z" fill="url(#goldDim)" opacity="0.85"/>
+
+  <!-- ===== 오른쪽 끝 인물 (4번째 팀원) ===== -->
+  <circle cx="172" cy="72" r="14" fill="url(#goldDim)" opacity="0.7"/>
+  <path d="M150,106 Q150,86 172,86 Q194,86 194,106 L194,116 L150,116 Z" fill="url(#goldDim)" opacity="0.7"/>
+
+  <!-- ===== 하단 숫자 "4" 배지 ===== -->
+  <circle cx="100" cy="162" r="28" fill="#0D1B2A"/>
+  <circle cx="100" cy="162" r="28" fill="none" stroke="url(#goldMain)" stroke-width="3" filter="url(#personGlow)"/>
+  <!-- 배지 내부 빛 -->
+  <circle cx="100" cy="162" r="22" fill="url(#badgeGlow)" opacity="0.15"/>
+  <!-- 숫자 텍스트 -->
+  <text x="100" y="172" font-family="'Georgia', serif" font-size="30" font-weight="900"
+        fill="url(#goldMain)" text-anchor="middle">4</text>
+
+  <!-- 배지 상단 연결 요소 -->
+  <rect x="95" y="128" width="10" height="10" rx="3" fill="url(#goldMain)" opacity="0.6"/>
+</svg>

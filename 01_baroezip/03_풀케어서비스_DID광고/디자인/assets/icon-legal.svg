@@ -1,0 +1,85 @@
+<!-- 법무사 상담 아이콘: 저울 + 법봉 조합, 면채움 스타일 -->
+<!-- 용도: DID 광고 서비스 소개 섹션 - 법무사 항목 (200x200px) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 골드 밝은 버전: 상단 하이라이트 -->
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5E6C4"/>
+      <stop offset="100%" style="stop-color:#C9A96E"/>
+    </linearGradient>
+    <!-- 골드 세로 방향: 기둥에 사용 -->
+    <linearGradient id="goldVert" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="100%" style="stop-color:#8A6A35"/>
+    </linearGradient>
+    <!-- 그림자 효과 -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#C9A96E" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 원형 -->
+  <circle cx="100" cy="100" r="90" fill="#0D1B2A" opacity="0.6"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#goldMain)" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- ===== 저울 구조 ===== -->
+  <!-- 받침대 기둥: 중앙 세로 막대 -->
+  <rect x="96" y="68" width="8" height="88" rx="4" fill="url(#goldVert)"/>
+  <!-- 하단 베이스 플레이트 -->
+  <rect x="62" y="150" width="76" height="12" rx="6" fill="url(#goldMain)"/>
+  <!-- 베이스 하단 마감 -->
+  <rect x="68" y="157" width="64" height="7" rx="3.5" fill="#A8854A"/>
+
+  <!-- 저울 가로대: 좌우 대칭 -->
+  <rect x="44" y="62" width="112" height="10" rx="5" fill="url(#goldMain)" filter="url(#glow)"/>
+
+  <!-- 피벗 포인트: 가로대 중심의 원형 -->
+  <circle cx="100" cy="55" r="12" fill="url(#goldMain)"/>
+  <circle cx="100" cy="55" r="6" fill="#1A2F45"/>
+  <circle cx="100" cy="55" r="3" fill="url(#goldLight)"/>
+
+  <!-- 왼쪽 체인/줄: 저울판 연결 -->
+  <rect x="53" y="72" width="4" height="32" rx="2" fill="url(#goldVert)"/>
+  <rect x="67" y="72" width="4" height="32" rx="2" fill="url(#goldVert)"/>
+  <!-- 왼쪽 저울판: 둥근 접시 -->
+  <ellipse cx="62" cy="107" rx="20" ry="7" fill="#A8854A"/>
+  <ellipse cx="62" cy="104" rx="20" ry="7" fill="url(#goldMain)"/>
+  <ellipse cx="62" cy="104" rx="14" ry="4" fill="url(#goldLight)"/>
+
+  <!-- 오른쪽 체인/줄 -->
+  <rect x="129" y="72" width="4" height="32" rx="2" fill="url(#goldVert)"/>
+  <rect x="143" y="72" width="4" height="32" rx="2" fill="url(#goldVert)"/>
+  <!-- 오른쪽 저울판 -->
+  <ellipse cx="138" cy="107" rx="20" ry="7" fill="#A8854A"/>
+  <ellipse cx="138" cy="104" rx="20" ry="7" fill="url(#goldMain)"/>
+  <ellipse cx="138" cy="104" rx="14" ry="4" fill="url(#goldLight)"/>
+
+  <!-- 왼쪽 저울판 위: 문서 서류 표현 -->
+  <rect x="50" y="93" width="24" height="11" rx="3" fill="#1A3A5C"/>
+  <rect x="50" y="93" width="24" height="11" rx="3" fill="none" stroke="url(#goldMain)" stroke-width="1.5"/>
+  <rect x="53" y="96" width="18" height="2" rx="1" fill="#C9A96E" opacity="0.7"/>
+  <rect x="53" y="100" width="12" height="2" rx="1" fill="#C9A96E" opacity="0.7"/>
+
+  <!-- 오른쪽 저울판 위: 동전 쌓임 (금액 표현) -->
+  <ellipse cx="138" cy="96" rx="11" ry="4" fill="#A8854A"/>
+  <ellipse cx="138" cy="93" rx="11" ry="4" fill="url(#goldMain)"/>
+  <ellipse cx="138" cy="90" rx="11" ry="4" fill="#A8854A"/>
+  <ellipse cx="138" cy="87" rx="11" ry="4" fill="url(#goldLight)"/>
+
+  <!-- ===== 법봉(Gavel): 하단 왼쪽 영역 ===== -->
+  <!-- 법봉 머리: 두꺼운 육면체 -->
+  <rect x="36" y="128" width="38" height="18" rx="6" fill="url(#goldMain)" transform="rotate(-35, 55, 137)" filter="url(#glow)"/>
+  <!-- 법봉 머리 하이라이트 -->
+  <rect x="36" y="128" width="38" height="8" rx="5" fill="url(#goldLight)" transform="rotate(-35, 55, 132)" opacity="0.7"/>
+  <!-- 법봉 손잡이 -->
+  <rect x="52" y="145" width="9" height="35" rx="4.5" fill="url(#goldVert)" transform="rotate(-35, 56.5, 162)"/>
+
+  <!-- 법봉 타격판: 받침 표현 -->
+  <rect x="26" y="168" width="50" height="6" rx="3" fill="url(#goldMain)" opacity="0.6"/>
+</svg>

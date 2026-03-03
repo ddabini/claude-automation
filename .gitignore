@@ -1,0 +1,32 @@
+# 비밀 정보 파일 — 절대 커밋 금지
+.env
+*.env.local
+*.env.secret
+
+# macOS 시스템 파일
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# 에디터/IDE 설정 파일
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js 의존성
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# 임시 파일
+*.tmp
+*.temp
+*.log
+
+# iCloud 관련
+.icloud
+
+# Firebase 빌드 캐시 (배포 시 자동 생성되는 임시 파일)
+.firebase/

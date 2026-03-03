@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<!--
+  파일명: investment-daily-20260302.html
+  역할: 2026년 3월 2일 투자 데일리 브리핑 보고서
+       한국 증시 휴장(삼일절 대체공휴일) · 미-이란 전쟁 발발 · WTI 급등 · 3/3 전망
+  작성일: 2026-03-03
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준: 2026년 2월 27일(금) 미국 마감 · 3월 2일(월) 글로벌 이슈 기준
+  본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[3월2일]투자 데일리 브리핑</title>
+
+  <!-- 구글 폰트에서 Noto Sans KR 웹폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       01_소비자앱서비스트렌드조사 보고서와 동일한 CSS (브런치 스타일)
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 전체 페이지 배경과 폰트 설정 */
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 보고서 본문 최대 너비를 900px로 설정하고 가운데 정렬 */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* ===================================================
+       표지 (Cover) 영역
+    =================================================== */
+    .cover {
+      padding: 60px 0 56px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 56px;
+    }
+
+    /* 카테고리 레이블 */
+    .cover-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    /* 보고서 날짜 뱃지 */
+    .cover-year {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* 메인 타이틀 */
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #111;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 서브 타이틀 */
+    .cover-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    /* 보고서 메타 정보 */
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ===================================================
+       목차 (Table of Contents) 영역
+    =================================================== */
+    .toc {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 28px 32px;
+      margin-bottom: 56px;
+      border-radius: 2px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+
+    .toc li {
+      counter-increment: toc-counter;
+      padding: 5px 0;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      gap: 12px;
+    }
+
+    .toc li:last-child { border-bottom: none; }
+
+    .toc li::before {
+      content: counter(toc-counter, decimal-leading-zero);
+      font-size: 11px;
+      font-weight: 600;
+      color: #bbb;
+      min-width: 22px;
+      padding-top: 2px;
+    }
+
+    /* ===================================================
+       섹션 공통 스타일
+    =================================================== */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    /* 섹션 헤더 */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* 섹션 번호 */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      padding-top: 6px;
+      min-width: 24px;
+    }
+
+    /* 섹션 제목 */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    /* 섹션 부제목 */
+    .section-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===================================================
+       본문 텍스트 스타일
+    =================================================== */
+    p {
+      margin-bottom: 16px;
+      color: #333;
+      font-weight: 400;
+    }
+
+    /* 소제목 */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin: 20px 0 8px;
+    }
+
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ===================================================
+       핵심 수치 강조 카드
+    =================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 540px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    .stat-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 16px 14px;
+      border-radius: 2px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-unit {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* ===================================================
+       테이블 스타일
+    =================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: #f5f5f5;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ebebeb;
+      color: #333;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-caption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===================================================
+       분석 노트 박스
+    =================================================== */
+    .note-box {
+      padding: 16px 18px;
+      margin: 20px 0;
+      border-radius: 2px;
+      border-left: 3px solid;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* 인사이트 (파란 계열) */
+    .note-insight {
+      background: #f7f9ff;
+      border-color: #4a6cf7;
+      color: #2d3a6b;
+    }
+
+    /* 주의점 (주황 계열) */
+    .note-warning {
+      background: #fff8f3;
+      border-color: #e07b1a;
+      color: #6b3a10;
+    }
+
+    /* 전망 (초록 계열) */
+    .note-forecast {
+      background: #f4faf6;
+      border-color: #2a9d5c;
+      color: #1a4a30;
+    }
+
+    /* 제언 (회색 계열) */
+    .note-suggest {
+      background: #f9f9f9;
+      border-color: #888;
+      color: #333;
+    }
+
+    /* 원문 인용 블록 */
+    blockquote {
+      border-left: 3px solid #ddd;
+      padding: 10px 16px;
+      margin: 16px 0;
+      color: #555;
+      font-size: 13.5px;
+      background: #fafafa;
+    }
+
+    /* ===================================================
+       출처 목록
+    =================================================== */
+    .source-list {
+      list-style: none;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .source-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .source-list li:last-child { border-bottom: none; }
+
+    /* 신뢰도 등급 뱃지 */
+    .grade {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+    }
+
+    .grade-a { background: #e8f5e9; color: #2e7d32; }
+    .grade-b { background: #e3f2fd; color: #1565c0; }
+    .grade-c { background: #fce4ec; color: #880e4f; }
+
+    /* 등락률 색상 */
+    .up { color: #c0392b; }
+    .down { color: #2471a3; }
+    .neutral { color: #555; }
+
+    /* ===================================================
+       푸터
+    =================================================== */
+    .footer {
+      border-top: 1px solid #e5e5e5;
+      padding-top: 32px;
+      margin-top: 64px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    /* ===================================================
+       인쇄 스타일 — 브라우저에서 Ctrl+P 시 PDF로 저장 가능
+    =================================================== */
+    @media print {
+      body { font-size: 13px; }
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===================== 표지 ===================== -->
+  <div class="cover">
+    <div class="cover-category">DeepDig Research · Investment Daily Briefing</div>
+    <div class="cover-year">2026년 3월 2일 (월) — 삼일절 대체공휴일 · 한국 증시 휴장</div>
+    <h1 class="cover-title">투자 데일리 브리핑</h1>
+    <p class="cover-subtitle">
+      미-이스라엘 이란 공습 발발 · WTI 8%+ 급등 · 금 $5,400 · 3/3 코스피 개장 전망
+    </p>
+    <div class="cover-meta">
+      <span>발행일: 2026-03-03</span>
+      <span>데이터 기준: 2026-02-27 미국 마감 / 3월 2일 글로벌</span>
+      <span>작성: research-crawler 에이전트</span>
+    </div>
+  </div>
+
+  <!-- ===================== 오늘의 핵심 요약 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">00</div>
+      <div>
+        <div class="section-title">오늘의 핵심 요약</div>
+        <div class="section-desc">3분 만에 읽는 이번 주 최대 이슈 — 3/2 한국 증시 휴장, 중동 전쟁 발발</div>
+      </div>
+    </div>
+
+    <!-- 5대 핵심 포인트 -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>핵심 포인트</th>
+            <th>중요도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>한국 증시 3월 2일 휴장</strong> — 삼일절(3/1 일요일) 대체공휴일 적용. 코스피·코스닥·채권·파생시장 전면 휴장. 3/3(화) 재개</td>
+            <td><span style="color:#e07b1a;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>미-이스라엘, 이란 공습 개시(오퍼레이션 에픽 퓨리)</strong> — 2/28(현지시각) 공습으로 하메네이 최고지도자 사망 확인. 이란, 호르무즈 해협 사실상 봉쇄</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>WTI 유가 8~9% 급등 ($72~73)</strong> — 호르무즈 봉쇄 우려로 아시아 개장 후 WTI $72.79 (+8.6%), 브렌트 $82 근접. 유가 $100+ 전망도 등장</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>금 $5,400 근접, 달러인덱스 강세</strong> — 안전자산으로 자금 집중. 달러인덱스 +0.95%, 금 +3% 급등하며 $5,400 테스트. 비트코인은 급락</td>
+            <td><span style="color:#c0392b;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>3/3(화) 코스피 개장 시 원/달러 1,462원 출발</strong> — 전 거래일 대비 22.6원 급등 출발. 코스피 변동성 확대 불가피, 방산주 급등 예상</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 주요 지수 스냅샷 -->
+    <h3>주요 지수·지표 스냅샷 (3/2 기준 / 미국은 2/27 마감)</h3>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">코스피 (한국)</div>
+        <div class="stat-value neutral">휴장</div>
+        <div class="stat-unit">삼일절 대체공휴일</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">S&P 500 (2/27)</div>
+        <div class="stat-value down">6,878.88</div>
+        <div class="stat-unit">-0.43% (2/27 마감)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">나스닥 (2/27)</div>
+        <div class="stat-value down">22,668.21</div>
+        <div class="stat-unit">-0.92% (2/27 마감)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">다우존스 (2/27)</div>
+        <div class="stat-value down">48,977.92</div>
+        <div class="stat-unit">-0.45% (2/27 마감)</div>
+      </div>
+    </div>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">WTI 유가 (3/2 아시아)</div>
+        <div class="stat-value up">$72.79</div>
+        <div class="stat-unit">+8.6% (2/27 $67 대비)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">금 현물 (3/2)</div>
+        <div class="stat-value up">~$5,400</div>
+        <div class="stat-unit">+3% 급등 (안전자산)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">달러인덱스</div>
+        <div class="stat-value up">+0.95%</div>
+        <div class="stat-unit">5주 최고 (안전자산)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">원/달러 (3/3 개장)</div>
+        <div class="stat-value down">1,462.3원</div>
+        <div class="stat-unit">+22.6원 급등 개장</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 목차 ===================== -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li>한국 증시 — 3/2 휴장 배경 & 3/3 개장 전망</li>
+      <li>미국 주식 — 2/27(금) 마감 & 3/1(일) 이란 공습 충격</li>
+      <li>부동산 — 서울 아파트 3월 동향 & 3월 분양 물량</li>
+      <li>글로벌 이슈 — 미-이란 전쟁 · WTI · 금 · 호르무즈 봉쇄</li>
+      <li>종합 분석 및 시사점</li>
+      <li>출처 목록</li>
+    </ol>
+  </div>
+
+  <!-- ===================== 섹션 1: 한국 증시 ===================== -->
+  <div class="section" id="sec1">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">한국 증시</div>
+        <div class="section-desc">3월 2일(월) 휴장 확인 & 3월 3일(화) 개장 전망</div>
+      </div>
+    </div>
+
+    <h3>3월 2일 — 삼일절 대체공휴일 증시 전면 휴장</h3>
+
+    <blockquote>
+      "3월 2일 삼일절 대체공휴일 적용… 은행·주식·택배 운영 여부는?" — 국제뉴스, 2026.03.02 [1]
+      <br>→ 해석: 삼일절(3월 1일)이 일요일과 겹치면서 월요일인 3월 2일이 대체공휴일로 지정. 한국거래소(KRX)는 이날 코스피·코스닥·ETF·채권·파생상품 등 모든 시장을 휴장했습니다.
+    </blockquote>
+
+    <p>2026년 삼일절(3월 1일)이 일요일과 겹침에 따라 3월 2일 월요일이 대체공휴일로 적용되었습니다. 한국 주식시장은 이날 <strong>전면 휴장</strong>하였으며, 코스피·코스닥·ETF·ETN·ELW·채권·파생상품 시장이 모두 거래를 중단했습니다 [1][2].</p>
+
+    <p>한국 증시가 휴장하는 동안, 미국-이스라엘의 이란 공습이 발발하는 초대형 지정학적 이벤트가 발생하였습니다. 이로 인해 한국 투자자들은 <strong>증시가 재개되는 3월 3일(화)에 누적된 글로벌 충격을 일시에 소화</strong>해야 하는 상황에 직면했습니다.</p>
+
+    <h3>3월 3일(화) 코스피 개장 전망</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>시나리오</th>
+            <th>내용</th>
+            <th>확률 (전문가 추정)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>단기 충격 후 회복</strong></td>
+            <td>3~5% 갭하락 후 저가 매수 유입. 3~4거래일 내 안정. 방산주 강세</td>
+            <td>30%</td>
+          </tr>
+          <tr>
+            <td><strong>변동성 장기화</strong></td>
+            <td>코스피 13% 하락 가능. 환율 1,500원, WTI $110 시나리오</td>
+            <td>50%</td>
+          </tr>
+          <tr>
+            <td><strong>빠른 협상·안정</strong></td>
+            <td>이란 신지도부 협상 수용 시 유가 즉각 반락, 증시 V자 반등</td>
+            <td>20%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 뉴스핌 [3] · 이투데이 [4] · active.assetsquarestory.com [5]</p>
+
+    <blockquote>
+      "원·달러 환율, 22.6원 오른 1462.3원 개장" — 이투데이, 2026.03.03 [6]
+      <br>→ 해석: 휴장 기간(3/1~3/2) 글로벌 달러 강세·리스크오프 흐름이 3/3 개장 즉시 환율로 반영됨. 1,462원 수준은 원화 약세 심리 강화 구간.
+    </blockquote>
+
+    <h3>3/3 주목 업종 — 방산주 급등, 항공·정유 등 혼재</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>업종/종목</th>
+            <th>전망 방향</th>
+            <th>이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>방산 (한화에어로, LIG넥스원, 한국항공우주)</strong></td>
+            <td class="up">급등 예상</td>
+            <td>지정학적 위험 고조 → 방산 수요 증가 기대 [7]</td>
+          </tr>
+          <tr>
+            <td><strong>정유·에너지 (S-Oil, SK이노베이션)</strong></td>
+            <td class="up">유가 수혜</td>
+            <td>WTI 급등 → 정유사 재고평가이익 기대 [8]</td>
+          </tr>
+          <tr>
+            <td><strong>항공 (대한항공, 아시아나)</strong></td>
+            <td class="down">하락 예상</td>
+            <td>중동 공역 폐쇄·유가 급등 → 비용 급증 [8]</td>
+          </tr>
+          <tr>
+            <td><strong>해운 (HMM, 팬오션)</strong></td>
+            <td class="down">하락 압력</td>
+            <td>호르무즈 봉쇄 → 우회 항로(희망봉) 전환 비용 증가 [9]</td>
+          </tr>
+          <tr>
+            <td><strong>반도체 (삼성전자, SK하이닉스)</strong></td>
+            <td class="neutral">혼조</td>
+            <td>글로벌 리스크오프 + AI 피크아웃 우려 지속 [4]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote>
+      "대신증권 '美·이란 전쟁 변수에도 코스피 7500 간다'…3월 변동성 후 상승 추세" — 이투데이, 2026.03.02 [4]
+      <br>→ 해석: 대신증권은 이번 중동 충격이 단기 변동성 요인이지, 코스피 장기 상승 추세를 꺾지는 못할 것으로 전망. 수급 주도권이 개인·ETF로 이동해 외국인 이탈 충격이 이전보다 완화될 것으로 분석.
+    </blockquote>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 휴장 기간 동안 발생한 글로벌 충격(이란 전쟁, 유가 급등, 달러 강세)이 3/3 개장 시 한꺼번에 반영됩니다. 개장 초반 급락·갭하락 이후 저가 매수 여부가 방향을 결정할 것입니다. 장중 뉴스(이란 협상 여부, 호르무즈 통항 재개 여부)에 따라 변동성이 극도로 커질 수 있습니다.
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 한국 증시가 3월 2일 휴장하는 동안 일본 닛케이가 -1.35%(-798.26p) 하락하며 먼저 충격을 받았습니다 [9]. 이는 3/3 코스피 개장 시 예상되는 충격 규모의 단서가 됩니다. 3/3 코스피는 초반 갭하락이 불가피하나, 방산주·에너지주 중심의 섹터 로테이션이 하방을 일부 지지할 것으로 예상됩니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 2: 미국 주식 ===================== -->
+  <div class="section" id="sec2">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">미국 주식</div>
+        <div class="section-desc">2/27(금) 마감 기준 + 3/1(일) 이란 공습 이후 선물·충격 반응</div>
+      </div>
+    </div>
+
+    <h3>2월 27일(금) 뉴욕 3대 지수 최종 마감</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">다우존스 (2/27)</div>
+        <div class="stat-value down">48,977.92</div>
+        <div class="stat-unit">-0.45% 하락</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">S&P 500 (2/27)</div>
+        <div class="stat-value down">6,878.88</div>
+        <div class="stat-unit">-0.43% 하락</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">나스닥 (2/27)</div>
+        <div class="stat-value down">22,668.21</div>
+        <div class="stat-unit">-0.92% 하락</div>
+      </div>
+    </div>
+
+    <blockquote>
+      "S&P 500, Nasdaq on track for biggest monthly drop in a year as AI worries bite" — Forex.com, 2026.02.28 [10]
+      <br>→ 해석: S&P500과 나스닥이 2025년 3월 이후 1년 만에 최대 월간 낙폭을 기록했습니다. AI 인프라 투자 회수 불확실성과 PCE 인플레이션 우려가 복합적으로 작용했습니다.
+    </blockquote>
+
+    <h3>3월 1일(일) 이란 공습 — 글로벌 시장 충격</h3>
+
+    <p>미국 주식시장은 3월 1일(일요일) 정규 거래가 없었으나, 미-이스라엘의 이란 공습 소식이 전해지며 <strong>다우 선물이 350포인트 하락</strong>하는 등 야간 선물 시장이 즉각 반응했습니다 [11].</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>주요 사건</th>
+            <th>내용</th>
+            <th>시장 반응</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>오퍼레이션 에픽 퓨리 개시</strong></td>
+            <td>미-이스라엘 2/28(현지시각) 이란 군사시설·핵시설 합동 공습. 하메네이 사망 확인</td>
+            <td>다우 선물 -350p, S&P 선물 하락 [11]</td>
+          </tr>
+          <tr>
+            <td><strong>이란, 호르무즈 사실상 봉쇄</strong></td>
+            <td>IRGC, 호르무즈 선박 통항 금지 경고. 해운사 70% 통항 감소</td>
+            <td>WTI +8~9%, 브렌트 $82 [12]</td>
+          </tr>
+          <tr>
+            <td><strong>이란 보복 미사일</strong></td>
+            <td>이란, 걸프 내 미군 기지(UAE·카타르·바레인) 미사일 공격. 미군 6명 전사</td>
+            <td>금 +3%, 달러인덱스 +0.95% [13]</td>
+          </tr>
+          <tr>
+            <td><strong>트럼프 성명</strong></td>
+            <td>"이란 새 지도부와 협상 여지 있다" — 제재 완화 암시로 유가 일부 반락</td>
+            <td>다우 선물 일부 회복 [11]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: CNBC [11] · Fortune [11] · Bloomberg [12] · CNBC Markets [13]</p>
+
+    <h3>3월 1일(일) 미국 선물 · 3월 2일 아시아 시장 반응</h3>
+
+    <blockquote>
+      "Stocks Slump as US-Iran War Lifts Brent Toward $80: Markets Wrap" — Bloomberg, 2026.03.01 [12]
+      <br>→ 해석: 글로벌 증시가 일제히 하락세를 보이는 가운데, 원유·금·달러가 안전자산으로 급등. 월스트리트는 '헤이븐 퍼스트(Haven-First)' 전략으로 전환.
+    </blockquote>
+
+    <blockquote>
+      "S&P 500 closes flat, rebounding from lows as traders buy the dip after U.S.-Iran attacks: Live updates" — CNBC, 2026.03.01 [14]
+      <br>→ 해석: S&P500이 -1.2%까지 하락했다가 저가 매수 유입으로 +0.04%로 마감(6,881.62). 나스닥도 +0.36%로 반등. 빅테크(엔비디아·마이크로소프트) 중심의 저가 매수가 하방을 지지했습니다.
+    </blockquote>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">S&P 500 (3/1 마감)</div>
+        <div class="stat-value up">+0.04%</div>
+        <div class="stat-unit">6,881.62 — 저점 반등</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">나스닥 (3/1 마감)</div>
+        <div class="stat-value up">+0.36%</div>
+        <div class="stat-unit">22,748.86 — 빅테크 매수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">다우존스 (3/1 마감)</div>
+        <div class="stat-value down">-0.15%</div>
+        <div class="stat-unit">48,904.78 — 선물 하락 반영</div>
+      </div>
+    </div>
+    <p class="table-caption">출처: CNBC [14] · Forbes [11]</p>
+
+    <h3>빅테크·AI 관련주 — 전쟁 속 엇갈린 반응</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>종목</th>
+            <th>방향</th>
+            <th>이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>엔비디아 (NVDA)</strong></td>
+            <td class="up">저가 매수</td>
+            <td>현금 부자·전쟁 회복력 기대. 3/1 저가 매수 유입 [14]</td>
+          </tr>
+          <tr>
+            <td><strong>엑슨모빌 (XOM)</strong></td>
+            <td class="up">+4%</td>
+            <td>유가 급등 직접 수혜 [14]</td>
+          </tr>
+          <tr>
+            <td><strong>쉐브론 (CVX)</strong></td>
+            <td class="up">+4%</td>
+            <td>유가 급등 직접 수혜 [14]</td>
+          </tr>
+          <tr>
+            <td><strong>코노코필립스 (COP)</strong></td>
+            <td class="up">+5%+</td>
+            <td>에너지 섹터 전반 급등 [14]</td>
+          </tr>
+          <tr>
+            <td><strong>항공주</strong></td>
+            <td class="down">하락 주도</td>
+            <td>중동 공역 폐쇄·유가 급등 비용 부담 [9]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 이번 미-이란 전쟁은 "AI 사이클 전환" 우려로 가라앉던 2월 시장에 또 하나의 변수를 추가했습니다. 그러나 S&P500이 3/1에 빠른 저점 반등을 보인 것은 '전쟁 충격 = 저가 매수 기회'로 해석하는 월스트리트의 단기 반응입니다. 장기 영향은 이란 전쟁의 확산 범위와 호르무즈 봉쇄 기간에 달려 있습니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>전망:</strong> 전쟁이 단기 종결(이란 신지도부 협상 수용)될 경우 유가는 즉각 반락하고 증시는 V자 반등할 수 있습니다. 반면 장기화 시 WTI $100+ → 인플레이션 재점화 → 연준 금리 인하 지연의 연쇄 시나리오가 현실화됩니다. 3월 이후 연준의 PCE 지표 해석이 더욱 중요해졌습니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 3: 부동산 ===================== -->
+  <div class="section" id="sec3">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">부동산</div>
+        <div class="section-desc">2026년 3월 서울 아파트 시장 동향 & 분양 물량</div>
+      </div>
+    </div>
+
+    <h3>서울 아파트 3월 분양 물량 — 연중 최대 공급</h3>
+
+    <blockquote>
+      "당첨만 되면 수억 원 차익 기대… 3월 서울 한강변에 쏟아지는 '로또 청약'의 정체" — 이코노믈, 2026.03 [15]
+      <br>→ 해석: 3월 한 달간 서울에서만 9개 단지 9,025가구가 청약시장에 등장. 용산·동작구 등 한강벨트 집중, 노량진6구역 재개발 단지는 분양가 상한제로 시세 대비 수억 원 낮게 책정될 전망.
+    </blockquote>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>단지</th>
+            <th>위치</th>
+            <th>규모</th>
+            <th>특이사항</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>라클라체자이드파인</strong></td>
+            <td>서울 노량진6구역 (동작구)</td>
+            <td>1,499가구</td>
+            <td>분양가 상한제 적용, 시세 대비 수억 원 저렴 [15]</td>
+          </tr>
+          <tr>
+            <td><strong>기타 한강벨트 단지</strong></td>
+            <td>용산·동작구 일대</td>
+            <td>약 7,500가구 이상</td>
+            <td>3월 연중 최대 물량 집중 [15]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>서울 아파트 매매 주간 동향 — 상승 둔화 지속</h3>
+    <p>2월 2주차(2/14 기준) 서울 아파트 매매가격은 <strong>전주 대비 +0.22%</strong>로, 53주 연속 상승세를 이어가고 있으나 상승폭이 2주 연속 축소되는 흐름입니다 [16]. 3월 진입 후에도 매물 증가와 금리 부담이 복합 작용하며 상승 모멘텀이 약화되는 추세입니다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>기준 주차</th>
+            <th>서울 매매 변동률</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2월 1주 (2/7)</td>
+            <td class="up">+0.27%</td>
+            <td>상승 둔화 시작</td>
+          </tr>
+          <tr>
+            <td>2월 2주 (2/14)</td>
+            <td class="up">+0.22%</td>
+            <td>53주 연속 상승, 2주 연속 둔화 [16]</td>
+          </tr>
+          <tr>
+            <td>3월 전망</td>
+            <td class="neutral">+0.15~0.20% 예상</td>
+            <td>중동 리스크·환율 급등 추가 압박 가능</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 한국부동산원 주간 아파트가격 동향 [16]</p>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 미-이란 전쟁 발발로 환율이 1,460원 이상으로 급등할 경우, 외국계 금융기관의 대출 조건 변화나 투자 심리 위축이 부동산 시장에도 2차 영향을 줄 수 있습니다. 특히 갭투자 비중이 높은 구간에서는 환율 급등→금리 부담 증가→매물 출회 가능성을 주의해야 합니다.
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>제언:</strong> 3월 분양 단지(특히 분양가 상한제 적용 단지)는 장기 투자 관점에서 여전히 유효한 기회입니다. 단, 중동 리스크로 인한 시장 변동성이 높은 구간에서는 단기 매매보다 청약·실거주 목적의 접근이 더 안정적입니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 4: 글로벌 이슈 ===================== -->
+  <div class="section" id="sec4">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">글로벌 이슈</div>
+        <div class="section-desc">미-이란 전쟁 · WTI 급등 · 호르무즈 봉쇄 · 안전자산 급등</div>
+      </div>
+    </div>
+
+    <h3>미-이스라엘 이란 공습 — 타임라인</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>일시 (한국시간)</th>
+            <th>주요 사건</th>
+            <th>출처</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>2/28 밤</strong></td>
+            <td>미-이스라엘, 이란 군사시설·핵시설 합동 공습 개시 (오퍼레이션 에픽 퓨리). 이스라엘군 하메네이 거처에 30발 벙커버스터 투하</td>
+            <td>[17]</td>
+          </tr>
+          <tr>
+            <td><strong>3/1 오전 6:40</strong></td>
+            <td>트럼프 대통령 "이란 최고지도자 하메네이 사망" 공식 발표. 이란 정부 확인</td>
+            <td>[18]</td>
+          </tr>
+          <tr>
+            <td><strong>3/1</strong></td>
+            <td>이란 IRGC, 호르무즈 해협 선박 통항 금지 경고. 선박 추적 데이터 70% 감소</td>
+            <td>[12]</td>
+          </tr>
+          <tr>
+            <td><strong>3/1</strong></td>
+            <td>이란, 걸프 내 미군 기지 미사일 보복. 미군 6명 전사. 트럼프 "보복하겠다" 성명</td>
+            <td>[19]</td>
+          </tr>
+          <tr>
+            <td><strong>3/2 (한국 대체공휴일)</strong></td>
+            <td>WTI $72.79(+8.6%), 금 $5,400 근접, 달러인덱스 5주 최고. 일본 닛케이 -1.35% 충격</td>
+            <td>[20][9]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 서울신문 [17] · 머니투데이 [18] · Bloomberg [12] · CNBC [19]</p>
+
+    <blockquote>
+      "37년간 이란 철권통치 하메네이, 30발 벙커버스터 폭탄에 사망" — 서울신문, 2026.03.01 [17]
+      <br>→ 해석: 1989년부터 37년간 이란을 통치한 최고지도자의 사망은 이란 정치 체제의 근본적 불안정을 의미합니다. 후계 지도자 체제 안착 여부가 향후 협상·전쟁 확대의 핵심 변수입니다.
+    </blockquote>
+
+    <h3>호르무즈 해협 봉쇄 — 글로벌 에너지 공급 위기</h3>
+
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">WTI 유가 (3/2 아시아)</div>
+        <div class="stat-value up">$72.79</div>
+        <div class="stat-unit">+$5.79 (+8.6%, 2/27 $67 대비)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">브렌트유 (3/2 고점)</div>
+        <div class="stat-value up">~$82</div>
+        <div class="stat-unit">+13% (장중 고점)</div>
+      </div>
+    </div>
+
+    <blockquote>
+      "호르무즈 봉쇄에 유가 13% 급등… 에너지 공급망도 '경고등'" — 서울신문, 2026.03.03 [21]
+      <br>→ 해석: 호르무즈 해협은 세계 원유 해상 운송의 약 30%, 전 세계 LNG 공급의 약 25%가 통과하는 핵심 해상 동맥. 한국은 중동산 원유 도입 비중이 69.1%이며, 이 중 95% 이상이 호르무즈를 통과합니다.
+    </blockquote>
+
+    <h3>한국 경제에 대한 직접 영향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>경제 분야</th>
+            <th>직접 영향</th>
+            <th>단기 전망</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>에너지 수입 비용</strong></td>
+            <td>한국 원유 수입의 69.1%가 중동산. 유가 $80+ 시 무역수지 악화</td>
+            <td class="down">악화 가능</td>
+          </tr>
+          <tr>
+            <td><strong>원/달러 환율</strong></td>
+            <td>달러 강세·리스크오프로 3/3 1,462원 출발. 최대 1,480~1,500원 전망</td>
+            <td class="down">추가 약세</td>
+          </tr>
+          <tr>
+            <td><strong>물가 (CPI)</strong></td>
+            <td>유가 급등 → 휘발유·항공운임·물류비 연쇄 상승</td>
+            <td class="down">인플레이션 자극</td>
+          </tr>
+          <tr>
+            <td><strong>방산 수출</strong></td>
+            <td>지정학 위험 고조 → K-방산 수요 증가 기대</td>
+            <td class="up">수혜 가능</td>
+          </tr>
+          <tr>
+            <td><strong>한국은행 금리</strong></td>
+            <td>인플레이션 재점화 시 금리 인하 지연 가능성</td>
+            <td class="down">인하 지연</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 서울신문 [22] · 뉴스핌 [3] · 오피니언뉴스 [23]</p>
+
+    <h3>안전자산 — 금·달러 급등, 비트코인 급락</h3>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">금 현물 (3/2)</div>
+        <div class="stat-value up">~$5,400</div>
+        <div class="stat-unit">+3% 급등 (안전자산)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">달러인덱스</div>
+        <div class="stat-value up">+0.95%</div>
+        <div class="stat-unit">5주 최고 기록</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">미 국채 10년물</div>
+        <div class="stat-value neutral">하락</div>
+        <div class="stat-unit">안전자산 수요 유입</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">비트코인</div>
+        <div class="stat-value down">급락</div>
+        <div class="stat-unit">위험자산 회피 심리</div>
+      </div>
+    </div>
+    <p class="table-caption">출처: Finance Magnates [20] · 서울신문 [22] · FXStreet [24]</p>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 금이 $5,400에 근접하고 달러인덱스가 5주 최고를 기록한 것은 고전적인 '전쟁 리스크오프(Risk-off)' 패턴입니다. 이 구간에서는 신흥국 통화(원화 포함)·가상자산·성장주가 동반 약세를 보이고, 금·달러·미 국채·에너지주가 강세를 보입니다. 이 패턴은 지정학적 불확실성이 해소될 때까지 지속될 가능성이 높습니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 5: 종합 분석 ===================== -->
+  <div class="section" id="sec5">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">종합 분석 및 시사점</div>
+        <div class="section-desc">이란 전쟁 발발 — 투자자가 지금 알아야 할 세 가지</div>
+      </div>
+    </div>
+
+    <h3>세 가지 핵심 흐름</h3>
+
+    <div class="note-box note-warning">
+      <strong>첫째 — 호르무즈 봉쇄가 핵심 변수:</strong> 호르무즈 해협은 전 세계 원유 해상 운송의 30%가 통과하는 요충지입니다. 이란의 실질적 봉쇄가 장기화될 경우 WTI $100 이상, 브렌트 $110+가 전망됩니다. 한국은 이 영향을 직접적으로 받습니다 — 중동 원유 의존도 69.1%, 호르무즈 통과 비중 95%. 봉쇄가 해제되는 시점이 에너지 가격 안정의 가장 중요한 신호입니다.
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>둘째 — 한국 증시 3/3 재개 — 갭하락 후 방향성 주목:</strong> 한국 증시는 3/2 휴장으로 글로벌 충격을 그대로 3/3에 반영해야 합니다. 일본 닛케이가 3/2에 -1.35% 하락한 것이 코스피 충격 규모의 단서입니다. 그러나 대신증권 등 주요 증권사는 "구조적 상승 추세(코스피 7,500 목표)는 바뀌지 않는다"고 진단 [4]. 방산주(한화에어로·LIG넥스원)와 에너지주의 강세가 하방 지지 역할을 할 것으로 예상됩니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>셋째 — 전쟁 시나리오별 시장 전망:</strong>
+      <br>• <strong>단기 종결 (3~4주 내 협상)</strong>: 유가 즉각 반락 → WTI $65 이하 복귀 가능. 코스피 V자 반등. 원/달러 1,430~1,440원 복귀.
+      <br>• <strong>중기 장기화 (3~6개월)</strong>: WTI $85~100, 환율 1,480~1,500원. 코스피 6,000선 테스트. 인플레이션 재점화, 연준 금리 동결 장기화.
+      <br>• <strong>최악 시나리오 (호르무즈 완전 봉쇄 + 전면전)</strong>: WTI $110+, 코스피 13% 추가 하락 가능. 한국 무역수지 악화, 경기 침체 우려 [3].
+    </div>
+
+    <h3>투자자별 시사점</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>투자 성향</th>
+            <th>주목 포인트</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>주식 단기 트레이더</strong></td>
+            <td>3/3 코스피 개장 초반 급락 시 과매도 여부 확인. 방산주 갭업 초반 분할 매도 전략. 호르무즈 뉴스가 장중 방향을 결정</td>
+          </tr>
+          <tr>
+            <td><strong>주식 중장기 투자자</strong></td>
+            <td>에너지·방산 섹터 비중 확대 검토. 항공·해운주는 전쟁 종결 신호 확인 후 진입. 반도체주는 지정학+AI 피크아웃 이중 압박 구간</td>
+          </tr>
+          <tr>
+            <td><strong>부동산 투자자</strong></td>
+            <td>3월 한강벨트 분양가상한제 단지 청약은 장기 관점에서 유효. 단기 매매는 환율·금리 안정 확인 후 결정</td>
+          </tr>
+          <tr>
+            <td><strong>글로벌 자산 배분</strong></td>
+            <td>금(안전자산)·에너지주 비중 유지. 달러 강세 구간이므로 외화 자산 비중 점검. 비트코인은 전쟁 리스크오프 구간에서 변동성 높음</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>제언:</strong> 지금 가장 중요한 것은 세 가지 뉴스를 모니터링하는 것입니다. ① 호르무즈 해협 통항 정상화 여부(유가 방향), ② 이란 신지도부 협상 수용 여부(전쟁 확산 vs 종결), ③ 3/3 코스피 개장 후 외국인 수급 방향(국내 증시 향방). 이 세 변수가 정해지기 전까지는 리스크 관리와 포지션 축소가 수익 추구보다 우선입니다. 섣불리 저가 매수에 나서기보다는, 지정학적 불확실성이 일부 해소되는 신호를 기다리는 것이 바람직합니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 6: 출처 목록 ===================== -->
+  <div class="section" id="sec6">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">출처 목록</div>
+        <div class="section-desc">본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.</div>
+      </div>
+    </div>
+
+    <ul class="source-list">
+      <li>
+        <span class="grade grade-b">B급</span>
+        [1] 국제뉴스 — "3월 2일 삼일절 대체공휴일 적용… 은행·주식·택배 운영 여부는?" (2026.03.02)
+        <a href="https://www.gukjenews.com/news/articleView.html?idxno=3517245" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [2] 삼일절 대체공휴일 주식 휴장 — 다음뉴스 (2026.03.02)
+        <a href="https://v.daum.net/v/20260302081004992" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [3] 뉴스핌 — "미-이란 전쟁 장기화시...코스피 13% 하락·환율 1500원·유가 110달러" (2026.03.02)
+        <a href="https://www.newspim.com/news/view/20260302000054" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [4] 이투데이 — "대신증권 '美·이란 전쟁 변수에도 코스피 7500 간다'…3월 변동성 후 상승 추세" (2026.03.02)
+        <a href="https://www.etoday.co.kr/news/view/2561061" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-c">C급</span>
+        [5] active.assetsquarestory.com — "미국 이란 전쟁 국내 주식 전망 5가지 시나리오" (2026.03)
+        <a href="https://active.assetsquarestory.com/2026/03/5.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [6] 이투데이 — "원·달러 환율, 22.6원 오른 1462.3원 개장" (2026.03.03)
+        <a href="https://www.etoday.co.kr/news/view/2561083" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [7] 이투데이 — "[특징주] 미국-이란 갈등 본격화에⋯한화에어로ㆍLIG넥스원 등 ↑" (2026.03.03)
+        <a href="https://www.etoday.co.kr/news/view/2561100" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [8] CNBC Asia — "Asia airline stocks drop while energy shares rise as Iran conflict escalates" (2026.03.02)
+        <a href="https://www.cnbc.com/2026/03/02/asia-markets-live-trump-iran-oil-prices-nikkei-hang-seng-us-israel-strikes-oil.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [9] CNBC Asia Markets — "Asia airline stocks drop while energy shares rise: Nikkei -1.35%" (2026.03.02)
+        <a href="https://www.cnbc.com/2026/03/02/asia-markets-live-trump-iran-oil-prices-nikkei-hang-seng-us-israel-strikes-oil.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [10] Forex.com — "S&P 500, Nasdaq, Dow Forecast for the Week Ahead (2/28/2026)" (2026.02.28)
+        <a href="https://www.forex.com/en-ca/news-and-analysis/s-p-500-nasdaq-dow-forecast-for-the-week-ahead-2-28-2026/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [11] Fortune — "Dow futures fall 350 points on U.S.-Iran conflict, but oil prices pare gains as Trump hints at sanctions relief" (2026.03.01)
+        <a href="https://fortune.com/2026/03/01/stock-market-today-dow-futures-oil-prices-us-attack-iran-strait-hormuz-clsoure/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [12] Bloomberg — "Stocks Slump as US-Iran War Lifts Brent Toward $80: Markets Wrap" (2026.03.01)
+        <a href="https://www.bloomberg.com/news/articles/2026-03-01/dollar-surges-as-traders-brace-for-war-impact-markets-wrap" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [13] Bloomberg — "Wall Street Turns to 'Haven-First' Strategies Amid Iran Attacks" (2026.03.01)
+        <a href="https://www.bloomberg.com/news/articles/2026-03-01/wall-street-turns-to-haven-first-strategies-amid-iran-attacks" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [14] CNBC — "S&P 500 closes flat, rebounding from lows as traders buy the dip after U.S.-Iran attacks: Live updates" (2026.03.01)
+        <a href="https://www.cnbc.com/2026/03/01/stock-market-today-live-update.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [15] 이코노믈 — "당첨만 되면 수억 원 차익 기대… 3월 서울 한강변에 쏟아지는 '로또 청약'" (2026.03)
+        <a href="https://econmingle.com/economy/seoul-apartment-presale-march-2026-9025/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-a">A급</span>
+        [16] 한국부동산원 — 주간 아파트가격 동향 (2026년 2월 2주)
+        <a href="https://www.reb.or.kr/reb/cm/cntnts/cntntsView.do?mi=10001&cntntsId=1308" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [17] 서울신문 — "37년간 이란 철권통치 하메네이, 30발 벙커버스터 폭탄에 사망" (2026.03.01)
+        <a href="https://www.seoul.co.kr/news/international/2026/03/01/20260301500037" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [18] 머니투데이 — "트럼프 '이란 공습 하메네이 사망'…국제유가 벌써 12% 급등" (2026.03.01)
+        <a href="https://www.mt.co.kr/world/2026/03/01/2026030108001216282" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [19] CNBC — "Iran war live updates: Six U.S. service members killed in action" (2026.03.02)
+        <a href="https://www.cnbc.com/2026/03/02/us-iran-live-updates-trump-oil-gold.html" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [20] Finance Magnates — "Gold Price Tests $5,400, Oil Jumps 13% as Strait of Hormuz Shuts: Iran War Rocks Markets" (2026.03.02)
+        <a href="https://www.financemagnates.com/trending/gold-price-tests-5400-oil-jumps-13-as-strait-of-hormuz-shuts-iran-war-rocks-markets/" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [21] 서울신문 — "호르무즈 봉쇄에 유가 13% 급등… 에너지 공급망도 '경고등'" (2026.03.03)
+        <a href="https://www.seoul.co.kr/news/economy/industry/2026/03/03/20260303029003" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [22] 서울신문 — "강달러에 환율 뛰고, 주가 변동성 커질 것…위험자산 회피에 비트코인 급락, 금은 상승" (2026.03.01)
+        <a href="https://www.seoul.co.kr/news/economy/2026/03/01/20260301500077" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [23] 오피니언뉴스 — "미국, 이란 공습 위기의 韓 경제…환율·유가·물가 급등 '경계'" (2026.03.02)
+        <a href="https://www.opinionnews.co.kr/news/articleView.html?idxno=134261" target="_blank">링크</a>
+      </li>
+      <li>
+        <span class="grade grade-b">B급</span>
+        [24] FXStreet — "Gold advances as US-Iran war drive risk-off sentiment" (2026.03.02)
+        <a href="https://www.fxstreet.com/news/gold-surges-on-safe-haven-flows-amid-us-iran-war-202603021215" target="_blank">링크</a>
+      </li>
+    </ul>
+
+    <!-- 출처 등급 요약 테이블 -->
+    <div class="table-wrap" style="margin-top:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>출처 등급</th>
+            <th>건수</th>
+            <th>비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="grade grade-a">A급</span> 공식·금융기관</td>
+            <td>1건</td>
+            <td>4%</td>
+          </tr>
+          <tr>
+            <td><span class="grade grade-b">B급</span> 주요 언론</td>
+            <td>22건</td>
+            <td>92%</td>
+          </tr>
+          <tr>
+            <td><span class="grade grade-c">C급</span> 블로그·참고</td>
+            <td>1건</td>
+            <td>4%</td>
+          </tr>
+          <tr>
+            <td><strong>전체</strong></td>
+            <td><strong>24건</strong></td>
+            <td><strong>100%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== 푸터 ===================== -->
+  <div class="footer">
+    <p>본 보고서는 research-crawler 에이전트가 공개된 출처를 수집·분석하여 자동 생성한 투자 정보 브리핑입니다.</p>
+    <p>투자 의사결정에 활용 시 반드시 추가적인 개인 조사와 전문가 상담을 병행하시기 바랍니다.</p>
+    <p>데이터 기준: 2026년 2월 27일 미국 마감 / 3월 2일 글로벌 기준 · 발행: 2026년 3월 3일 · DeepDig Research Archive</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>바로이집 퍼스트클래스 만족도 설문조사</title>
+  <style>
+    /* ============================================================
+       전체 기본 스타일
+       페이지 전체의 배경색, 글꼴, 여백 등을 설정합니다.
+    ============================================================ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 80px;
+    }
+
+    /* ============================================================
+       설문지 전체를 감싸는 흰색 카드 박스
+       최대 너비 680px로 중앙에 정렬됩니다.
+    ============================================================ */
+    .survey-container {
+      width: 100%;
+      max-width: 680px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(212,175,55,0.12);
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       상단 헤더 영역 (로고 및 제목)
+    ============================================================ */
+    .survey-header {
+      background: linear-gradient(135deg, #12122a 0%, #1e1e40 100%);
+      padding: 28px 32px 24px;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .brand-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #d4af37;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .survey-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.4;
+    }
+
+    /* ============================================================
+       진행률 바 영역
+       현재 몇 번째 질문인지 시각적으로 보여줍니다.
+    ============================================================ */
+    .progress-area {
+      padding: 20px 32px 0;
+      background: #ffffff;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: #999999;
+      font-weight: 500;
+    }
+
+    .progress-count {
+      font-size: 12px;
+      color: #d4af37;
+      font-weight: 700;
+    }
+
+    /* 진행률 바 배경 (회색 트랙) */
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #ebebeb;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    /* 진행률 바 채워지는 부분 (골드색) */
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #d4af37, #f0d060);
+      border-radius: 2px;
+      /* 너비가 바뀔 때 부드럽게 애니메이션 */
+      transition: width 0.4s ease;
+    }
+
+    /* ============================================================
+       각 질문이 표시되는 메인 콘텐츠 영역
+    ============================================================ */
+    .survey-body {
+      padding: 32px 32px 24px;
+    }
+
+    /* ============================================================
+       화면 전환 애니메이션 (fadeIn)
+       질문이 바뀔 때 서서히 나타나는 효과
+    ============================================================ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step {
+      display: none; /* 기본적으로 모든 스텝은 숨김 */
+    }
+
+    .step.active {
+      display: block;
+      animation: fadeIn 0.35s ease; /* 활성 스텝만 fadeIn 애니메이션 적용 */
+    }
+
+    /* ============================================================
+       질문 번호 배지 (예: Q1, Q2)
+    ============================================================ */
+    .question-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #d4af37;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    /* ============================================================
+       질문 제목 텍스트
+    ============================================================ */
+    .question-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a2e;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    /* ============================================================
+       질문 부가 설명 텍스트 (선택, 최대 3개 등)
+    ============================================================ */
+    .question-hint {
+      font-size: 12px;
+      color: #888888;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .question-hint.required-hint {
+      color: #e8956d;
+    }
+
+    /* ============================================================
+       라디오/체크박스 선택 항목 카드 스타일
+       각 선택지를 카드 형태로 보여줍니다.
+    ============================================================ */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 개별 선택 항목 카드 */
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 12px;
+      background: #fafafa;
+      cursor: pointer;
+      /* 마우스를 올리거나 선택될 때 부드럽게 변하는 효과 */
+      transition: border-color 0.2s, background 0.2s, transform 0.1s;
+      user-select: none;
+    }
+
+    .option-item:hover {
+      border-color: #d4af37;
+      background: rgba(212,175,55,0.06);
+    }
+
+    /* 선택된 항목 카드: 골드 테두리와 배경색 적용 */
+    .option-item.selected {
+      border-color: #d4af37;
+      background: rgba(212, 175, 55, 0.12);
+      transform: scale(1.005);
+    }
+
+    /* 내부 숨겨진 라디오/체크박스 input 요소 (시각적으로 숨김) */
+    .option-item input[type="radio"],
+    .option-item input[type="checkbox"] {
+      display: none;
+    }
+
+    /* 커스텀 라디오 버튼 원형 아이콘 */
+    .radio-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #cccccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+
+    .option-item.selected .radio-icon {
+      border-color: #d4af37;
+    }
+
+    /* 선택된 라디오 내부 점 */
+    .radio-icon::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d4af37;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .option-item.selected .radio-icon::after {
+      opacity: 1;
+    }
+
+    /* 커스텀 체크박스 아이콘 */
+    .check-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid #cccccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .option-item.selected .check-icon {
+      border-color: #d4af37;
+      background: #d4af37;
+    }
+
+    /* 체크박스 체크 표시 (SVG 체크 아이콘) */
+    .check-icon::after {
+      content: '';
+      width: 10px;
+      height: 6px;
+      border-left: 2px solid #1a1a2e;
+      border-bottom: 2px solid #1a1a2e;
+      transform: rotate(-45deg) translateY(-1px);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .option-item.selected .check-icon::after {
+      opacity: 1;
+    }
+
+    /* 선택 항목 텍스트 */
+    .option-text {
+      font-size: 14px;
+      color: #444444;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .option-item.selected .option-text {
+      color: #1a1a2e;
+    }
+
+    /* ============================================================
+       기타 직접입력 텍스트 필드 (기타 선택 시 나타남)
+    ============================================================ */
+    .other-input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: #f5f5f5;
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
+      border-radius: 8px;
+      color: #1a1a2e;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      display: none; /* 기본적으로 숨겨져 있음 */
+    }
+
+    .other-input:focus {
+      border-color: #d4af37;
+      background: rgba(212,175,55,0.05);
+    }
+
+    .other-input.visible {
+      display: block; /* 기타 선택 시 표시 */
+    }
+
+    /* ============================================================
+       자유 텍스트 입력 영역 (긴 서술형 답변)
+    ============================================================ */
+    .textarea-field {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px 16px;
+      background: #f8f8f8;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 12px;
+      color: #1a1a2e;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .textarea-field:focus {
+      border-color: #d4af37;
+      background: rgba(212,175,55,0.04);
+    }
+
+    .textarea-field::placeholder {
+      color: #bbbbbb;
+    }
+
+    /* ============================================================
+       일반 텍스트 입력 필드 (한 줄 입력)
+    ============================================================ */
+    .text-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #f8f8f8;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 12px;
+      color: #1a1a2e;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .text-input:focus {
+      border-color: #d4af37;
+      background: rgba(212,175,55,0.04);
+    }
+
+    .text-input::placeholder {
+      color: #bbbbbb;
+    }
+
+    .text-input-label {
+      font-size: 12px;
+      color: #666666;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* ============================================================
+       오류 메시지 (필수 항목 미입력 시 표시)
+    ============================================================ */
+    .error-message {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(232, 80, 80, 0.15);
+      border: 1px solid rgba(232, 80, 80, 0.4);
+      border-radius: 8px;
+      color: #ff8080;
+      font-size: 13px;
+      display: none; /* 기본적으로 숨겨져 있음 */
+    }
+
+    .error-message.visible {
+      display: block; /* 오류 발생 시 표시 */
+    }
+
+    /* ============================================================
+       이전/다음 버튼 영역
+    ============================================================ */
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 32px 28px;
+      gap: 12px;
+    }
+
+    /* 이전 버튼 */
+    .btn-prev {
+      padding: 12px 24px;
+      background: #ffffff;
+      border: 1.5px solid #dddddd;
+      border-radius: 10px;
+      color: #666666;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-prev:hover {
+      border-color: #aaaaaa;
+      color: #333333;
+    }
+
+    .btn-prev:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* 다음/제출 버튼 (메인 골드 버튼) */
+    .btn-next {
+      flex: 1;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #d4af37, #f0d060);
+      border: none;
+      border-radius: 10px;
+      color: #1a1a2e;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-next:hover {
+      background: linear-gradient(135deg, #e8c845, #f8e070);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+    }
+
+    .btn-next:active {
+      transform: translateY(0);
+    }
+
+    /* ============================================================
+       환영 화면 스타일
+    ============================================================ */
+    .welcome-screen {
+      text-align: center;
+      padding: 40px 32px;
+    }
+
+    .welcome-icon {
+      font-size: 56px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .welcome-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .welcome-title span {
+      color: #d4af37;
+    }
+
+    .welcome-desc {
+      font-size: 14px;
+      color: #666666;
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 30px;
+      padding: 8px 20px;
+      font-size: 13px;
+      color: #d4af37;
+      margin-bottom: 32px;
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #d4af37, #f0d060);
+      border: none;
+      border-radius: 12px;
+      color: #1a1a2e;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-start:hover {
+      background: linear-gradient(135deg, #e8c845, #f8e070);
+      box-shadow: 0 6px 24px rgba(212, 175, 55, 0.4);
+    }
+
+    /* ============================================================
+       서비스 소개 화면 스타일
+    ============================================================ */
+    .service-intro {
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .service-intro-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #d4af37;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .service-intro-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .service-intro-list li {
+      font-size: 13px;
+      color: #555555;
+      line-height: 1.6;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .service-intro-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: #d4af37;
+    }
+
+    .service-price {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+      font-size: 13px;
+      color: #d4af37;
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       감사 화면 스타일
+    ============================================================ */
+    .thank-you-screen {
+      text-align: center;
+      padding: 48px 32px;
+    }
+
+    .thank-you-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .thank-you-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 12px;
+    }
+
+    .thank-you-title span {
+      color: #d4af37;
+    }
+
+    .thank-you-desc {
+      font-size: 14px;
+      color: #8888aa;
+      line-height: 1.8;
+    }
+
+    /* ============================================================
+       관리자 버튼 (오른쪽 하단에 고정)
+    ============================================================ */
+    .admin-btn {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #1a1a2e; border: 1px solid rgba(212,175,55,0.4);
+      color: #d4af37; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25); transition: all 0.2s; z-index: 100;
+    }
+    .admin-btn:hover { background: #2a2a50; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+
+    /* ============================================================
+       관리자 로그인 모달 (작은 팝업)
+    ============================================================ */
+    .login-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .login-modal-overlay.open { display: flex; }
+
+    .login-modal-box {
+      background: #ffffff; border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+      padding: 36px 32px; width: 100%; max-width: 360px;
+    }
+    .login-modal-title {
+      font-size: 18px; font-weight: 800; color: #1a1a2e;
+      margin-bottom: 6px; text-align: center;
+    }
+    .login-modal-sub {
+      font-size: 13px; color: #888888; margin-bottom: 24px; text-align: center;
+    }
+    .admin-input {
+      width: 100%; padding: 14px 16px;
+      background: #f5f5f7; border: 1.5px solid #e8e8e8;
+      border-radius: 12px; color: #1a1a2e;
+      font-size: 24px; letter-spacing: 10px; text-align: center;
+      outline: none; font-family: inherit; margin-bottom: 14px;
+    }
+    .admin-input:focus { border-color: #d4af37; background: #fffcf0; }
+    .btn-admin-login {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg,#d4af37,#f0d060);
+      border: none; border-radius: 12px;
+      color: #1a1a2e; font-size: 14px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 14px rgba(212,175,55,0.35);
+    }
+    .btn-admin-login:hover { box-shadow: 0 6px 20px rgba(212,175,55,0.5); transform: translateY(-1px); }
+    .btn-admin-cancel {
+      width: 100%; margin-top: 10px; padding: 11px;
+      background: none; border: 1.5px solid #eeeeee;
+      border-radius: 12px; color: #999999; cursor: pointer;
+      font-family: inherit; font-size: 13px;
+    }
+
+    /* ============================================================
+       관리자 대시보드 (전체화면 — 라이트 테마)
+    ============================================================ */
+    .admin-dashboard {
+      position: fixed; inset: 0; background: #f5f6fa;
+      z-index: 2000; display: none; flex-direction: column; overflow: hidden;
+    }
+    .admin-dashboard.open { display: flex; }
+
+    /* 대시보드 헤더 (브랜드 아이덴티티 — 다크 유지) */
+    .dash-header {
+      background: linear-gradient(135deg,#1a1a2e 0%,#2a2a50 100%);
+      border-bottom: 2px solid rgba(212,175,55,0.35);
+      padding: 14px 24px; display: flex; align-items: center;
+      justify-content: space-between; flex-shrink: 0; gap: 12px; flex-wrap: wrap;
+    }
+    .dash-brand { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #d4af37; text-transform: uppercase; margin-bottom: 3px; }
+    .dash-title { font-size: 17px; font-weight: 700; color: #fff; }
+    .dash-header-right { display: flex; align-items: center; gap: 8px; }
+    .dash-btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all 0.2s; }
+    .dash-btn-primary { background: rgba(212,175,55,0.18); border: 1px solid rgba(212,175,55,0.45); color: #f0d060; }
+    .dash-btn-primary:hover { background: rgba(212,175,55,0.32); }
+    .dash-btn-danger { background: rgba(255,100,100,0.15); border: 1px solid rgba(255,100,100,0.35); color: #ff9090; }
+    .dash-btn-close {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #cccccc; width: 36px; height: 36px; padding: 0; border-radius: 50%;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 탭 */
+    .dash-tabs {
+      display: flex; background: #ffffff;
+      border-bottom: 2px solid #eeeeee;
+      flex-shrink: 0; padding: 0 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .dash-tab {
+      padding: 13px 20px; font-size: 14px; font-weight: 600; color: #aaaaaa;
+      cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+      background: none; border-top: none; border-left: none; border-right: none;
+      font-family: inherit; margin-bottom: -2px;
+    }
+    .dash-tab.active { color: #1a1a2e; border-bottom-color: #d4af37; }
+
+    /* 대시보드 본문 */
+    .dash-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* 요약 카드 */
+    .summary-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }
+    .summary-card {
+      background: #ffffff; border: 1px solid #eeeeee;
+      border-radius: 16px; padding: 20px; text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .summary-card-value { font-size: 32px; font-weight: 800; color: #c8950c; margin-bottom: 6px; line-height: 1; }
+    .summary-card-label { font-size: 11px; color: #888888; font-weight: 600; letter-spacing: 0.5px; }
+
+    /* 섹션 */
+    .dash-section { margin-bottom: 32px; }
+    .dash-section-title {
+      font-size: 15px; font-weight: 700; color: #1a1a2e;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 2px solid #eeeeee;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dash-section-title .badge {
+      font-size: 11px; background: #fff8e8; color: #c8950c;
+      padding: 2px 8px; border-radius: 20px; font-weight: 700;
+      border: 1px solid rgba(212,175,55,0.25);
+    }
+
+    /* 차트 */
+    .chart-container {
+      background: #ffffff; border: 1px solid #eeeeee;
+      border-radius: 14px; padding: 18px; margin-bottom: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+    .chart-title { font-size: 13px; font-weight: 700; color: #555555; margin-bottom: 14px; }
+    .chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .chart-label {
+      font-size: 12px; color: #444444; width: 195px; flex-shrink: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chart-bar-wrap { flex: 1; background: #f0f0f0; border-radius: 4px; height: 20px; overflow: hidden; }
+    .chart-bar {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg,#d4af37,#f0d060);
+      transition: width 0.7s ease; min-width: 2px;
+    }
+    .chart-count { font-size: 12px; color: #888888; width: 68px; text-align: right; flex-shrink: 0; }
+
+    /* 자유응답 */
+    .text-responses { display: flex; flex-direction: column; gap: 8px; }
+    .text-response-item {
+      background: #faf8f2; border-left: 3px solid #d4af37;
+      border-radius: 0 10px 10px 0;
+      padding: 10px 14px; font-size: 13px; color: #444444; line-height: 1.7;
+    }
+    .text-response-empty { font-size: 13px; color: #bbbbbb; text-align: center; padding: 20px; }
+
+    /* 개별 응답 카드 */
+    .response-cards { display: flex; flex-direction: column; gap: 8px; }
+    .resp-card {
+      background: #ffffff; border: 1.5px solid #eeeeee;
+      border-radius: 12px; overflow: hidden; transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .resp-card:hover { border-color: rgba(212,175,55,0.5); box-shadow: 0 2px 10px rgba(212,175,55,0.12); }
+    .resp-card-header {
+      display: flex; align-items: center;
+      padding: 12px 16px; gap: 10px;
+    }
+    .resp-card-num { font-size: 12px; font-weight: 700; color: #c8950c; flex-shrink: 0; }
+    .resp-card-summary { font-size: 12px; color: #666666; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .resp-card-time { font-size: 11px; color: #aaaaaa; flex-shrink: 0; }
+    .resp-card-toggle { font-size: 13px; color: #aaaaaa; flex-shrink: 0; transition: transform 0.2s; cursor: pointer; }
+    .resp-card.expanded .resp-card-toggle { transform: rotate(180deg); }
+    .resp-card-body { display: none; padding: 0 16px 14px; border-top: 1px solid #f0f0f0; }
+    .resp-card.expanded .resp-card-body { display: block; }
+    .resp-field { display: flex; gap: 10px; margin-top: 10px; font-size: 12px; line-height: 1.5; }
+    .resp-field-key { color: #c8950c; font-weight: 700; flex-shrink: 0; width: 120px; }
+    .resp-field-val { color: #444444; }
+
+    /* 체크박스 (선택삭제용) */
+    .resp-checkbox {
+      width: 18px; height: 18px; border-radius: 5px;
+      border: 2px solid #cccccc; background: #ffffff;
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .resp-checkbox:hover { border-color: #d4af37; }
+    .resp-checkbox.checked { background: #d4af37; border-color: #d4af37; }
+    .resp-checkbox.checked::after {
+      content: '';
+      width: 9px; height: 5px;
+      border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px); display: block;
+    }
+
+    /* 선택 삭제 툴바 */
+    .selection-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; background: #fff8e8;
+      border: 1px solid rgba(212,175,55,0.3); border-radius: 12px;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .selection-count { font-size: 13px; font-weight: 700; color: #c8950c; flex: 1; }
+    .btn-select-all {
+      padding: 6px 14px; border-radius: 8px; font-size: 13px;
+      background: #ffffff; border: 1.5px solid #dddddd; color: #555555;
+      cursor: pointer; font-family: inherit; font-weight: 600;
+    }
+    .btn-select-all:hover { border-color: #aaaaaa; color: #333333; }
+    .btn-delete-selected {
+      padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      background: rgba(220,50,50,0.08); border: 1.5px solid rgba(220,50,50,0.3);
+      color: #cc3333; cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-delete-selected:hover:not(:disabled) { background: rgba(220,50,50,0.15); }
+    .btn-delete-selected:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* 체크박스로 선택된 카드 강조 표시 */
+    .resp-card.card-selected { border-color: rgba(212,175,55,0.6); background: #fffef7; }
+    .resp-card.card-selected .resp-card-header { background: #fffbea; }
+
+    /* 데이터 없음 메시지 */
+    .no-data-msg { text-align: center; padding: 60px 20px; color: #aaaaaa; font-size: 14px; line-height: 1.9; }
+
+    /* ============================================================
+       반응형 - 작은 화면 대응
+    ============================================================ */
+    @media (max-width: 480px) {
+      .survey-header { padding: 22px 20px 18px; }
+      .progress-area { padding: 16px 20px 0; }
+      .survey-body { padding: 24px 20px 20px; }
+      .nav-buttons { padding: 16px 20px 24px; }
+      .welcome-screen { padding: 32px 20px; }
+      .thank-you-screen { padding: 40px 20px; }
+      .question-title { font-size: 15px; }
+      .option-item { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     설문지 메인 컨테이너
+============================================================ -->
+<div class="survey-container">
+
+  <!-- 상단 헤더 -->
+  <div class="survey-header">
+    <div class="brand-label">바로이집 · 퍼스트클래스</div>
+    <div class="survey-title">퍼스트클래스 만족도 설문조사</div>
+  </div>
+
+  <!-- 진행률 바 영역 (환영/감사 화면에서는 숨겨짐) -->
+  <div class="progress-area" id="progressArea" style="display:none;">
+    <div class="progress-meta">
+      <span class="progress-label" id="progressLabel">질문 1 / 13</span>
+      <span class="progress-count" id="progressPercent">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       각 스텝(화면)들을 담는 영역
+  ============================================================ -->
+  <div class="survey-body">
+
+    <!-- ===== 스텝 0: 환영 화면 ===== -->
+    <div class="step active" data-step="0">
+      <div class="welcome-screen">
+        <div class="welcome-icon">🏆</div>
+        <h1 class="welcome-title">
+          <span>퍼스트클래스</span><br>만족도 설문조사
+        </h1>
+        <p class="welcome-desc">
+          회원님의 소중한 의견을 바탕으로<br>
+          더 나은 서비스를 만들어 나가겠습니다.<br>
+          설문은 약 3~5분 소요됩니다.
+        </p>
+        <div class="welcome-badge">
+          ⭐ 바로이집 퍼스트클래스 회원 전용
+        </div>
+        <button class="btn-start" onclick="시작하기()">설문 시작하기</button>
+      </div>
+    </div>
+
+    <!-- ===== 스텝 1: Q1. 전반적 만족도 ===== -->
+    <div class="step" data-step="1">
+      <div class="question-badge">Q1 · 필수</div>
+      <div class="question-title">퍼스트클래스 서비스에 대한<br>전반적인 만족도는 어떻습니까?</div>
+      <div class="question-hint">한 가지를 선택해 주세요.</div>
+
+      <div class="options-list" id="q1Options">
+        <!-- 라디오 선택 항목들: 클릭하면 라디오선택() 함수 실행 -->
+        <div class="option-item" onclick="라디오선택('q1', '매우 만족', this)">
+          <input type="radio" name="q1" value="매우 만족" />
+          <div class="radio-icon"></div>
+          <span class="option-text">매우 만족</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q1', '만족', this)">
+          <input type="radio" name="q1" value="만족" />
+          <div class="radio-icon"></div>
+          <span class="option-text">만족</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q1', '보통', this)">
+          <input type="radio" name="q1" value="보통" />
+          <div class="radio-icon"></div>
+          <span class="option-text">보통</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q1', '불만족', this)">
+          <input type="radio" name="q1" value="불만족" />
+          <div class="radio-icon"></div>
+          <span class="option-text">불만족</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q1', '매우 불만족', this)">
+          <input type="radio" name="q1" value="매우 불만족" />
+          <div class="radio-icon"></div>
+          <span class="option-text">매우 불만족</span>
+        </div>
+      </div>
+      <div class="error-message" id="q1Error">선택 항목을 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 2: Q2. 가장 자주 이용하는 혜택 ===== -->
+    <div class="step" data-step="2">
+      <div class="question-badge">Q2 · 필수</div>
+      <div class="question-title">가장 자주 이용하는 혜택을<br>모두 선택해 주세요.</div>
+      <div class="question-hint">복수 선택이 가능합니다.</div>
+
+      <div class="options-list" id="q2Options">
+        <div class="option-item" onclick="체크박스선택('q2', '전용 라운지 이용', this)">
+          <input type="checkbox" name="q2" value="전용 라운지 이용" />
+          <div class="check-icon"></div>
+          <span class="option-text">전용 라운지 이용</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q2', '퍼스트 톡방', this)">
+          <input type="checkbox" name="q2" value="퍼스트 톡방" />
+          <div class="check-icon"></div>
+          <span class="option-text">퍼스트 톡방</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q2', '고수 상담', this)">
+          <input type="checkbox" name="q2" value="고수 상담" />
+          <div class="check-icon"></div>
+          <span class="option-text">고수 상담</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q2', '콘텐츠: 고수의 임장 및 리포트', this)">
+          <input type="checkbox" name="q2" value="콘텐츠: 고수의 임장 및 리포트" />
+          <div class="check-icon"></div>
+          <span class="option-text">콘텐츠: 고수의 임장 및 리포트</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q2', '콘텐츠: 퍼스트 세미나', this)">
+          <input type="checkbox" name="q2" value="콘텐츠: 퍼스트 세미나" />
+          <div class="check-icon"></div>
+          <span class="option-text">콘텐츠: 퍼스트 세미나</span>
+        </div>
+        <!-- 기타: 선택 시 직접 입력 필드 표시 -->
+        <div class="option-item" onclick="체크박스선택('q2', '기타', this, 'q2Other')">
+          <input type="checkbox" name="q2" value="기타" />
+          <div class="check-icon"></div>
+          <span class="option-text">기타</span>
+        </div>
+        <input type="text" class="other-input" id="q2Other" placeholder="직접 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q2Error">하나 이상 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 3: Q3. 개선이 필요한 혜택 ===== -->
+    <div class="step" data-step="3">
+      <div class="question-badge">Q3 · 선택</div>
+      <div class="question-title">개선이 필요하다고 생각하는 혜택이나<br>아쉬운 점이 있다면 자유롭게 적어주세요.</div>
+      <div class="question-hint">선택 항목입니다. 건너뛰셔도 됩니다.</div>
+
+      <textarea class="textarea-field" id="q3Text" placeholder="예) 라운지 운영 시간이 더 길었으면 좋겠습니다..."></textarea>
+    </div>
+
+    <!-- ===== 스텝 4: Q4. 원하는 새로운 혜택 ===== -->
+    <div class="step" data-step="4">
+      <div class="question-badge">Q4 · 필수</div>
+      <div class="question-title">앞으로 퍼스트클래스에서 제공받고 싶은<br>새로운 혜택을 모두 선택해 주세요.</div>
+      <div class="question-hint">복수 선택이 가능합니다.</div>
+
+      <div class="options-list" id="q4Options">
+        <div class="option-item" onclick="체크박스선택('q4', '퍼스트클래스 회원 전용 네트워킹 모임', this)">
+          <input type="checkbox" name="q4" value="퍼스트클래스 회원 전용 네트워킹 모임" />
+          <div class="check-icon"></div>
+          <span class="option-text">퍼스트클래스 회원 전용 네트워킹 모임</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q4', '새로운 강사들의 스페셜 세미나', this)">
+          <input type="checkbox" name="q4" value="새로운 강사들의 스페셜 세미나" />
+          <div class="check-icon"></div>
+          <span class="option-text">새로운 강사들의 스페셜 세미나</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q4', '고수들과의 커피챗 타임', this)">
+          <input type="checkbox" name="q4" value="고수들과의 커피챗 타임" />
+          <div class="check-icon"></div>
+          <span class="option-text">고수들과의 커피챗 타임</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q4', '1:1 오프라인 무료 상담', this)">
+          <input type="checkbox" name="q4" value="1:1 오프라인 무료 상담" />
+          <div class="check-icon"></div>
+          <span class="option-text">1:1 오프라인 무료 상담</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q4', '기타', this, 'q4Other')">
+          <input type="checkbox" name="q4" value="기타" />
+          <div class="check-icon"></div>
+          <span class="option-text">기타</span>
+        </div>
+        <input type="text" class="other-input" id="q4Other" placeholder="직접 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q4Error">하나 이상 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 5: Q5. 새로운 혜택 우선순위 ===== -->
+    <div class="step" data-step="5">
+      <div class="question-badge">Q5 · 선택</div>
+      <div class="question-title">앞서 선택한 혜택 중 우선순위를<br>알려주세요.</div>
+      <div class="question-hint">선택 항목입니다. 건너뛰셔도 됩니다.</div>
+
+      <label class="text-input-label">1순위</label>
+      <input type="text" class="text-input" id="q5First" placeholder="가장 원하는 혜택을 입력해 주세요" />
+
+      <label class="text-input-label">2순위</label>
+      <input type="text" class="text-input" id="q5Second" placeholder="두 번째로 원하는 혜택을 입력해 주세요" />
+    </div>
+
+    <!-- ===== 스텝 6: Q6. 타 브랜드 멤버십 이용 여부 ===== -->
+    <div class="step" data-step="6">
+      <div class="question-badge">Q6 · 필수</div>
+      <div class="question-title">현재 타 부동산 브랜드 멤버십 서비스를<br>이용하고 계십니까?</div>
+      <div class="question-hint">한 가지를 선택해 주세요.</div>
+
+      <div class="options-list" id="q6Options">
+        <div class="option-item" onclick="라디오선택('q6', '예', this)" id="q6YesItem">
+          <input type="radio" name="q6" value="예" />
+          <div class="radio-icon"></div>
+          <span class="option-text">예</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q6', '아니오', this)">
+          <input type="radio" name="q6" value="아니오" />
+          <div class="radio-icon"></div>
+          <span class="option-text">아니오</span>
+        </div>
+      </div>
+
+      <!-- "예" 선택 시 표시되는 서비스명 입력 필드 -->
+      <div id="q6ServiceArea" style="margin-top:14px; display:none;">
+        <label class="text-input-label">어떤 서비스를 이용하고 계신가요?</label>
+        <input type="text" class="text-input" id="q6Service" placeholder="서비스명을 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q6Error">선택 항목을 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 7: Q6-1. 타 서비스 대비 경쟁력 (Q6=예인 경우만) ===== -->
+    <div class="step" data-step="7">
+      <div class="question-badge">Q6-1 · 필수</div>
+      <div class="question-title">타 서비스와 비교했을 때<br>퍼스트클래스의 경쟁력은 어떻습니까?</div>
+      <div class="question-hint">한 가지를 선택해 주세요.</div>
+
+      <div class="options-list" id="q6_1Options">
+        <div class="option-item" onclick="라디오선택('q6_1', '훨씬 우수하다', this)">
+          <input type="radio" name="q6_1" value="훨씬 우수하다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">훨씬 우수하다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q6_1', '약간 우수하다', this)">
+          <input type="radio" name="q6_1" value="약간 우수하다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">약간 우수하다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q6_1', '비슷하다', this)">
+          <input type="radio" name="q6_1" value="비슷하다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">비슷하다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q6_1', '약간 부족하다', this)">
+          <input type="radio" name="q6_1" value="약간 부족하다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">약간 부족하다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q6_1', '많이 부족하다', this)">
+          <input type="radio" name="q6_1" value="많이 부족하다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">많이 부족하다</span>
+        </div>
+      </div>
+      <div class="error-message" id="q6_1Error">선택 항목을 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 8: Q7. 지인 추천 의향 ===== -->
+    <div class="step" data-step="8">
+      <div class="question-badge">Q7 · 필수</div>
+      <div class="question-title">주변 지인에게 퍼스트클래스를<br>추천할 의향이 있으십니까?</div>
+      <div class="question-hint">한 가지를 선택해 주세요.</div>
+
+      <div class="options-list" id="q7Options">
+        <div class="option-item" onclick="라디오선택('q7', '예', this)">
+          <input type="radio" name="q7" value="예" />
+          <div class="radio-icon"></div>
+          <span class="option-text">예</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q7', '아니요', this)">
+          <input type="radio" name="q7" value="아니요" />
+          <div class="radio-icon"></div>
+          <span class="option-text">아니요</span>
+        </div>
+      </div>
+      <div class="error-message" id="q7Error">선택 항목을 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 9: Q7-1. 추천 이유 ===== -->
+    <div class="step" data-step="9">
+      <div class="question-badge">Q7-1 · 선택</div>
+      <div class="question-title">추천 의향에 대한 이유를<br>자유롭게 적어주세요.</div>
+      <div class="question-hint">선택 항목입니다. 건너뛰셔도 됩니다.</div>
+
+      <textarea class="textarea-field" id="q7_1Text" placeholder="예) 다양한 투자 정보를 얻을 수 있어서 추천하고 싶습니다..."></textarea>
+    </div>
+
+    <!-- ===== 스텝 10: Q8. 전반적 자유 의견 ===== -->
+    <div class="step" data-step="10">
+      <div class="question-badge">Q8 · 선택</div>
+      <div class="question-title">퍼스트클래스에 대해<br>자유롭게 의견을 남겨주세요.</div>
+      <div class="question-hint">선택 항목입니다. 어떤 내용이든 환영합니다.</div>
+
+      <textarea class="textarea-field" id="q8Text" placeholder="서비스 개선을 위한 어떤 의견이든 소중하게 반영하겠습니다..."></textarea>
+    </div>
+
+    <!-- ===== 스텝 11: 서비스 소개 화면 ===== -->
+    <div class="step" data-step="11">
+      <div class="question-badge">서비스 소개</div>
+      <div class="question-title">바로이집 풀케어 서비스를<br>소개합니다.</div>
+
+      <div class="service-intro">
+        <div class="service-intro-title">🏠 바로이집 풀케어 서비스</div>
+        <ul class="service-intro-list">
+          <li>회원님의 보유 자금 규모와 목표에 맞춰 최적의 부동산 투자 전략 수립</li>
+          <li>물건 탐색 → 분석 → 협상 → 계약 → 매수 완료까지 전담 매니저가 1:1로 밀착 케어</li>
+          <li>믿을 수 있는 전문가와 함께하는 안심 투자 프로세스</li>
+        </ul>
+        <div class="service-price">서비스 이용료: 350만원대 (옵션에 따라 상이)</div>
+      </div>
+
+      <div class="question-hint" style="margin-bottom:0;">다음 질문에서 이 서비스에 대한 관심도를 여쭤보겠습니다.</div>
+    </div>
+
+    <!-- ===== 스텝 12: Q9. 풀케어 서비스 관심도 ===== -->
+    <div class="step" data-step="12">
+      <div class="question-badge">Q9 · 필수</div>
+      <div class="question-title">바로이집 풀케어 서비스에<br>관심이 있으십니까?</div>
+      <div class="question-hint">한 가지를 선택해 주세요.</div>
+
+      <div class="options-list" id="q9Options">
+        <div class="option-item" onclick="라디오선택('q9', '매우 관심 있다', this)">
+          <input type="radio" name="q9" value="매우 관심 있다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">매우 관심 있다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q9', '관심 있다', this)">
+          <input type="radio" name="q9" value="관심 있다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">관심 있다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q9', '보통이다', this)">
+          <input type="radio" name="q9" value="보통이다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">보통이다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q9', '관심 없다', this)">
+          <input type="radio" name="q9" value="관심 없다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">관심 없다</span>
+        </div>
+        <div class="option-item" onclick="라디오선택('q9', '전혀 관심 없다', this)">
+          <input type="radio" name="q9" value="전혀 관심 없다" />
+          <div class="radio-icon"></div>
+          <span class="option-text">전혀 관심 없다</span>
+        </div>
+      </div>
+      <div class="error-message" id="q9Error">선택 항목을 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 13: Q10. 부동산 투자 어려움 (Q9=관심있는 경우) ===== -->
+    <div class="step" data-step="13">
+      <div class="question-badge">Q10 · 필수</div>
+      <div class="question-title">부동산 투자 시 어떤 점이<br>가장 어려우십니까?</div>
+      <div class="question-hint">해당하는 항목을 모두 선택해 주세요. 복수 선택 가능.</div>
+
+      <div class="options-list" id="q10Options">
+        <div class="option-item" onclick="체크박스선택('q10', '어디에 투자해야 할지 정보가 부족하다', this)">
+          <input type="checkbox" name="q10" value="어디에 투자해야 할지 정보가 부족하다" />
+          <div class="check-icon"></div>
+          <span class="option-text">어디에 투자해야 할지 정보가 부족하다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '좋은 매물을 찾기가 어렵다', this)">
+          <input type="checkbox" name="q10" value="좋은 매물을 찾기가 어렵다" />
+          <div class="check-icon"></div>
+          <span class="option-text">좋은 매물을 찾기가 어렵다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '시세 분석 및 적정가 판단이 어렵다', this)">
+          <input type="checkbox" name="q10" value="시세 분석 및 적정가 판단이 어렵다" />
+          <div class="check-icon"></div>
+          <span class="option-text">시세 분석 및 적정가 판단이 어렵다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '협상 및 계약 과정이 낯설고 복잡하다', this)">
+          <input type="checkbox" name="q10" value="협상 및 계약 과정이 낯설고 복잡하다" />
+          <div class="check-icon"></div>
+          <span class="option-text">협상 및 계약 과정이 낯설고 복잡하다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '투자 후 관리(임대·매도 타이밍 등)가 막막하다', this)">
+          <input type="checkbox" name="q10" value="투자 후 관리(임대·매도 타이밍 등)가 막막하다" />
+          <div class="check-icon"></div>
+          <span class="option-text">투자 후 관리(임대·매도 타이밍 등)가 막막하다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '믿을 수 있는 전문가를 찾기 어렵다', this)">
+          <input type="checkbox" name="q10" value="믿을 수 있는 전문가를 찾기 어렵다" />
+          <div class="check-icon"></div>
+          <span class="option-text">믿을 수 있는 전문가를 찾기 어렵다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '바빠서 직접 발품을 팔 시간이 없다', this)">
+          <input type="checkbox" name="q10" value="바빠서 직접 발품을 팔 시간이 없다" />
+          <div class="check-icon"></div>
+          <span class="option-text">바빠서 직접 발품을 팔 시간이 없다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q10', '기타', this, 'q10Other')">
+          <input type="checkbox" name="q10" value="기타" />
+          <div class="check-icon"></div>
+          <span class="option-text">기타</span>
+        </div>
+        <input type="text" class="other-input" id="q10Other" placeholder="직접 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q10Error">하나 이상 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 14: Q11. 풀케어 서비스 필수 포함 항목 (최대 3개) ===== -->
+    <div class="step" data-step="14">
+      <div class="question-badge">Q11 · 필수</div>
+      <div class="question-title">풀케어 서비스에 반드시 포함되어야 한다고<br>생각하는 항목을 선택해 주세요.</div>
+      <div class="question-hint required-hint">최대 3개까지 선택 가능합니다.</div>
+
+      <div class="options-list" id="q11Options">
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '투자 목적별 맞춤 전략 수립(시세차익/월세수익/법인투자 등)', this)">
+          <input type="checkbox" name="q11" value="투자 목적별 맞춤 전략 수립(시세차익/월세수익/법인투자 등)" />
+          <div class="check-icon"></div>
+          <span class="option-text">투자 목적별 맞춤 전략 수립(시세차익/월세수익/법인투자 등)</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '전담 매니저 1:1 배정 및 전화/카톡 상시 상담', this)">
+          <input type="checkbox" name="q11" value="전담 매니저 1:1 배정 및 전화/카톡 상시 상담" />
+          <div class="check-icon"></div>
+          <span class="option-text">전담 매니저 1:1 배정 및 전화/카톡 상시 상담</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '투자 유망 지역 분석 리포트 제공', this)">
+          <input type="checkbox" name="q11" value="투자 유망 지역 분석 리포트 제공" />
+          <div class="check-icon"></div>
+          <span class="option-text">투자 유망 지역 분석 리포트 제공</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '매물 직접 발굴 및 현장 답사 동행', this)">
+          <input type="checkbox" name="q11" value="매물 직접 발굴 및 현장 답사 동행" />
+          <div class="check-icon"></div>
+          <span class="option-text">매물 직접 발굴 및 현장 답사 동행</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '시세 및 수익률 분석 자료 제공', this)">
+          <input type="checkbox" name="q11" value="시세 및 수익률 분석 자료 제공" />
+          <div class="check-icon"></div>
+          <span class="option-text">시세 및 수익률 분석 자료 제공</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '매도자 협상 대행', this)">
+          <input type="checkbox" name="q11" value="매도자 협상 대행" />
+          <div class="check-icon"></div>
+          <span class="option-text">매도자 협상 대행</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '계약서 검토 및 계약 동행', this)">
+          <input type="checkbox" name="q11" value="계약서 검토 및 계약 동행" />
+          <div class="check-icon"></div>
+          <span class="option-text">계약서 검토 및 계약 동행</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '잔금·등기 절차 안내 및 동행', this)">
+          <input type="checkbox" name="q11" value="잔금·등기 절차 안내 및 동행" />
+          <div class="check-icon"></div>
+          <span class="option-text">잔금·등기 절차 안내 및 동행</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '투자 후 관리 컨설팅(임대 관리·매도 시점 조언 등)', this)">
+          <input type="checkbox" name="q11" value="투자 후 관리 컨설팅(임대 관리·매도 시점 조언 등)" />
+          <div class="check-icon"></div>
+          <span class="option-text">투자 후 관리 컨설팅(임대 관리·매도 시점 조언 등)</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '세금·절세 전략 연계 서비스(세무사 연결)', this)">
+          <input type="checkbox" name="q11" value="세금·절세 전략 연계 서비스(세무사 연결)" />
+          <div class="check-icon"></div>
+          <span class="option-text">세금·절세 전략 연계 서비스(세무사 연결)</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '법률 리스크 검토(변호사·법무사 연결)', this)">
+          <input type="checkbox" name="q11" value="법률 리스크 검토(변호사·법무사 연결)" />
+          <div class="check-icon"></div>
+          <span class="option-text">법률 리스크 검토(변호사·법무사 연결)</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택최대3개('q11', '기타', this, 'q11Other')">
+          <input type="checkbox" name="q11" value="기타" />
+          <div class="check-icon"></div>
+          <span class="option-text">기타</span>
+        </div>
+        <input type="text" class="other-input" id="q11Other" placeholder="직접 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q11Error">하나 이상 선택해 주세요. (최대 3개)</div>
+    </div>
+
+    <!-- ===== 스텝 15: Q12. 서비스 관련 추가 의견 (관심있는 경우 마지막) ===== -->
+    <div class="step" data-step="15">
+      <div class="question-badge">Q12 · 선택</div>
+      <div class="question-title">풀케어 서비스와 관련하여<br>추가로 하고 싶은 말씀이 있으신가요?</div>
+      <div class="question-hint">선택 항목입니다. 자유롭게 작성해 주세요.</div>
+
+      <textarea class="textarea-field" id="q12Text" placeholder="서비스 개선 의견, 궁금한 점, 기대 사항 등 자유롭게 적어주세요..."></textarea>
+    </div>
+
+    <!-- ===== 스텝 16: Q13. 관심 없는 이유 (Q9=관심없는 경우) ===== -->
+    <div class="step" data-step="16">
+      <div class="question-badge">Q13 · 필수</div>
+      <div class="question-title">풀케어 서비스에 관심이 없으신<br>이유를 알려주세요.</div>
+      <div class="question-hint">해당하는 항목을 모두 선택해 주세요. 복수 선택 가능.</div>
+
+      <div class="options-list" id="q13Options">
+        <div class="option-item" onclick="체크박스선택('q13', '이미 신뢰하는 부동산 전문가가 있다', this)">
+          <input type="checkbox" name="q13" value="이미 신뢰하는 부동산 전문가가 있다" />
+          <div class="check-icon"></div>
+          <span class="option-text">이미 신뢰하는 부동산 전문가가 있다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q13', '직접 투자 결정을 내리고 싶다', this)">
+          <input type="checkbox" name="q13" value="직접 투자 결정을 내리고 싶다" />
+          <div class="check-icon"></div>
+          <span class="option-text">직접 투자 결정을 내리고 싶다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q13', '서비스 가격이 부담된다', this)">
+          <input type="checkbox" name="q13" value="서비스 가격이 부담된다" />
+          <div class="check-icon"></div>
+          <span class="option-text">서비스 가격이 부담된다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q13', '서비스 신뢰도가 아직 확인되지 않았다', this)">
+          <input type="checkbox" name="q13" value="서비스 신뢰도가 아직 확인되지 않았다" />
+          <div class="check-icon"></div>
+          <span class="option-text">서비스 신뢰도가 아직 확인되지 않았다</span>
+        </div>
+        <div class="option-item" onclick="체크박스선택('q13', '기타', this, 'q13Other')">
+          <input type="checkbox" name="q13" value="기타" />
+          <div class="check-icon"></div>
+          <span class="option-text">기타</span>
+        </div>
+        <input type="text" class="other-input" id="q13Other" placeholder="직접 입력해 주세요" />
+      </div>
+      <div class="error-message" id="q13Error">하나 이상 선택해 주세요.</div>
+    </div>
+
+    <!-- ===== 스텝 17: 감사 화면 ===== -->
+    <div class="step" data-step="17">
+      <div class="thank-you-screen">
+        <div class="thank-you-icon">🎉</div>
+        <h2 class="thank-you-title">
+          설문이 <span>완료</span>되었습니다!
+        </h2>
+        <p class="thank-you-desc">
+          소중한 의견을 남겨주셔서 감사합니다.<br>
+          회원님의 의견은 더 나은 퍼스트클래스<br>
+          서비스를 만드는 데 소중히 활용하겠습니다.<br><br>
+          <strong style="color:#d4af37;">바로이집 퍼스트클래스</strong>와 함께<br>
+          성공적인 부동산 투자 여정을 이어가세요.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /.survey-body -->
+
+  <!-- 이전/다음 버튼 영역 -->
+  <div class="nav-buttons" id="navButtons">
+    <button class="btn-prev" id="btnPrev" onclick="이전으로가기()" disabled>← 이전</button>
+    <button class="btn-next" id="btnNext" onclick="다음으로가기()">다음 →</button>
+  </div>
+
+</div><!-- /.survey-container -->
+
+<!-- ============================================================
+     관리자 버튼 (오른쪽 하단 고정)
+============================================================ -->
+<button class="admin-btn" onclick="관리자모달열기()" title="관리자 대시보드">⚙</button>
+
+<!-- ============================================================
+     관리자 로그인 모달 (작은 팝업)
+============================================================ -->
+<div class="login-modal-overlay" id="loginModal">
+  <div class="login-modal-box">
+    <div class="login-modal-title">🔐 관리자 로그인</div>
+    <div class="login-modal-sub">관리자 코드를 입력해 주세요.</div>
+    <input type="password" class="admin-input" id="adminPwInput"
+           maxlength="10" placeholder="••••"
+           onkeydown="if(event.key==='Enter') 관리자로그인()" />
+    <button class="btn-admin-login" onclick="관리자로그인()">입장하기</button>
+    <button class="btn-admin-cancel" onclick="로그인모달닫기()">취소</button>
+    <div class="error-message" id="adminLoginError" style="margin-top:10px; text-align:center;">
+      코드가 올바르지 않습니다.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     관리자 대시보드 (전체화면 오버레이)
+============================================================ -->
+<div class="admin-dashboard" id="adminDashboard">
+
+  <!-- 대시보드 헤더 -->
+  <div class="dash-header">
+    <div>
+      <div class="dash-brand">바로이집 · 퍼스트클래스</div>
+      <div class="dash-title">📊 설문 응답 대시보드</div>
+    </div>
+    <div class="dash-header-right">
+      <button class="dash-btn dash-btn-primary" onclick="CSV다운로드()">📥 CSV 다운로드</button>
+      <button class="dash-btn dash-btn-danger" onclick="응답전체삭제()">🗑 전체 삭제</button>
+      <button class="dash-btn dash-btn-close" onclick="대시보드닫기()">✕</button>
+    </div>
+  </div>
+
+  <!-- 탭 네비게이션 -->
+  <div class="dash-tabs">
+    <button class="dash-tab active" id="tabStats" onclick="탭전환('stats')">📊 통계 요약</button>
+    <button class="dash-tab" id="tabIndiv" onclick="탭전환('indiv')">📋 개별 응답</button>
+  </div>
+
+  <!-- 대시보드 본문 (JS로 채워짐) -->
+  <div class="dash-body" id="dashBody"></div>
+</div>
+
+<!-- ============================================================
+     JavaScript: 설문 동작 전체 로직
+============================================================ -->
+<script>
+  /* ============================================================
+     전역 상태 변수
+     현재 어떤 화면에 있는지, 응답 데이터를 저장합니다.
+  ============================================================ */
+
+  // 현재 보여지는 스텝 번호 (0=환영화면, 17=감사화면)
+  let 현재스텝 = 0;
+
+  // 사용자 응답 데이터를 저장하는 객체
+  let 응답데이터 = {};
+
+  // 어드민 개별 응답에서 체크박스로 선택된 응답 ID 목록 (Set = 중복 없는 집합)
+  let 선택된항목 = new Set();
+
+  // 현재 화면에 표시된 응답들의 Supabase ID 목록 (전체선택에 사용)
+  let 현재응답IDs = [];
+
+  /* ============================================================
+     Supabase 연결 설정
+     모든 설문 응답을 중앙 DB에 저장/조회합니다.
+  ============================================================ */
+  /* ============================================================
+     Supabase REST API 설정
+     외부 라이브러리 없이 브라우저 기본 fetch로 DB와 통신합니다.
+  ============================================================ */
+  const SUPABASE_URL = 'https://mcxzbnzftxdxrifondrq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jeHpibnpmdHhkeHJpZm9uZHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTI0MzQsImV4cCI6MjA4NzM4ODQzNH0.BMytgm93PHiRWTjqzvkIKfYBWvCFhmi4L7o6JQzPlp0';
+  // Supabase REST API 공통 헤더
+  const SB_HEADERS = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json'
+  };
+
+  /* ============================================================
+     스텝 이동 경로를 계산하는 함수
+     Q6, Q9의 답변에 따라 다른 경로로 이동합니다.
+     예) Q6=예 → Q6-1 표시 / Q9=관심없다 → Q13으로 이동
+  ============================================================ */
+  function 다음스텝번호가져오기(현재) {
+    // 환영화면(0) → Q1(1)
+    if (현재 === 0) return 1;
+    // Q1(1) → Q2(2)
+    if (현재 === 1) return 2;
+    // Q2(2) → Q3(3)
+    if (현재 === 2) return 3;
+    // Q3(3) → Q4(4)
+    if (현재 === 3) return 4;
+    // Q4(4) → Q5(5)
+    if (현재 === 4) return 5;
+    // Q5(5) → Q6(6)
+    if (현재 === 5) return 6;
+    // Q6(6): 예이면 → Q6-1(7), 아니오면 → Q7(8)
+    if (현재 === 6) {
+      if (응답데이터.q6 === '예') return 7;
+      return 8;
+    }
+    // Q6-1(7) → Q7(8)
+    if (현재 === 7) return 8;
+    // Q7(8) → Q7-1(9)
+    if (현재 === 8) return 9;
+    // Q7-1(9) → Q8(10)
+    if (현재 === 9) return 10;
+    // Q8(10) → 서비스소개(11)
+    if (현재 === 10) return 11;
+    // 서비스소개(11) → Q9(12)
+    if (현재 === 11) return 12;
+    // Q9(12): 관심없다/전혀관심없다 → Q13(16), 나머지 → Q10(13)
+    if (현재 === 12) {
+      const q9 = 응답데이터.q9;
+      if (q9 === '관심 없다' || q9 === '전혀 관심 없다') return 16;
+      return 13;
+    }
+    // Q10(13) → Q11(14)
+    if (현재 === 13) return 14;
+    // Q11(14) → Q12(15)
+    if (현재 === 14) return 15;
+    // Q12(15) → 감사화면(17)
+    if (현재 === 15) return 17;
+    // Q13(16) → 감사화면(17)
+    if (현재 === 16) return 17;
+    return null;
+  }
+
+  /* 이전 스텝 번호를 계산합니다. (다음과 반대 방향) */
+  function 이전스텝번호가져오기(현재) {
+    if (현재 === 1) return 0;
+    if (현재 === 2) return 1;
+    if (현재 === 3) return 2;
+    if (현재 === 4) return 3;
+    if (현재 === 5) return 4;
+    if (현재 === 6) return 5;
+    // Q6-1(7) → Q6(6)으로 돌아감
+    if (현재 === 7) return 6;
+    // Q7(8): Q6=예이면 Q6-1(7)에서 왔고, 아니오면 Q6(6)에서 왔음
+    if (현재 === 8) {
+      if (응답데이터.q6 === '예') return 7;
+      return 6;
+    }
+    if (현재 === 9) return 8;
+    if (현재 === 10) return 9;
+    if (현재 === 11) return 10;
+    if (현재 === 12) return 11;
+    if (현재 === 13) return 12;
+    if (현재 === 14) return 13;
+    if (현재 === 15) return 14;
+    // Q13(16): Q9(12)에서 왔음
+    if (현재 === 16) return 12;
+    return null;
+  }
+
+  /* ============================================================
+     진행률 바를 업데이트하는 함수
+     현재 스텝에 따라 진행률 바의 너비와 텍스트를 업데이트합니다.
+  ============================================================ */
+  function 진행률업데이트() {
+    const 진행률영역 = document.getElementById('progressArea');
+    const 라벨 = document.getElementById('progressLabel');
+    const 퍼센트텍스트 = document.getElementById('progressPercent');
+    const 채워지는바 = document.getElementById('progressFill');
+    const 버튼영역 = document.getElementById('navButtons');
+
+    // 환영화면(0)이나 감사화면(17)에서는 진행률 바 숨김
+    if (현재스텝 === 0 || 현재스텝 === 17) {
+      진행률영역.style.display = 'none';
+      버튼영역.style.display = 'none';
+      return;
+    }
+
+    진행률영역.style.display = 'block';
+    버튼영역.style.display = 'flex';
+
+    // Q9 답변에 따라 전체 질문 수가 달라집니다.
+    // 관심없는 경우: Q1~Q9, Q13 = 총 10문항
+    // 관심있는 경우: Q1~Q9, Q10~Q12 = 총 13문항
+    // 여기서는 최대 스텝 수를 기준으로 퍼센트 계산
+    const q9응답 = 응답데이터.q9;
+    let 총스텝수;
+    if (q9응답 === '관심 없다' || q9응답 === '전혀 관심 없다') {
+      총스텝수 = 10; // Q1~Q9(서비스소개 포함), Q13
+    } else {
+      총스텝수 = 13; // Q1~Q12 (서비스소개 포함)
+    }
+
+    // 현재 질문 번호 계산 (스텝 0=환영, 11=서비스소개 제외)
+    const 현재번호 = 현재스텝 <= 11 ? 현재스텝 : 현재스텝 - 1;
+    const 퍼센트 = Math.round((현재번호 / 총스텝수) * 100);
+
+    라벨.textContent = `질문 ${현재번호} / ${총스텝수}`;
+    퍼센트텍스트.textContent = `${퍼센트}%`;
+    채워지는바.style.width = `${퍼센트}%`;
+
+    // 이전 버튼: 환영화면 다음인 Q1에서는 비활성화
+    const 이전버튼 = document.getElementById('btnPrev');
+    이전버튼.disabled = (현재스텝 === 1);
+
+    // 마지막 질문에서는 "제출" 버튼으로 텍스트 변경
+    const 다음버튼 = document.getElementById('btnNext');
+    const 다음스텝 = 다음스텝번호가져오기(현재스텝);
+    if (현재스텝 === 11) {
+      다음버튼.textContent = '다음 →';
+    } else if (다음스텝 === 17) {
+      다음버튼.textContent = '제출하기 ✓';
+    } else {
+      다음버튼.textContent = '다음 →';
+    }
+  }
+
+  /* ============================================================
+     특정 스텝을 화면에 표시하는 함수
+     이전 스텝을 숨기고 새 스텝을 보여줍니다.
+  ============================================================ */
+  function 스텝이동(새스텝) {
+    // 현재 보이는 스텝 숨기기
+    const 현재요소 = document.querySelector(`.step[data-step="${현재스텝}"]`);
+    if (현재요소) 현재요소.classList.remove('active');
+
+    // 새 스텝 보이기
+    const 새요소 = document.querySelector(`.step[data-step="${새스텝}"]`);
+    if (새요소) 새요소.classList.add('active');
+
+    현재스텝 = 새스텝;
+    진행률업데이트();
+
+    // 페이지 맨 위로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ============================================================
+     "설문 시작하기" 버튼 클릭 시 실행되는 함수
+  ============================================================ */
+  function 시작하기() {
+    스텝이동(1);
+  }
+
+  /* ============================================================
+     현재 스텝의 유효성을 검사하는 함수
+     필수 항목이 비어있으면 오류 메시지를 보여주고 false를 반환합니다.
+     모두 입력되어 있으면 true를 반환합니다.
+  ============================================================ */
+  function 현재스텝유효성검사() {
+    // 오류 메시지 숨기는 헬퍼 함수
+    function 오류숨기기(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('visible');
+    }
+
+    // 오류 메시지 보여주는 헬퍼 함수
+    function 오류보이기(id, msg) {
+      const el = document.getElementById(id);
+      if (el) {
+        if (msg) el.textContent = msg;
+        el.classList.add('visible');
+      }
+    }
+
+    // 스텝 1: Q1 (라디오 필수)
+    if (현재스텝 === 1) {
+      오류숨기기('q1Error');
+      if (!응답데이터.q1) { 오류보이기('q1Error'); return false; }
+    }
+
+    // 스텝 2: Q2 (체크박스 필수, 1개 이상)
+    if (현재스텝 === 2) {
+      오류숨기기('q2Error');
+      const 선택된값 = 응답데이터.q2 || [];
+      if (선택된값.length === 0) { 오류보이기('q2Error'); return false; }
+    }
+
+    // 스텝 3: Q3 (선택사항 → 유효성 검사 없음)
+    // 스텝 4: Q4 (체크박스 필수)
+    if (현재스텝 === 4) {
+      오류숨기기('q4Error');
+      const 선택된값 = 응답데이터.q4 || [];
+      if (선택된값.length === 0) { 오류보이기('q4Error'); return false; }
+    }
+
+    // 스텝 5: Q5 (선택사항)
+
+    // 스텝 6: Q6 (라디오 필수)
+    if (현재스텝 === 6) {
+      오류숨기기('q6Error');
+      if (!응답데이터.q6) { 오류보이기('q6Error'); return false; }
+    }
+
+    // 스텝 7: Q6-1 (라디오 필수)
+    if (현재스텝 === 7) {
+      오류숨기기('q6_1Error');
+      if (!응답데이터.q6_1) { 오류보이기('q6_1Error'); return false; }
+    }
+
+    // 스텝 8: Q7 (라디오 필수)
+    if (현재스텝 === 8) {
+      오류숨기기('q7Error');
+      if (!응답데이터.q7) { 오류보이기('q7Error'); return false; }
+    }
+
+    // 스텝 9, 10: Q7-1, Q8 (선택사항)
+
+    // 스텝 11: 서비스 소개 화면 (유효성 검사 없음)
+
+    // 스텝 12: Q9 (라디오 필수)
+    if (현재스텝 === 12) {
+      오류숨기기('q9Error');
+      if (!응답데이터.q9) { 오류보이기('q9Error'); return false; }
+    }
+
+    // 스텝 13: Q10 (체크박스 필수)
+    if (현재스텝 === 13) {
+      오류숨기기('q10Error');
+      const 선택된값 = 응답데이터.q10 || [];
+      if (선택된값.length === 0) { 오류보이기('q10Error'); return false; }
+    }
+
+    // 스텝 14: Q11 (체크박스 필수, 최대 3개)
+    if (현재스텝 === 14) {
+      오류숨기기('q11Error');
+      const 선택된값 = 응답데이터.q11 || [];
+      if (선택된값.length === 0) { 오류보이기('q11Error', '하나 이상 선택해 주세요. (최대 3개)'); return false; }
+    }
+
+    // 스텝 15: Q12 (선택사항)
+
+    // 스텝 16: Q13 (체크박스 필수)
+    if (현재스텝 === 16) {
+      오류숨기기('q13Error');
+      const 선택된값 = 응답데이터.q13 || [];
+      if (선택된값.length === 0) { 오류보이기('q13Error'); return false; }
+    }
+
+    return true;
+  }
+
+  /* ============================================================
+     "다음" 버튼 클릭 시 실행되는 함수
+     현재 스텝의 응답을 저장하고 다음 스텝으로 이동합니다.
+  ============================================================ */
+  async function 다음으로가기() {
+    // 현재 스텝의 텍스트 입력 값 저장
+    현재스텝텍스트저장();
+
+    // 필수 항목 유효성 검사
+    if (!현재스텝유효성검사()) return;
+
+    const 다음 = 다음스텝번호가져오기(현재스텝);
+    if (다음 === null) return;
+
+    // 감사화면으로 이동하기 전에 최종 데이터를 DB에 저장
+    if (다음 === 17) {
+      await 응답저장();
+    }
+
+    스텝이동(다음);
+  }
+
+  /* ============================================================
+     "이전" 버튼 클릭 시 실행되는 함수
+     이전 스텝으로 돌아갑니다.
+  ============================================================ */
+  function 이전으로가기() {
+    // 현재 스텝의 텍스트 입력 값 임시 저장
+    현재스텝텍스트저장();
+
+    const 이전 = 이전스텝번호가져오기(현재스텝);
+    if (이전 === null) return;
+
+    스텝이동(이전);
+  }
+
+  /* ============================================================
+     현재 스텝의 텍스트 입력 값을 응답데이터에 저장하는 함수
+  ============================================================ */
+  function 현재스텝텍스트저장() {
+    // Q3: 개선 사항 텍스트 저장
+    if (현재스텝 === 3) {
+      응답데이터.q3 = document.getElementById('q3Text').value.trim();
+    }
+    // Q5: 우선순위 저장
+    if (현재스텝 === 5) {
+      응답데이터.q5_1순위 = document.getElementById('q5First').value.trim();
+      응답데이터.q5_2순위 = document.getElementById('q5Second').value.trim();
+    }
+    // Q6: 타 서비스명 저장 (예 선택 시)
+    if (현재스텝 === 6 && 응답데이터.q6 === '예') {
+      응답데이터.q6_service = document.getElementById('q6Service').value.trim();
+    }
+    // Q7-1: 추천 이유 저장
+    if (현재스텝 === 9) {
+      응답데이터.q7_1 = document.getElementById('q7_1Text').value.trim();
+    }
+    // Q8: 자유 의견 저장
+    if (현재스텝 === 10) {
+      응답데이터.q8 = document.getElementById('q8Text').value.trim();
+    }
+    // Q12: 서비스 추가 의견 저장
+    if (현재스텝 === 15) {
+      응답데이터.q12 = document.getElementById('q12Text').value.trim();
+    }
+  }
+
+  /* ============================================================
+     라디오 버튼 선택 처리 함수
+     클릭한 항목을 선택 상태로 표시하고 나머지는 해제합니다.
+     - 질문이름: 어떤 질문인지 (예: 'q1')
+     - 값: 선택된 항목의 값
+     - 클릭된요소: 사용자가 클릭한 카드 DOM 요소
+  ============================================================ */
+  function 라디오선택(질문이름, 값, 클릭된요소) {
+    // 같은 그룹의 모든 카드에서 'selected' 클래스 제거
+    const 모든카드 = 클릭된요소.closest('.options-list').querySelectorAll('.option-item');
+    모든카드.forEach(카드 => 카드.classList.remove('selected'));
+
+    // 클릭한 카드에 'selected' 클래스 추가
+    클릭된요소.classList.add('selected');
+
+    // 응답 데이터에 저장
+    응답데이터[질문이름] = 값;
+
+    // Q6: 예/아니오 선택에 따라 서비스명 입력 필드 보이기/숨기기
+    if (질문이름 === 'q6') {
+      const 서비스입력영역 = document.getElementById('q6ServiceArea');
+      서비스입력영역.style.display = (값 === '예') ? 'block' : 'none';
+      if (값 !== '예') 응답데이터.q6_service = '';
+    }
+
+    // 오류 메시지 숨기기
+    const 오류요소 = document.getElementById(`${질문이름}Error`);
+    if (오류요소) 오류요소.classList.remove('visible');
+
+    // 진행률 버튼 텍스트 업데이트 (Q9 선택 후 버튼 텍스트 변경될 수 있음)
+    진행률업데이트();
+  }
+
+  /* ============================================================
+     체크박스 선택 처리 함수 (복수 선택 가능)
+     클릭한 항목의 선택 상태를 토글합니다.
+     - 질문이름: 어떤 질문인지
+     - 값: 선택된 항목의 값
+     - 클릭된요소: 클릭한 카드 DOM 요소
+     - 기타입력ID: "기타" 선택 시 보여줄 입력 필드의 ID (선택적)
+  ============================================================ */
+  function 체크박스선택(질문이름, 값, 클릭된요소, 기타입력ID) {
+    // 응답 배열이 없으면 초기화
+    if (!응답데이터[질문이름]) 응답데이터[질문이름] = [];
+
+    const 이미선택됨 = 클릭된요소.classList.contains('selected');
+
+    if (이미선택됨) {
+      // 이미 선택된 항목을 클릭하면 → 선택 해제
+      클릭된요소.classList.remove('selected');
+      응답데이터[질문이름] = 응답데이터[질문이름].filter(v => v !== 값);
+
+      // "기타" 입력 필드 숨기기
+      if (기타입력ID) {
+        const 기타필드 = document.getElementById(기타입력ID);
+        if (기타필드) 기타필드.classList.remove('visible');
+      }
+    } else {
+      // 선택되지 않은 항목을 클릭하면 → 선택
+      클릭된요소.classList.add('selected');
+      응답데이터[질문이름].push(값);
+
+      // "기타" 입력 필드 보이기
+      if (기타입력ID) {
+        const 기타필드 = document.getElementById(기타입력ID);
+        if (기타필드) 기타필드.classList.add('visible');
+      }
+    }
+
+    // 오류 메시지 숨기기
+    const 오류요소 = document.getElementById(`${질문이름}Error`);
+    if (오류요소) 오류요소.classList.remove('visible');
+  }
+
+  /* ============================================================
+     체크박스 최대 3개 선택 제한 함수 (Q11 전용)
+     이미 3개가 선택된 상태에서 추가 선택 시 경고 메시지 표시
+  ============================================================ */
+  function 체크박스선택최대3개(질문이름, 값, 클릭된요소, 기타입력ID) {
+    if (!응답데이터[질문이름]) 응답데이터[질문이름] = [];
+
+    const 이미선택됨 = 클릭된요소.classList.contains('selected');
+
+    if (이미선택됨) {
+      // 선택 해제
+      클릭된요소.classList.remove('selected');
+      응답데이터[질문이름] = 응답데이터[질문이름].filter(v => v !== 값);
+
+      if (기타입력ID) {
+        const 기타필드 = document.getElementById(기타입력ID);
+        if (기타필드) 기타필드.classList.remove('visible');
+      }
+    } else {
+      // 이미 3개 선택된 경우 추가 선택 불가
+      if (응답데이터[질문이름].length >= 3) {
+        const 오류요소 = document.getElementById(`${질문이름}Error`);
+        if (오류요소) {
+          오류요소.textContent = '최대 3개까지만 선택할 수 있습니다.';
+          오류요소.classList.add('visible');
+          // 3초 후 자동으로 오류 메시지 숨김
+          setTimeout(() => 오류요소.classList.remove('visible'), 3000);
+        }
+        return;
+      }
+
+      // 선택 추가
+      클릭된요소.classList.add('selected');
+      응답데이터[질문이름].push(값);
+
+      if (기타입력ID) {
+        const 기타필드 = document.getElementById(기타입력ID);
+        if (기타필드) 기타필드.classList.add('visible');
+      }
+    }
+
+    // 선택 수가 3개 미만이면 오류 메시지 숨기기
+    const 오류요소 = document.getElementById(`${질문이름}Error`);
+    if (오류요소) 오류요소.classList.remove('visible');
+  }
+
+  /* ============================================================
+     응답 데이터를 Supabase DB에 저장하는 함수
+     제출 시 호출되며, 모든 기기의 응답이 중앙 DB에 쌓입니다.
+  ============================================================ */
+  async function 응답저장() {
+    // 기타 입력 필드 값도 응답에 추가
+    const 기타필드목록 = [
+      { 키: 'q2Other', 저장키: 'q2_기타내용', 질문: 'q2' },
+      { 키: 'q4Other', 저장키: 'q4_기타내용', 질문: 'q4' },
+      { 키: 'q10Other', 저장키: 'q10_기타내용', 질문: 'q10' },
+      { 키: 'q11Other', 저장키: 'q11_기타내용', 질문: 'q11' },
+      { 키: 'q13Other', 저장키: 'q13_기타내용', 질문: 'q13' },
+    ];
+
+    기타필드목록.forEach(항목 => {
+      const 필드 = document.getElementById(항목.키);
+      if (필드 && 필드.value.trim()) {
+        응답데이터[항목.저장키] = 필드.value.trim();
+      }
+    });
+
+    // 현재 시각 저장
+    응답데이터.제출시각 = new Date().toLocaleString('ko-KR');
+
+    // Supabase REST API로 응답 저장 (모바일/PC 모두 같은 DB에 쌓임)
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ response_data: 응답데이터 })
+    });
+
+    if (!res.ok) {
+      // 저장 실패 시 사용자에게 재시도 안내
+      alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  }
+
+  /* ============================================================
+     관리자 패널 열기/닫기
+  ============================================================ */
+
+  // 우하단 ⚙ 버튼 클릭 → 로그인 모달 열기
+  function 관리자모달열기() {
+    document.getElementById('loginModal').classList.add('open');
+    document.getElementById('adminPwInput').value = '';
+    document.getElementById('adminLoginError').classList.remove('visible');
+    setTimeout(() => document.getElementById('adminPwInput').focus(), 120);
+  }
+
+  // 로그인 모달 닫기
+  function 로그인모달닫기() {
+    document.getElementById('loginModal').classList.remove('open');
+  }
+
+  // 모달 바깥 클릭 시 닫기
+  document.getElementById('loginModal').addEventListener('click', function(e) {
+    if (e.target === this) 로그인모달닫기();
+  });
+
+  // 대시보드 닫기
+  function 대시보드닫기() {
+    document.getElementById('adminDashboard').classList.remove('open');
+  }
+
+  /* ============================================================
+     관리자 로그인 함수
+     코드 '2340' 입력 시 전체화면 대시보드를 엽니다.
+  ============================================================ */
+  function 관리자로그인() {
+    const 입력값 = document.getElementById('adminPwInput').value;
+    if (입력값 === '2340') {
+      // 로그인 성공 → 모달 닫고 대시보드 열기
+      로그인모달닫기();
+      document.getElementById('adminDashboard').classList.add('open');
+      대시보드렌더링('stats'); // 통계 탭을 기본으로 표시
+    } else {
+      document.getElementById('adminLoginError').classList.add('visible');
+    }
+  }
+
+  /* ============================================================
+     탭 전환 (통계 요약 ↔ 개별 응답)
+  ============================================================ */
+  async function 탭전환(탭이름) {
+    // 모든 탭 버튼에서 활성화 표시 제거
+    document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+    // 클릭된 탭에 활성화 표시
+    document.getElementById(탭이름 === 'stats' ? 'tabStats' : 'tabIndiv').classList.add('active');
+    await 대시보드렌더링(탭이름);
+  }
+
+  /* ============================================================
+     대시보드 메인 렌더링 함수
+     Supabase DB에서 모든 응답을 불러와 탭에 맞게 화면을 채웁니다.
+  ============================================================ */
+  async function 대시보드렌더링(탭) {
+    const 본문 = document.getElementById('dashBody');
+    본문.innerHTML = '<div class="no-data-msg">⏳ 데이터를 불러오는 중...</div>';
+
+    // Supabase REST API로 전체 응답 조회 (오래된 순 정렬)
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/survey_responses?select=id,response_data&order=id.asc`,
+      { headers: SB_HEADERS }
+    );
+
+    if (!res.ok) {
+      본문.innerHTML = '<div class="no-data-msg">❌ 데이터를 불러오지 못했습니다.<br>잠시 후 다시 시도해주세요.</div>';
+      return;
+    }
+
+    const rows = await res.json();
+
+    // DB row를 { _id, ...응답데이터 } 형태로 변환
+    const 응답목록 = (rows || []).map(row => ({ _id: row.id, ...row.response_data }));
+
+    // 전체선택 토글에 사용할 ID 목록 갱신
+    현재응답IDs = 응답목록.map(r => r._id);
+
+    본문.innerHTML = (탭 === 'stats') ? 통계HTML생성(응답목록) : 개별응답HTML생성(응답목록);
+  }
+
+  /* ============================================================
+     통계 탭 HTML 생성
+     각 질문의 응답을 집계하여 막대차트와 텍스트 목록으로 표시합니다.
+  ============================================================ */
+  function 통계HTML생성(응답목록) {
+    const 총응답수 = 응답목록.length;
+
+    // 응답이 없으면 안내 메시지 표시
+    if (총응답수 === 0) {
+      return `<div class="no-data-msg">📭 아직 응답이 없습니다.<br>설문 링크를 공유하고 응답을 기다려 주세요.</div>`;
+    }
+
+    // --- 집계 헬퍼 함수들 ---
+
+    // 단일 선택(라디오) 응답을 항목별로 카운팅
+    function 단일집계(키) {
+      const 결과 = {};
+      응답목록.forEach(r => { const v = r[키]; if (v) 결과[v] = (결과[v] || 0) + 1; });
+      return 결과;
+    }
+
+    // 복수 선택(체크박스) 응답을 항목별로 카운팅
+    function 복수집계(키) {
+      const 결과 = {};
+      응답목록.forEach(r => {
+        (r[키] || []).forEach(v => { 결과[v] = (결과[v] || 0) + 1; });
+      });
+      return 결과;
+    }
+
+    // 자유응답(텍스트) 수집 — 빈 값 제외
+    function 텍스트수집(키) {
+      return 응답목록.map(r => r[키]).filter(v => v && String(v).trim());
+    }
+
+    // --- 요약 수치 계산 ---
+    const 만족도점수 = {'매우 만족':5,'만족':4,'보통':3,'불만족':2,'매우 불만족':1};
+    const 만족도합 = 응답목록.reduce((합, r) => 합 + (만족도점수[r.q1] || 0), 0);
+    const 평균만족도 = (만족도합 / 총응답수).toFixed(1);
+    const 추천률 = Math.round(응답목록.filter(r => r.q7 === '예').length / 총응답수 * 100);
+    const 관심률 = Math.round(응답목록.filter(r =>
+      ['매우 관심 있다','관심 있다','보통이다'].includes(r.q9)).length / 총응답수 * 100);
+
+    // --- 막대차트 HTML 생성 헬퍼 ---
+    function 막대차트(집계, 항목순서) {
+      const 최대값 = Math.max(...Object.values(집계), 1);
+      return 항목순서.map(항목 => {
+        const 수 = 집계[항목] || 0;
+        const 비율 = Math.round(수 / 총응답수 * 100);
+        const 너비 = Math.round(수 / 최대값 * 100);
+        return `<div class="chart-row">
+          <span class="chart-label" title="${항목}">${항목}</span>
+          <div class="chart-bar-wrap"><div class="chart-bar" style="width:${너비}%"></div></div>
+          <span class="chart-count">${수}명 (${비율}%)</span>
+        </div>`;
+      }).join('');
+    }
+
+    // 자유응답 텍스트 목록 HTML
+    function 텍스트목록(배열) {
+      if (!배열.length) return `<div class="text-response-empty">작성된 의견이 없습니다.</div>`;
+      return `<div class="text-responses">${배열.map(t =>
+        `<div class="text-response-item">${String(t).replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`
+      ).join('')}</div>`;
+    }
+
+    // --- 집계 데이터 미리 계산 ---
+    const q1집계  = 단일집계('q1');
+    const q2집계  = 복수집계('q2');
+    const q4집계  = 복수집계('q4');
+    const q6집계  = 단일집계('q6');
+    const q61집계 = 단일집계('q6_1');
+    const q7집계  = 단일집계('q7');
+    const q9집계  = 단일집계('q9');
+    const q10집계 = 복수집계('q10');
+    const q11집계 = 복수집계('q11');
+    const q13집계 = 복수집계('q13');
+
+    // Q6 예 응답자의 타 서비스명 목록
+    const 타서비스목록 = 응답목록.filter(r => r.q6_service && r.q6_service.trim())
+                                   .map(r => r.q6_service.trim());
+
+    // Q5 우선순위 응답 목록
+    const q5응답 = 응답목록.filter(r => r['q5_1순위'] || r['q5_2순위']);
+
+    return `
+    <!-- ① 요약 카드 4개 -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-card-value">${총응답수}</div>
+        <div class="summary-card-label">총 응답 수</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-value">${평균만족도}</div>
+        <div class="summary-card-label">평균 만족도 / 5점</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-value">${추천률}%</div>
+        <div class="summary-card-label">지인 추천 의향률</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-value">${관심률}%</div>
+        <div class="summary-card-label">풀케어 서비스 관심률</div>
+      </div>
+    </div>
+
+    <!-- ② 섹션: 회원 만족도 -->
+    <div class="dash-section">
+      <div class="dash-section-title">🏆 퍼스트클래스 회원 혜택 만족도 <span class="badge">Q1 ~ Q5</span></div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q1. 전반적 만족도</div>
+        ${막대차트(q1집계, ['매우 만족','만족','보통','불만족','매우 불만족'])}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q2. 가장 자주 이용하는 혜택 <span style="color:#666688; font-weight:400">(복수 선택)</span></div>
+        ${막대차트(q2집계, ['전용 라운지 이용','퍼스트 톡방','고수 상담',
+          '콘텐츠: 고수의 임장 및 리포트','콘텐츠: 퍼스트 세미나','기타'])}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q3. 개선이 필요한 혜택 의견</div>
+        ${텍스트목록(텍스트수집('q3'))}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q4. 원하는 새로운 혜택 <span style="color:#666688; font-weight:400">(복수 선택)</span></div>
+        ${막대차트(q4집계, ['퍼스트 클래스 회원 전용 네트워킹 모임','새로운 강사들의 스페셜 세미나',
+          '고수들과의 커피챗 타임','1:1 오프라인 무료 상담','기타'])}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q5. 원하는 혜택 우선순위</div>
+        ${q5응답.length === 0
+          ? `<div class="text-response-empty">입력된 순위가 없습니다.</div>`
+          : `<div class="text-responses">${q5응답.map(r =>
+              `<div class="text-response-item">
+                1순위: <strong>${(r['q5_1순위']||'-').replace(/</g,'&lt;')}</strong>
+                &nbsp;/&nbsp;
+                2순위: <strong>${(r['q5_2순위']||'-').replace(/</g,'&lt;')}</strong>
+              </div>`).join('')}</div>`}
+      </div>
+    </div>
+
+    <!-- ③ 섹션: 경쟁력 분석 -->
+    <div class="dash-section">
+      <div class="dash-section-title">⚔️ 경쟁력 & 추천 분석 <span class="badge">Q6 ~ Q8</span></div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q6. 타 브랜드 멤버십 이용 여부</div>
+        ${막대차트(q6집계, ['예','아니오'])}
+        ${타서비스목록.length > 0 ? `
+          <div style="margin-top:14px; font-size:12px; color:#8888aa; margin-bottom:6px;">▸ 이용 중인 타 서비스 목록:</div>
+          <div class="text-responses">${타서비스목록.map(s =>
+            `<div class="text-response-item">${s.replace(/</g,'&lt;')}</div>`).join('')}
+          </div>` : ''}
+      </div>
+
+      ${Object.keys(q61집계).length > 0 ? `
+      <div class="chart-container">
+        <div class="chart-title">Q6-1. 타 서비스 대비 경쟁력 평가 <span style="color:#666688; font-weight:400">(Q6=예 응답자)</span></div>
+        ${막대차트(q61집계, ['훨씬 우수하다','약간 우수하다','비슷하다','약간 부족하다','많이 부족하다'])}
+      </div>` : ''}
+
+      <div class="chart-container">
+        <div class="chart-title">Q7. 지인 추천 의향</div>
+        ${막대차트(q7집계, ['예','아니요'])}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q7-1. 추천·비추천 이유</div>
+        ${텍스트목록(텍스트수집('q7_1'))}
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q8. 전반적 자유 의견</div>
+        ${텍스트목록(텍스트수집('q8'))}
+      </div>
+    </div>
+
+    <!-- ④ 섹션: 풀케어 서비스 -->
+    <div class="dash-section">
+      <div class="dash-section-title">🏠 바로이집 풀케어 서비스 관심도 <span class="badge">Q9 ~ Q13</span></div>
+
+      <div class="chart-container">
+        <div class="chart-title">Q9. 풀케어 서비스 전반적 관심도</div>
+        ${막대차트(q9집계, ['매우 관심 있다','관심 있다','보통이다','관심 없다','전혀 관심 없다'])}
+      </div>
+
+      ${Object.keys(q10집계).length > 0 ? `
+      <div class="chart-container">
+        <div class="chart-title">Q10. 부동산 투자 시 어려운 점 <span style="color:#666688; font-weight:400">(복수 선택)</span></div>
+        ${막대차트(q10집계, [
+          '어디에 투자해야 할지 정보가 부족하다','좋은 매물을 찾기가 어렵다',
+          '시세 분석 및 적정가 판단이 어렵다','협상 및 계약 과정이 낯설고 복잡하다',
+          '투자 후 관리가 막막하다','믿을 수 있는 전문가를 찾기 어렵다',
+          '바빠서 직접 발품을 팔 시간이 없다','기타'])}
+      </div>` : ''}
+
+      ${Object.keys(q11집계).length > 0 ? `
+      <div class="chart-container">
+        <div class="chart-title">Q11. 풀케어 서비스 필수 포함 항목 <span style="color:#666688; font-weight:400">(최대 3개 선택)</span></div>
+        ${막대차트(q11집계, [
+          '투자 목적별 맞춤 전략 수립','전담 매니저 1:1 배정 및 상시 상담',
+          '투자 유망 지역 분석 리포트','매물 직접 발굴 및 현장 답사 동행',
+          '시세 및 수익률 분석 자료','매도자 협상 대행',
+          '계약서 검토 및 계약 동행','잔금·등기 절차 안내 및 동행',
+          '투자 후 관리 컨설팅','세금·절세 전략 연계 서비스','법률 리스크 검토','기타'])}
+      </div>` : ''}
+
+      ${텍스트수집('q12').length > 0 ? `
+      <div class="chart-container">
+        <div class="chart-title">Q12. 서비스 관련 추가 의견</div>
+        ${텍스트목록(텍스트수집('q12'))}
+      </div>` : ''}
+
+      ${Object.keys(q13집계).length > 0 ? `
+      <div class="chart-container">
+        <div class="chart-title">Q13. 풀케어에 관심 없는 이유 <span style="color:#666688; font-weight:400">(복수 선택)</span></div>
+        ${막대차트(q13집계, [
+          '이미 신뢰하는 부동산 전문가가 있다','직접 투자 결정을 내리고 싶다',
+          '서비스 가격이 부담된다','서비스 신뢰도가 아직 확인되지 않았다','기타'])}
+      </div>` : ''}
+    </div>`;
+  }
+
+  /* ============================================================
+     개별 응답 탭 HTML 생성
+     각 응답을 클릭하면 펼쳐지는 카드 형태로 표시합니다.
+  ============================================================ */
+  function 개별응답HTML생성(응답목록) {
+    // 함수가 호출될 때마다 선택 상태 초기화 (탭 전환 시 남지 않도록)
+    선택된항목 = new Set();
+
+    if (응답목록.length === 0) {
+      return `<div class="no-data-msg">📭 아직 응답이 없습니다.</div>`;
+    }
+
+    // 각 응답 키에 대한 한국어 레이블 정의
+    const 레이블맵 = {
+      q1: 'Q1. 전반적 만족도', q2: 'Q2. 이용 혜택', q3: 'Q3. 개선 의견',
+      q4: 'Q4. 원하는 혜택', 'q5_1순위': 'Q5. 1순위', 'q5_2순위': 'Q5. 2순위',
+      q6: 'Q6. 타 서비스 이용', q6_service: 'Q6. 서비스명', q6_1: 'Q6-1. 경쟁력',
+      q7: 'Q7. 추천 의향', q7_1: 'Q7-1. 추천 이유', q8: 'Q8. 전반 의견',
+      q9: 'Q9. 풀케어 관심', q10: 'Q10. 투자 어려움', q11: 'Q11. 필수 항목',
+      q12: 'Q12. 서비스 의견', q13: 'Q13. 관심 없는 이유'
+    };
+
+    // 최신 응답이 위로 오도록 역순 정렬
+    const 카드들 = [...응답목록].reverse().map((응답, 역인덱스) => {
+      const 표시번호 = 응답목록.length - 역인덱스; // 화면에 보이는 순서 번호
+      const dbID = 응답._id;                       // Supabase 실제 ID (삭제에 사용)
+      // 카드 요약 줄 (Q1, Q7, Q9 핵심만 표시)
+      const 요약 = [응답.q1, 응답.q7 ? `추천:${응답.q7}` : null, 응답.q9]
+                    .filter(Boolean).join(' · ');
+      // 상세 필드 목록 생성
+      const 필드들 = Object.entries(레이블맵)
+        .filter(([키]) => {
+          const 값 = 응답[키];
+          return 값 !== undefined && 값 !== null && 값 !== '' &&
+                 !(Array.isArray(값) && 값.length === 0);
+        })
+        .map(([키, 레이블]) => {
+          const 값 = 응답[키];
+          const 표시값 = Array.isArray(값) ? 값.join(', ') : String(값);
+          return `<div class="resp-field">
+            <span class="resp-field-key">${레이블}</span>
+            <span class="resp-field-val">${표시값.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</span>
+          </div>`;
+        }).join('');
+
+      // 체크박스가 포함된 카드 헤더 구성
+      // onclick에 event를 전달해 카드 펼치기와 체크박스 클릭을 구분
+      return `<div class="resp-card" id="rcard-${dbID}">
+        <div class="resp-card-header" onclick="응답카드토글(${dbID})">
+          <div class="resp-checkbox" id="chk-${dbID}" onclick="응답카드체크(${dbID}, event)"></div>
+          <span class="resp-card-num">#${표시번호}</span>
+          <span class="resp-card-summary">${요약 || '내용 없음'}</span>
+          <span class="resp-card-time">${응답.제출시각 || ''}</span>
+          <span class="resp-card-toggle">▼</span>
+        </div>
+        <div class="resp-card-body">
+          ${필드들 || '<div style="color:#555577; font-size:13px; padding-top:8px;">상세 내용 없음</div>'}
+        </div>
+      </div>`;
+    }).join('');
+
+    // 선택 삭제 툴바 (상단에 항상 표시)
+    const 툴바 = `
+      <div class="selection-toolbar" id="selToolbar">
+        <span class="selection-count" id="selCount">0개 선택됨</span>
+        <button class="btn-select-all" onclick="전체선택토글()">전체 선택</button>
+        <button class="btn-delete-selected" id="btnDeleteSel" disabled onclick="선택삭제()">선택 삭제</button>
+      </div>`;
+
+    return `
+      ${툴바}
+      <p style="font-size:13px; color:#8888aa; margin-bottom:16px;">
+        총 ${응답목록.length}개의 응답 (최신순 정렬)
+      </p>
+      <div class="response-cards">${카드들}</div>`;
+  }
+
+  // 개별 응답 카드 펼치기 / 접기
+  function 응답카드토글(번호) {
+    const 카드 = document.getElementById('rcard-' + 번호);
+    if (카드) 카드.classList.toggle('expanded');
+  }
+
+  /* ============================================================
+     체크박스 클릭 처리 함수
+     카드 헤더 안에 있는 체크박스 클릭 시,
+     카드 펼치기 이벤트가 동시에 발생하지 않도록 막아줍니다.
+  ============================================================ */
+  function 응답카드체크(번호, event) {
+    // 체크박스를 눌러도 카드가 펼쳐지지 않도록 이벤트 전파를 차단
+    event.stopPropagation();
+
+    const 체크박스 = document.getElementById('chk-' + 번호);
+    const 카드 = document.getElementById('rcard-' + 번호);
+
+    if (선택된항목.has(번호)) {
+      // 이미 선택된 항목이면 → 선택 해제
+      선택된항목.delete(번호);
+      체크박스.classList.remove('checked');
+      카드.classList.remove('card-selected');
+    } else {
+      // 선택되지 않은 항목이면 → 선택 추가
+      선택된항목.add(번호);
+      체크박스.classList.add('checked');
+      카드.classList.add('card-selected');
+    }
+
+    // 선택 개수 표시 업데이트
+    선택카운트갱신();
+  }
+
+  /* ============================================================
+     선택 개수 표시 및 버튼 상태 갱신
+     몇 개가 선택됐는지 툴바에 표시하고,
+     선택된 항목이 없으면 삭제 버튼을 비활성화합니다.
+  ============================================================ */
+  function 선택카운트갱신() {
+    const 카운트표시 = document.getElementById('selCount');
+    const 삭제버튼 = document.getElementById('btnDeleteSel');
+    const 전체선택버튼 = document.querySelector('.btn-select-all');
+    const 전체응답수 = 현재응답IDs.length; // Supabase에서 불러온 ID 목록 기준
+
+    if (카운트표시) 카운트표시.textContent = `${선택된항목.size}개 선택됨`;
+    if (삭제버튼) 삭제버튼.disabled = (선택된항목.size === 0);
+
+    // 전체 선택된 경우 버튼 텍스트를 '전체 해제'로 변경
+    if (전체선택버튼) {
+      전체선택버튼.textContent = (선택된항목.size === 전체응답수 && 전체응답수 > 0)
+        ? '전체 해제' : '전체 선택';
+    }
+  }
+
+  /* ============================================================
+     전체 선택 / 전체 해제 토글 함수
+     이미 모두 선택된 상태면 전부 해제,
+     그렇지 않으면 모두 선택합니다.
+  ============================================================ */
+  function 전체선택토글() {
+    // 현재응답IDs = Supabase에서 불러온 모든 응답의 실제 ID 목록
+    const 전체수 = 현재응답IDs.length;
+
+    if (선택된항목.size === 전체수) {
+      // 이미 전부 선택됨 → 전체 해제
+      선택된항목.clear();
+      현재응답IDs.forEach(id => {
+        const 체크박스 = document.getElementById('chk-' + id);
+        const 카드 = document.getElementById('rcard-' + id);
+        if (체크박스) 체크박스.classList.remove('checked');
+        if (카드) 카드.classList.remove('card-selected');
+      });
+    } else {
+      // 일부 또는 아무것도 선택 안 됨 → 전체 선택
+      선택된항목.clear();
+      현재응답IDs.forEach(id => {
+        선택된항목.add(id);
+        const 체크박스 = document.getElementById('chk-' + id);
+        const 카드 = document.getElementById('rcard-' + id);
+        if (체크박스) 체크박스.classList.add('checked');
+        if (카드) 카드.classList.add('card-selected');
+      });
+    }
+
+    // 선택 개수 표시 업데이트
+    선택카운트갱신();
+  }
+
+  /* ============================================================
+     선택된 항목만 삭제하는 함수
+     선택된 응답 ID들을 Supabase DB에서 제거하고 화면을 새로 그립니다.
+     (응답 번호는 1부터 시작, 배열 인덱스는 0부터 시작이므로 -1 변환)
+  ============================================================ */
+  async function 선택삭제() {
+    if (선택된항목.size === 0) return;
+
+    const 삭제개수 = 선택된항목.size;
+    if (!confirm(`선택한 ${삭제개수}개의 응답을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+    // 선택된 ID 목록으로 DB에서 삭제
+    const ids = [...선택된항목].join(',');
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/survey_responses?id=in.(${ids})`,
+      { method: 'DELETE', headers: SB_HEADERS }
+    );
+
+    if (!res.ok) {
+      alert('삭제 중 오류가 발생했습니다.');
+      return;
+    }
+
+    // 화면 새로 그리기
+    await 대시보드렌더링('indiv');
+  }
+
+  /* ============================================================
+     CSV 다운로드 함수
+     저장된 모든 응답을 CSV 파일로 다운로드합니다.
+     BOM(\uFEFF)을 추가하여 Excel에서 한글이 깨지지 않도록 합니다.
+  ============================================================ */
+  async function CSV다운로드() {
+    // Supabase REST API로 전체 응답 불러오기
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/survey_responses?select=id,response_data&order=id.asc`,
+      { headers: SB_HEADERS }
+    );
+
+    if (!res.ok) {
+      alert('데이터를 불러오지 못했습니다.');
+      return;
+    }
+
+    const rows = await res.json();
+    const 응답목록 = rows.map(row => row.response_data);
+
+    if (응답목록.length === 0) {
+      alert('다운로드할 응답이 없습니다.');
+      return;
+    }
+
+    // CSV 헤더 행 (각 질문을 열로 정의)
+    const 헤더 = [
+      '번호', '제출시각',
+      'Q1_전반적만족도',
+      'Q2_이용혜택', 'Q2_기타내용',
+      'Q3_개선사항',
+      'Q4_원하는혜택', 'Q4_기타내용',
+      'Q5_1순위', 'Q5_2순위',
+      'Q6_타서비스이용', 'Q6_서비스명',
+      'Q6_1_경쟁력',
+      'Q7_추천의향',
+      'Q7_1_추천이유',
+      'Q8_자유의견',
+      'Q9_풀케어관심도',
+      'Q10_투자어려움', 'Q10_기타내용',
+      'Q11_필수포함항목', 'Q11_기타내용',
+      'Q12_서비스추가의견',
+      'Q13_관심없는이유', 'Q13_기타내용'
+    ];
+
+    // CSV 값에 쉼표, 줄바꿈이 포함된 경우를 처리하는 헬퍼 함수
+    function CSV안전값(값) {
+      if (값 === null || 값 === undefined) return '';
+      const 문자열 = String(값);
+      // 쉼표, 줄바꿈, 따옴표가 있으면 큰따옴표로 감쌈
+      if (문자열.includes(',') || 문자열.includes('\n') || 문자열.includes('"')) {
+        return '"' + 문자열.replace(/"/g, '""') + '"';
+      }
+      return 문자열;
+    }
+
+    // 각 응답을 CSV 행으로 변환
+    const 행들 = 응답목록.map((응답, 인덱스) => {
+      const 행 = [
+        인덱스 + 1,
+        응답.제출시각 || '',
+        응답.q1 || '',
+        (응답.q2 || []).join(' / '), 응답.q2_기타내용 || '',
+        응답.q3 || '',
+        (응답.q4 || []).join(' / '), 응답.q4_기타내용 || '',
+        응답.q5_1순위 || '', 응답.q5_2순위 || '',
+        응답.q6 || '', 응답.q6_service || '',
+        응답.q6_1 || '',
+        응답.q7 || '',
+        응답.q7_1 || '',
+        응답.q8 || '',
+        응답.q9 || '',
+        (응답.q10 || []).join(' / '), 응답.q10_기타내용 || '',
+        (응답.q11 || []).join(' / '), 응답.q11_기타내용 || '',
+        응답.q12 || '',
+        (응답.q13 || []).join(' / '), 응답.q13_기타내용 || ''
+      ];
+      return 행.map(CSV안전값).join(',');
+    });
+
+    // BOM + 헤더 + 데이터 합치기
+    const CSV내용 = '\uFEFF' + 헤더.map(CSV안전값).join(',') + '\n' + 행들.join('\n');
+
+    // 다운로드 링크 생성 및 클릭
+    const 블롭 = new Blob([CSV내용], { type: 'text/csv;charset=utf-8;' });
+    const 링크 = document.createElement('a');
+    링크.href = URL.createObjectURL(블롭);
+    링크.download = `퍼스트클래스_설문응답_${new Date().toLocaleDateString('ko-KR').replace(/\./g, '').replace(/ /g, '')}.csv`;
+    링크.click();
+  }
+
+  /* ============================================================
+     응답 전체 삭제 함수
+     관리자가 Supabase DB의 모든 응답을 삭제합니다.
+  ============================================================ */
+  async function 응답전체삭제() {
+    if (!confirm('모든 응답을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+
+    // DB의 모든 행 삭제
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/survey_responses?id=gt.0`,
+      { method: 'DELETE', headers: SB_HEADERS }
+    );
+
+    if (!res.ok) {
+      alert('삭제 중 오류가 발생했습니다.');
+      return;
+    }
+
+    await 대시보드렌더링('indiv');
+  }
+
+  /* ============================================================
+     페이지 초기화
+     페이지가 로드될 때 첫 번째 화면(환영화면)을 표시합니다.
+  ============================================================ */
+  function 초기화() {
+    진행률업데이트();
+  }
+
+  // 페이지 로드 시 초기화 실행
+  초기화();
+</script>
+
+</body>
+</html>

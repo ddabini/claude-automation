@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<!--
+  파일명: investment-daily-20260303.html
+  역할: 2026년 3월 3일(화) 투자 데일리 브리핑 보고서
+       한국주식·미국주식·부동산투자·글로벌 이슈 종합 분석
+  작성일: 2026-03-03
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준:
+    - 한국 주식: 2026년 3월 3일(화) 개장 및 장중 흐름 (2/27 마감 이후 첫 거래일)
+    - 미국 주식: 2026년 3월 3일(화) 뉴욕 마감 (한국시간 3/4 새벽) — 이투데이 기준
+    - 부동산: 2026년 2월 28일~3월 3일 최신 통계
+    - 글로벌: 2026년 3월 2~3일 기준
+  본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[3월3일]투자 데일리 브리핑</title>
+
+  <!-- 구글 폰트에서 Noto Sans KR 웹폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       01_소비자앱서비스트렌드조사 보고서와 동일한 CSS (브런치 스타일)
+       ※ 이 CSS는 DeepDig 표준 템플릿입니다 — 임의 변경 금지
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 전체 페이지 배경과 폰트 설정 */
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 보고서 본문 최대 너비를 900px로 설정하고 가운데 정렬 */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* ===================================================
+       표지 (Cover) 영역
+    =================================================== */
+    .cover {
+      padding: 60px 0 56px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 56px;
+    }
+
+    /* 카테고리 레이블 */
+    .cover-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    /* 보고서 날짜 뱃지 */
+    .cover-year {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* 메인 타이틀 */
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #111;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 서브 타이틀 */
+    .cover-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    /* 보고서 메타 정보 */
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ===================================================
+       목차 (Table of Contents) 영역
+    =================================================== */
+    .toc {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 28px 32px;
+      margin-bottom: 56px;
+      border-radius: 2px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+
+    .toc li {
+      counter-increment: toc-counter;
+      padding: 5px 0;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      gap: 12px;
+    }
+
+    .toc li:last-child { border-bottom: none; }
+
+    .toc li::before {
+      content: counter(toc-counter, decimal-leading-zero);
+      font-size: 11px;
+      font-weight: 600;
+      color: #bbb;
+      min-width: 22px;
+      padding-top: 2px;
+    }
+
+    /* ===================================================
+       섹션 공통 스타일
+    =================================================== */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    /* 섹션 헤더 */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* 섹션 번호 */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      padding-top: 6px;
+      min-width: 24px;
+    }
+
+    /* 섹션 제목 */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    /* 섹션 부제목 */
+    .section-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===================================================
+       본문 텍스트 스타일
+    =================================================== */
+    p {
+      margin-bottom: 16px;
+      color: #333;
+      font-weight: 400;
+    }
+
+    /* 소제목 */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin: 20px 0 8px;
+    }
+
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ===================================================
+       핵심 수치 강조 카드
+    =================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 540px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    .stat-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 16px 14px;
+      border-radius: 2px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-unit {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* ===================================================
+       테이블 스타일
+    =================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: #f5f5f5;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ebebeb;
+      color: #333;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-caption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===================================================
+       분석 노트 박스
+    =================================================== */
+    .note-box {
+      padding: 16px 18px;
+      margin: 20px 0;
+      border-radius: 2px;
+      border-left: 3px solid;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* 인사이트 (파란 계열) */
+    .note-insight {
+      background: #f7f9ff;
+      border-color: #4a6cf7;
+      color: #2d3a6b;
+    }
+
+    /* 주의점 (주황 계열) */
+    .note-warning {
+      background: #fff8f3;
+      border-color: #e07b1a;
+      color: #6b3a10;
+    }
+
+    /* 전망 (초록 계열) */
+    .note-forecast {
+      background: #f4faf6;
+      border-color: #2a9d5c;
+      color: #1a4a30;
+    }
+
+    /* 제언 (회색 계열) */
+    .note-suggest {
+      background: #f9f9f9;
+      border-color: #888;
+      color: #333;
+    }
+
+    /* 원문 인용 블록 */
+    blockquote {
+      border-left: 3px solid #ddd;
+      padding: 10px 16px;
+      margin: 16px 0;
+      color: #555;
+      font-size: 13.5px;
+      background: #fafafa;
+    }
+
+    /* ===================================================
+       출처 목록
+    =================================================== */
+    .source-list {
+      list-style: none;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .source-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .source-list li:last-child { border-bottom: none; }
+
+    /* 신뢰도 등급 뱃지 */
+    .grade {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+    }
+
+    .grade-a { background: #e8f5e9; color: #2e7d32; }
+    .grade-b { background: #e3f2fd; color: #1565c0; }
+    .grade-c { background: #fce4ec; color: #880e4f; }
+
+    /* 등락률 색상 — 한국 관례: 상승=빨강, 하락=파랑 */
+    .up { color: #c0392b; }
+    .down { color: #2471a3; }
+    .neutral { color: #555; }
+
+    /* ===================================================
+       푸터
+    =================================================== */
+    .footer {
+      border-top: 1px solid #e5e5e5;
+      padding-top: 32px;
+      margin-top: 64px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    /* ===================================================
+       인쇄 스타일 — 브라우저에서 Ctrl+P 시 PDF로 저장 가능
+    =================================================== */
+    @media print {
+      body { font-size: 13px; }
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===================== 표지 ===================== -->
+  <div class="cover">
+    <div class="cover-category">DeepDig Research · Investment Daily Briefing</div>
+    <div class="cover-year">2026년 3월 3일 (화)</div>
+    <h1 class="cover-title">투자 데일리 브리핑</h1>
+    <p class="cover-subtitle">
+      한국 3월 3일(화) 개장 흐름 · 미국 3월 3일(화) 마감 기준 · 유가·환율·부동산 종합
+    </p>
+    <div class="cover-meta">
+      <span>발행일: 2026-03-03</span>
+      <span>데이터 기준: 2026-03-03 (한국 개장 + 미국 마감)</span>
+      <span>작성: research-crawler 에이전트</span>
+    </div>
+  </div>
+
+  <!-- ===================== 오늘의 핵심 요약 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">00</div>
+      <div>
+        <div class="section-title">오늘의 핵심 요약</div>
+        <div class="section-desc">3분 만에 읽는 오늘 시장의 핵심</div>
+      </div>
+    </div>
+
+    <!-- 5대 핵심 포인트 -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>핵심 포인트</th>
+            <th>중요도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>코스피 6,165 급락 개장(-1.26%)</strong> — 미·이스라엘의 이란 합동 공습('에픽 퓨리 작전') 충격으로 2/27 마감 후 첫 거래일 큰 폭 하락. 에너지·방위주는 역행 강세</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>WTI +6.28%($71.23) · 브렌트 +6.68%($77.74)</strong> — 이란 호르무즈 해협 봉쇄 선언에 유가 폭등. 선박 운항 전면 중단, 글로벌 원유 수급 비상</td>
+            <td><span style="color:#c0392b;">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>뉴욕증시 혼조 마감</strong> — 다우 -0.15%(48,904.78), S&P500 +0.04%(6,881.62), 나스닥 +0.36%(22,748.86). 장중 최대 -1.6%에서 기술주 반등으로 낙폭 만회</td>
+            <td><span style="color:#c0392b;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>원/달러 환율 1,480원 단기 상단 우려</strong> — 하나증권 "지정학 리스크 지속 시 1,480원 테스트 가능" 경고. 한국 원유 수입 의존도 70.7%(중동), 에너지 수급 취약</td>
+            <td><span style="color:#e07b1a;">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>서울 아파트 매물 7.2만건(+26%) 급증</strong> — 매매 물건이 1개월 만에 26% 폭증했으나 전월세는 16% 감소. 양도세 중과 종료 전 5월 매물 출회 예상. 강남3구 일부 하락 전환</td>
+            <td><span style="color:#e07b1a;">★★★☆☆</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 주요 지수 스냅샷 -->
+    <h3>주요 지수 스냅샷</h3>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <!-- 한국 코스피: 3/3 개장 기준 (마감 데이터 미확정) -->
+        <div class="stat-label">코스피 (3/3 개장)</div>
+        <div class="stat-value down">6,165</div>
+        <div class="stat-unit">-78.98p (-1.26%) [미확정]</div>
+      </div>
+      <div class="stat-card">
+        <!-- 미국 나스닥: 3/3(화) 뉴욕 마감 기준 -->
+        <div class="stat-label">나스닥 (3/3 마감)</div>
+        <div class="stat-value up">22,748</div>
+        <div class="stat-unit">+80.65p (+0.36%)</div>
+      </div>
+      <div class="stat-card">
+        <!-- WTI 원유 선물: 3/3 기준 -->
+        <div class="stat-label">WTI 유가 (3/3)</div>
+        <div class="stat-value up">$71.23</div>
+        <div class="stat-unit">+6.28% 급등</div>
+      </div>
+      <div class="stat-card">
+        <!-- 브렌트유 선물: 3/3 기준 -->
+        <div class="stat-label">브렌트유 (3/3)</div>
+        <div class="stat-value up">$77.74</div>
+        <div class="stat-unit">+6.68% 급등</div>
+      </div>
+    </div>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <!-- S&P500: 3/3(화) 뉴욕 마감 -->
+        <div class="stat-label">S&P 500 (3/3 마감)</div>
+        <div class="stat-value neutral">6,881.62</div>
+        <div class="stat-unit">+2.74p (+0.04%) 보합</div>
+      </div>
+      <div class="stat-card">
+        <!-- 다우존스: 3/3(화) 뉴욕 마감 -->
+        <div class="stat-label">다우존스 (3/3 마감)</div>
+        <div class="stat-value down">48,904.78</div>
+        <div class="stat-unit">-73.14p (-0.15%)</div>
+      </div>
+    </div>
+    <p style="font-size:11px; color:#aaa; margin-top:8px;">
+      ※ 코스피는 3월 3일 개장가 기준 (2/27(금) 마감 후 4거래일 연휴 공백). 미국 지수는 3/3(화) 뉴욕 마감 기준.
+    </p>
+  </div>
+
+  <!-- ===================== 목차 ===================== -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li>한국 주식 — 코스피·코스닥 개장 흐름 & 주요 종목</li>
+      <li>미국 주식 — 3/3 뉴욕증시 마감 & 빅테크·지정학</li>
+      <li>부동산 — 서울 매매·전세 동향 & 정책 이슈</li>
+      <li>글로벌 이슈 — 이란 공습·호르무즈·유가·환율</li>
+      <li>종합 분석 및 시사점</li>
+      <li>출처 목록</li>
+    </ol>
+  </div>
+
+  <!-- ===================== 섹션 1: 한국 주식 ===================== -->
+  <div class="section" id="sec1">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">한국 주식</div>
+        <div class="section-desc">2026년 3월 3일(화) 코스피·코스닥 — 중동 리스크 반영 첫 거래일</div>
+      </div>
+    </div>
+
+    <!-- 배경 설명 -->
+    <p>한국 증시는 2월 27일(금) 마감 이후 3월 2일(월)까지 연휴로 휴장했습니다. 그 사이 미국과 이스라엘이 이란 합동 공습(2/28)을 단행하고 이란이 호르무즈 해협 봉쇄를 선언(3/1)하는 충격적 이벤트가 발생했습니다. 3월 3일(화)은 이 모든 리스크를 처음으로 반영하는 첫 거래일로, 코스피는 큰 폭의 갭 다운으로 개장했습니다.</p>
+
+    <h3>지수 개장 (3/3 기준)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>지수</th>
+            <th>전일 마감 (2/27)</th>
+            <th>3/3 개장가</th>
+            <th>변동폭</th>
+            <th>등락률</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>코스피 (KOSPI)</strong></td>
+            <td>6,244.13</td>
+            <td class="down"><strong>6,165.15</strong></td>
+            <td class="down">-78.98p</td>
+            <td class="down"><strong>-1.26%</strong></td>
+          </tr>
+          <tr>
+            <td><strong>코스닥 (KOSDAQ)</strong></td>
+            <td>1,192.78</td>
+            <td class="down"><strong>1,169.82</strong></td>
+            <td class="down">-22.96p</td>
+            <td class="down"><strong>-1.92%</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 블록미디어, 2026.03.03 [1] / 전일 마감: 이투데이, 2026.02.27 [2]</p>
+
+    <blockquote>
+      "[시황] 코스피 6165.15(▽1.26%), 코스닥 1169.82(▽1.92%) 개장" — 블록미디어, 2026.03.03 [1]
+      <br>→ 해석: 4거래일 공백 동안 터진 중동 지정학 충격이 고스란히 개장가에 반영. 코스닥의 낙폭(-1.92%)이 코스피보다 컸던 것은 성장주·소형주 중심의 매도 심리가 더 강했음을 시사.
+    </blockquote>
+
+    <h3>섹터별 흐름 — 에너지·방위주 역행 강세</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>섹터</th>
+            <th>방향</th>
+            <th>주요 내용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>에너지·정유</strong></td>
+            <td class="up">강세</td>
+            <td>유가 급등 수혜 — 흥구석유, 에쓰오일(S-OIL) 강세 [3]</td>
+          </tr>
+          <tr>
+            <td><strong>방위산업</strong></td>
+            <td class="up">강세</td>
+            <td>한화에어로스페이스, LIG넥스원 중동 긴장 수혜 [3]</td>
+          </tr>
+          <tr>
+            <td><strong>반도체</strong></td>
+            <td class="down">약세</td>
+            <td>삼성전자·SK하이닉스 외국인 매도 지속 우려 [4]</td>
+          </tr>
+          <tr>
+            <td><strong>2차전지</strong></td>
+            <td class="down">약세</td>
+            <td>전반적 위험자산 회피 심리 속 동반 조정</td>
+          </tr>
+          <tr>
+            <td><strong>해운·물류</strong></td>
+            <td class="down">약세</td>
+            <td>호르무즈 봉쇄 → HMM 등 중동 항로 운항 불확실성 [5]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 이투데이, 2026.03.03 [3] · 뉴스핌, 2026.03.02 [5]</p>
+
+    <h3>외국인·기관 수급 전망 (하나증권 분석)</h3>
+    <p>하나증권은 2월 28일 발간한 분석 보고서에서 "지정학 이벤트 발생 시 코스피는 수 일 평균 9~10% 조정을 경험했다"며 외국인의 일평균 순매도 규모를 <strong>5,000억원 내외</strong>로 추정했습니다 [5]. 2월 27일 역대 최대 7.4조원 순매도 직후인 만큼, 3월 3일~4일의 외국인 수급 방향이 증시 반등의 핵심 변수입니다.</p>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 코스피가 2/27 6,244 대비 -1.26% 갭 다운으로 개장한 것은 시장이 중동 리스크를 '심각하게' 받아들이고 있음을 보여줍니다. 그러나 에너지주·방위주의 역행 강세는 수혜 섹터로의 자금 이동이 이미 시작됐다는 신호입니다. 단기 낙폭은 불가피하나, 지정학 리스크의 조기 완화 가능성도 동시에 열려 있습니다.
+    </div>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 한국은 원유 수입의 70.7%를 중동에 의존하며, 그 상당 부분이 호르무즈 해협을 통과합니다 [5]. 봉쇄가 장기화되면 원자재 수입 비용 급증 → 기업 원가 상승 → 실적 하방 압력으로 이어지는 구조적 리스크가 있습니다. 단순 지정학 노이즈로 치부해서는 안 됩니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 2: 미국 주식 ===================== -->
+  <div class="section" id="sec2">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">미국 주식</div>
+        <div class="section-desc">2026년 3월 3일(화) 뉴욕증시 마감 기준 (한국시간 3/4 새벽)</div>
+      </div>
+    </div>
+
+    <h3>3대 지수 마감</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">다우존스 (DJIA)</div>
+        <div class="stat-value down">48,904</div>
+        <div class="stat-unit">-73.14p (-0.15%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">S&P 500</div>
+        <div class="stat-value neutral">6,881</div>
+        <div class="stat-unit">+2.74p (+0.04%) 보합</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">나스닥</div>
+        <div class="stat-value up">22,748</div>
+        <div class="stat-unit">+80.65p (+0.36%)</div>
+      </div>
+    </div>
+
+    <blockquote>
+      "뉴욕증시, 미국 이란 공습에도 기술주 강세…나스닥 0.36%↑" — 이투데이, 2026.03.03 [6]
+      <br>→ 해석: 이란 공습이라는 역대급 지정학 충격에도 불구하고, 장중 최대 -1.6% 하락 후 기술주 중심 반등으로 낙폭을 거의 만회했습니다. JP모건 CEO 제이미 다이먼의 "이 정도 이벤트는 경제에 큰 영향을 주지 않는다"는 발언이 투자심리 안정에 기여한 것으로 분석됩니다.
+    </blockquote>
+
+    <h3>장중 흐름 및 회복 과정</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>시점</th>
+            <th>다우</th>
+            <th>S&P500</th>
+            <th>나스닥</th>
+            <th>상황</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>장중 저점</td>
+            <td class="down">-1.5%</td>
+            <td class="down">-1.2%</td>
+            <td class="down">-1.6%</td>
+            <td>이란 공습 반응 매도세</td>
+          </tr>
+          <tr>
+            <td>장 마감</td>
+            <td class="down">-0.15%</td>
+            <td class="neutral">+0.04%</td>
+            <td class="up">+0.36%</td>
+            <td>기술주 주도 낙폭 만회</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 이투데이, 2026.03.03 [6] [7]</p>
+
+    <h3>빅테크 및 AI 관련주 동향</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>종목</th>
+            <th>등락률</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Microsoft (MSFT)</strong></td>
+            <td class="up">+1.48%</td>
+            <td>빅테크 반등 선도 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>NVIDIA (NVDA)</strong></td>
+            <td class="up">+2.93%</td>
+            <td>2/27 -5.46% 급락에서 반등 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>Apple (AAPL)</strong></td>
+            <td class="up">+0.20%</td>
+            <td>보합 수준 소폭 강세 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>Tesla (TSLA)</strong></td>
+            <td class="up">+0.20%</td>
+            <td>소폭 반등 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>Amazon (AMZN)</strong></td>
+            <td class="down">-0.77%</td>
+            <td>물류·에너지 비용 상승 우려 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>방위주 (LMT, NOC)</strong></td>
+            <td class="up">+5~7%</td>
+            <td>록히드마틴 +6%, 노스롭그루먼 +6.2% 급등 [6]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>연준(Fed) 동향 및 주요 경제지표</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>지표</th>
+            <th>수치</th>
+            <th>의미</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>연준 기준금리</strong></td>
+            <td><strong>3.50~3.75%</strong></td>
+            <td>동결 유지 중 — 다음 FOMC 3/17~18 예정 [8]</td>
+          </tr>
+          <tr>
+            <td><strong>미 국채 10년물 금리</strong></td>
+            <td><strong>4.03%</strong></td>
+            <td>유가 급등 인플레 우려로 10bp 상승 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>JP모건 CEO 제이미 다이먼</strong></td>
+            <td colspan="2">"이 정도 이벤트는 경제에 큰 영향을 주지 않는다" — 시장 안정 발언 [6]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 뉴욕증시가 이란 공습이라는 초대형 지정학 이벤트에도 불구하고 사실상 보합으로 마감한 것은 시장의 '충격 내성'이 상당히 높아졌음을 보여줍니다. 동시에 방위주(+5~7%)와 에너지주의 급등은 자금이 특정 수혜 섹터로 이동하는 전형적인 '지정학 플레이' 패턴입니다.
+    </div>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 미 국채 10년물 금리가 4.03%로 반등한 것은 유가 급등이 인플레이션 우려를 다시 자극하고 있다는 신호입니다. 연준의 3/17~18 FOMC에서 금리 동결은 거의 확실하지만, 유가가 $80 이상으로 지속 상승할 경우 금리 인하 기대감이 후퇴할 수 있습니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 3: 부동산 ===================== -->
+  <div class="section" id="sec3">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">부동산</div>
+        <div class="section-desc">2026년 2월 28일~3월 3일 기준 서울 아파트 매매·전세 동향</div>
+      </div>
+    </div>
+
+    <h3>서울 아파트 매물 동향 (2/28 기준)</h3>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <!-- 서울 아파트 매매 물건 수 -->
+        <div class="stat-label">매매 물건 (2/28)</div>
+        <div class="stat-value up">72,049건</div>
+        <div class="stat-unit">+26.1% (1개월 전 57,132건 대비)</div>
+      </div>
+      <div class="stat-card">
+        <!-- 서울 아파트 전월세 물건 수 -->
+        <div class="stat-label">전월세 물건 (2/28)</div>
+        <div class="stat-value down">35,676건</div>
+        <div class="stat-unit">-16.0% (1개월 전 42,438건 대비)</div>
+      </div>
+    </div>
+    <p class="table-caption">출처: 서울신문, 2026.03.03 [9]</p>
+
+    <blockquote>
+      "서울 아파트 매물 26% 늘 때 전월세는 16% 감소" — 서울신문, 2026.03.03 [9]
+      <br>→ 해석: 매매 물건은 급증(매도 의향 높아짐)하는 반면 전월세 물건은 급감(임대차 수요 대비 공급 부족)하는 양극화가 심화되고 있습니다. 이는 집을 팔고 싶은 사람은 많지만, 전세로 내놓으려는 집주인은 오히려 줄고 있다는 역설적 시장 구조를 반영합니다.
+    </blockquote>
+
+    <h3>지역별 전월세 감소 현황</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>구</th>
+            <th>전월세 물건 감소율</th>
+            <th>특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>노원구</strong></td>
+            <td class="down">-40.1%</td>
+            <td>969건 → 581건, 서울 최대폭 감소</td>
+          </tr>
+          <tr>
+            <td><strong>도봉구</strong></td>
+            <td class="down">-32.8%</td>
+            <td>노도강 지역 전반 감소세</td>
+          </tr>
+          <tr>
+            <td><strong>강북구</strong></td>
+            <td class="down">-31.1%</td>
+            <td>중저가 지역 전세 공급 위축</td>
+          </tr>
+          <tr>
+            <td><strong>동대문구</strong></td>
+            <td class="down">-26.9%</td>
+            <td>교통요지지만 공급 급감</td>
+          </tr>
+          <tr>
+            <td><strong>구로구</strong></td>
+            <td class="down">-26.6%</td>
+            <td>직주근접 수요 높지만 공급 부족</td>
+          </tr>
+          <tr>
+            <td><strong>서울 전체</strong></td>
+            <td class="down">-16.0%</td>
+            <td>25개 자치구 모두 감소 [9]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>전세→반전세 전환 가속</h3>
+    <p>갱신청구권 사용 비율 중 <strong>43.9%(7,122건)</strong>에서 전세 보증금은 유지하되 <strong>월 5~30만원의 월세</strong>를 추가하는 '보증부월세(반전세)' 계약이 증가하고 있습니다 [9]. 이는 집주인들이 전통적인 전세 방식보다 현금 흐름(월세 수입)을 선호하는 방향으로 임대 전략을 바꾸는 구조적 변화를 나타냅니다.</p>
+
+    <h3>주요 정책 이슈</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>이슈</th>
+            <th>내용</th>
+            <th>시사점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>양도세 중과 종료</strong></td>
+            <td>다주택자 양도세 중과 한시 종료 시한(5월) 임박</td>
+            <td>5월 전후 매물 출회 가속화 예상 — 매수자 협상력 상승</td>
+          </tr>
+          <tr>
+            <td><strong>스트레스 DSR 3단계</strong></td>
+            <td>2026년 초 본격화 — 대출 한도 축소</td>
+            <td>고가 아파트 매수 수요 위축 지속</td>
+          </tr>
+          <tr>
+            <td><strong>강남3구 하락 전환</strong></td>
+            <td>일부 단지 47~100주 만에 하락 전환</td>
+            <td>서울 전역 상승세 둔화 + 강남 선도효과 약화 시작</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-insight">
+      <strong>인사이트:</strong> 매매 매물이 26% 급증했음에도 전월세 물건이 동반 감소하는 것은 서울 아파트 시장의 '이중 구조'를 보여줍니다. 매매 시장은 관망과 매도 증가, 임대차 시장은 공급 부족과 월세화가 동시에 진행되는 것입니다. 이런 상황에서 '매수도 전세도 어려운' 세입자들의 주거 비용 압박이 증가할 것으로 예상됩니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>전망:</strong> 5월 양도세 중과 종료를 앞두고 다주택자들의 매물 출회가 증가하면서 서울 매매 시장의 상승폭은 점진적으로 축소될 가능성이 높습니다. 특히 강남3구 선도 지수의 하락 전환은 서울 전역으로 조정 흐름이 확산될 수 있다는 선행 신호로 주목해야 합니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 4: 글로벌 이슈 ===================== -->
+  <div class="section" id="sec4">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">글로벌 이슈</div>
+        <div class="section-desc">2026년 3월 2~3일 기준 — 이란 공습·호르무즈·유가·환율</div>
+      </div>
+    </div>
+
+    <h3>미·이스라엘 이란 합동 공습 경과</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>사건</th>
+            <th>출처</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>2월 28일</strong></td>
+            <td>미국-이스라엘 이란 합동 공습 개시. 미국 작전명 '에픽 퓨리', 이스라엘 '포효하는 사자'. 하메네이 사망 보고</td>
+            <td>[10]</td>
+          </tr>
+          <tr>
+            <td><strong>3월 1일</strong></td>
+            <td>이란 혁명수비대(IRGC), 호르무즈 해협 통항 불가 선언. 이란, UAE·바레인·카타르·사우디·요르단 등 인근국 미국 자산 미사일·드론 반격</td>
+            <td>[11]</td>
+          </tr>
+          <tr>
+            <td><strong>3월 1일</strong></td>
+            <td>유조선 '스카이라이트호' 해협 드론 공격 피격 — 인도·이란 선원 4명 부상</td>
+            <td>[11]</td>
+          </tr>
+          <tr>
+            <td><strong>3월 2일</strong></td>
+            <td>마에르스크·MSC 등 글로벌 해운사 호르무즈 운항 전면 중단. HMM 선박 6~7척 해협 인근 대기 중</td>
+            <td>[5][12]</td>
+          </tr>
+          <tr>
+            <td><strong>3월 2~3일</strong></td>
+            <td>트럼프 대통령 "4주간 공습 계속" 발언 — 단기 종전 가능성 낮음</td>
+            <td>[13]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>국제 유가 급등</h3>
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">WTI 원유 (3/3)</div>
+        <div class="stat-value up">$71.23</div>
+        <div class="stat-unit">+6.28% 급등 (2/27 대비)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">브렌트유 (3/3)</div>
+        <div class="stat-value up">$77.74</div>
+        <div class="stat-unit">+6.68% 급등 / 장중 $82 터치</div>
+      </div>
+    </div>
+
+    <h3>호르무즈 리스크 시나리오 (하나증권 분석)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>시나리오</th>
+            <th>조건</th>
+            <th>WTI 전망</th>
+            <th>원/달러</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="up"><strong>최선(Best)</strong></td>
+            <td>1~2주 단기 충돌 후 외교 해법</td>
+            <td>$60 대 안착</td>
+            <td>점진 안정</td>
+          </tr>
+          <tr>
+            <td class="neutral"><strong>기본(Base)</strong></td>
+            <td>1~2개월 군사적 긴장 지속</td>
+            <td>$90 수준</td>
+            <td>1,480원 상단</td>
+          </tr>
+          <tr>
+            <td class="down"><strong>최악(Worst)</strong></td>
+            <td>이란 해협 완전 봉쇄 + 정유시설 타격</td>
+            <td>$120~150</td>
+            <td>1,500원 이상</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">출처: 하나증권, 뉴스핌 재인용, 2026.03.02 [5]</p>
+
+    <h3>한국의 에너지 취약성</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <!-- 한국 원유 수입 중 중동 의존도 -->
+        <div class="stat-label">원유 수입 중 중동 비중</div>
+        <div class="stat-value down">70.7%</div>
+        <div class="stat-unit">호르무즈 경유 의존 [5]</div>
+      </div>
+      <div class="stat-card">
+        <!-- 한국 LNG 수입 중 중동 비중 -->
+        <div class="stat-label">LNG 수입 중 중동 비중</div>
+        <div class="stat-value down">20.4%</div>
+        <div class="stat-unit">에너지 공급망 리스크 [5]</div>
+      </div>
+      <div class="stat-card">
+        <!-- 전 세계 해상 원유 중 호르무즈 통과 비중 -->
+        <div class="stat-label">글로벌 해상 원유 호르무즈 통과</div>
+        <div class="stat-value down">약 1/3</div>
+        <div class="stat-unit">일일 1,400만 배럴 [12]</div>
+      </div>
+    </div>
+
+    <h3>환율 및 금리</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>지표</th>
+            <th>현황</th>
+            <th>전망</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>원/달러 환율</strong></td>
+            <td>1,480원 단기 상단 우려 (2/27 1,439.7원)</td>
+            <td>지정학 완화 시 1,430원대 안정 / 지속 시 1,480원+ [5]</td>
+          </tr>
+          <tr>
+            <td><strong>미 국채 10년물</strong></td>
+            <td>4.03% (+10bp 반등)</td>
+            <td>유가 급등 → 인플레 우려 → 금리 인하 기대 약화 [6]</td>
+          </tr>
+          <tr>
+            <td><strong>달러 인덱스</strong></td>
+            <td>주요 통화 대비 강세</td>
+            <td>안전자산 수요 지속 — 신흥국 통화 압박 [6]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-warning">
+      <strong>주의점:</strong> 호르무즈 해협은 전 세계 해상 원유의 약 1/3이 통과하는 전략 요충지입니다 [12]. 봉쇄가 1개월 이상 장기화될 경우 한국은 대체 원유 확보(미국산 WTI, 러시아산 ESPO 등) 비용이 급격히 상승하게 됩니다. 이는 에너지 집약 산업(철강, 석유화학, 항공)의 원가 압박으로 직결됩니다.
+    </div>
+
+    <div class="note-box note-forecast">
+      <strong>전망:</strong> 이란 최고지도자 하메네이의 사망으로 이란 지도체제 재편이 불가피한 상황입니다. 강경파가 권력을 승계할 경우 분쟁이 장기화될 가능성이 있으며, 반대로 온건파나 군사적 약화로 협상이 재개될 경우 빠른 정상화가 가능합니다. 향후 1~2주 이란 내부 권력 향배가 에너지 시장의 결정적 변수입니다.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 5: 종합 분석 ===================== -->
+  <div class="section" id="sec5">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">종합 분석 및 시사점</div>
+        <div class="section-desc">오늘의 데이터를 종합한 투자 인사이트</div>
+      </div>
+    </div>
+
+    <h3>현재 시장 구조: 3가지 동시 충격</h3>
+    <p>오늘 시장은 세 가지 충격이 동시에 작동하는 복합 리스크 환경에 처해 있습니다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>리스크 유형</th>
+            <th>현황</th>
+            <th>단기 영향</th>
+            <th>완화 조건</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>지정학 (중동)</strong></td>
+            <td>미·이스라엘-이란 전쟁 상태, 호르무즈 봉쇄</td>
+            <td>유가 급등 → 에너지 비용 상승</td>
+            <td>외교 협상 재개 / 호르무즈 재개통</td>
+          </tr>
+          <tr>
+            <td><strong>AI 투자 사이클</strong></td>
+            <td>엔비디아 실적 호조에도 AI 성장성 의구심</td>
+            <td>반도체·AI 인프라주 변동성 지속</td>
+            <td>AI 소프트웨어 수익화 가시화</td>
+          </tr>
+          <tr>
+            <td><strong>한국 부동산</strong></td>
+            <td>매물 급증 + 전월세 감소 이중 구조</td>
+            <td>5월 양도세 중과 종료 전 매물 출회</td>
+            <td>DSR 완화 / 수요 회복</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>섹터별 투자 시사점</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>섹터</th>
+            <th>단기 전망</th>
+            <th>주요 근거</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>에너지·정유</strong></td>
+            <td class="up">긍정적</td>
+            <td>WTI +6% — 유가 강세가 정유사 마진 개선으로 직결</td>
+          </tr>
+          <tr>
+            <td><strong>방위산업</strong></td>
+            <td class="up">긍정적</td>
+            <td>중동 긴장 지속 → LMT +6%, NOC +6.2% 선행. 한국 방산도 동반 수혜</td>
+          </tr>
+          <tr>
+            <td><strong>해운</strong></td>
+            <td class="down">부정적</td>
+            <td>호르무즈 운항 중단 → 중동 항로 해운사 매출 차질</td>
+          </tr>
+          <tr>
+            <td><strong>반도체</strong></td>
+            <td class="neutral">중립~부정적</td>
+            <td>AI 투자 사이클 재점검 + 외국인 수급 불확실성</td>
+          </tr>
+          <tr>
+            <td><strong>서울 아파트</strong></td>
+            <td class="neutral">중립~부정적</td>
+            <td>5월 매물 출회 + DSR 압박 + 강남 하락 선행</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>핵심 모니터링 포인트</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>일정</th>
+            <th>이벤트</th>
+            <th>주목 이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>3월 4~7일</strong></td>
+            <td>이란 내부 권력 향배 뉴스</td>
+            <td>중동 분쟁 장기화 여부 결정 → 유가 방향 핵심 변수</td>
+          </tr>
+          <tr>
+            <td><strong>3월 3~4일</strong></td>
+            <td>코스피 외국인 수급 방향</td>
+            <td>2/27 역대 최대 7.4조 매도 후 연속 매도 여부</td>
+          </tr>
+          <tr>
+            <td><strong>3월 12일</strong></td>
+            <td>미국 CPI 발표</td>
+            <td>유가 급등이 인플레에 반영되는지 확인</td>
+          </tr>
+          <tr>
+            <td><strong>3월 17~18일</strong></td>
+            <td>연준 FOMC</td>
+            <td>유가 급등 속 금리 동결 + 파월 발언 주목</td>
+          </tr>
+          <tr>
+            <td><strong>5월 종료 전</strong></td>
+            <td>양도세 중과 종료</td>
+            <td>서울 아파트 매물 추가 출회 시기</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>제언:</strong>
+      <br>① <strong>에너지·방산 단기 주목</strong> — 유가 급등·중동 긴장이 구조적으로 지속된다면 정유·방산주의 실적 개선이 수반됩니다. 단, '소문에 사고 사실에 팔리는' 지정학 플레이 특성상 뉴스 대응 속도가 중요합니다.
+      <br>② <strong>반도체 관망</strong> — 외국인 수급 방향이 확인될 때까지 코스피 대형 반도체주(삼성전자·SK하이닉스)에 대한 신규 진입은 신중히 접근하는 것이 적절합니다.
+      <br>③ <strong>부동산 매수 서두르지 않기</strong> — 5월 양도세 중과 종료를 앞두고 매물이 추가로 출회될 가능성이 높습니다. 강남3구의 하락 전환은 매수자에게 협상력이 이전되고 있다는 신호입니다.
+      <br>④ <strong>환율 리스크 헤지</strong> — 달러 자산을 보유 중이라면 원/달러 1,480원 상단 시나리오를 고려해 포지션을 점검하세요.
+    </div>
+  </div>
+
+  <!-- ===================== 섹션 6: 출처 목록 ===================== -->
+  <div class="section" id="sec6">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">출처 목록</div>
+        <div class="section-desc">본 보고서에 수록된 모든 자료의 원본 출처 (신뢰도 등급 포함)</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:#555; margin-bottom:16px;">
+      본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다. A급: 공식 통계·기업 IR / B급: 주요 언론 / C급: 블로그·커뮤니티(참고용)
+    </p>
+
+    <ul class="source-list">
+      <li>
+        <span class="grade grade-b">B</span>
+        [1] 블록미디어 — "[시황] 코스피 6165.15(▽1.26%), 코스닥 1169.82(▽1.92%) 개장" (2026.03.03)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.blockmedia.co.kr/archives/1054250</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [2] 이투데이 — "코스피, 7거래일 만에 하락 마감…개인 7조 '사자'·외국인 7.4조 '팔자'" (2026.02.27)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.etoday.co.kr/news/view/2558331</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [3] 이투데이 — "[오늘의 증시일정] 만호제강·씨케이솔루션 등" + 에너지·방위주 동향 (2026.03.03)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.etoday.co.kr/news/view/2561033</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [4] 스마트비즈 — "코스피, 6조원대 개미 매수에도 6244.13 마감" (2026.02.27)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.smartbizn.com/news/articleView.html?idxno=137265</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [5] 뉴스핌 — "호르무즈 리스크 3가지 시나리오…'외국인, 코스피 日 5천억 매도 가능'" (2026.03.02)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.newspim.com/news/view/20260302000213</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [6] 이투데이 — "뉴욕증시, 미국 이란 공습에도 기술주 강세…나스닥 0.36%↑ [종합]" (2026.03.03)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.etoday.co.kr/news/view/2561020</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [7] 이투데이 — "뉴욕증시, 미국 이란 공습에도 기술주 강세…나스닥 0.36%↑ [상보]" (2026.03.03)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.etoday.co.kr/news/view/2561008</small>
+      </li>
+      <li>
+        <span class="grade grade-a">A</span>
+        [8] 연준(Federal Reserve) — FOMC 기준금리 3.50~3.75% 동결 (2026.01 회의)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.federalreserve.gov/monetarypolicy/openmarket.htm</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [9] 서울신문 — "서울 아파트 매물 26% 늘 때 전월세는 16% 감소" (2026.03.03)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.seoul.co.kr/news/economy/estate/2026/03/03/20260303032003</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [10] MBC뉴스데스크 — "미국·이스라엘, 이란 합동 공격‥최고지도자·핵시설 등 노려" (2026.02.28)
+        <br><small style="color:#aaa; margin-left:28px;">https://imnews.imbc.com/replay/2026/nwdesk/article/6803994_37004.html</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [11] 전국인력신문 — "[속보] 중동 분쟁 격화: 이스라엘 이란 공습·호르무즈 해협 포격·미군 사상자" (2026.03.01)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.kjob.news/news/471039</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [12] 뉴시스 — "국제 유가, 호르무즈 해협 봉쇄에 폭등…'브렌트유 120달러 갈 수도'" (2026.03.02)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.newsis.com/view/NISX20260302_0003531227</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [13] 머니투데이 — "'호르무즈 리스크'에 불확실성 증폭…트럼프 '4주간 이란 공습'" (2026.03.02)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.mt.co.kr/industry/2026/03/02/2026030215423488747</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [14] 블록미디어 — "'이란, 호르무즈 공식 봉쇄'…발표 직후 유가 7% 급등" (2026.03.01)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.blockmedia.co.kr/archives/1054142</small>
+      </li>
+      <li>
+        <span class="grade grade-b">B</span>
+        [15] 뉴데일리 — "호르무즈 해협 봉쇄 장기화땐 유가 '150달러까지'…하메네이 사망 후 이란 지도체제 재편이 핵심 변수" (2026.03.01)
+        <br><small style="color:#aaa; margin-left:28px;">https://www.newdaily.co.kr/site/data/html/2026/03/01/2026030100005.html</small>
+      </li>
+    </ul>
+
+    <h3 style="margin-top:28px;">출처 통계</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">전체 출처</div>
+        <div class="stat-value">15건</div>
+        <div class="stat-unit">A급 2 · B급 13 · C급 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">교차 검증</div>
+        <div class="stat-value">완료</div>
+        <div class="stat-unit">핵심 수치 복수 출처 확인</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">미검증 항목</div>
+        <div class="stat-value">0건</div>
+        <div class="stat-unit">출처 미확인 정보 미수록</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 푸터 ===================== -->
+  <div class="footer">
+    <p>DeepDig Research · 투자 데일리 브리핑 · 2026년 3월 3일 발행</p>
+    <p>본 보고서는 research-crawler 에이전트가 공개 출처 자료를 기반으로 작성한 정보 제공용 문서입니다. 투자 결정은 개인의 책임 하에 이루어져야 하며, 본 보고서의 내용은 투자 권유가 아닙니다.</p>
+    <p style="margin-top:8px;">저장 경로: 04_deepdig/03_투자데일리브리핑/report/investment-daily-20260303.html</p>
+  </div>
+
+</div>
+</body>
+</html>

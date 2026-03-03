@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<!--
+  파일명: consumer-app-usage-2025-20260227.html
+  역할: 2025년 소비자 앱서비스 이용행태 분석 보고서
+  작성일: 2026-02-27
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준: 2025년 (Sensor Tower, data.ai, 와이즈앱, DataReportal 등 공식 자료 기반)
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[2025] 소비자 앱서비스 이용행태 분석</title>
+
+  <!-- 구글 폰트에서 Pretendard 대체 폰트(Noto Sans KR)를 불러옵니다 -->
+  <!-- Pretendard는 CDN이 없으므로, 유사한 산세리프 웹폰트를 사용합니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       브런치(brunch.co.kr) 스타일의 깔끔한 아티클 형태를 목표로 합니다
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 전체 페이지 배경과 폰트 설정 */
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 보고서 본문 최대 너비를 900px로 설정하고 가운데 정렬 */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* ===================================================
+       표지 (Cover) 영역
+    =================================================== */
+    .cover {
+      padding: 60px 0 56px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 56px;
+    }
+
+    /* 카테고리 레이블 - 작은 회색 텍스트 */
+    .cover-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    /* 보고서 연도 뱃지 */
+    .cover-year {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* 메인 타이틀 */
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #111;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 서브 타이틀 */
+    .cover-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    /* 보고서 메타 정보 (날짜, 출처 등) */
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ===================================================
+       목차 (Table of Contents) 영역
+    =================================================== */
+    .toc {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 28px 32px;
+      margin-bottom: 56px;
+      border-radius: 2px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+
+    .toc li {
+      counter-increment: toc-counter;
+      padding: 5px 0;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      gap: 12px;
+    }
+
+    .toc li:last-child { border-bottom: none; }
+
+    .toc li::before {
+      content: counter(toc-counter, decimal-leading-zero);
+      font-size: 11px;
+      font-weight: 600;
+      color: #bbb;
+      min-width: 22px;
+      padding-top: 2px;
+    }
+
+    /* ===================================================
+       섹션 공통 스타일
+    =================================================== */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    /* 섹션 헤더: "01", "02" 등 번호와 제목 */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* 섹션 번호 (01, 02...) */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      padding-top: 6px;
+      min-width: 24px;
+    }
+
+    /* 섹션 제목 */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    /* 섹션 부제목 (섹션 제목 아래 작은 설명) */
+    .section-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===================================================
+       본문 텍스트 스타일
+    =================================================== */
+    p {
+      margin-bottom: 16px;
+      color: #333;
+      font-weight: 400;
+    }
+
+    /* 소제목 (h3) */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    /* 소소제목 (h4) */
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin: 20px 0 8px;
+    }
+
+    /* 강조 텍스트 */
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ===================================================
+       핵심 수치 강조 카드 (숫자 강조 블록)
+    =================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    /* 작은 화면에서는 2열로 변환 */
+    @media (max-width: 540px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    .stat-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* 각 수치 카드 */
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 16px 14px;
+      border-radius: 2px;
+    }
+
+    /* 수치 카드 - 라벨 텍스트 */
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    /* 수치 카드 - 숫자 */
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    /* 수치 카드 - 단위나 설명 */
+    .stat-unit {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* ===================================================
+       테이블 스타일 (thin-line 테이블)
+    =================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    /* 테이블 헤더 행 - 회색 배경 */
+    thead tr {
+      background: #f5f5f5;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ebebeb;
+      color: #333;
+      vertical-align: top;
+    }
+
+    /* 홀수 행에 아주 연한 배경 */
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    /* 테이블 하단 테두리 제거 */
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* 표 캡션 */
+    .table-caption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===================================================
+       분석 노트 박스 (좌측 border 컬러 포인트)
+    =================================================== */
+
+    /* 공통 노트 박스 스타일 */
+    .note-box {
+      padding: 16px 18px;
+      margin: 20px 0;
+      border-radius: 2px;
+      border-left: 3px solid;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* 인사이트 노트 (파란 계열) */
+    .note-insight {
+      background: #f7f9ff;
+      border-color: #4a6cf7;
+      color: #2d3a6b;
+    }
+
+    /* 주의점 노트 (주황 계열) */
+    .note-warning {
+      background: #fff8f3;
+      border-color: #e07b1a;
+      color: #6b3a10;
+    }
+
+    /* 전망 노트 (초록 계열) */
+    .note-forecast {
+      background: #f4faf6;
+      border-color: #2a9d5c;
+      color: #1a4a30;
+    }
+
+    /* 제언 노트 (회색 계열) */
+    .note-suggest {
+      background: #f9f9f9;
+      border-color: #888;
+      color: #333;
+    }
+
+    /* 노트 박스 제목 */
+    .note-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      opacity: 0.65;
+    }
+
+    /* ===================================================
+       Executive Summary (핵심 요약) 스타일
+    =================================================== */
+    .exec-summary {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      padding: 28px 28px;
+      margin-bottom: 48px;
+      border-radius: 2px;
+    }
+
+    .exec-summary-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 18px;
+    }
+
+    /* 핵심 포인트 리스트 */
+    .exec-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .exec-points li {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      color: #222;
+      line-height: 1.65;
+    }
+
+    /* 포인트 앞 번호 */
+    .exec-points li::before {
+      content: attr(data-num);
+      font-size: 10px;
+      font-weight: 700;
+      color: #bbb;
+      min-width: 16px;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ===================================================
+       출처 목록 스타일
+    =================================================== */
+    .source-list {
+      list-style: none;
+    }
+
+    .source-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .source-list li:last-child { border-bottom: none; }
+
+    .source-grade {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* A급 출처 - 진한 회색 */
+    .grade-a { background: #333; color: #fff; }
+    /* B급 출처 - 중간 회색 */
+    .grade-b { background: #aaa; color: #fff; }
+
+    .source-list a {
+      color: #555;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .source-list a:hover { text-decoration: underline; }
+
+    /* ===================================================
+       푸터 스타일
+    =================================================== */
+    .report-footer {
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    /* ===================================================
+       배지 (Badge) - 앱 순위 등에 사용
+    =================================================== */
+    .rank-badge {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-right: 4px;
+      vertical-align: middle;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .up-badge {
+      font-size: 10px;
+      color: #2a9d5c;
+      font-weight: 600;
+    }
+
+    .new-badge {
+      font-size: 10px;
+      background: #e8f4ff;
+      color: #1a6bbf;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+
+    /* ===================================================
+       구분선
+    =================================================== */
+    .divider {
+      border: none;
+      border-top: 1px solid #ebebeb;
+      margin: 36px 0;
+    }
+
+    /* 카테고리 칩 */
+    .chip {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      background: #f0f0f0;
+      color: #555;
+      border-radius: 100px;
+      margin: 2px 2px 2px 0;
+    }
+
+    /* 퍼센트 변화 표시 */
+    .pct-up { color: #2a9d5c; font-weight: 600; }
+    .pct-down { color: #d94e4e; font-weight: 600; }
+    .pct-neutral { color: #888; font-weight: 500; }
+
+    /* 인쇄 시 스타일 조정 */
+    @media print {
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- =====================================================
+       표지 영역
+  ===================================================== -->
+  <div class="cover">
+    <div class="cover-category">Research Report &middot; Consumer Digital Behavior</div>
+    <div class="cover-year">[2025]</div>
+    <h1 class="cover-title">소비자 앱서비스 이용행태 분석</h1>
+    <p class="cover-subtitle">글로벌·국내 앱 시장 현황 및 카테고리별·세대별 이용 패턴, 주요 트렌드 종합</p>
+    <div class="cover-meta">
+      <span>작성일: 2026년 2월 27일</span>
+      <span>데이터 기준: 2025년</span>
+      <span>출처: Sensor Tower, DataReportal, 와이즈앱, 모바일인덱스 등</span>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       목차
+  ===================================================== -->
+  <div class="toc">
+    <div class="toc-title">Table of Contents</div>
+    <ol>
+      <li>조사 개요 &amp; 방법론</li>
+      <li>핵심 발견 요약 (Executive Summary)</li>
+      <li>글로벌 앱 시장 전체 현황</li>
+      <li>카테고리별 이용 행태</li>
+      <li>세대별·연령별 앱 이용 패턴</li>
+      <li>주요 트렌드 심층 분석</li>
+      <li>국내(한국) 특화 데이터</li>
+      <li>종합 분석 및 시사점</li>
+      <li>출처 목록</li>
+    </ol>
+  </div>
+
+  <!-- =====================================================
+       01. 조사 개요 & 방법론
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">조사 개요 &amp; 방법론</div>
+        <div class="section-desc">데이터 수집 범위, 출처 등급 기준, 조사 한계</div>
+      </div>
+    </div>
+
+    <p>이 보고서는 2025년 기준 소비자 앱서비스 이용행태를 분석한 것입니다. 글로벌 데이터와 국내(한국) 특화 데이터를 모두 포함하며, 가능한 한 공식 리서치 기관의 1차 자료를 우선 인용했습니다.</p>
+
+    <h3>데이터 수집 범위</h3>
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">기준 연도</div>
+        <div class="stat-value">2025</div>
+        <div class="stat-unit">일부 비교용 2024 포함</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">지역 범위</div>
+        <div class="stat-value">글로벌</div>
+        <div class="stat-unit">+ 국내 특화 파트 별도</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">카테고리</div>
+        <div class="stat-value">12+</div>
+        <div class="stat-unit">앱 장르 분류</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">주요 출처</div>
+        <div class="stat-value">A·B급</div>
+        <div class="stat-unit">리서치 기관 + 언론</div>
+      </div>
+    </div>
+
+    <h3>출처 등급 기준</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>등급</th>
+            <th>기준</th>
+            <th>주요 출처</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="grade-a source-grade">A급</span> 공식 자료</td>
+            <td>리서치 기관 공식 보고서, 정부 통계</td>
+            <td>Sensor Tower, DataReportal, 와이즈앱, 모바일인덱스, RevenueCat</td>
+          </tr>
+          <tr>
+            <td><span class="grade-b source-grade">B급</span> 언론 기사</td>
+            <td>기자명·날짜 확인 가능한 기사</td>
+            <td>TechCrunch, 한국경제, EBN, Seeking Alpha, openads</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-warning">
+      <div class="note-label">주의점</div>
+      2025년 데이터는 연간 최종 집계(연초 발표)와 분기별 업데이트가 혼재합니다. 일부 수치는 Q3~Q4 기준 연간 추정치이며, 이 경우 출처와 함께 명시했습니다. 국내 세대별 데이터는 공식 통계보다 민간 분석 서비스(와이즈앱·모바일인덱스)에 의존한 부분이 있어 샘플 편향 가능성이 있습니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       02. Executive Summary (핵심 발견 요약)
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">핵심 발견 요약</div>
+        <div class="section-desc">Executive Summary — 보고서 전체를 5분 안에 파악하는 핵심 포인트</div>
+      </div>
+    </div>
+
+    <div class="exec-summary">
+      <div class="exec-summary-title">5 Key Findings</div>
+      <ul class="exec-points">
+        <li data-num="01">
+          <strong>앱 시장 규모 사상 최대:</strong> 2025년 글로벌 인앱 구매(IAP) 매출이 1,670억 달러(약 240조 원)를 돌파해 전년 대비 10.6% 성장했습니다. 비게임 앱이 처음으로 게임 매출을 초과하는 역사적 분기점을 맞았습니다.
+        </li>
+        <li data-num="02">
+          <strong>AI 앱의 폭발적 성장:</strong> 생성형 AI 앱 다운로드가 38억 건으로 전년의 2배 이상이 됐습니다. ChatGPT는 2025년 소비자 지출 24.8억 달러(전년 대비 408% 증가)로 미국 내 인앱 매출 1위 앱인 TikTok을 위협하는 수준에 도달했습니다.
+        </li>
+        <li data-num="03">
+          <strong>구독 모델이 앱 경제의 근간:</strong> 구독 기반 앱은 전체 앱 스토어 매출의 45%를 차지하며, iOS에서는 전체 앱 매출의 85%를 구독 모델이 담당합니다. 주간 결제 플랜이 iOS 앱 수익의 절반 가까이를 견인합니다.
+        </li>
+        <li data-num="04">
+          <strong>한국은 '영상 중심'으로 이동:</strong> 국내 앱 시장에서 유튜브(1,140억 분/월)의 총 이용시간이 카카오톡(324억 분/월)의 3.5배에 달합니다. 메신저 중심에서 영상 플랫폼 중심으로 구조적 전환이 확인됩니다.
+        </li>
+        <li data-num="05">
+          <strong>세대 간 뚜렷한 분화:</strong> Z세대(잘파세대)는 에브리타임·디스코드·X 등 커뮤니티·SNS, 액티브 시니어(50~60대)는 지도·금융 앱이 주요 활동 공간입니다. ChatGPT는 전 세대를 관통하는 신규 진입 앱으로 상반기 국내 설치 1위를 기록했습니다.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       03. 글로벌 앱 시장 전체 현황
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">글로벌 앱 시장 전체 현황</div>
+        <div class="section-desc">2025년 기준 다운로드 수, 매출, 앱스토어별 트렌드</div>
+      </div>
+    </div>
+
+    <h3>시장 규모 핵심 지표</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">총 IAP 매출</div>
+        <div class="stat-value">$1,670억</div>
+        <div class="stat-unit">약 240조 원, YoY +10.6%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">총 다운로드</div>
+        <div class="stat-value">1,360억</div>
+        <div class="stat-unit">건, 전년 대비 보합세</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">비게임 앱 매출 성장</div>
+        <div class="stat-value">+23%</div>
+        <div class="stat-unit">게임 +4%, 비게임이 주도</div>
+      </div>
+    </div>
+
+    <p>2025년 글로벌 모바일 앱 시장은 '매출 성장, 다운로드 정체'라는 특징적인 구조를 보였습니다. iOS와 Google Play를 합산한 전체 다운로드 건수는 1,360억 건으로 전년과 큰 차이가 없었지만, 소비자 지출(IAP 매출)은 1,670억 달러로 사상 최대치를 경신했습니다. 이는 앱 시장이 '신규 사용자 확보' 단계에서 '기존 사용자의 지갑 점유' 단계로 넘어섰음을 의미합니다.</p>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      다운로드가 늘지 않아도 매출이 성장하는 이유는 두 가지입니다. 첫째, 구독 모델의 확산으로 1인당 지출 단가가 상승했습니다. 둘째, AI 앱이 프리미엄 요금을 기꺼이 지불하려는 사용자를 끌어모으고 있습니다. 앱 비즈니스는 이제 '볼륨 게임'이 아닌 '가치 게임'입니다.
+    </div>
+
+    <h3>앱스토어별 비교</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>iOS App Store</th>
+            <th>Google Play</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>2025년 매출 추정</strong></td>
+            <td>$2,750억</td>
+            <td>$2,250억</td>
+            <td>구독 포함 전체 앱 매출 기준</td>
+          </tr>
+          <tr>
+            <td><strong>구독 비중</strong></td>
+            <td>전체 앱 매출의 85%</td>
+            <td>전체 앱 매출의 72%</td>
+            <td>RevenueCat 2025 보고서</td>
+          </tr>
+          <tr>
+            <td><strong>최대 매출 앱</strong></td>
+            <td>TikTok ($30억)</td>
+            <td>Google One ($26억)</td>
+            <td>Sensor Tower 2025</td>
+          </tr>
+          <tr>
+            <td><strong>AI 앱 성장</strong></td>
+            <td>ChatGPT: 월 7,340만 다운로드(2025년 12월)</td>
+            <td>ChatGPT 포함 AI 앱 빠른 성장</td>
+            <td>Sensor Tower 추정</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: Sensor Tower State of Mobile 2025, RevenueCat State of Subscription Apps 2025</div>
+
+    <h3>2025 글로벌 앱 매출 Top 5</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>앱명</th>
+            <th>2025년 매출</th>
+            <th>카테고리</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rank-badge">1</span></td>
+            <td><strong>TikTok</strong></td>
+            <td>$33억</td>
+            <td>숏폼 동영상</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">2</span></td>
+            <td><strong>ChatGPT</strong> <span class="new-badge">AI</span></td>
+            <td>$24.8억 <span class="pct-up">+408%</span></td>
+            <td>생성형 AI</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">3</span></td>
+            <td><strong>YouTube</strong></td>
+            <td>상위권 유지</td>
+            <td>동영상 플랫폼</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">4</span></td>
+            <td><strong>Google One</strong></td>
+            <td>Google Play 1위</td>
+            <td>클라우드 구독</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">5</span></td>
+            <td><strong>Tinder</strong></td>
+            <td>구독 앱 상위권</td>
+            <td>소셜/데이팅</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: Sensor Tower, FoxData (2025년 전체 기준 추정)</div>
+  </div>
+
+  <!-- =====================================================
+       04. 카테고리별 이용 행태
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">카테고리별 이용 행태</div>
+        <div class="section-desc">소셜·메신저·동영상·쇼핑·금융·건강·AI 앱 MAU, 사용시간, 설치율</div>
+      </div>
+    </div>
+
+    <h3>글로벌 주요 카테고리 현황 (2025년)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>카테고리</th>
+            <th>주요 지표</th>
+            <th>YoY 변화</th>
+            <th>대표 앱</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>소셜미디어</strong></td>
+            <td>모바일 이용시간의 32% 점유, 일 평균 2.6시간</td>
+            <td><span class="pct-up">+13~17%</span> (Instagram, TikTok)</td>
+            <td>Facebook (30.7억), Instagram (30억), TikTok (16억)</td>
+          </tr>
+          <tr>
+            <td><strong>동영상 플랫폼</strong></td>
+            <td>YouTube MAU 25억, 전 연령 커버리지 최고</td>
+            <td>안정적 성장</td>
+            <td>YouTube, TikTok, Netflix</td>
+          </tr>
+          <tr>
+            <td><strong>쇼핑</strong></td>
+            <td>전체 사용자 세션의 23% (미국), Q1 +13%</td>
+            <td><span class="pct-up">+13%</span></td>
+            <td>Amazon, Shein, Temu, 쿠팡</td>
+          </tr>
+          <tr>
+            <td><strong>금융</strong></td>
+            <td>다운로드 성장률 카테고리 1위 (+25%), Day 7 리텐션 32%</td>
+            <td><span class="pct-up">+25%</span></td>
+            <td>Revolut, Chime, 토스</td>
+          </tr>
+          <tr>
+            <td><strong>건강/피트니스</strong></td>
+            <td>MAU 7억 명 돌파, AI 코칭 앱 급성장</td>
+            <td><span class="pct-up">+21%</span></td>
+            <td>Samsung Health, MyFitnessPal</td>
+          </tr>
+          <tr>
+            <td><strong>생성형 AI</strong></td>
+            <td>다운로드 38억 건(전년 대비 2배), 매출 50억 달러 돌파</td>
+            <td><span class="pct-up">+100%+</span></td>
+            <td>ChatGPT, Grok, DeepSeek</td>
+          </tr>
+          <tr>
+            <td><strong>게임</strong></td>
+            <td>다운로드 345억 건 (전체 앱의 30.8% 점유)</td>
+            <td><span class="pct-up">+4%</span> (회복세)</td>
+            <td>다양한 캐주얼·전략 게임</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: Sensor Tower 2025 State of Mobile, SQ Magazine, AppTweak 2025 Download by Category</div>
+
+    <h3>소셜미디어 플랫폼 MAU 순위 (2025년)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>플랫폼</th>
+            <th>글로벌 MAU</th>
+            <th>YoY 성장</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rank-badge">1</span></td>
+            <td><strong>Facebook</strong></td>
+            <td>30.7억 명</td>
+            <td>안정</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">2</span></td>
+            <td><strong>Instagram</strong></td>
+            <td>30억 명</td>
+            <td><span class="pct-up">+13%</span></td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">3</span></td>
+            <td><strong>YouTube</strong></td>
+            <td>25억 명</td>
+            <td>안정</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">4</span></td>
+            <td><strong>TikTok</strong></td>
+            <td>16억 명</td>
+            <td><span class="pct-up">+17%</span></td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">5</span></td>
+            <td><strong>Snapchat</strong></td>
+            <td>약 9.4억 명</td>
+            <td>완만한 성장</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: DataReportal Global Social Media Statistics (2025), Statista, Backlinko Social Media Users 2025</div>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      금융 앱이 카테고리 다운로드 성장률 1위(+25%)를 기록한 것은 주목할 만합니다. 특히 Gen Z 61%가 2025년에 네오뱅크(Chime, N26 등)를 사용하고 있어, 금융 서비스의 앱 네이티브화가 빠르게 진행 중입니다. 이 흐름은 한국의 토스가 주도한 '금융 슈퍼앱' 전략과 동일 궤도입니다.
+    </div>
+
+    <h3>카테고리별 사용자 리텐션 (앱을 계속 사용하는 비율)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>카테고리</th>
+            <th>Day 1 리텐션</th>
+            <th>Day 7 리텐션</th>
+            <th>Day 30 리텐션</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>금융 앱</td>
+            <td>30.3%</td>
+            <td>32%</td>
+            <td>11.6%</td>
+          </tr>
+          <tr>
+            <td>건강/피트니스</td>
+            <td>~25%</td>
+            <td>~18%</td>
+            <td>주간 이용률 43%</td>
+          </tr>
+          <tr>
+            <td>전체 평균</td>
+            <td>~25%</td>
+            <td>~10%</td>
+            <td>~5%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: AMRA and ELMA Mobile App Retention Statistics 2025</div>
+  </div>
+
+  <!-- =====================================================
+       05. 세대별·연령별 앱 이용 패턴
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">세대별·연령별 앱 이용 패턴</div>
+        <div class="section-desc">MZ세대, X세대, 시니어 등 세대 간 앱 사용 차이 분석</div>
+      </div>
+    </div>
+
+    <h3>세대별 앱 이용 특성 요약</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>세대</th>
+            <th>출생연도</th>
+            <th>주요 앱 카테고리</th>
+            <th>소셜 플랫폼 선호</th>
+            <th>금융 앱 특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Z세대 (잘파)</strong></td>
+            <td>1997~2010년대</td>
+            <td>SNS, 커뮤니티, 게임, 웹툰</td>
+            <td>TikTok, Instagram, Discord, X</td>
+            <td>네오뱅크 61% 사용</td>
+          </tr>
+          <tr>
+            <td><strong>밀레니얼</strong></td>
+            <td>1981~1996</td>
+            <td>생산성, 쇼핑, 라이프스타일</td>
+            <td>Instagram, Facebook(그룹)</td>
+            <td>모바일뱅킹 80%가 계좌관리 우선</td>
+          </tr>
+          <tr>
+            <td><strong>X세대</strong></td>
+            <td>1965~1980</td>
+            <td>교통, 커머스, 금융, 뉴스</td>
+            <td>Facebook, Pinterest, LinkedIn</td>
+            <td>전통 은행앱 선호, 기능성 중시</td>
+          </tr>
+          <tr>
+            <td><strong>베이비부머·시니어</strong></td>
+            <td>1946~1964</td>
+            <td>지도, 금융, 메신저</td>
+            <td>Facebook(가족 소통 위주)</td>
+            <td>63%가 대면 창구 선호</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: PartnerCentric Social Media Use by Generation 2025, CoinLaw Gen Z Banking Statistics 2025, Pew Research 2025</div>
+
+    <h3>국내 세대별 앱 선호 (2025년 1~5월 기준)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>세대</th>
+            <th>해당 연령대 사용 비율이 높은 앱 (Top 5)</th>
+            <th>특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>잘파세대</strong><br>(Z세대+α세대)</td>
+            <td>에브리타임(85.3%), 디스코드(67.4%), X(63.8%), 핀터레스트(62.7%), 네이버 웹툰(57.3%)</td>
+            <td>학업·엔터테인먼트·커뮤니티 중심. 게임, 웹툰, 중고거래 적극 이용</td>
+          </tr>
+          <tr>
+            <td><strong>밀레니얼세대</strong></td>
+            <td>스노우, 지그재그, 네이버 블로그, 쿠팡, 카카오페이</td>
+            <td>쇼핑·라이프스타일·재테크 앱에 집중. 카메라 앱도 활발히 사용</td>
+          </tr>
+          <tr>
+            <td><strong>X세대</strong></td>
+            <td>네이버 지도, 카카오T, 은행앱, 교통/대중교통앱</td>
+            <td>일상 생활, 교통, 소비와 밀접한 기능성 앱 선호</td>
+          </tr>
+          <tr>
+            <td><strong>액티브 시니어+</strong><br>(50~60대)</td>
+            <td>다음(52.2%), NH콕뱅크(42.3%), 티맵(38.9%), e알리미(+7.9%), 페이북/ISP(+7.0%)</td>
+            <td>금융·공지·지도 중심. 디지털 활용도 높은 경제활동 시니어 증가세</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: openads 2025년 1~5월 세대별 앱 사용 현황 보고서</div>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      국내 세대별 앱 이용 패턴에서 주목할 점은 α세대와 Z세대가 '엔터테인먼트(게임·웹툰·음악)' 중심인 반면, M세대와 X세대는 '일상 실용(교통·소비·금융)' 중심이라는 명확한 분화입니다. 이는 마케팅 타기팅 시 연령이 아닌 '앱 생활권'으로 구분해야 함을 시사합니다.
+    </div>
+
+    <h3>Z세대의 소셜 미디어 행동 변화</h3>
+    <p>Sprout Social의 2025년 Q2 조사에 따르면, Z세대의 41%가 정보 검색 시 소셜 미디어를 먼저 이용하며, 이는 전통적인 검색 엔진(32%)을 앞서는 수치입니다. 이른바 '소셜 서치(Social Search)' 현상이 확산되고 있으며, 이는 Google과 Naver의 검색 점유율에 장기적 위협이 됩니다.</p>
+
+    <div class="note-box note-forecast">
+      <div class="note-label">전망</div>
+      시니어 세대의 디지털 앱 이용이 지속적으로 늘고 있습니다. 국내 액티브 시니어(50~60대)에서 e알리미(+7.9%), 페이북/ISP(+7.0%) 같은 공공·금융 앱이 빠르게 성장하는 것은, 고령화 사회에서 시니어 전용 앱 UX 설계가 중요한 비즈니스 기회임을 보여줍니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       06. 주요 트렌드 심층 분석
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">주요 트렌드 심층 분석</div>
+        <div class="section-desc">AI 앱 성장세, 슈퍼앱, 구독 경제, 숏폼 콘텐츠</div>
+      </div>
+    </div>
+
+    <h3>트렌드 1 · AI 앱의 시장 진입</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">생성형 AI 다운로드</div>
+        <div class="stat-value">38억</div>
+        <div class="stat-unit">건, 전년 대비 2배</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI 앱 총 매출</div>
+        <div class="stat-value">$50억+</div>
+        <div class="stat-unit">3배 이상 성장</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ChatGPT 소비자 지출</div>
+        <div class="stat-value">$24.8억</div>
+        <div class="stat-unit">YoY +408%</div>
+      </div>
+    </div>
+
+    <p>Sensor Tower에 따르면 2025년 생성형 AI 앱은 다운로드와 매출 모두 폭발적으로 성장했습니다. OpenAI(ChatGPT)와 DeepSeek이 글로벌 AI 앱 다운로드의 약 50%를 차지했으며(2024년 21%에서 대폭 상승), 빅테크(구글·메타·애플)의 AI 앱 점유율도 14%에서 30%로 확대됐습니다.</p>
+
+    <p>국내에서는 ChatGPT의 연간 MAU가 약 998만 명(2025년 평균)으로 전체 앱 순위 27위를 기록했으며, 1월 대비 12월 MAU가 341% 증가했습니다. 2025년 상반기 국내 신규 설치 수에서도 ChatGPT가 약 1,012만 건으로 1위를 달성했습니다.</p>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      ChatGPT는 '업무용 도구'에서 '생활 앱'으로 전환되고 있습니다. 2025년 AI 앱 사용 패턴 분석에서 주중 집중에서 주말 이용 증가가 확인됐고, 미국 내 ChatGPT 프롬프트 성장 분야 상위 10개 중 9개가 라이프스타일·엔터테인먼트 카테고리였습니다. '지브리풍 이미지 변환' 기능이 국내 대중화의 트리거가 된 것도 이 흐름의 반영입니다.
+    </div>
+
+    <hr class="divider">
+
+    <h3>트렌드 2 · 슈퍼앱(Super App) 트렌드</h3>
+    <p>하나의 앱에서 모든 서비스를 해결하는 '슈퍼앱' 전략이 2025년에도 핵심 트렌드로 자리 잡았습니다. ChatGPT는 캘린더 관리, 이메일 통합, 여행 계획, 외부 앱 연동 등 슈퍼 어시스턴트 기능을 추가하며 단순 챗봇에서 올인원 생산성 허브로 진화하는 로드맵을 제시했습니다.</p>
+
+    <p>국내에서는 <strong>토스</strong>가 금융 슈퍼앱의 대표 사례로 2025년 MAU 2,494만 명(연간 기준 약 1,977만 명, 상반기)을 기록했습니다. 단순 송금앱을 넘어 보험, 투자, 대출, 소비 분석까지 통합하는 방향으로 계속 확장 중입니다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>앱</th>
+            <th>슈퍼앱 전략</th>
+            <th>2025년 현황</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>토스 (한국)</strong></td>
+            <td>금융 전 분야 통합</td>
+            <td>MAU 2,494만 명, 금융앱 1위</td>
+          </tr>
+          <tr>
+            <td><strong>카카오</strong></td>
+            <td>메신저+쇼핑+결제+콘텐츠</td>
+            <td>MAU 4,823만 명, 국민앱 지위 유지</td>
+          </tr>
+          <tr>
+            <td><strong>ChatGPT</strong></td>
+            <td>AI 허브+생산성+콘텐츠 생성</td>
+            <td>글로벌 매출 2위, 국내 설치 1위</td>
+          </tr>
+          <tr>
+            <td><strong>WeChat (중국)</strong></td>
+            <td>메신저+결제+미니앱 생태계</td>
+            <td>슈퍼앱의 원형 모델로 계속 벤치마킹</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <h3>트렌드 3 · 구독 경제</h3>
+    <p>앱 수익화 모델의 중심축이 완전히 구독으로 이동했습니다. RevenueCat의 2025년 구독 앱 보고서에 따르면, 구독 기반 앱은 전체 앱 스토어 매출의 45%를 차지하지만 전체 앱 수 중에서는 소수에 불과합니다. 이는 구독 모델이 얼마나 높은 ARPU(사용자 1인당 매출)를 창출하는지를 보여줍니다.</p>
+
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">iOS 앱 매출 중 구독 비중</div>
+        <div class="stat-value">85%</div>
+        <div class="stat-unit">App Store 전체 앱 매출 기준</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">구독 앱 사용자 지출 성장</div>
+        <div class="stat-value">+15.8%</div>
+        <div class="stat-unit">2025년 상반기 YoY</div>
+      </div>
+    </div>
+
+    <p>특히 주간 결제 플랜이 iOS 앱 수익의 절반 가까이를 차지하는 현상은, 사용자들이 '저렴한 주간 금액'으로 진입 장벽을 낮추되 장기 구독으로 전환되는 패턴을 보여줍니다. AI 앱(ChatGPT, Midjourney 등)이 구독 모델의 수혜를 가장 많이 받은 카테고리입니다.</p>
+
+    <hr class="divider">
+
+    <h3>트렌드 4 · 숏폼 콘텐츠의 지배력 확대</h3>
+    <p>TikTok은 2025년 전체 앱 매출 1위(33억 달러)를 기록했으며, 소셜 카테고리와 동영상 카테고리 양쪽에서 모두 상위권을 차지한 유일한 앱입니다. 이는 숏폼 콘텐츠가 단순한 영상 포맷을 넘어 커머스(라이브 커머스), 광고, 교육 등 다양한 수익 채널로 확장됐음을 의미합니다.</p>
+
+    <p>국내에서는 TikTok과 TikTok Lite의 상반기 누적 신규 설치가 2,461만 건을 기록하며, Z세대 사용자 유입을 이끌었습니다. Instagram의 Reels, YouTube의 Shorts와의 경쟁이 계속되고 있으나, TikTok의 알고리즘 기반 발견(Discovery) 경험은 여전히 차별화된 경쟁우위를 보여주고 있습니다.</p>
+
+    <div class="note-box note-warning">
+      <div class="note-label">주의점</div>
+      숏폼 콘텐츠 플랫폼은 미국 내 TikTok 금지법 이슈(2025년 초)로 인한 불확실성이 있습니다. 국내에서는 직접 규제가 없지만, 미국 정책 변화가 글로벌 광고 시장에 영향을 미칠 수 있으므로 장기적 플랫폼 리스크 모니터링이 필요합니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       07. 국내(한국) 특화 데이터
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">07</div>
+      <div>
+        <div class="section-title">국내(한국) 특화 데이터</div>
+        <div class="section-desc">한국 앱 시장 특수성, 국내 인기 앱 순위, 플랫폼 동향</div>
+      </div>
+    </div>
+
+    <h3>한국 디지털 인프라 현황 (2025년)</h3>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">인터넷 이용자</div>
+        <div class="stat-value">5,040만</div>
+        <div class="stat-unit">명, 침투율 97.4%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">소셜미디어 사용자</div>
+        <div class="stat-value">4,890만</div>
+        <div class="stat-unit">명, 침투율 94.7%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">모바일 연결</div>
+        <div class="stat-value">6,920만</div>
+        <div class="stat-unit">개, 1인당 1.3대</div>
+      </div>
+    </div>
+    <div class="table-caption">출처: DataReportal Digital 2025 South Korea</div>
+
+    <h3>2025년 국내 앱 Top 10 (MAU 기준, 연간 평균)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>앱명</th>
+            <th>MAU(만 명)</th>
+            <th>카테고리</th>
+            <th>특이사항</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rank-badge">1</span></td>
+            <td><strong>카카오톡</strong></td>
+            <td>4,823</td>
+            <td>메신저</td>
+            <td>국민 메신저, 사용 횟수 761억 회/월</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">2</span></td>
+            <td><strong>유튜브</strong></td>
+            <td>4,678</td>
+            <td>동영상</td>
+            <td>이용시간 1,140억 분/월, 압도적 1위</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">3</span></td>
+            <td><strong>구글</strong></td>
+            <td>4,510</td>
+            <td>검색</td>
+            <td>모바일 검색 점유율 유지</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">4</span></td>
+            <td><strong>네이버</strong></td>
+            <td>4,409</td>
+            <td>검색·포털</td>
+            <td>Z세대 이탈 vs 중장년 충성 이용</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">5</span></td>
+            <td><strong>구글 크롬</strong></td>
+            <td>4,203</td>
+            <td>브라우저</td>
+            <td>모바일 기본 브라우저 지위</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">6</span></td>
+            <td><strong>쿠팡</strong></td>
+            <td>3,388</td>
+            <td>커머스</td>
+            <td>로켓배송·로켓와우로 충성 고객 확보</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">7</span></td>
+            <td><strong>네이버 지도</strong></td>
+            <td>3,044</td>
+            <td>지도·로컬</td>
+            <td>카카오맵과의 양강 구도</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">8</span></td>
+            <td><strong>인스타그램</strong></td>
+            <td>2,703</td>
+            <td>소셜미디어</td>
+            <td>이용 횟수 159억 회/월, 젊은 층 중심</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">9</span></td>
+            <td><strong>토스</strong></td>
+            <td>2,494</td>
+            <td>금융</td>
+            <td>금융 슈퍼앱, 연말 2,000만 돌파</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">10</span></td>
+            <td><strong>배달의민족</strong></td>
+            <td>2,226</td>
+            <td>배달</td>
+            <td>배달앱 시장점유율 59.2%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: openads 2025 모바일 앱 총결산 리포트, 와이즈앱 (2025년 연간 기준)</div>
+
+    <h3>2025년 가장 성장한 국내 앱 순위</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>앱명</th>
+            <th>성장률(MAU)</th>
+            <th>성장 배경</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rank-badge">1</span></td>
+            <td><strong>ChatGPT</strong> <span class="new-badge">AI</span></td>
+            <td><span class="pct-up">+341%</span> (1월 vs 12월)</td>
+            <td>지브리풍 이미지 변환 등 대중화 기능 출시, 상반기 신규 설치 1위(1,012만 건)</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">2</span></td>
+            <td><strong>네이버플러스 스토어</strong></td>
+            <td>출시 3개월 만에 신규 설치 698만 건</td>
+            <td>네이버의 독립 쇼핑앱 론칭, 쿠팡 대항마</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">3</span></td>
+            <td><strong>TikTok Lite</strong></td>
+            <td>Z세대 급속 유입</td>
+            <td>가벼운 용량·빠른 속도, Z세대 틈새 공략</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">4</span></td>
+            <td><strong>쿠팡이츠</strong></td>
+            <td>배달앱 2위 확고히</td>
+            <td>무료배송 전쟁 승리, 요기요 제치고 양강 구도</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: dfinery 2025 상반기 앱 순위, openads 2025 총결산, koreabizreview 배달앱 시장 분석</div>
+
+    <h3>국내 이용 시간 vs 이용 횟수 비교</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>앱</th>
+            <th>월간 이용시간</th>
+            <th>월간 이용 횟수</th>
+            <th>시사점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>유튜브</strong></td>
+            <td>1,140억 분 (1위)</td>
+            <td>149억 회</td>
+            <td>1회 당 긴 시간 → 몰입형 소비</td>
+          </tr>
+          <tr>
+            <td><strong>카카오톡</strong></td>
+            <td>324억 분 (2위)</td>
+            <td>761억 회 (1위)</td>
+            <td>짧고 빈번 → 필수 생활앱</td>
+          </tr>
+          <tr>
+            <td><strong>인스타그램</strong></td>
+            <td>279억 분 (3위)</td>
+            <td>159억 회 (2위)</td>
+            <td>중간 길이, 중간 빈도 → 습관성 스크롤</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">출처: openads 2025 모바일 앱 총결산 리포트</div>
+
+    <h3>국내 배달앱 시장 동향</h3>
+    <p>배달앱 시장에서는 배달의민족(59.2%), 쿠팡이츠(21.0%), 요기요(16.2%)의 3강 체제가 양강 체제로 재편됐습니다. 2025년에는 쿠팡이츠가 무료배송 전쟁의 수혜를 받아 요기요를 안정적으로 제치고 배달의민족과의 양강 구도를 굳혔습니다. 먹깨비, 땡겨요 등 후발 주자의 사용자도 역대 최대 수준을 기록하며 틈새 공략을 이어가고 있습니다.</p>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      한국 앱 시장의 가장 큰 구조적 변화는 '메신저 중심'에서 '영상 중심'으로의 이동입니다. 유튜브의 월간 총 이용시간(1,140억 분)은 카카오톡(324억 분)의 3.5배로, 이미 생활 인프라의 중심이 대화에서 영상 소비로 넘어갔습니다. 이는 광고 집행, 콘텐츠 전략, CRM 채널 모두에서 영상 플랫폼을 1순위로 고려해야 함을 의미합니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       08. 종합 분석 및 시사점
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">08</div>
+      <div>
+        <div class="section-title">종합 분석 및 시사점</div>
+        <div class="section-desc">트렌드 종합, 기회·위험 요소, 비즈니스 제언</div>
+      </div>
+    </div>
+
+    <h3>2025년 앱 시장 5대 구조적 변화</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>변화</th>
+            <th>핵심 근거</th>
+            <th>영향</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>①</td>
+            <td><strong>볼륨에서 가치로</strong></td>
+            <td>다운로드 정체 vs 매출 +10.6%</td>
+            <td>신규 앱 론칭보다 ARPU 최적화가 핵심</td>
+          </tr>
+          <tr>
+            <td>②</td>
+            <td><strong>게임에서 비게임으로</strong></td>
+            <td>비게임 앱 매출 처음으로 게임 초과</td>
+            <td>AI·금융·건강 앱의 성장 공간이 더 크다</td>
+          </tr>
+          <tr>
+            <td>③</td>
+            <td><strong>AI가 모든 카테고리에 침투</strong></td>
+            <td>2025년 200+ 앱이 AI 기능 추가</td>
+            <td>AI 미탑재 앱의 경쟁력 약화 가속</td>
+          </tr>
+          <tr>
+            <td>④</td>
+            <td><strong>소셜이 검색을 대체</strong></td>
+            <td>Z세대 41%가 소셜 우선 검색</td>
+            <td>검색 광고보다 소셜 콘텐츠 마케팅 비중 확대 필요</td>
+          </tr>
+          <tr>
+            <td>⑤</td>
+            <td><strong>구독이 앱 경제의 근간</strong></td>
+            <td>iOS 매출 85% 구독 모델</td>
+            <td>일회성 결제 모델로는 성장 한계 봉착</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>기회 요소</h3>
+    <div class="note-box note-forecast">
+      <div class="note-label">전망</div>
+      <strong>① AI 앱 연계 서비스:</strong> ChatGPT가 '생활 앱'으로 전환된 만큼, AI와 결합한 금융·건강·교육 앱이 빠르게 성장할 것입니다. 특히 한국은 AI 앱 신규 설치 성장률이 세계 최상위 수준이어서 조기 진입 효과가 큽니다.<br><br>
+      <strong>② 시니어 디지털 시장:</strong> 국내 액티브 시니어(50~60대)의 앱 이용 지속 증가로 시니어 친화 UX 설계 앱 수요가 커질 것입니다. 금융·공공·건강 분야에서 시니어 전용 앱은 블루오션입니다.<br><br>
+      <strong>③ 금융 슈퍼앱 생태계:</strong> 토스 모델의 성공은 다른 수직 도메인(부동산, 교육, 의료)에서도 슈퍼앱 전략이 유효함을 입증합니다.
+    </div>
+
+    <h3>위험 요소</h3>
+    <div class="note-box note-warning">
+      <div class="note-label">주의점</div>
+      <strong>① 플랫폼 집중 리스크:</strong> 국내 앱 시장은 상위 5개 앱(카카오톡·유튜브·구글·네이버·크롬)이 전체 이용자의 84~97%를 커버합니다. 특정 플랫폼 의존도가 매우 높아, 플랫폼 정책 변경 시 앱 비즈니스 전반이 타격을 받을 수 있습니다.<br><br>
+      <strong>② AI 앱 경쟁 격화:</strong> OpenAI·Google·Meta 등 빅테크가 AI 앱 점유율을 30%까지 확대한 만큼, 스타트업과 중소 서비스의 AI 기능 경쟁이 점점 어려워지고 있습니다.<br><br>
+      <strong>③ TikTok 불확실성:</strong> 미국 내 규제 이슈가 전 세계 숏폼 광고 시장에 영향을 미칠 수 있으며, 국내 MZ세대의 대체 플랫폼 이동에 주의가 필요합니다.
+    </div>
+
+    <h3>비즈니스 제언</h3>
+    <div class="note-box note-suggest">
+      <div class="note-label">제언</div>
+      <strong>마케팅 담당자:</strong> Z세대 타기팅 시 TikTok·Instagram Reels 우선, 30~40대는 YouTube·Instagram 피드 믹스, 50~60대는 카카오 채널+네이버 카페를 기본으로 설계하세요.<br><br>
+      <strong>앱 개발·기획자:</strong> 구독 모델 도입 시 주간 저가 플랜을 진입점으로 삼고, AI 기능 탑재를 최우선 개발 과제로 설정하세요. Day 7 리텐션을 핵심 KPI로 관리해야 합니다.<br><br>
+      <strong>서비스 기획자:</strong> '소셜 서치' 트렌드에 맞게 SEO보다 소셜 검색(TikTok, 인스타그램 해시태그) 최적화를 강화하세요. 특히 20대 이하 타깃 서비스는 전통 검색 마케팅의 효율이 빠르게 낮아지고 있습니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       09. 출처 목록
+  ===================================================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">09</div>
+      <div>
+        <div class="section-title">출처 목록</div>
+        <div class="section-desc">본 보고서에 인용된 모든 자료의 출처</div>
+      </div>
+    </div>
+
+    <h3>A급 출처 (공식 리서치 기관·보고서)</h3>
+    <ul class="source-list">
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>Sensor Tower — 2025 State of Mobile</strong><br>
+        <a href="https://sensortower.com/blog/2025-state-of-mobile-consumers-usd150-billion-spent-on-mobile-highlights" target="_blank">sensortower.com/blog/2025-state-of-mobile...</a> · 2025년 전체 앱 시장 매출·다운로드 핵심 데이터
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>Sensor Tower — State of AI Apps Report 2025</strong><br>
+        <a href="https://sensortower.com/blog/state-of-ai-apps-report-2025" target="_blank">sensortower.com/blog/state-of-ai-apps-report-2025</a> · AI 앱 성장세, ChatGPT 통계
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>Sensor Tower — Q4 2025 Digital Market Index</strong><br>
+        <a href="https://sensortower.com/blog/q4-digital-market-index-app-2026" target="_blank">sensortower.com/blog/q4-digital-market-index-app-2026</a> · 2025년 Q4 분기 데이터
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>RevenueCat — State of Subscription Apps 2025</strong><br>
+        <a href="https://www.revenuecat.com/state-of-subscription-apps-2025/" target="_blank">revenuecat.com/state-of-subscription-apps-2025</a> · 구독 경제 데이터
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>DataReportal — Digital 2025: South Korea</strong><br>
+        <a href="https://datareportal.com/reports/digital-2025-south-korea" target="_blank">datareportal.com/reports/digital-2025-south-korea</a> · 한국 디지털 현황 공식 통계
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>Pew Research Center — Americans' Social Media Use 2025</strong><br>
+        <a href="https://www.pewresearch.org/internet/2025/11/20/americans-social-media-use-2025/" target="_blank">pewresearch.org/internet/2025/11/20/americans-social-media-use-2025</a> · 세대별 소셜미디어 이용
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>AppTweak — 2025 Global App Download Trends by Category</strong><br>
+        <a href="https://www.apptweak.com/en/reports/app-downloads-by-category" target="_blank">apptweak.com/en/reports/app-downloads-by-category</a> · 카테고리별 다운로드
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>openads — 2025 모바일 앱 총결산 리포트</strong><br>
+        <a href="https://openads.co.kr/content/contentDetail?contsId=18145" target="_blank">openads.co.kr/content/contentDetail?contsId=18145</a> · 국내 앱 MAU·이용시간·성장률
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>openads — 2025년 1~5월 세대별 앱 이용행태</strong><br>
+        <a href="https://openads.co.kr/content/contentDetail?contsId=16580" target="_blank">openads.co.kr/content/contentDetail?contsId=16580</a> · 잘파·밀레니얼·시니어 세대별 데이터
+      </li>
+      <li>
+        <span class="grade-a source-grade">A</span>
+        <strong>Sensor Tower — State of Mobile Health &amp; Fitness 2025</strong><br>
+        <a href="https://sensortower.com/blog/state-of-mobile-health-and-fitness-in-2025" target="_blank">sensortower.com/blog/state-of-mobile-health-and-fitness-in-2025</a> · 건강·피트니스 앱 데이터
+      </li>
+    </ul>
+
+    <h3>B급 출처 (언론 기사)</h3>
+    <ul class="source-list">
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>TechCrunch — Consumers spent more on mobile apps than games in 2025</strong><br>
+        <a href="https://techcrunch.com/2026/01/21/consumers-spent-more-on-mobile-apps-than-games-in-2025-driven-by-ai-app-adoption/" target="_blank">techcrunch.com · 2026.01.21</a> · 비게임 앱 매출 게임 초과 보도
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>TechCrunch — GenAI apps doubled their revenue, grew to 1.7B downloads in first half of 2025</strong><br>
+        <a href="https://techcrunch.com/2025/07/30/gen-ai-apps-doubled-their-revenue-grew-to-1-7b-downloads-in-first-half-of-2025/" target="_blank">techcrunch.com · 2025.07.30</a> · AI 앱 상반기 성장 분석
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>TechCrunch — ChatGPT's mobile app hits new milestone of $3B in consumer spending</strong><br>
+        <a href="https://techcrunch.com/2025/12/18/chatgpts-mobile-app-hits-new-milestone-of-3b-in-consumer-spending/" target="_blank">techcrunch.com · 2025.12.18</a> · ChatGPT 소비자 지출 $3B 달성
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>Seeking Alpha — Gen-AI drove mobile app downloads, revenue growth in 2025</strong><br>
+        <a href="https://seekingalpha.com/news/4540906-gen-ai-drove-mobile-app-downloads-revenue-growth-in-2025-sensor-tower" target="_blank">seekingalpha.com · 2026년 초</a> · AI 앱 성장 분석
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>KoreaBizReview — 배달앱 양강 구도 굳혔다</strong><br>
+        <a href="https://koreabizreview.com/detail.php?number=7018" target="_blank">koreabizreview.com</a> · 쿠팡이츠·배달의민족 시장 재편
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>dfinery — 2025년 상반기 모바일 앱 순위 총정리</strong><br>
+        <a href="https://www.dfinery.io/post/2025-firsthalf-appchart" target="_blank">dfinery.io</a> · 상반기 ChatGPT 설치 1위 등
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>PartnerCentric — Social Media Use by Generation 2025</strong><br>
+        <a href="https://partnercentric.com/blog/social-media-use-trends-by-generation/" target="_blank">partnercentric.com · 2025</a> · 세대별 소셜미디어 이용 패턴
+      </li>
+      <li>
+        <span class="grade-b source-grade">B</span>
+        <strong>CoinLaw — Millennial vs. Gen Z Banking Preferences Statistics 2025</strong><br>
+        <a href="https://coinlaw.io/millennial-vs-gen-z-banking-preferences-statistics/" target="_blank">coinlaw.io · 2025</a> · 세대별 금융앱 이용 패턴
+      </li>
+    </ul>
+  </div>
+
+  <!-- =====================================================
+       보고서 푸터
+  ===================================================== -->
+  <div class="report-footer">
+    <p>DeepDig Research Archive &mdash; 리서치 아카이브</p>
+    <p>작성일: 2026년 2월 27일 &nbsp;|&nbsp; 데이터 기준: 2025년 &nbsp;|&nbsp; 작성 에이전트: research-crawler</p>
+    <p>본 보고서의 수치는 공개된 리서치 기관 자료를 기반으로 하며, 일부는 추정치를 포함합니다. 상업적 의사결정 전 원본 출처 재확인을 권장합니다.</p>
+  </div>
+
+</div>
+</body>
+</html>

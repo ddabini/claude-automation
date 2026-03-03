@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "media": {
+      ".read": true,
+      ".write": true
+    },
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+    "ticker": {
+      ".read": true,
+      ".write": true
+    },
+    "pikbox": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

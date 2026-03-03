@@ -1,0 +1,14 @@
+<!-- 대형 쿼트 마크 장식 — 후킹 카피 강조용 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+  <!-- 왼쪽 따옴표 -->
+  <path d="M10 80 Q10 30 55 20 L62 34 Q38 42 36 60 L55 60 L55 100 L10 100 Z"
+        fill="#C9A96E" opacity="0.15"/>
+  <path d="M10 80 Q10 30 55 20 L62 34 Q38 42 36 60 L55 60 L55 100 L10 100 Z"
+        stroke="#C9A96E" stroke-width="2" opacity="0.4"/>
+
+  <!-- 오른쪽 따옴표 -->
+  <path d="M150 40 Q150 90 105 100 L98 86 Q122 78 124 60 L105 60 L105 20 L150 20 Z"
+        fill="#C9A96E" opacity="0.15"/>
+  <path d="M150 40 Q150 90 105 100 L98 86 Q122 78 124 60 L105 60 L105 20 L150 20 Z"
+        stroke="#C9A96E" stroke-width="2" opacity="0.4"/>
+</svg>

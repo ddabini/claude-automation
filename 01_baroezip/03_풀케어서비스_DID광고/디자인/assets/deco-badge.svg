@@ -1,0 +1,48 @@
+<!-- 숫자 강조 배지: 서비스 혜택 번호 표시용 원형 배지 -->
+<!-- 용도: DID 광고 "01 / 02 / 03 / 04" 등 서비스 번호 강조에 사용 -->
+<!-- 사용 방법: SVG를 포함하거나 HTML에서 배지 번호를 교체해 사용 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8D5A3"/>
+      <stop offset="50%" style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 골드 빛나는 효과 -->
+    <radialGradient id="goldGlow" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" style="stop-color:#F5E6C4; stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#A8854A; stop-opacity:1"/>
+    </radialGradient>
+    <!-- 다크 배경: 배지 내부 -->
+    <radialGradient id="darkBg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#1A2F45"/>
+      <stop offset="100%" style="stop-color:#0D1B2A"/>
+    </radialGradient>
+    <!-- 그림자 효과 -->
+    <filter id="badgeShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#C9A96E" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- ===== 배지 01 ===== -->
+  <!-- 외부 원형 링: 골드 테두리 -->
+  <circle cx="40" cy="40" r="36" fill="url(#darkBg)" filter="url(#badgeShadow)"/>
+  <circle cx="40" cy="40" r="36" fill="none" stroke="url(#goldMain)" stroke-width="3"/>
+  <!-- 내부 작은 원형: 골드 채움 -->
+  <circle cx="40" cy="40" r="28" fill="url(#goldGlow)" opacity="0.15"/>
+  <!-- 번호 텍스트 -->
+  <text x="40" y="48" font-family="'Georgia', serif" font-size="24" font-weight="900" fill="url(#goldMain)" text-anchor="middle" letter-spacing="-1">01</text>
+
+  <!-- ===== 배지 02 ===== -->
+  <circle cx="120" cy="40" r="36" fill="url(#darkBg)" filter="url(#badgeShadow)"/>
+  <circle cx="120" cy="40" r="36" fill="none" stroke="url(#goldMain)" stroke-width="3"/>
+  <circle cx="120" cy="40" r="28" fill="url(#goldGlow)" opacity="0.15"/>
+  <text x="120" y="48" font-family="'Georgia', serif" font-size="24" font-weight="900" fill="url(#goldMain)" text-anchor="middle" letter-spacing="-1">02</text>
+
+  <!-- ===== 배지 03 ===== -->
+  <circle cx="200" cy="40" r="36" fill="url(#darkBg)" filter="url(#badgeShadow)"/>
+  <circle cx="200" cy="40" r="36" fill="none" stroke="url(#goldMain)" stroke-width="3"/>
+  <circle cx="200" cy="40" r="28" fill="url(#goldGlow)" opacity="0.15"/>
+  <text x="200" y="48" font-family="'Georgia', serif" font-size="24" font-weight="900" fill="url(#goldMain)" text-anchor="middle" letter-spacing="-1">03</text>
+</svg>
