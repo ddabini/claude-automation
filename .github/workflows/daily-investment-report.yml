@@ -51,7 +51,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--allowedTools WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep --max-turns 50"
+          claude_args: "--max-turns 50"
           prompt: |
             오늘(${{ steps.date.outputs.today }}) 투자 데일리 브리핑을 자동 생성해줘.
 
