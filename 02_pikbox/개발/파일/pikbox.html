@@ -9284,7 +9284,12 @@
       if (!drState.currentDesignId || !key) return;
       const nick = drState.currentNickname;
       if (!nick) {
-        toast('먼저 닉네임을 선택하세요', 'error');
+        // 닉네임이 없으면 바로 드롭다운을 열어서 선택하도록 유도
+        toast('닉네임을 먼저 선택해 주세요', 'error');
+        // 닉네임 드롭다운 강제 오픈
+        const dropdown = document.getElementById('drNickDropdown');
+        if (dropdown) dropdown.style.display = 'block';
+        drRenderNicknameList();
         return;
       }
       const checkRef = firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}/${key}/checks/${nick}`);
