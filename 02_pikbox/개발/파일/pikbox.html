@@ -9220,10 +9220,11 @@
         ? `<div class="dr-confirm-row">${checkNames.map(n => `<span class="dr-confirm-chip">✓ ${escHtml(n)}</span>`).join('')}</div>`
         : '';
 
+      // 닉네임 색상을 인라인 스타일로 직접 적용 (아바타 배경 + 이름 텍스트)
       el.innerHTML = `
         <div class="dr-msg-header">
-          <div class="dr-msg-avatar">${escHtml(avatar)}</div>
-          <span class="dr-msg-name">${escHtml(msg.nickname || '익명')}</span>
+          <div class="dr-msg-avatar" style="background:${nickColor};">${escHtml(avatar)}</div>
+          <span class="dr-msg-name" style="color:${nickColor};">${escHtml(msg.nickname || '익명')}</span>
           <span class="dr-msg-time">${timeStr}</span>
         </div>
         ${replyHtml}
