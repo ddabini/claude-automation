@@ -94,7 +94,7 @@
   -->
   <rect x="55" y="150" width="130" height="70" rx="2" ry="2"
         fill="#F7F5F2" opacity="0.12"
-        stroke="#A89070" stroke-width="0.5" opacity="0.25"/>
+        stroke="#A89070" stroke-width="0.5"/>
 
   <!-- 라벨 안 장식선 (양쪽 여백) -->
   <line x1="65" y1="175" x2="175" y2="175" stroke="#A89070" stroke-width="0.4" opacity="0.3"/>
