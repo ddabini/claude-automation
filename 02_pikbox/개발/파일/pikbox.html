@@ -9677,107 +9677,129 @@
     }
 
     /* ─── Figma 버튼 상태 업데이트 ─── */
-    // figma_url이 있으면 검정 버튼, 없으면 회색 버튼으로 표시
+    // figma_url 유무와 관계없이 버튼은 항상 활성 (디자인 URL을 복사하므로)
     function drUpdateFigmaBtn(figmaUrl) {
       const btn = document.getElementById('drFigmaBtn');
       if (!btn) return;
-      if (figmaUrl) {
-        // URL이 있으면 활성 상태 (검정 배경)
-        btn.classList.remove('no-url');
-        btn.title = 'Figma에서 열기';
-      } else {
-        // URL이 없으면 비활성 상태 (회색) — 클릭하면 URL 입력 팝업
-        btn.classList.add('no-url');
-        btn.title = 'Figma URL 등록하기';
-      }
+      btn.classList.remove('no-url');
+      btn.title = figmaUrl
+        ? 'Figma에서 편집하기 (파일 연결됨)'
+        : 'Figma에서 편집하기';
     }
 
-    /* ─── Figma로 이동 — 디자인 캡처 후 클립보드 복사 + Figma 파일 열기 ─── */
-    // 1) 현재 보고 있는 페이지를 이미지로 캡처
-    // 2) 클립보드에 복사 (Figma에서 Ctrl+V로 붙여넣기 가능)
-    // 3) Figma URL이 등록되어 있으면 자동으로 해당 파일 열기
+    /* ─── Figma로 보내기 — 디자인 URL 복사 + html.to.design 플러그인 안내 ─── */
+    // Figma 커뮤니티 플러그인 "html.to.design"을 활용하여
+    // HTML 디자인을 편집 가능한 Figma 레이어로 변환하는 플로우
     async function drOpenFigma() {
       if (!drState.currentDesignId) return;
-
-      const iframe = document.getElementById('drViewerIframe');
-      if (!iframe) return;
+      const design = drState.currentDesignData;
+      if (!design?.url) { toast('디자인 URL이 없습니다', 'error'); return; }
 
       const btn = document.getElementById('drFigmaBtn');
       const originalHTML = btn ? btn.innerHTML : '';
-
-      // 로딩 표시
-      if (btn) { btn.innerHTML = '⏳ 캡처중...'; btn.disabled = true; }
+      if (btn) { btn.innerHTML = '⏳ 복사중...'; btn.disabled = true; }
 
       try {
-        // iframe 내부 문서 접근 시도 (same-origin일 때만 가능)
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        // 디자인 원본 URL을 클립보드에 복사
+        await navigator.clipboard.writeText(design.url);
 
-        if (iframeDoc && iframeDoc.body) {
-          // ── same-origin: html2canvas로 현재 페이지 캡처 ──
-          const pageH = drState.viewerPageHeight || 1200;
-          const pageIdx = (drState.viewerPage || 1) - 1;
-
-          const canvas = await html2canvas(iframeDoc.body, {
-            scale: 2,            // 고해상도(2배) 캡처
-            useCORS: true,
-            allowTaint: false,
-            y: pageIdx * pageH,  // 현재 페이지 시작 위치
-            height: pageH,       // 1페이지 높이만 캡처
-            backgroundColor: '#ffffff',
-            logging: false,
-          });
-
-          // canvas → blob → 클립보드에 이미지 복사
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ]);
-            toast('이미지가 클립보드에 복사되었습니다!\nFigma에서 Ctrl+V로 붙여넣으세요', 'success');
-          } catch (clipErr) {
-            // 클립보드 API 실패 시 → PNG 파일 다운로드로 대체
-            console.warn('클립보드 복사 실패, 다운로드로 전환:', clipErr);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const safeName = (drState.currentDesignData?.name || '디자인').replace(/[/\\?%*:|"<>]/g, '_');
-            a.download = `${safeName}_page${drState.viewerPage || 1}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            toast('이미지가 다운로드되었습니다.\nFigma에서 드래그앤드롭으로 가져오세요', 'success');
-          }
-
-          // Figma URL이 등록되어 있으면 자동으로 열기
-          const figmaUrl = drState.currentDesignData?.figma_url;
-          if (figmaUrl) {
-            window.open(figmaUrl, '_blank');
-          } else {
-            // 미등록 → 등록 안내
-            setTimeout(() => {
-              if (confirm('Figma 파일 URL을 등록하면 다음부터 자동으로 열립니다.\n지금 등록하시겠습니까?')) {
-                drRegisterFigmaUrl();
-              }
-            }, 300);
-          }
-
-        } else {
-          // ── cross-origin: html2canvas 불가 → 새 탭에서 열어 스크린샷 안내 ──
-          window.open(drState.currentDesignData?.url || '', '_blank');
-          toast('외부 URL은 직접 캡처할 수 없습니다.\n새 탭에서 열었습니다 — 스크린샷 후 Figma에 붙여넣으세요', 'error');
-
-          const figmaUrl = drState.currentDesignData?.figma_url;
-          if (figmaUrl) window.open(figmaUrl, '_blank');
+        // figma_url이 등록되어 있으면 해당 Figma 파일도 열기
+        if (design.figma_url) {
+          window.open(design.figma_url, '_blank');
         }
+
+        // 안내 다이얼로그 표시 — 편집 가능한 Figma 가져오기 방법
+        drShowFigmaGuide(design.url);
+
       } catch (e) {
-        console.error('[Pikbox] Figma 캡처 오류:', e);
-        toast('캡처 실패: ' + e.message, 'error');
+        // 클립보드 API 실패 시 — 직접 URL 표시
+        console.warn('[Pikbox] 클립보드 복사 실패:', e);
+        drShowFigmaGuide(design.url, true);
       } finally {
-        // 버튼 원래 상태로 복원
         if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
       }
+    }
+
+    /* ─── Figma 가이드 다이얼로그 — 플러그인 사용법 안내 ─── */
+    // 디자인 URL을 복사한 후, html.to.design 플러그인 사용 방법을 안내
+    function drShowFigmaGuide(designUrl, copyFailed = false) {
+      // 기존 가이드가 열려 있으면 닫기
+      const existing = document.getElementById('drFigmaGuideOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'drFigmaGuideOverlay';
+      overlay.style.cssText = `
+        position:fixed; inset:0; background:rgba(0,0,0,0.5);
+        display:flex; align-items:center; justify-content:center;
+        z-index:99999; animation:fadeIn 0.2s;
+      `;
+
+      overlay.innerHTML = `
+        <div style="
+          background:#fff; border-radius:16px; padding:28px 32px; max-width:420px;
+          width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family:'Pretendard',sans-serif;
+        ">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <svg width="20" height="20" viewBox="0 0 38 57" fill="#A259FF">
+              <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z"/>
+              <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0z"/>
+              <path d="M19 0v19h9.5a9.5 9.5 0 0 0 0-19H19z"/>
+              <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z"/>
+              <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z"/>
+            </svg>
+            <span style="font-size:18px;font-weight:700;color:#1a1a1a;">Figma에서 편집하기</span>
+          </div>
+
+          ${copyFailed
+            ? `<div style="background:#f5f5f5;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;word-break:break-all;color:#666;">
+                 ${designUrl}
+               </div>
+               <p style="font-size:13px;color:#e53e3e;margin:0 0 12px;">클립보드 복사가 실패했습니다. 위 URL을 직접 복사하세요.</p>`
+            : `<p style="font-size:14px;color:#22c55e;font-weight:600;margin:0 0 14px;">
+                 ✓ 디자인 URL이 클립보드에 복사되었습니다
+               </p>`
+          }
+
+          <div style="background:#faf5ff;border-radius:10px;padding:16px;margin-bottom:16px;">
+            <p style="font-size:13px;font-weight:600;color:#7c3aed;margin:0 0 10px;">사용 방법</p>
+            <ol style="margin:0;padding-left:18px;font-size:13px;color:#374151;line-height:1.8;">
+              <li>Figma 열기 → 상단 메뉴 <b>Plugins</b></li>
+              <li><b>html.to.design</b> 검색 → 실행</li>
+              <li>URL 입력란에 <b>Ctrl+V</b>로 붙여넣기</li>
+              <li><b>Import</b> 클릭 → 편집 가능한 디자인 생성!</li>
+            </ol>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <a href="https://www.figma.com/community/plugin/1159123024924461424"
+               target="_blank" rel="noopener"
+               style="
+                 flex:1; display:inline-flex; align-items:center; justify-content:center;
+                 gap:6px; padding:10px; border-radius:8px;
+                 background:#7c3aed; color:#fff; text-decoration:none;
+                 font-size:13px; font-weight:600;
+               ">
+              플러그인 설치하기
+            </a>
+            <button onclick="this.closest('#drFigmaGuideOverlay').remove()"
+                    style="
+                      flex:1; padding:10px; border-radius:8px;
+                      background:#f3f4f6; border:none; cursor:pointer;
+                      font-size:13px; font-weight:600; color:#374151;
+                    ">
+              닫기
+            </button>
+          </div>
+        </div>
+      `;
+
+      // 오버레이 바깥 클릭 시 닫기
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+
+      document.body.appendChild(overlay);
     }
 
     /* ─── Figma URL 등록 / 수정 ─── */
