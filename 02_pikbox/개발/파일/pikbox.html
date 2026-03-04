@@ -5841,26 +5841,27 @@
         sources.push('google_instagram');
 
         // ── 2) Meta/Facebook 광고 소재 (4호출 = 80개) ──
-        // Meta 광고 라이브러리(실제 집행 광고) + 키워드 기반 광고 크리에이티브 병행
+        // Meta 광고 라이브러리(실제 집행 광고) + 글로벌 광고 크리에이티브 병행
         promises.push(searchSerperImages(baseQuery + ' 광고', 'site:facebook.com/ads/library', 1));
         sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1));
+        promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1, { gl: 'us' }));
         sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' facebook instagram ad creative design best', '', 1));
+        promises.push(searchSerperImages(baseQuery + ' facebook instagram ad creative design best', '', 1, { gl: 'us' }));
         sources.push('google_meta_ads');
         promises.push(searchSerperImages(baseQuery + ' meta ad creative 광고 소재 레퍼런스', '', 1));
         sources.push('google_meta_ads');
 
         // ── 3) Pinterest 집중 (5호출 = 100개) ──
+        // 한국 구글 2호출 + 글로벌(미국) 구글 3호출로 해외 고퀄 핀 수집 강화
         promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1));
         sources.push('google_pinterest');
         promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 2));
         sources.push('google_pinterest');
-        promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 3));
+        promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1, { gl: 'us' }));
         sources.push('google_pinterest');
-        promises.push(searchSerperImages(expandedQueries[3], 'site:pinterest.com', 1));
+        promises.push(searchSerperImages(expandedQueries[3], 'site:pinterest.com', 1, { gl: 'us' }));
         sources.push('google_pinterest');
-        promises.push(searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1));
+        promises.push(searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1, { gl: 'us' }));
         sources.push('google_pinterest');
 
         // ── 3-1) 화보사진 선택 시 Pinterest 사진 부문 추가 크롤링 ──
