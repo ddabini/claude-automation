@@ -9381,7 +9381,7 @@
       drRenderNicknameList();
     }
 
-    // 닉네임 드롭다운 목록 렌더링
+    // 닉네임 드롭다운 목록 렌더링 (각 닉네임에 고유 컬러 아바타 표시)
     function drRenderNicknameList() {
       const listEl = document.getElementById('drNicknameList');
       if (!listEl) return;
@@ -9390,13 +9390,27 @@
         return;
       }
       listEl.className = `dr-nick-list ${drState.isNickAdmin ? 'dr-nick-admin-mode' : ''}`;
-      listEl.innerHTML = drState.nicknameList.map(name => `
-        <div class="dr-nick-chip ${name === drState.currentNickname ? 'selected' : ''}"
-             onclick="drSelectNickname('${escHtml(name)}')">
-          <span>${escHtml(name)}</span>
-          <button class="dr-nick-del-btn" onclick="event.stopPropagation();drDeleteNickname('${escHtml(name)}')">✕</button>
-        </div>
-      `).join('');
+      listEl.innerHTML = drState.nicknameList.map(name => {
+        const color = drNickColor(name); // 닉네임별 고유 색상
+        const initial = name[0].toUpperCase();
+        const isSelected = name === drState.currentNickname;
+        return `
+          <div class="dr-nick-chip ${isSelected ? 'selected' : ''}"
+               onclick="drSelectNickname('${escHtml(name)}')">
+            <!-- 작은 컬러 아바타 — 채팅 메시지와 같은 색상 -->
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:16px;height:16px;border-radius:50%;background:${color};
+                           color:#fff;font-size:9px;font-weight:700;
+                           display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                ${escHtml(initial)}
+              </span>
+              ${escHtml(name)}
+            </span>
+            <button class="dr-nick-del-btn"
+                    onclick="event.stopPropagation();drDeleteNickname('${escHtml(name)}')">✕</button>
+          </div>
+        `;
+      }).join('');
     }
 
     // 닉네임 선택
