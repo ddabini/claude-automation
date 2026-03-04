@@ -5442,6 +5442,21 @@
         promises.push(searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1));
         sources.push('google_pinterest');
 
+        // ── 3-1) 화보사진 선택 시 Pinterest 사진 부문 추가 크롤링 ──
+        // 제품사진, 화보촬영, 광고촬영 등 사진 관련 키워드로 Pinterest 집중 검색
+        if (runState.contentTypes.includes('photo')) {
+          const photoQueries = [
+            baseQuery + ' 제품사진 product photography site:pinterest.com',
+            baseQuery + ' 화보촬영 lookbook editorial site:pinterest.com',
+            baseQuery + ' 광고촬영 commercial photography site:pinterest.com',
+            baseQuery + ' studio photography styling site:pinterest.com',
+          ];
+          for (const pq of photoQueries) {
+            promises.push(searchSerperImages(pq, '', 1));
+            sources.push('google_pinterest');
+          }
+        }
+
         // ── 4) 보조: Behance, Dribbble, 네이버 (각 1호출) ──
         const subPlatforms = PLATFORMS.filter(p => p.site && ['behance', 'dribbble', 'naver'].includes(p.id));
         for (const p of subPlatforms) {
