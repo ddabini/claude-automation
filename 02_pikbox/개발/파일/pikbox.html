@@ -5372,6 +5372,15 @@
           promises.push(searchSerperImages(searchQuery, p.site, 1));
           sources.push('google_' + p.id);
         }
+
+        // ── 5) 구글 이미지 일반 검색 (site 필터 없이, 3호출 = 60개) ──
+        // 특정 플랫폼에 한정되지 않은 다양한 레퍼런스 수집
+        promises.push(searchSerperImages(searchQuery, '', 1));
+        sources.push('google_google');
+        promises.push(searchSerperImages(searchQuery, '', 2));
+        sources.push('google_google');
+        promises.push(searchSerperImages(expandedQueries[0], '', 1));
+        sources.push('google_google');
       } else {
         // "더 보기" 호출: 현재 오프셋부터 1페이지만
         const activePlatform = PLATFORMS.find(p => p.id === runState.activePlatform);
