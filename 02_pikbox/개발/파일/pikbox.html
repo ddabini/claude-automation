@@ -3086,9 +3086,14 @@
           <option value="done">완료</option>
         </select>
         <button class="dr-btn" onclick="drOpenInNewTab()">↗ 새 탭</button>
-        <!-- Figma로 이동 버튼 — URL 복사 + Figma 파일 열기 -->
+        <!-- 이미지 저장 버튼 — 현재 보고 있는 장을 PNG로 다운로드 -->
+        <button class="dr-btn" id="drSaveImgBtn"
+                onclick="drSaveImage()" title="현재 장을 PNG 이미지로 저장">
+          📥 저장
+        </button>
+        <!-- Figma 열기 버튼 — Figma URL이 등록된 경우에만 활성화 -->
         <button class="dr-btn dr-btn-figma no-url" id="drFigmaBtn"
-                onclick="drOpenFigma()" title="디자인 URL 복사 + Figma로 이동">
+                onclick="drOpenFigma()" title="Figma 파일 열기">
           <svg width="12" height="12" viewBox="0 0 38 57" fill="currentColor" style="vertical-align:-1px;margin-right:3px;">
             <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z"/>
             <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0z"/>
