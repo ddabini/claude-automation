@@ -100,7 +100,7 @@
   -->
   <rect x="68" y="170" width="64" height="80" rx="1" ry="1"
         fill="#F7F5F2" opacity="0.15"
-        stroke="#C9B99A" stroke-width="0.5" opacity="0.2"/>
+        stroke="#C9B99A" stroke-width="0.5"/>
 
   <!--
     보틀 바닥면
