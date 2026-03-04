@@ -4228,6 +4228,14 @@
 
     // ─── 이미지 로드 실패 핸들러 ───
     // 이미지가 깨질 때 — 카드 자체를 숨기거나 재시도 (스니핏의 자체 CDN 복사 대신)
+    // ─── 이미지 프록시 목록 — 외부 이미지 핫링크 차단 우회용 ───
+    // 순서대로 시도하며, 하나가 실패하면 다음 프록시로 재시도
+    const IMG_PROXIES = [
+      (url) => `https://wsrv.nl/?url=${encodeURIComponent(url)}&default=1`,
+      (url) => `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=1`,
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+
     function handleImgError(imgEl, imgId) {
       const wrap = imgEl.parentElement;
       const card = document.getElementById('card-' + imgId);
@@ -4244,12 +4252,43 @@
         }
       }
 
-      // 최종 실패: 카드 숨김 (빈 영역 대신 깔끔하게 제거)
-      if (card) {
-        card.style.display = 'none';
+      if (retryCount <= IMG_PROXIES.length) {
+        // 프록시 재시도: 외부 이미지 핫링크 차단 우회
+        const proxyIdx = retryCount - 1;
+        if (proxyIdx >= 0 && proxyIdx < IMG_PROXIES.length) {
+          const img = images.find(i => i.id === imgId);
+          const origUrl = img?.image_url || imgEl.dataset.origSrc || '';
+          if (origUrl && !origUrl.startsWith('indexeddb://') && !origUrl.startsWith('blob:')) {
+            // 최초 원본 URL 기록 (프록시 URL이 아닌 진짜 원본)
+            if (!imgEl.dataset.origSrc) imgEl.dataset.origSrc = origUrl;
+            imgEl.dataset.retryCount = String(retryCount + 1);
+            imgEl.src = IMG_PROXIES[proxyIdx](origUrl);
+            return;
+          }
+        }
       }
-      // 스켈레톤도 제거
-      if (wrap) wrap.classList.add('loaded');
+
+      // 모든 프록시도 실패: 플레이스홀더 표시 (카드는 유지)
+      imgEl.style.display = 'none';
+      if (wrap) {
+        wrap.classList.add('loaded');
+        // 플레이스홀더 표시 — 기존에 없을 때만 추가
+        if (!wrap.querySelector('.img-placeholder')) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'img-placeholder';
+          placeholder.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:180px;background:var(--bg);color:var(--text-muted);font-size:12px;
+                        border-radius:var(--radius-sm);gap:6px;">
+              <span style="font-size:32px;opacity:0.4;">🖼</span>
+              <span>이미지 로드 실패</span>
+            </div>
+          `;
+          wrap.appendChild(placeholder);
+        }
+      }
+      // 메이슨리 재계산
+      requestAnimationFrame(() => { if (typeof masonryLayout === 'function') masonryLayout(); });
     }
 
     /* ═══════════════════════════════════════
