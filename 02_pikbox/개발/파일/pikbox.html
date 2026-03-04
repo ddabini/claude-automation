@@ -3100,6 +3100,15 @@
 
       <!-- iframe이 실제 디자인을 보여주는 영역 -->
       <div class="dr-viewer-frame" id="drViewerFrame" style="display:none;">
+        <!-- 이전 페이지 화살표 — 카드뉴스 다중 페이지일 때만 표시 -->
+        <button class="dr-page-nav dr-page-prev hidden" id="drPagePrev"
+                onclick="drPrevPage()" title="이전 장">‹</button>
+        <!-- 다음 페이지 화살표 -->
+        <button class="dr-page-nav dr-page-next hidden" id="drPageNext"
+                onclick="drNextPage()" title="다음 장">›</button>
+        <!-- 페이지 인디케이터 "현재 / 전체" -->
+        <div class="dr-page-indicator hidden" id="drPageIndicator">1 / 1</div>
+
         <div class="dr-iframe-wrap" id="drIframeWrap">
           <!-- sandbox: 스크립트 실행 허용 (카드뉴스 내 버튼 클릭 등), 외부 접근 차단 -->
           <iframe class="dr-viewer-iframe" id="drViewerIframe"
