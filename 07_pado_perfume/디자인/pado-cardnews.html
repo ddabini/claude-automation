@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<!--
+  PADO (파도) — 제주 니치 퍼퓸 인스타그램 카드뉴스 3장
+  사이즈: 1080×1350px (세로형 인스타그램 표준)
+  작성일: 2026-03-04
+  에셋 경로 기준: 이 HTML 파일과 같은 폴더 기준 (07_pado_perfume/디자인/)
+
+  장별 구성:
+  - 1장 (?page=1): 브랜드 임팩트 — 딥 오션 블루 배경
+  - 2장 (?page=2): 제품 스토리 — 크리스탈 화이트 배경
+  - 3장 (?page=3): 라인업 + CTA — 세이지 베이지 배경
+
+  URL 파라미터 ?page=1~3 으로 장별 전환
+  기본값: ?page=1
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080">
+  <title>PADO — 제주 니치 퍼퓸 카드뉴스</title>
+
+  <!-- ===== 폰트 CDN 로드 ===== -->
+
+  <!-- Raleway: 영문 헤드라인 (극히 가벼운 산세리프 — 니치 퍼퓸 영문 표준) -->
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400&display=swap" rel="stylesheet">
+
+  <!-- Josefin Sans: 영문 제품명 (기하학적 산세리프 — DAWN TIDE 등 라인업용) -->
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;200;300&display=swap" rel="stylesheet">
+
+  <!-- Pretendard Variable: 한글/영문 본문 -->
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+
+  <!-- Paperlogy ExtraBold: 한글 헤드라인 메인폰트 -->
+  <style>
+    @font-face {
+      font-family: 'Paperlogy';
+      src: url('https://cdn.jsdelivr.net/gh/e-hwan/paperlogy@latest/fonts/Paperlogy-8ExtraBold.woff2') format('woff2');
+      font-weight: 800;
+      font-style: normal;
+      /* 폰트 로딩 전에도 레이아웃이 깨지지 않도록 swap 설정 */
+      font-display: swap;
+    }
+  </style>
+
+  <style>
+    /* ===== CSS 디자인 토큰 (적용가이드 전체 팔레트) ===== */
+    :root {
+      /* --- Ocean Blue 팔레트 (딥 오션 블루 계열) --- */
+      --ocean-50:  #EBF4FA;
+      --ocean-100: #C8E0EF;
+      --ocean-200: #A0C8E2;
+      --ocean-300: #7AB4D6;
+      --ocean-400: #5FA8D3;   /* 터쿼이즈 포인트 — 강조 컬러 */
+      --ocean-500: #4090BF;
+      --ocean-600: #2E79A8;
+      --ocean-700: #1B4965;   /* 딥 오션 블루 — 메인 브랜드 컬러 */
+      --ocean-800: #142F4A;
+      --ocean-900: #0D2137;   /* 미드나이트 네이비 — 1장 배경 */
+
+      /* --- Sand Beige 팔레트 (세이지 베이지 계열) --- */
+      --sand-50:  #FAF8F5;
+      --sand-100: #F7F5F2;    /* 크리스탈 화이트 — 2·3장 배경 */
+      --sand-200: #EDE9E1;
+      --sand-300: #E0D8CC;
+      --sand-400: #D4C6A8;
+      --sand-500: #C9B99A;    /* 세이지 베이지 — 서브 브랜드 */
+      --sand-600: #B8A080;
+      --sand-700: #A89070;
+      --sand-800: #8A7050;
+      --sand-900: #6A5030;
+
+      /* --- Basalt 팔레트 (현무암 블랙 계열) --- */
+      --basalt-50:  #F5F5F5;
+      --basalt-100: #E8E8E8;
+      --basalt-200: #CCCCCC;
+      --basalt-300: #AAAAAA;
+      --basalt-400: #888888;
+      --basalt-500: #666666;
+      --basalt-600: #444444;
+      --basalt-700: #2D2D2D;  /* 현무암 블랙 — 라이트 배경 위 메인 텍스트 */
+      --basalt-800: #1A1A1A;
+      --basalt-900: #0D0D0D;
+
+      /* --- Semantic Tokens (용도별 의미 있는 색 이름) --- */
+      /* 배경 */
+      --bg-card1: #0D2137;         /* 1장 배경 — 미드나이트 네이비 */
+      --bg-card2: #F7F5F2;         /* 2장 배경 — 크리스탈 화이트 */
+      --bg-card3: #F7F5F2;         /* 3장 배경 상단 */
+      --bg-card3-bottom: #C9B99A;  /* 3장 배경 하단 */
+
+      /* 텍스트 */
+      --text-on-dark:  #F7F5F2;    /* 다크 배경 위 기본 텍스트 */
+      --text-on-light: #2D2D2D;    /* 라이트 배경 위 기본 텍스트 */
+      --text-sub-dark: #C9B99A;    /* 다크 배경 위 서브 텍스트 */
+      --text-sub-light: #A89070;   /* 라이트 배경 위 서브 텍스트 */
+
+      /* 브랜드 */
+      --brand-primary: #1B4965;    /* 딥 오션 블루 */
+      --brand-accent:  #5FA8D3;    /* 터쿼이즈 포인트 */
+      --brand-warm:    #C9B99A;    /* 세이지 베이지 */
+      --brand-dark:    #0D2137;    /* 미드나이트 네이비 */
+
+      /* 데코 */
+      --deco-line: #C9B99A;        /* 구분선, 데코 요소 */
+      --deco-dot:  #C9B99A;        /* 점 액센트 */
+    }
+
+    /* ===== 전체 페이지 기본 설정 ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      /* 카드 사이즈에 맞춘 고정 너비 */
+      width: 1080px;
+      background: #0a0a0a;
+    }
+
+    /* ===== 카드 공통 컨테이너 ===== */
+    /* 1080×1350px 고정 크기 카드 — 반응형 없음 (캡처용 고정 레이아웃) */
+    .card {
+      position: relative;
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      /* 기본적으로 숨겨진 상태 — JS로 활성 카드만 표시 */
+      display: none;
+    }
+
+    /* 현재 보여지는 카드만 표시 */
+    .card.active {
+      display: block;
+    }
+
+    /* ===== 배경 이미지 공통 스타일 ===== */
+    /* SVG 배경을 카드 전체에 꽉 채우는 방식 */
+    .card-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;  /* 비율 유지하면서 꽉 채우기 */
+      z-index: 0;         /* 배경이므로 가장 뒤에 */
+    }
+
+    /* ===== 텍스처 오버레이 공통 스타일 ===== */
+    /* 모든 카드에 파도·모래 복합 텍스처를 살짝 얹는 레이어 */
+    .texture-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('./assets/backgrounds/texture-wave-overlay.svg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.12;
+      mix-blend-mode: overlay;  /* 배경과 자연스럽게 섞이는 합성 모드 */
+      pointer-events: none;     /* 텍스처 위 클릭 이벤트 통과 */
+      z-index: 1;
+    }
+
+    /* ===== 카드 내용물 공통 레이어 ===== */
+    /* 배경 위에 실제 콘텐츠(텍스트, 이미지)를 올리는 레이어 */
+    .card-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ===== 타이포그래피 클래스 ===== */
+
+    /* 영문 메인 헤드라인 — PADO, 브랜드명, 영문 제목 */
+    .headline-en {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 200;
+      letter-spacing: 0.35em;  /* 자간 35% — 니치 퍼퓸 영문 표준 */
+      text-transform: uppercase;
+    }
+
+    /* 한글 메인 카피 — "바다가 남긴 향기" 등 */
+    .headline-ko {
+      /* Paperlogy 로드 실패 시 SUIT → Noto Sans KR 순으로 대체 */
+      font-family: 'Paperlogy', 'SUIT', 'Noto Sans KR', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.01em;  /* 한글은 자간 살짝 좁게 */
+      line-height: 1.4;
+    }
+
+    /* 영문 제품명 — DAWN TIDE, SALT WIND, WHITE SAND */
+    .product-name {
+      font-family: 'Josefin Sans', 'Raleway', sans-serif;
+      font-weight: 100;
+      letter-spacing: 0.45em;  /* 자간 45% — 라인업 강조 */
+      text-transform: uppercase;
+    }
+
+    /* 본문 스토리 카피 — 스토리 설명 텍스트 */
+    .body-copy {
+      font-family: 'Pretendard Variable', 'Raleway', sans-serif;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      line-height: 1.9;
+    }
+
+    /* 서브 브랜드 텍스트 — "PADO — Jeju Niche Perfume" */
+    .sub-brand {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 100;
+      letter-spacing: 0.5em;   /* 자간 50% — 브랜드 서브텍스트 최대 자간 */
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+
+    /* ============================================================ */
+    /*   1장 — 브랜드 임팩트 (딥 오션 블루 배경)                    */
+    /* ============================================================ */
+
+    /* 1장 전체 구조: 수직 중앙 정렬로 텍스트 블록 배치 */
+    #card1 .card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    /* 1장 상단 여백: 전체 높이의 20% = 270px */
+    .c1-top-spacer {
+      height: 270px;
+      flex-shrink: 0;
+    }
+
+    /* 1장 PADO 로고 영역 (Y:270~420) */
+    .c1-logo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 150px;
+      justify-content: center;
+    }
+
+    /* 1장 로고 이미지: 가이드 기준 W:480px */
+    .c1-logo {
+      width: 480px;
+      height: auto;
+      /* 화이트 컬러 필터 — SVG에 이미 화이트 그라디언트가 적용되어 있으나
+         CSS filter로 밝기 보정 */
+      filter: brightness(1.05);
+    }
+
+    /* 1장 데코 라인 영역 (Y:420~500) */
+    .c1-deco-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* 1장 라인 액센트: 로고 아래 얇은 수평 장식선 */
+    .c1-line-accent {
+      width: 120px;  /* 가이드에서 sand-500 opacity:0.5 */
+      height: 1px;
+      background: var(--sand-500);
+      opacity: 0.5;
+    }
+
+    /* 파도 구분선 이미지 */
+    .c1-wave-divider {
+      width: 280px;
+      opacity: 0.4;
+    }
+
+    /* 1장 메인 한글 카피 영역 (Y:500~640) */
+    .c1-main-copy {
+      margin-top: 32px;
+      text-align: center;
+    }
+
+    /* "바다가 남긴 향기" — 가이드: 96px 폰트, sand-100 컬러 */
+    .c1-headline {
+      font-size: 88px;     /* 렌더링 환경에 따른 실제 표시 크기 최적화 */
+      color: var(--sand-100);  /* 크리스탈 화이트 */
+      line-height: 1.3;
+    }
+
+    /* 1장 서브 영문 카피 영역 (Y:640~720) */
+    .c1-sub-copy {
+      margin-top: 28px;
+      text-align: center;
+    }
+
+    /* "PADO — Jeju Niche Perfume" — 가이드: 28px, sand-500 컬러 */
+    .c1-subline {
+      font-size: 26px;
+      color: var(--sand-500);  /* 세이지 베이지 */
+      letter-spacing: 0.45em;
+      font-family: 'Josefin Sans', 'Raleway', sans-serif;
+      font-weight: 100;
+      text-transform: uppercase;
+    }
+
+
+    /* ============================================================ */
+    /*   2장 — 제품 스토리 (크리스탈 화이트 배경)                   */
+    /* ============================================================ */
+
+    /* 2장 전체 구조 */
+    #card2 .card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 2장 상단: PADO 소형 로고 (Y:0~200, 로고는 Y:80) */
+    .c2-top-area {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 80px;
+    }
+
+    /* 2장 소형 로고: W:180px, 딥 오션 블루 색상 */
+    .c2-logo {
+      width: 180px;
+      height: auto;
+      /* SVG는 화이트 그라디언트 — 라이트 배경 위에서는 색상 반전 필터 적용 */
+      filter: invert(1) sepia(1) saturate(3) hue-rotate(180deg) brightness(0.35);
+    }
+
+    /* 2장 보틀 시각 영역 (Y:200~880) — 보틀 이미지를 중앙에 배치 */
+    .c2-bottle-area {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 2장 보틀 이미지 */
+    .c2-bottle {
+      height: 480px;        /* 가이드: H:480px 기준 */
+      width: auto;
+      opacity: 0.82;        /* 가이드: opacity:0.85 — 배경과 융합 효과 */
+      /* 화이트 배경 위 다크 보틀 — multiply 블렌딩으로 배경에 녹아드는 느낌 */
+      mix-blend-mode: multiply;
+      /* 살짝 비대칭 배치를 위해 미세 오프셋 */
+      transform: translateX(16px);
+    }
+
+    /* 2장 파도 구분선 영역 (Y:880~960) */
+    .c2-divider-area {
+      display: flex;
+      justify-content: center;
+      margin-top: 0;
+    }
+
+    /* 2장 파도 구분선: 딥 오션 블루로 색상 변환 */
+    .c2-wave-divider {
+      width: 360px;
+      opacity: 0.35;
+      /* SVG의 화이트 선을 딥 오션 블루로 변환하는 CSS 필터 */
+      filter: invert(1) sepia(1) saturate(2) hue-rotate(180deg) brightness(0.5);
+    }
+
+    /* 2장 메인 스토리 카피 영역 (Y:960~1160) */
+    .c2-story-area {
+      margin-top: 32px;
+      padding: 0 80px;    /* 좌우 여백 80px — 8px 그리드 × 10 */
+      text-align: center;
+    }
+
+    /* 스토리 카피: 2줄 텍스트 — Paperlogy 56px */
+    .c2-story-line {
+      font-size: 52px;
+      color: var(--basalt-700);   /* 현무암 블랙 */
+      line-height: 1.55;
+      display: block;
+    }
+
+    /* 2장 노트 설명 카피 영역 (Y:1160~1260) */
+    .c2-notes-area {
+      margin-top: 32px;
+      padding: 0 96px;    /* 좌우 여백 더 넓게 */
+      text-align: center;
+    }
+
+    /* 노트 설명 텍스트: Pretendard Light 28px */
+    .c2-notes-text {
+      font-size: 26px;
+      color: var(--basalt-600);   /* 중간 진한 텍스트 */
+      line-height: 2.0;
+      letter-spacing: 0.05em;
+      display: block;
+    }
+
+    /* 노트 키워드 가로 배치 영역 */
+    .c2-keywords-area {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;          /* 키워드 간 간격 */
+    }
+
+    /* 개별 노트 키워드: Josefin Sans 100, 자간 넓게 */
+    .c2-keyword {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 100;
+      font-size: 22px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ocean-700);    /* 딥 오션 블루 */
+    }
+
+    /* 키워드 사이 구분점 */
+    .c2-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--deco-dot);   /* 세이지 베이지 */
+      flex-shrink: 0;
+    }
+
+
+    /* ============================================================ */
+    /*   3장 — 라인업 + CTA (세이지 베이지 배경)                    */
+    /* ============================================================ */
+
+    /* 3장 전체 구조 */
+    #card3 .card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 3장 상단: PADO 소형 로고 (Y:0~160, 로고는 Y:80) */
+    .c3-top-area {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 72px;
+    }
+
+    /* 3장 소형 로고: W:200px, 딥 오션 블루 */
+    .c3-logo {
+      width: 200px;
+      height: auto;
+      /* 2장과 동일한 컬러 변환 필터 */
+      filter: invert(1) sepia(1) saturate(2) hue-rotate(180deg) brightness(0.35);
+    }
+
+    /* 3장 로고 하단 데코 라인 (Y:160~240) */
+    .c3-deco-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* 로고 하단 가로 장식선: sand-600 컬러, opacity:0.5 */
+    .c3-line {
+      width: 80px;
+      height: 1px;
+      background: var(--sand-600);
+      opacity: 0.5;
+    }
+
+    /* ===== 3장 라인업 3종 세로 배열 영역 (Y:240~960) ===== */
+    .c3-lineup-area {
+      width: 100%;
+      padding: 0 80px;
+      margin-top: 16px;
+    }
+
+    /* 개별 제품 항목 컨테이너 */
+    .c3-product-item {
+      display: flex;
+      align-items: center;
+      padding: 24px 0;
+      gap: 40px;          /* 보틀 이미지와 텍스트 사이 간격 */
+    }
+
+    /* 제품 항목 구분선 (아이템 하단) */
+    .c3-product-item.has-divider {
+      border-bottom: none;    /* 직접 테두리 대신 wave-divider SVG 사용 */
+    }
+
+    /* 보틀 이미지 래퍼 — 고정 너비로 정렬 통일 */
+    .c3-bottle-wrap {
+      width: 100px;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 3장 보틀 이미지 — 가이드: H:180px (DAWN TIDE, SALT WIND) */
+    .c3-bottle {
+      height: 180px;
+      width: auto;
+    }
+
+    /* WHITE SAND 보틀 — 가이드: H:160px (낮고 넓은 형태) */
+    .c3-bottle-wide {
+      height: 160px;
+      width: auto;
+    }
+
+    /* 제품 텍스트 영역 */
+    .c3-product-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* 제품명: Josefin Sans 100, 40px, ocean-800 */
+    .c3-product-name {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 100;
+      font-size: 38px;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ocean-800);    /* 딥 블루 진한 색 */
+    }
+
+    /* 제품 서브 설명: Pretendard 300, 22px */
+    .c3-product-sub {
+      font-family: 'Pretendard Variable', sans-serif;
+      font-weight: 300;
+      font-size: 21px;
+      color: var(--basalt-600);
+      letter-spacing: 0.02em;
+    }
+
+    /* 제품 항목 아래 파도 구분선 */
+    .c3-item-divider {
+      display: flex;
+      justify-content: flex-start;
+      padding-left: 140px;    /* 보틀 너비만큼 들여쓰기 */
+      margin-bottom: 0;
+    }
+
+    .c3-wave-divider {
+      width: 280px;
+      opacity: 0.25;
+      /* 베이지 배경 위 — 딥 오션 블루 계열로 색상 변환 */
+      filter: invert(1) sepia(1) saturate(2) hue-rotate(180deg) brightness(0.6);
+    }
+
+    /* ===== 3장 CTA 영역 (Y:960~1150) ===== */
+    .c3-cta-area {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* CTA 텍스트: Raleway 200, 30px, ocean-700 */
+    .c3-cta-text {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 200;
+      font-size: 28px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--ocean-700);    /* 딥 오션 블루 */
+      text-align: center;
+    }
+
+    /* CTA 하단 데코: 라인 + 점 조합 */
+    .c3-cta-deco {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .c3-cta-line {
+      width: 48px;
+      height: 1px;
+      background: var(--deco-line);
+      opacity: 0.6;
+    }
+
+    .c3-cta-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--deco-dot);
+    }
+
+    /* ===== 3장 URL 영역 (Y:1150~1280) ===== */
+    .c3-url-area {
+      margin-top: 32px;
+      text-align: center;
+    }
+
+    /* URL 텍스트: Josefin Sans 100, 24px, basalt-600 */
+    .c3-url-text {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 100;
+      font-size: 22px;
+      letter-spacing: 0.25em;
+      color: var(--basalt-600);
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!--   1장 — 브랜드 임팩트 (딥 오션 블루 배경)                   -->
+  <!-- ============================================================ -->
+  <section id="card1" class="card">
+
+    <!-- 배경: 딥 오션 블루 SVG (1080×1350 전체) -->
+    <img class="card-bg"
+         src="./assets/backgrounds/bg-card1-ocean.svg"
+         alt="딥 오션 블루 배경"
+         aria-hidden="true">
+
+    <!-- 텍스처 오버레이: 파도 결 미묘하게 얹기 -->
+    <div class="texture-overlay" aria-hidden="true"></div>
+
+    <!-- 실제 콘텐츠 레이어 -->
+    <div class="card-content">
+
+      <!-- 상단 여백: 전체 높이의 20% (270px) -->
+      <div class="c1-top-spacer"></div>
+
+      <!-- PADO 워드마크 로고 영역 (Y:270~420) -->
+      <!-- 가이드: W:480px, 중앙 정렬, letter-spacing:0.35em -->
+      <div class="c1-logo-area">
+        <img class="c1-logo"
+             src="./assets/icons/logo-pado.svg"
+             alt="PADO 로고">
+      </div>
+
+      <!-- 데코: 로고 하단 장식선 + 파도 구분선 (Y:420~500) -->
+      <div class="c1-deco-area">
+        <!-- 얇은 수평 장식선 (sand-500, opacity:0.5) -->
+        <div class="c1-line-accent"></div>
+        <!-- 파도 곡선 구분선 -->
+        <img class="c1-wave-divider"
+             src="./assets/icons/deco-wave-divider.svg"
+             alt="" aria-hidden="true">
+      </div>
+
+      <!-- 메인 한글 카피 영역 (Y:500~640) -->
+      <!-- 가이드: Paperlogy ExtraBold 800, 96px, sand-100 (#F7F5F2) -->
+      <div class="c1-main-copy">
+        <h1 class="headline-ko c1-headline">바다가 남긴 향기</h1>
+      </div>
+
+      <!-- 서브 영문 카피 영역 (Y:640~720) -->
+      <!-- 가이드: Josefin Sans 100, 28px, sand-500 (#C9B99A), letter-spacing:0.45em -->
+      <div class="c1-sub-copy">
+        <p class="c1-subline">PADO &mdash; Jeju Niche Perfume</p>
+      </div>
+
+      <!-- 하단은 배경 SVG의 파도 결이 역할을 대신함 (Y:720~1350) -->
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!--   2장 — 제품 스토리 (크리스탈 화이트 배경)                  -->
+  <!-- ============================================================ -->
+  <section id="card2" class="card">
+
+    <!-- 배경: 크리스탈 화이트 + 모래 결 SVG -->
+    <img class="card-bg"
+         src="./assets/backgrounds/bg-card2-white.svg"
+         alt="크리스탈 화이트 배경"
+         aria-hidden="true">
+
+    <!-- 텍스처 오버레이 (라이트 배경에서는 더 연하게) -->
+    <div class="texture-overlay" style="opacity:0.08;" aria-hidden="true"></div>
+
+    <!-- 실제 콘텐츠 레이어 -->
+    <div class="card-content">
+
+      <!-- 상단 소형 PADO 로고 (Y:0~200, 로고 위치 Y:80) -->
+      <!-- 가이드: W:180px, ocean-700 (#1B4965) 컬러 -->
+      <div class="c2-top-area">
+        <img class="c2-logo"
+             src="./assets/icons/logo-pado.svg"
+             alt="PADO 로고">
+      </div>
+
+      <!-- 향수 보틀 시각 영역 (Y:200~880) -->
+      <!-- 가이드: bottle-dawn-tide.svg, H:480px, 중앙 배치, 살짝 비대칭, opacity:0.85 -->
+      <div class="c2-bottle-area">
+        <img class="c2-bottle"
+             src="./assets/images/bottle-dawn-tide.svg"
+             alt="DAWN TIDE 향수 보틀">
+      </div>
+
+      <!-- 파도 구분선 (Y:880~960) -->
+      <!-- 가이드: ocean-700, W:360px, opacity:0.4 -->
+      <div class="c2-divider-area">
+        <img class="c2-wave-divider"
+             src="./assets/icons/deco-wave-divider.svg"
+             alt="" aria-hidden="true">
+      </div>
+
+      <!-- 메인 스토리 카피 (Y:960~1160) -->
+      <!-- 가이드: Paperlogy ExtraBold 800, 56px, basalt-700 (#2D2D2D), 중앙 정렬 -->
+      <div class="c2-story-area">
+        <span class="headline-ko c2-story-line">새벽 파도가 머문 자리,</span>
+        <span class="headline-ko c2-story-line">소금기 머금은 바람의 기억</span>
+      </div>
+
+      <!-- 노트 설명 카피 (Y:1160~1260) -->
+      <!-- 가이드: Pretendard Light 300, 28px, basalt-600, line-height:2.0 -->
+      <div class="c2-notes-area">
+        <span class="body-copy c2-notes-text">제주 동쪽 해안의 해조, 시트러스, 흰 모래</span>
+        <span class="body-copy c2-notes-text">세 가지 노트로 완성한 향</span>
+
+        <!-- 노트 키워드 3개 가로 배치 -->
+        <!-- 가이드: Josefin Sans 100, 24px, letter-spacing:0.3em, 구분점: deco-dot -->
+        <div class="c2-keywords-area">
+          <span class="c2-keyword">해조</span>
+          <!-- 구분점 — deco-dot-accent.svg 대신 CSS로 동일 스타일 구현 -->
+          <div class="c2-dot" aria-hidden="true"></div>
+          <span class="c2-keyword">시트러스</span>
+          <div class="c2-dot" aria-hidden="true"></div>
+          <span class="c2-keyword">흰 모래</span>
+        </div>
+      </div>
+
+      <!-- 하단 여백 (Y:1260~1350) -->
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!--   3장 — 라인업 + CTA (세이지 베이지 배경)                   -->
+  <!-- ============================================================ -->
+  <section id="card3" class="card">
+
+    <!-- 배경: 세이지 베이지 그라디언트 SVG -->
+    <img class="card-bg"
+         src="./assets/backgrounds/bg-card3-beige.svg"
+         alt="세이지 베이지 배경"
+         aria-hidden="true">
+
+    <!-- 텍스처 오버레이 -->
+    <div class="texture-overlay" style="opacity:0.10;" aria-hidden="true"></div>
+
+    <!-- 실제 콘텐츠 레이어 -->
+    <div class="card-content">
+
+      <!-- 상단 PADO 소형 로고 (Y:0~160, Y:80 배치) -->
+      <!-- 가이드: W:200px, ocean-700 (#1B4965), 중앙 정렬 -->
+      <div class="c3-top-area">
+        <img class="c3-logo"
+             src="./assets/icons/logo-pado.svg"
+             alt="PADO 로고">
+      </div>
+
+      <!-- 로고 하단 데코 라인 (Y:160~240) -->
+      <!-- 가이드: sand-600 (#B8A080) x2, opacity:0.5 -->
+      <div class="c3-deco-lines">
+        <div class="c3-line"></div>
+        <div class="c3-line" style="width:48px; opacity:0.3;"></div>
+      </div>
+
+      <!-- ===== 라인업 3종 세로 배열 (Y:240~960) ===== -->
+      <div class="c3-lineup-area">
+
+        <!-- --- DAWN TIDE 제품 항목 (Y:240~480) --- -->
+        <div class="c3-product-item">
+          <!-- 보틀 이미지: H:180px -->
+          <div class="c3-bottle-wrap">
+            <img class="c3-bottle"
+                 src="./assets/images/bottle-dawn-tide.svg"
+                 alt="DAWN TIDE 보틀">
+          </div>
+          <!-- 제품 텍스트 -->
+          <div class="c3-product-text">
+            <!-- 제품명: Josefin Sans 100, 40px, ocean-800, letter-spacing:0.5em -->
+            <span class="c3-product-name">Dawn Tide</span>
+            <!-- 서브: Pretendard 300, 22px, basalt-600 -->
+            <span class="c3-product-sub">새벽 파도의 향</span>
+          </div>
+        </div>
+
+        <!-- DAWN TIDE 하단 파도 구분선 -->
+        <div class="c3-item-divider">
+          <img class="c3-wave-divider"
+               src="./assets/icons/deco-wave-divider.svg"
+               alt="" aria-hidden="true">
+        </div>
+
+        <!-- --- SALT WIND 제품 항목 (Y:480~720) --- -->
+        <div class="c3-product-item">
+          <div class="c3-bottle-wrap">
+            <img class="c3-bottle"
+                 src="./assets/images/bottle-salt-wind.svg"
+                 alt="SALT WIND 보틀">
+          </div>
+          <div class="c3-product-text">
+            <span class="c3-product-name">Salt Wind</span>
+            <span class="c3-product-sub">소금기 머금은 바람</span>
+          </div>
+        </div>
+
+        <!-- SALT WIND 하단 파도 구분선 -->
+        <div class="c3-item-divider">
+          <img class="c3-wave-divider"
+               src="./assets/icons/deco-wave-divider.svg"
+               alt="" aria-hidden="true">
+        </div>
+
+        <!-- --- WHITE SAND 제품 항목 (Y:720~960) --- -->
+        <div class="c3-product-item">
+          <div class="c3-bottle-wrap">
+            <!-- WHITE SAND: H:160px (낮고 넓은 보틀) -->
+            <img class="c3-bottle-wide"
+                 src="./assets/images/bottle-white-sand.svg"
+                 alt="WHITE SAND 보틀">
+          </div>
+          <div class="c3-product-text">
+            <span class="c3-product-name">White Sand</span>
+            <span class="c3-product-sub">흰 모래의 온기</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- 라인업 영역 끝 -->
+
+
+      <!-- ===== CTA + 컬렉션 정보 영역 (Y:960~1150) ===== -->
+      <!-- 가이드: Raleway 200, 30px, ocean-700, letter-spacing:0.35em -->
+      <div class="c3-cta-area">
+        <p class="c3-cta-text">2026 S/S First Collection</p>
+
+        <!-- 라인 + 점 + 라인 데코 조합 -->
+        <div class="c3-cta-deco">
+          <div class="c3-cta-line"></div>
+          <div class="c3-cta-dot"></div>
+          <div class="c3-cta-line"></div>
+        </div>
+      </div>
+
+      <!-- ===== URL 영역 (Y:1150~1280) ===== -->
+      <!-- 가이드: Josefin Sans 100, 24px, letter-spacing:0.25em, basalt-600 -->
+      <div class="c3-url-area">
+        <p class="c3-url-text">pado-perfume.kr</p>
+      </div>
+
+      <!-- 하단 여백 (Y:1280~1350): 70px -->
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!--   페이지 전환 JavaScript                                     -->
+  <!-- ============================================================ -->
+  <script>
+    /*
+      URL의 ?page=N 파라미터를 읽어서 해당 카드를 보여주는 스크립트
+      ?page=1 → 1장 (브랜드 임팩트)
+      ?page=2 → 2장 (제품 스토리)
+      ?page=3 → 3장 (라인업 + CTA)
+      파라미터 없으면 → 기본값 1장 표시
+    */
+
+    // URL에서 page 파라미터 값을 가져옴
+    function getCurrentPage() {
+      const params = new URLSearchParams(window.location.search);
+      const page = parseInt(params.get('page')) || 1;  // 없으면 1 반환
+      // 유효 범위 1~3 으로 제한
+      return Math.max(1, Math.min(3, page));
+    }
+
+    // 해당 페이지 번호의 카드를 화면에 표시
+    function showCard(pageNumber) {
+      // 모든 카드를 먼저 숨김
+      document.querySelectorAll('.card').forEach(function(card) {
+        card.classList.remove('active');
+      });
+
+      // 해당 카드만 활성화
+      const targetCard = document.getElementById('card' + pageNumber);
+      if (targetCard) {
+        targetCard.classList.add('active');
+      }
+    }
+
+    // 페이지 로드 시 현재 페이지 번호에 맞는 카드 표시
+    showCard(getCurrentPage());
+  </script>
+
+</body>
+</html>
