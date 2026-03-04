@@ -8784,6 +8784,11 @@
       drState.zoom = 70;
       drApplyZoom();
 
+      // 페이지 탭 초기화 (다중 페이지 디자인이면 탭 생성)
+      drState.currentPage = 0; // 디자인 변경 시 항상 "전체" 탭으로 리셋
+      const pages = design.meta_pages || 1;
+      drBuildPageTabs(pages);
+
       // 채팅 불러오기
       drLoadChat(id);
 
