@@ -9589,8 +9589,9 @@
       drUpdatePageNav();
 
       // 채팅 탭을 뷰어 페이지와 동기화 (다중 페이지일 때만)
+      // fromViewer=true 전달 → 채팅→뷰어 역방향 호출 방지 (무한 루프 방지)
       if (total > 1) {
-        drSelectPageTab(pageNum); // 채팅도 동일 장 탭으로 전환
+        drSelectPageTab(pageNum, true); // 채팅도 동일 장 탭으로 전환
       }
     }
 
