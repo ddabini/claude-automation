@@ -31,6 +31,10 @@ yarn-error.log
 # Claude Code 로컬 전용 설정 (MCP 서버 권한 등 — GitHub Actions에서 실행 불가)
 .claude/settings.json
 .claude/settings.local.json
+.mcp.json
+
+# MCP 이미지 출력 폴더
+mcp-images/
 
 # Claude Code 에이전트/명령어/메모리 (로컬 전용 — GitHub Actions 불필요, MCP 참조 포함)
 .claude/agents/
