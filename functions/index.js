@@ -104,36 +104,48 @@ exports.searchPinterest = functions
 
       const page = await browser.newPage();
 
-      // 불필요한 리소스 차단 (속도 향상)
+      // 불필요한 리소스 차단 (속도 대폭 향상)
       await page.setRequestInterception(true);
       page.on("request", (request) => {
         const type = request.resourceType();
-        // 이미지, 폰트, 미디어는 차단 (DOM 구조만 필요)
-        if (["font", "media", "stylesheet"].includes(type)) {
+        const url = request.url();
+        // 이미지, 폰트, 미디어, 스타일시트, 추적 스크립트 차단 (DOM 구조만 필요)
+        if (
+          ["font", "media", "stylesheet"].includes(type) ||
+          url.includes("recaptcha") ||
+          url.includes("google-analytics") ||
+          url.includes("facebook.com/x/") ||
+          url.includes("accounts.google.com")
+        ) {
           request.abort();
         } else {
           request.continue();
         }
       });
 
+      // 모바일 User-Agent — Pinterest 모바일 페이지가 더 가볍고 빠르게 로드됨
+      await page.setUserAgent(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      );
+
       // Pinterest 검색 페이지 이동
       const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
       await page.goto(searchUrl, {
-        waitUntil: "networkidle2", // 네트워크 요청이 거의 없을 때까지 대기
+        waitUntil: "domcontentloaded", // networkidle2보다 훨씬 빠름
+        timeout: 45000,
+      });
+
+      // 핀 카드가 로드될 때까지 대기 (최대 30초)
+      await page.waitForSelector('[role="group"] img, [data-test-id="pin"] img, [role="listitem"] img', {
         timeout: 30000,
       });
 
-      // 핀 카드가 로드될 때까지 대기
-      await page.waitForSelector('[role="group"] img, [data-test-id="pin"] img', {
-        timeout: 15000,
-      });
+      // 핀 이미지가 실제로 렌더링될 시간 추가 대기
+      await new Promise((r) => setTimeout(r, 2000));
 
-      // 스크롤하여 더 많은 핀 로드 (2회 스크롤)
-      for (let i = 0; i < 2; i++) {
-        await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
-        // 새 핀이 로드될 시간 대기
-        await new Promise((r) => setTimeout(r, 1500));
-      }
+      // 스크롤하여 더 많은 핀 로드 (1회만 — 속도 우선)
+      await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
+      await new Promise((r) => setTimeout(r, 2000));
 
       // ── 핀 데이터 추출 ──
       const pins = await page.evaluate(() => {
