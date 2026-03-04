@@ -10560,9 +10560,9 @@
           url,
           type: 'upload',
           created_at: new Date().toISOString(),
-          ...(meta.width  && { meta_width:  meta.width  }),
-          ...(meta.height && { meta_height: meta.height }),
-          ...(meta.pages  && { meta_pages:  meta.pages  }),
+          ...(meta.width  && { width:  meta.width  }),
+          ...(meta.height && { height: meta.height }),
+          ...(meta.pages  && { pages:  meta.pages  }),
         });
 
         drCloseUploadModal();
