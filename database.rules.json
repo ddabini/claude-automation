@@ -15,6 +15,10 @@
     "pikbox": {
       ".read": true,
       ".write": true
+    },
+    "design-review": {
+      ".read": true,
+      ".write": true
     }
   }
 }

@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Review — 디자인 리뷰 협업 도구</title>
+
+  <!--
+    ═══════════════════════════════════════════════════════════
+    파일 역할:
+    Design Review — 팀원들과 디자인을 공유하고 실시간으로
+    피드백을 주고받는 협업 도구입니다.
+
+    주요 기능:
+    1. 디자인 아카이빙 & 뷰어: HTML 파일 업로드 → 카드 목록 → iframe 프리뷰
+    2. 상태 관리: 검토중 / 수정요청 / 승인 / 완료
+    3. 실시간 채팅: Firebase Realtime DB로 디자인별 피드백 채팅
+    4. Figma 내보내기: html-to-design 스크립트로 캡처 후 전송
+    ═══════════════════════════════════════════════════════════
+  -->
+
+  <!-- Pretendard 폰트 — 모던 산세리프, 설치 없이 CDN으로 사용 -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+
+  <!-- Firebase SDK (compat v10.8.0) — 데이터베이스와 파일 저장소 연동 라이브러리 -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <style>
+    /* ── 색상 변수 모음 (라이트 테마) ── */
+    :root {
+      /* 주색: 인디고 계열 */
+      --primary: #5b5ef4;
+      --primary-hover: #4845e3;
+      --primary-light: #efefff;
+      --primary-bg: #f5f5ff;
+
+      /* 중립 색상 */
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --border: #e4e7ec;
+      --border-hover: #c5cad4;
+      --text: #101828;
+      --text-secondary: #475467;
+      --text-muted: #98a2b3;
+
+      /* 상태 색상 뱃지 */
+      --status-review: #f59e0b;       /* 검토중: 노란색 */
+      --status-review-bg: #fffbeb;
+      --status-request: #ef4444;      /* 수정요청: 빨간색 */
+      --status-request-bg: #fef2f2;
+      --status-approved: #10b981;     /* 승인: 초록색 */
+      --status-approved-bg: #ecfdf5;
+      --status-done: #6366f1;         /* 완료: 보라색 */
+      --status-done-bg: #eef2ff;
+
+      /* 크기 */
+      --header-h: 60px;
+      --chat-w: 320px;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+    }
+
+    /* ── 전체 리셋 ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+    input, textarea, select { font-family: inherit; outline: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ════════════════════════════════════
+       헤더 — 상단 고정 네비게이션 바
+    ════════════════════════════════════ */
+    .header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      gap: 16px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo svg { width: 22px; height: 22px; }
+    .logo-divider {
+      width: 1px; height: 20px;
+      background: var(--border);
+    }
+    .logo-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .header-center {
+      flex: 1;
+      max-width: 400px;
+    }
+    .search-box {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px 0 36px;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.2s ease;
+      position: relative;
+    }
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 11px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-box:focus { border-color: var(--primary); background: var(--surface); }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    /* 닉네임 표시 칩 */
+    .nickname-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nickname-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .nickname-avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* 버튼 공통 */
+    .btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); background: var(--bg); }
+    .btn svg { width: 15px; height: 15px; }
+
+    /* ════════════════════════════════════
+       메인 레이아웃 — 헤더 아래 전체
+    ════════════════════════════════════ */
+    .main-layout {
+      display: flex;
+      height: calc(100vh - var(--header-h));
+      margin-top: var(--header-h);
+      overflow: hidden;
+    }
+
+    /* ════════════════════════════════════
+       좌측 사이드바 — 디자인 목록 & 필터
+    ════════════════════════════════════ */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    /* 상태 필터 탭 */
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    /* 디자인 카드 목록 */
+    .design-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .design-list::-webkit-scrollbar { width: 4px; }
+    .design-list::-webkit-scrollbar-track { background: transparent; }
+    .design-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* 개별 디자인 카드 */
+    .design-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+    .design-card:hover { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .design-card.active { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px var(--primary-light); }
+    /* 카드 썸네일 영역 */
+    .card-thumb {
+      width: 100%;
+      height: 100px;
+      background: var(--bg);
+      overflow: hidden;
+      position: relative;
+    }
+    .card-thumb iframe {
+      width: 200%;
+      height: 200%;
+      transform: scale(0.5);
+      transform-origin: top left;
+      border: none;
+      pointer-events: none;
+    }
+    .card-thumb-placeholder {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 28px;
+    }
+    /* 카드 정보 영역 */
+    .card-body {
+      padding: 10px 12px;
+    }
+    .card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .card-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    /* 상태 뱃지 */
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-review  { color: var(--status-review);  background: var(--status-review-bg); }
+    .status-request { color: var(--status-request); background: var(--status-request-bg); }
+    .status-approved{ color: var(--status-approved);background: var(--status-approved-bg);}
+    .status-done    { color: var(--status-done);    background: var(--status-done-bg); }
+
+    /* 빈 상태 안내 */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .empty-state svg { width: 40px; height: 40px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; line-height: 1.5; }
+
+    /* ════════════════════════════════════
+       중앙 뷰어 — 프리뷰 & 정보
+    ════════════════════════════════════ */
+    .viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    /* 뷰어 상단 툴바 */
+    .viewer-toolbar {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .viewer-title {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .viewer-toolbar .btn { height: 32px; padding: 0 12px; font-size: 12px; }
+    /* 상태 변경 드롭다운 */
+    .status-select {
+      height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface);
+      transition: border-color 0.2s ease;
+    }
+    .status-select:focus { border-color: var(--primary); }
+    /* iframe 프리뷰 */
+    .viewer-frame {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .viewer-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+    /* 뷰어 빈 상태 */
+    .viewer-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 40px;
+    }
+    .viewer-empty svg { width: 56px; height: 56px; opacity: 0.3; }
+    .viewer-empty h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+    .viewer-empty p { font-size: 13px; line-height: 1.6; max-width: 300px; }
+
+    /* ════════════════════════════════════
+       우측 채팅 패널
+    ════════════════════════════════════ */
+    .chat-panel {
+      width: var(--chat-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: width 0.3s ease, transform 0.3s ease;
+    }
+    .chat-panel.collapsed {
+      width: 0;
+      border-left: none;
+      overflow: hidden;
+    }
+    /* 채팅 헤더 */
+    .chat-header {
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .chat-header-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* 온라인 표시 점 */
+    .online-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--status-approved);
+    }
+    .chat-close-btn {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .chat-close-btn:hover { background: var(--bg); color: var(--text); }
+    /* 채팅 선택 안내 */
+    .chat-no-design {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .chat-no-design svg { width: 32px; height: 32px; opacity: 0.4; }
+    .chat-no-design p { font-size: 12px; line-height: 1.5; }
+    /* 채팅 메시지 목록 */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 3px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    /* 개별 메시지 */
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-width: 100%;
+    }
+    .msg-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .msg-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .msg-name { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .msg-time { font-size: 11px; color: var(--text-muted); }
+    .msg-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      padding: 8px 12px;
+      border-radius: 0 10px 10px 10px;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    /* 내 메시지 (오른쪽 정렬) */
+    .msg.mine {
+      align-items: flex-end;
+    }
+    .msg.mine .msg-header { flex-direction: row-reverse; }
+    .msg.mine .msg-text {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px 0 10px 10px;
+    }
+    .msg.mine .msg-avatar { background: var(--status-approved); }
+    /* 날짜 구분선 */
+    .chat-date-divider {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 4px 0;
+      position: relative;
+    }
+    .chat-date-divider::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      height: 1px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .chat-date-divider span {
+      background: var(--surface);
+      padding: 0 8px;
+      position: relative;
+      z-index: 1;
+    }
+    /* 채팅 입력창 */
+    .chat-input-area {
+      border-top: 1px solid var(--border);
+      padding: 12px;
+      flex-shrink: 0;
+    }
+    .chat-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .chat-input {
+      flex: 1;
+      min-height: 36px;
+      max-height: 120px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      resize: none;
+      line-height: 1.4;
+      background: var(--bg);
+      transition: border-color 0.2s ease;
+      overflow-y: auto;
+    }
+    .chat-input:focus { border-color: var(--primary); background: var(--surface); }
+    .chat-send-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s ease;
+    }
+    .chat-send-btn:hover { background: var(--primary-hover); }
+    .chat-send-btn svg { width: 16px; height: 16px; }
+    .chat-input-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ════════════════════════════════════
+       모달 — 닉네임 설정 / 파일 업로드
+    ════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 460px;
+      box-shadow: var(--shadow-md);
+      padding: 28px;
+      transform: translateY(12px);
+      transition: transform 0.2s ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    /* 폼 입력 */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+      background: var(--surface);
+    }
+    .form-input:focus { border-color: var(--primary); }
+    .form-select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 14px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+    .form-select:focus { border-color: var(--primary); }
+    /* 파일 드롭존 */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--bg);
+    }
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-bg);
+    }
+    .dropzone svg { width: 32px; height: 32px; color: var(--text-muted); margin-bottom: 8px; }
+    .dropzone-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .dropzone-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .file-preview {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--primary-light);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 500;
+      display: none;
+    }
+    /* 업로드 진행바 */
+    .progress-wrap {
+      margin-top: 12px;
+      display: none;
+    }
+    .progress-bar-bg {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.2s ease;
+      width: 0%;
+    }
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: center;
+    }
+    /* 모달 버튼 그룹 */
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    .modal-actions .btn { height: 40px; font-size: 14px; }
+    /* 인라인 에러 메시지 */
+    .error-msg {
+      font-size: 12px;
+      color: var(--status-request);
+      margin-top: 6px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* ════════════════════════════════════
+       토스트 알림 (우측 하단)
+    ════════════════════════════════════ */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--text);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.3s ease;
+      max-width: 300px;
+    }
+    .toast.success { background: var(--status-approved); }
+    .toast.error   { background: var(--status-request); }
+    .toast.warning { background: var(--status-review); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════════
+       채팅 토글 버튼 (접혔을 때 보이는 버튼)
+    ════════════════════════════════════ */
+    .chat-toggle-btn {
+      position: fixed;
+      right: 16px;
+      bottom: 72px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(91,94,244,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      transition: all 0.2s ease;
+    }
+    .chat-toggle-btn:hover { background: var(--primary-hover); transform: scale(1.05); }
+    .chat-toggle-btn.visible { display: flex; }
+    /* 채팅 알림 뱃지 */
+    .chat-badge {
+      position: absolute;
+      top: -2px; right: -2px;
+      min-width: 16px; height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      background: var(--status-request);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-badge.show { display: flex; }
+
+    /* ════════════════════════════════════
+       Figma 내보내기 오버레이
+    ════════════════════════════════════ */
+    .figma-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .figma-overlay.open { display: flex; }
+    .figma-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 400px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+    }
+    .figma-box svg { width: 48px; height: 48px; margin-bottom: 12px; }
+    .figma-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .figma-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; }
+    .figma-steps {
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+    .figma-steps span { color: var(--primary); font-weight: 600; }
+
+    /* ════════════════════════════════════
+       반응형 (태블릿·모바일)
+    ════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .sidebar { width: 240px; }
+      --chat-w: 280px;
+    }
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .header-center { display: none; }
+      .chat-panel {
+        position: fixed;
+        right: 0; top: var(--header-h); bottom: 0;
+        width: 100% !important;
+        z-index: 300;
+      }
+      .chat-panel.collapsed { width: 0 !important; }
+    }
+
+    /* ════════════════════════════════════
+       로딩 스피너 (카드 목록 로딩 중)
+    ════════════════════════════════════ */
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 링크 등록 모달 추가 입력 */
+    .url-register-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* 뷰어 외부 링크 표시 */
+    .viewer-link-bar {
+      padding: 8px 20px;
+      background: var(--primary-bg);
+      border-bottom: 1px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      display: none;
+    }
+    .viewer-link-bar.show { display: flex; }
+    .viewer-link-url {
+      font-size: 12px;
+      color: var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 400px;
+    }
+    .viewer-link-open {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+      flex-shrink: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════ 헤더 ════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <!-- 로고 -->
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M9 9h6M9 12h6M9 15h4"/>
+        </svg>
+        Design Review
+      </div>
+      <div class="logo-divider"></div>
+      <span class="logo-sub">디자인 리뷰 협업 도구</span>
+    </div>
+
+    <!-- 검색창 -->
+    <div class="header-center">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" class="search-box" id="searchInput" placeholder="디자인 검색...">
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- 닉네임 설정 버튼 -->
+      <div class="nickname-chip" onclick="openNicknameModal()" id="nicknameChip">
+        <div class="nickname-avatar" id="nicknameAvatar">?</div>
+        <span id="nicknameLabel">닉네임 설정</span>
+      </div>
+
+      <!-- 채팅 토글 버튼 (헤더용) -->
+      <button class="btn btn-ghost" onclick="toggleChat()" id="chatToggleHeader" title="채팅 패널 토글">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        채팅
+      </button>
+
+      <!-- 링크로 등록 버튼 -->
+      <button class="btn btn-ghost" onclick="openLinkModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+        </svg>
+        링크 등록
+      </button>
+
+      <!-- 파일 업로드 버튼 -->
+      <button class="btn btn-primary" onclick="openUploadModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        파일 업로드
+      </button>
+    </div>
+  </header>
+
+  <!-- ════════════ 메인 레이아웃 ════════════ -->
+  <div class="main-layout">
+
+    <!-- ──── 좌측 사이드바: 디자인 목록 ──── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">디자인 목록</div>
+        <!-- 상태 필터 탭 -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('all', this)">전체</button>
+          <button class="filter-tab" onclick="setFilter('review', this)">검토중</button>
+          <button class="filter-tab" onclick="setFilter('request', this)">수정요청</button>
+          <button class="filter-tab" onclick="setFilter('approved', this)">승인</button>
+          <button class="filter-tab" onclick="setFilter('done', this)">완료</button>
+        </div>
+      </div>
+
+      <!-- 디자인 카드 목록 (JS로 동적 생성) -->
+      <div class="design-list" id="designList">
+        <!-- 로딩 상태 -->
+        <div style="display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--text-muted);">
+          <div class="spinner"></div>
+          <span style="font-size:13px;">불러오는 중...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ──── 중앙: 프리뷰 뷰어 ──── -->
+    <main class="viewer" id="viewer">
+      <!-- 뷰어 툴바 (디자인 선택 시 표시) -->
+      <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
+        <span class="viewer-title" id="viewerTitle">-</span>
+        <!-- 상태 변경 드롭다운 -->
+        <select class="status-select" id="statusSelect" onchange="changeStatus(this.value)">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+        <!-- Figma로 보내기 버튼 -->
+        <button class="btn btn-ghost" onclick="openFigmaExport()">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="flex-shrink:0">
+            <path d="M5 5.5A3.5 3.5 0 018.5 2H12v7H8.5A3.5 3.5 0 015 5.5zM12 2h3.5a3.5 3.5 0 110 7H12V2zM12 10.5H8.5a3.5 3.5 0 100 7H12v-7zM12 22v-4.5h3.5a3.5 3.5 0 110 4.5H12zM5 18.5A3.5 3.5 0 018.5 15H12v4.5H8.5A3.5 3.5 0 015 18.5z"/>
+          </svg>
+          Figma로 보내기
+        </button>
+        <!-- 새 창에서 열기 -->
+        <button class="btn btn-ghost" id="openNewBtn" onclick="openInNewTab()" title="새 탭에서 열기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 외부 URL 표시 바 -->
+      <div class="viewer-link-bar" id="viewerLinkBar">
+        <span class="viewer-link-url" id="viewerLinkUrl"></span>
+        <button class="viewer-link-open" onclick="openInNewTab()">새 탭에서 열기 ↗</button>
+      </div>
+
+      <!-- iframe 프리뷰 -->
+      <div class="viewer-frame" id="viewerFrame" style="display:none;">
+        <iframe class="viewer-iframe" id="viewerIframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+
+      <!-- 빈 상태 안내 (디자인 미선택) -->
+      <div class="viewer-empty" id="viewerEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M9 9h6M9 12h6M9 15h4"/>
+        </svg>
+        <h3>디자인을 선택하세요</h3>
+        <p>좌측 목록에서 디자인을 클릭하면 여기에 프리뷰가 표시됩니다.<br>파일을 업로드하거나 링크를 등록해 공유해 보세요.</p>
+      </div>
+    </main>
+
+    <!-- ──── 우측: 실시간 채팅 패널 ──── -->
+    <aside class="chat-panel" id="chatPanel">
+      <!-- 채팅 헤더 -->
+      <div class="chat-header">
+        <div class="chat-header-title">
+          <div class="online-dot"></div>
+          <span id="chatTitle">피드백 채팅</span>
+        </div>
+        <button class="chat-close-btn" onclick="toggleChat()" title="채팅 닫기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 디자인 미선택 시 안내 -->
+      <div class="chat-no-design" id="chatNoDesign">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <p>좌측에서 디자인을 선택하면<br>해당 디자인의 채팅방이 열립니다.</p>
+      </div>
+
+      <!-- 채팅 메시지 목록 -->
+      <div class="chat-messages" id="chatMessages" style="display:none;"></div>
+
+      <!-- 채팅 입력창 -->
+      <div class="chat-input-area" id="chatInputArea" style="display:none;">
+        <div class="chat-input-wrap">
+          <textarea
+            class="chat-input"
+            id="chatInput"
+            placeholder="피드백을 입력하세요..."
+            rows="1"
+            onkeydown="handleChatKeydown(event)"
+            oninput="autoResizeInput(this)"
+          ></textarea>
+          <button class="chat-send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="chat-input-hint">Enter로 전송 / Shift+Enter로 줄바꿈</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ════════════ 채팅 플로팅 버튼 (채팅 접혔을 때) ════════════ -->
+  <button class="chat-toggle-btn" id="chatFloatBtn" onclick="toggleChat()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+    <div class="chat-badge" id="chatBadge">0</div>
+  </button>
+
+  <!-- ════════════ 닉네임 설정 모달 ════════════ -->
+  <div class="modal-overlay" id="nicknameModal">
+    <div class="modal">
+      <h2 class="modal-title">닉네임 설정</h2>
+      <p class="modal-desc">채팅에서 사용할 닉네임을 입력하세요. 로그인 없이 닉네임만으로 참여합니다.</p>
+      <div class="form-group">
+        <label class="form-label">닉네임</label>
+        <input type="text" class="form-input" id="nicknameInput" placeholder="예: 다빈, 디자이너A" maxlength="20">
+        <div class="error-msg" id="nicknameError">닉네임을 입력해 주세요.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeNicknameModal()">취소</button>
+        <button class="btn btn-primary" onclick="saveNickname()">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ 파일 업로드 모달 ════════════ -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <h2 class="modal-title">디자인 파일 업로드</h2>
+      <p class="modal-desc">HTML 파일을 업로드하면 팀원들이 바로 프리뷰로 확인할 수 있습니다.</p>
+
+      <div class="form-group">
+        <label class="form-label">프로젝트명</label>
+        <input type="text" class="form-input" id="uploadName" placeholder="예: 바로이집 AI 에이전트 카드뉴스" maxlength="60">
+        <div class="error-msg" id="uploadNameError">프로젝트명을 입력해 주세요.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">초기 상태</label>
+        <select class="form-select" id="uploadStatus">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">HTML 파일</label>
+        <!-- 파일 드롭존: 클릭하거나 파일을 드래그앤드롭 -->
+        <div class="dropzone" id="dropzone"
+          onclick="document.getElementById('fileInput').click()"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="dropzone-text">클릭하거나 파일을 여기에 드래그하세요</div>
+          <div class="dropzone-hint">.html 파일만 지원 · 최대 10MB</div>
+        </div>
+        <input type="file" id="fileInput" accept=".html" style="display:none" onchange="handleFileSelect(this)">
+        <div class="file-preview" id="filePreview"></div>
+        <!-- 업로드 진행바 -->
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div class="progress-text" id="progressText">업로드 중... 0%</div>
+        </div>
+        <div class="error-msg" id="fileError">파일을 선택해 주세요.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeUploadModal()">취소</button>
+        <button class="btn btn-primary" onclick="submitUpload()" id="uploadBtn">업로드하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ 링크 등록 모달 ════════════ -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal">
+      <h2 class="modal-title">링크로 등록</h2>
+      <p class="modal-desc">Firebase Storage URL 또는 외부 URL을 입력하면 iframe으로 프리뷰합니다.</p>
+
+      <div class="form-group">
+        <label class="form-label">프로젝트명</label>
+        <input type="text" class="form-input" id="linkName" placeholder="예: G-DRAGON Beer 랜딩페이지" maxlength="60">
+        <div class="error-msg" id="linkNameError">프로젝트명을 입력해 주세요.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">디자인 URL</label>
+        <input type="text" class="form-input" id="linkUrl" placeholder="https://..." >
+        <div class="error-msg" id="linkUrlError">올바른 URL을 입력해 주세요.</div>
+        <div class="url-register-info">
+          Firebase Storage 공개 URL, Firebase Hosting URL, 또는 iframe으로 표시 가능한 외부 URL을 입력하세요.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">초기 상태</label>
+        <select class="form-select" id="linkStatus">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeLinkModal()">취소</button>
+        <button class="btn btn-primary" onclick="submitLink()">등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ Figma 내보내기 오버레이 ════════════ -->
+  <div class="figma-overlay" id="figmaOverlay">
+    <div class="figma-box">
+      <!-- Figma 로고 아이콘 -->
+      <svg viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 28.5a9.5 9.5 0 1119 0 9.5 9.5 0 01-19 0z" fill="#1ABCFE"/>
+        <path d="M0 47.5A9.5 9.5 0 019.5 38H19v9.5a9.5 9.5 0 01-19 0z" fill="#0ACF83"/>
+        <path d="M19 0v19h9.5a9.5 9.5 0 000-19H19z" fill="#FF7262"/>
+        <path d="M0 9.5A9.5 9.5 0 009.5 19H19V0H9.5A9.5 9.5 0 000 9.5z" fill="#F24E1E"/>
+        <path d="M0 28.5A9.5 9.5 0 009.5 38H19V19H9.5A9.5 9.5 0 000 28.5z" fill="#A259FF"/>
+      </svg>
+      <h3>Figma로 보내기</h3>
+      <p>현재 디자인을 Figma 캔버스에 캡처하여 보냅니다.<br>아래 순서대로 진행해 주세요.</p>
+      <div class="figma-steps">
+        <span>① </span>Figma 데스크탑 앱을 열고 캔버스를 준비하세요.<br>
+        <span>② </span>아래 "캡처 스크립트 복사" 버튼을 클릭하세요.<br>
+        <span>③ </span>Figma 플러그인 콘솔에 붙여넣고 실행하세요.<br>
+        <span>④ </span>현재 디자인 URL이 자동으로 캡처됩니다.
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-ghost" onclick="closeFigmaExport()" style="height:40px;font-size:14px;">닫기</button>
+        <button class="btn btn-primary" onclick="copyFigmaScript()" style="height:40px;font-size:14px;">
+          캡처 스크립트 복사
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ 토스트 컨테이너 ════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ════════════ JavaScript ════════════ -->
+  <script>
+    /*
+     * ═════════════════════════════════════════════════════
+     * Design Review — 메인 스크립트
+     *
+     * 구조:
+     * 1. Firebase 초기화
+     * 2. 상태 관리 변수
+     * 3. 닉네임 관련 함수
+     * 4. 디자인 목록 로드 & 렌더링
+     * 5. 디자인 선택 & 프리뷰
+     * 6. 상태 변경
+     * 7. 채팅 관련 함수
+     * 8. 파일 업로드 모달
+     * 9. 링크 등록 모달
+     * 10. Figma 내보내기
+     * 11. 유틸리티 함수
+     * ═════════════════════════════════════════════════════
+     */
+
+    /* ────────────────────────────────
+       1. Firebase 초기화
+       — did-ads 프로젝트의 Realtime DB와 Cloud Storage 연결
+    ──────────────────────────────── */
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4u-cTREFEIxFHMPLjLXcLGHGkaaFzCUg",
+      authDomain: "did-ads.firebaseapp.com",
+      databaseURL: "https://did-ads-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "did-ads",
+      storageBucket: "did-ads.firebasestorage.app",
+      messagingSenderId: "211524252003",
+      appId: "1:211524252003:web:5cbc84581def74d2896356"
+    };
+
+    // Firebase 앱 초기화 (이미 초기화된 경우 기존 것 재사용)
+    let firebaseApp;
+    try {
+      firebaseApp = firebase.app('design-review');
+    } catch(e) {
+      firebaseApp = firebase.initializeApp(firebaseConfig, 'design-review');
+    }
+
+    // 데이터베이스와 스토리지 객체를 변수에 담기
+    const db      = firebase.database(firebaseApp);   // 채팅·메타데이터 저장소
+    const storage = firebase.storage(firebaseApp);    // HTML 파일 저장소
+
+    // DB 경로 상수 — 경로를 한 곳에서 관리
+    const DB_DESIGNS  = 'design-review/designs';   // 디자인 목록
+    const DB_MESSAGES = 'design-review/messages';  // 채팅 메시지
+
+    /* ────────────────────────────────
+       2. 상태 관리 변수
+       — 현재 선택된 디자인, 닉네임, 채팅 리스너 등
+    ──────────────────────────────── */
+    let currentDesignId   = null;  // 현재 선택된 디자인 ID
+    let currentDesignData = null;  // 현재 선택된 디자인 데이터
+    let chatListener      = null;  // Firebase 채팅 실시간 리스너 참조
+    let allDesigns        = {};    // 전체 디자인 데이터 (필터링용)
+    let currentFilter     = 'all'; // 현재 선택된 필터 ('all'|'review'|'request'|'approved'|'done')
+    let searchQuery       = '';    // 검색어
+    let selectedFile      = null;  // 업로드할 파일 객체
+    let unreadCount       = 0;     // 안 읽은 채팅 수
+    let isChatOpen        = true;  // 채팅 패널 열림 여부
+
+    /* ────────────────────────────────
+       3. 닉네임 관련 함수
+       — localStorage에서 닉네임을 불러오거나 설정
+    ──────────────────────────────── */
+
+    // 페이지 로딩 시 저장된 닉네임을 불러옴
+    function loadNickname() {
+      const saved = localStorage.getItem('design-review-nickname');
+      if (saved) {
+        updateNicknameUI(saved);
+      } else {
+        // 닉네임이 없으면 자동으로 설정 모달 열기
+        setTimeout(() => openNicknameModal(), 600);
+      }
+    }
+
+    // 닉네임 설정 모달 열기
+    function openNicknameModal() {
+      const saved = localStorage.getItem('design-review-nickname') || '';
+      document.getElementById('nicknameInput').value = saved;
+      document.getElementById('nicknameError').classList.remove('show');
+      document.getElementById('nicknameModal').classList.add('open');
+      setTimeout(() => document.getElementById('nicknameInput').focus(), 100);
+    }
+
+    // 닉네임 설정 모달 닫기
+    function closeNicknameModal() {
+      document.getElementById('nicknameModal').classList.remove('open');
+    }
+
+    // 닉네임 저장하기
+    function saveNickname() {
+      const val = document.getElementById('nicknameInput').value.trim();
+      if (!val) {
+        document.getElementById('nicknameError').classList.add('show');
+        return;
+      }
+      localStorage.setItem('design-review-nickname', val);
+      updateNicknameUI(val);
+      closeNicknameModal();
+      showToast(`닉네임이 "${val}"로 설정되었습니다.`, 'success');
+    }
+
+    // 헤더의 닉네임 칩 UI 업데이트
+    function updateNicknameUI(nickname) {
+      document.getElementById('nicknameLabel').textContent = nickname;
+      // 닉네임 첫 글자를 아바타에 표시
+      document.getElementById('nicknameAvatar').textContent = nickname.charAt(0).toUpperCase();
+    }
+
+    // 현재 닉네임 가져오기 (없으면 '익명')
+    function getNickname() {
+      return localStorage.getItem('design-review-nickname') || '익명';
+    }
+
+    /* ────────────────────────────────
+       4. 디자인 목록 로드 & 렌더링
+       — Firebase에서 디자인 데이터를 실시간으로 불러와 카드 목록 생성
+    ──────────────────────────────── */
+
+    // Firebase에서 디자인 목록을 실시간으로 불러옴
+    function loadDesigns() {
+      db.ref(DB_DESIGNS).on('value', snapshot => {
+        allDesigns = snapshot.val() || {};
+        renderDesignList();
+      }, err => {
+        console.error('디자인 목록 로드 실패:', err);
+        showEmptyDesignList('데이터를 불러오는 데 실패했습니다.');
+      });
+    }
+
+    // 필터와 검색어를 적용해 디자인 카드 목록을 화면에 그림
+    function renderDesignList() {
+      const list = document.getElementById('designList');
+
+      // 전체 디자인을 배열로 변환하고 날짜 최신순 정렬
+      let designs = Object.entries(allDesigns).map(([id, data]) => ({id, ...data}));
+      designs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      // 상태 필터 적용
+      if (currentFilter !== 'all') {
+        designs = designs.filter(d => d.status === currentFilter);
+      }
+
+      // 검색어 필터 적용 (프로젝트명에서 검색)
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        designs = designs.filter(d => (d.name || '').toLowerCase().includes(q));
+      }
+
+      // 결과가 없으면 빈 상태 메시지 표시
+      if (designs.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <path d="M9 9h6M9 12h6M9 15h4"/>
+            </svg>
+            <p>${searchQuery ? '검색 결과가 없습니다.' : '등록된 디자인이 없습니다.<br>파일을 업로드하거나 링크를 등록해 보세요.'}</p>
+          </div>`;
+        return;
+      }
+
+      // 각 디자인 카드 HTML 생성
+      list.innerHTML = designs.map(d => `
+        <div class="design-card ${d.id === currentDesignId ? 'active' : ''}"
+          onclick="selectDesign('${d.id}')" data-id="${d.id}">
+          <div class="card-thumb">
+            ${d.url
+              ? `<iframe src="${escapeHtml(d.url)}" sandbox="allow-scripts allow-same-origin" loading="lazy" title="썸네일"></iframe>`
+              : `<div class="card-thumb-placeholder">🎨</div>`
+            }
+          </div>
+          <div class="card-body">
+            <div class="card-name">${escapeHtml(d.name || '이름 없음')}</div>
+            <div class="card-meta">
+              <span class="card-date">${formatDate(d.createdAt)}</span>
+              <span class="status-badge status-${d.status || 'review'}">${statusLabel(d.status)}</span>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // 빈 목록 상태 메시지 표시
+    function showEmptyDesignList(msg) {
+      document.getElementById('designList').innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p>${msg}</p>
+        </div>`;
+    }
+
+    // 상태 필터 변경 (탭 클릭 시 호출)
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      // 모든 탭에서 active 클래스 제거 후 클릭된 탭에만 추가
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderDesignList();
+    }
+
+    /* ────────────────────────────────
+       5. 디자인 선택 & 프리뷰
+       — 카드 클릭 시 iframe으로 해당 디자인 표시
+    ──────────────────────────────── */
+
+    // 디자인 카드 클릭 시 호출 — 해당 디자인을 뷰어에 표시
+    function selectDesign(id) {
+      // 이전 채팅 리스너 해제
+      if (chatListener && currentDesignId) {
+        db.ref(`${DB_MESSAGES}/${currentDesignId}`).off('child_added', chatListener);
+        chatListener = null;
+      }
+
+      currentDesignId = id;
+      currentDesignData = allDesigns[id];
+
+      if (!currentDesignData) return;
+
+      // 카드 목록 활성 상태 업데이트
+      document.querySelectorAll('.design-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.id === id);
+      });
+
+      // 뷰어 툴바 표시
+      const toolbar = document.getElementById('viewerToolbar');
+      toolbar.style.display = 'flex';
+      document.getElementById('viewerTitle').textContent = currentDesignData.name || '이름 없음';
+
+      // 상태 드롭다운 동기화
+      document.getElementById('statusSelect').value = currentDesignData.status || 'review';
+
+      // iframe 프리뷰 표시
+      const frame = document.getElementById('viewerFrame');
+      const empty = document.getElementById('viewerEmpty');
+      const linkBar = document.getElementById('viewerLinkBar');
+      const iframe = document.getElementById('viewerIframe');
+
+      if (currentDesignData.url) {
+        frame.style.display = 'block';
+        empty.style.display = 'none';
+        iframe.src = currentDesignData.url;
+
+        // 외부 URL이면 링크바 표시
+        if (!currentDesignData.url.startsWith('blob:') &&
+            !currentDesignData.url.includes('firebasestorage')) {
+          linkBar.classList.add('show');
+          document.getElementById('viewerLinkUrl').textContent = currentDesignData.url;
+        } else {
+          linkBar.classList.remove('show');
+        }
+      } else {
+        frame.style.display = 'none';
+        empty.style.display = 'flex';
+        linkBar.classList.remove('show');
+      }
+
+      // 채팅 패널 업데이트
+      document.getElementById('chatTitle').textContent = `💬 ${currentDesignData.name || '채팅'}`;
+      loadChat(id);
+
+      // 안 읽은 수 초기화
+      unreadCount = 0;
+      updateChatBadge();
+    }
+
+    // 새 탭에서 현재 디자인 열기
+    function openInNewTab() {
+      if (currentDesignData && currentDesignData.url) {
+        window.open(currentDesignData.url, '_blank');
+      }
+    }
+
+    /* ────────────────────────────────
+       6. 상태 변경
+       — 드롭다운에서 상태 변경 시 Firebase에 반영
+    ──────────────────────────────── */
+
+    // 상태 변경 (드롭다운 onchange 시 호출)
+    function changeStatus(newStatus) {
+      if (!currentDesignId) return;
+
+      // Firebase DB에서 해당 디자인의 status 값 업데이트
+      db.ref(`${DB_DESIGNS}/${currentDesignId}`).update({ status: newStatus })
+        .then(() => {
+          showToast(`상태가 "${statusLabel(newStatus)}"로 변경되었습니다.`, 'success');
+          // 로컬 데이터도 업데이트
+          if (allDesigns[currentDesignId]) {
+            allDesigns[currentDesignId].status = newStatus;
+          }
+        })
+        .catch(err => {
+          showToast('상태 변경에 실패했습니다.', 'error');
+          console.error(err);
+          // 실패 시 드롭다운을 원래 값으로 되돌림
+          document.getElementById('statusSelect').value = currentDesignData.status || 'review';
+        });
+    }
+
+    /* ────────────────────────────────
+       7. 채팅 관련 함수
+       — Firebase Realtime DB의 child_added 이벤트로 실시간 메시지 수신
+    ──────────────────────────────── */
+
+    // 특정 디자인의 채팅방 로드 (디자인 선택 시 호출)
+    function loadChat(designId) {
+      const messagesEl = document.getElementById('chatMessages');
+      const inputArea  = document.getElementById('chatInputArea');
+      const noDesign   = document.getElementById('chatNoDesign');
+
+      // 채팅 영역 표시
+      noDesign.style.display = 'none';
+      messagesEl.style.display = 'flex';
+      inputArea.style.display = 'block';
+      messagesEl.innerHTML = ''; // 기존 메시지 초기화
+
+      // 이전에 불러온 날짜 구분선 추적용
+      let lastDateStr = '';
+
+      // Firebase 실시간 리스너 연결 (child_added = 새 메시지가 추가될 때마다 호출)
+      chatListener = db.ref(`${DB_MESSAGES}/${designId}`)
+        .orderByChild('timestamp')
+        .on('child_added', snapshot => {
+          const msg = snapshot.val();
+          if (!msg) return;
+
+          // 날짜 구분선 추가 (날짜가 바뀔 때마다 표시)
+          const dateStr = formatDateKR(msg.timestamp);
+          if (dateStr !== lastDateStr) {
+            lastDateStr = dateStr;
+            const divider = document.createElement('div');
+            divider.className = 'chat-date-divider';
+            divider.innerHTML = `<span>${dateStr}</span>`;
+            messagesEl.appendChild(divider);
+          }
+
+          // 메시지 엘리먼트 생성 및 추가
+          const isMine = msg.nickname === getNickname();
+          const msgEl = document.createElement('div');
+          msgEl.className = `msg ${isMine ? 'mine' : ''}`;
+          msgEl.innerHTML = `
+            <div class="msg-header">
+              <div class="msg-avatar" style="background:${strToColor(msg.nickname || '익명')}">
+                ${(msg.nickname || '익').charAt(0).toUpperCase()}
+              </div>
+              <span class="msg-name">${escapeHtml(msg.nickname || '익명')}</span>
+              <span class="msg-time">${formatTime(msg.timestamp)}</span>
+            </div>
+            <div class="msg-text">${escapeHtml(msg.text || '')}</div>`;
+          messagesEl.appendChild(msgEl);
+
+          // 새 메시지가 오면 스크롤을 맨 아래로 이동
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+
+          // 채팅 패널이 닫혀 있으면 안 읽은 수 증가
+          if (!isChatOpen && !isMine) {
+            unreadCount++;
+            updateChatBadge();
+          }
+        });
+    }
+
+    // 메시지 전송 (전송 버튼 또는 Enter 키 시 호출)
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+
+      if (!text) return;
+      if (!currentDesignId) {
+        showToast('디자인을 먼저 선택해 주세요.', 'warning');
+        return;
+      }
+
+      const nickname = getNickname();
+      if (nickname === '익명') {
+        // 닉네임이 없으면 설정 모달 열기
+        openNicknameModal();
+        showToast('채팅 전에 닉네임을 설정해 주세요.', 'warning');
+        return;
+      }
+
+      // Firebase DB에 메시지 저장 (push = 자동으로 고유 키 생성)
+      db.ref(`${DB_MESSAGES}/${currentDesignId}`).push({
+        nickname: nickname,
+        text: text,
+        timestamp: Date.now()
+      }).then(() => {
+        input.value = '';        // 입력창 비우기
+        autoResizeInput(input);  // 입력창 높이 초기화
+      }).catch(err => {
+        showToast('메시지 전송에 실패했습니다.', 'error');
+        console.error(err);
+      });
+    }
+
+    // Enter 키로 전송, Shift+Enter로 줄바꿈
+    function handleChatKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // 텍스트 영역 높이 자동 조절 (내용에 따라 늘어남)
+    function autoResizeInput(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    // 채팅 패널 열기/닫기 토글
+    function toggleChat() {
+      isChatOpen = !isChatOpen;
+      const panel = document.getElementById('chatPanel');
+      const floatBtn = document.getElementById('chatFloatBtn');
+
+      if (isChatOpen) {
+        panel.classList.remove('collapsed');
+        floatBtn.classList.remove('visible');
+        // 패널 열면 안 읽은 수 초기화
+        unreadCount = 0;
+        updateChatBadge();
+      } else {
+        panel.classList.add('collapsed');
+        floatBtn.classList.add('visible');
+      }
+    }
+
+    // 안 읽은 메시지 수 뱃지 업데이트
+    function updateChatBadge() {
+      const badge = document.getElementById('chatBadge');
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.classList.add('show');
+      } else {
+        badge.classList.remove('show');
+      }
+    }
+
+    /* ────────────────────────────────
+       8. 파일 업로드 모달
+       — HTML 파일을 Firebase Storage에 업로드 후 DB에 메타데이터 저장
+    ──────────────────────────────── */
+
+    // 파일 업로드 모달 열기
+    function openUploadModal() {
+      document.getElementById('uploadName').value = '';
+      document.getElementById('uploadStatus').value = 'review';
+      document.getElementById('filePreview').style.display = 'none';
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('uploadNameError').classList.remove('show');
+      document.getElementById('fileError').classList.remove('show');
+      selectedFile = null;
+      document.getElementById('uploadModal').classList.add('open');
+    }
+
+    // 파일 업로드 모달 닫기
+    function closeUploadModal() {
+      document.getElementById('uploadModal').classList.remove('open');
+    }
+
+    // 드래그앤드롭 — 파일을 드롭존 위로 가져올 때
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.add('drag-over');
+    }
+
+    // 드래그앤드롭 — 드롭존에서 파일이 벗어날 때
+    function handleDragLeave(e) {
+      document.getElementById('dropzone').classList.remove('drag-over');
+    }
+
+    // 드래그앤드롭 — 파일을 드롭했을 때
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) setSelectedFile(file);
+    }
+
+    // 파일 선택 인풋으로 파일 고를 때
+    function handleFileSelect(input) {
+      const file = input.files[0];
+      if (file) setSelectedFile(file);
+    }
+
+    // 선택된 파일 처리 — HTML 파일인지 확인 후 미리보기 표시
+    function setSelectedFile(file) {
+      if (!file.name.endsWith('.html') && file.type !== 'text/html') {
+        showToast('HTML 파일만 업로드할 수 있습니다.', 'error');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {  // 10MB 제한
+        showToast('파일 크기는 10MB 이하여야 합니다.', 'error');
+        return;
+      }
+      selectedFile = file;
+      const preview = document.getElementById('filePreview');
+      preview.textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+      preview.style.display = 'block';
+      document.getElementById('fileError').classList.remove('show');
+    }
+
+    // 업로드 실행 — Firebase Storage에 파일 저장 후 DB에 등록
+    async function submitUpload() {
+      const name   = document.getElementById('uploadName').value.trim();
+      const status = document.getElementById('uploadStatus').value;
+
+      // 입력 검증
+      let hasError = false;
+      if (!name) { document.getElementById('uploadNameError').classList.add('show'); hasError = true; }
+      if (!selectedFile) { document.getElementById('fileError').classList.add('show'); hasError = true; }
+      if (hasError) return;
+
+      // 버튼 비활성화 + 진행바 표시
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true;
+      btn.textContent = '업로드 중...';
+      const progressWrap = document.getElementById('progressWrap');
+      const progressBar  = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      progressWrap.style.display = 'block';
+
+      try {
+        // 파일 저장 경로: design-review/파일명_타임스탬프.html
+        const timestamp = Date.now();
+        const fileName  = `design-review/${timestamp}_${selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const storageRef = storage.ref(fileName);
+
+        // 파일 업로드 시작 (진행률 표시 포함)
+        const uploadTask = storageRef.put(selectedFile);
+
+        uploadTask.on('state_changed',
+          // 진행률 업데이트
+          snap => {
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            progressBar.style.width = pct + '%';
+            progressText.textContent = `업로드 중... ${pct}%`;
+          },
+          // 업로드 오류
+          err => {
+            showToast('파일 업로드에 실패했습니다.', 'error');
+            console.error(err);
+            btn.disabled = false;
+            btn.textContent = '업로드하기';
+            progressWrap.style.display = 'none';
+          },
+          // 업로드 완료
+          async () => {
+            const url = await uploadTask.snapshot.ref.getDownloadURL();
+
+            // DB에 디자인 메타데이터 저장
+            await db.ref(DB_DESIGNS).push({
+              name:      name,
+              status:    status,
+              url:       url,
+              fileName:  selectedFile.name,
+              type:      'file',       // 'file' = 업로드 파일, 'link' = 외부 링크
+              createdAt: timestamp,
+              updatedAt: timestamp
+            });
+
+            showToast('디자인이 성공적으로 업로드되었습니다.', 'success');
+            closeUploadModal();
+            btn.disabled = false;
+            btn.textContent = '업로드하기';
+          }
+        );
+      } catch(err) {
+        showToast('업로드 중 오류가 발생했습니다.', 'error');
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = '업로드하기';
+        progressWrap.style.display = 'none';
+      }
+    }
+
+    /* ────────────────────────────────
+       9. 링크 등록 모달
+       — 외부 URL을 직접 등록하여 iframe으로 프리뷰
+    ──────────────────────────────── */
+
+    // 링크 등록 모달 열기
+    function openLinkModal() {
+      document.getElementById('linkName').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkStatus').value = 'review';
+      document.getElementById('linkNameError').classList.remove('show');
+      document.getElementById('linkUrlError').classList.remove('show');
+      document.getElementById('linkModal').classList.add('open');
+      setTimeout(() => document.getElementById('linkName').focus(), 100);
+    }
+
+    // 링크 등록 모달 닫기
+    function closeLinkModal() {
+      document.getElementById('linkModal').classList.remove('open');
+    }
+
+    // URL 유효성 검사 (간단한 형식 체크)
+    function isValidUrl(str) {
+      try { new URL(str); return true; } catch { return false; }
+    }
+
+    // 링크 등록 실행 — DB에 URL 메타데이터만 저장
+    async function submitLink() {
+      const name   = document.getElementById('linkName').value.trim();
+      const url    = document.getElementById('linkUrl').value.trim();
+      const status = document.getElementById('linkStatus').value;
+
+      // 입력 검증
+      let hasError = false;
+      if (!name) { document.getElementById('linkNameError').classList.add('show'); hasError = true; }
+      if (!url || !isValidUrl(url)) { document.getElementById('linkUrlError').classList.add('show'); hasError = true; }
+      if (hasError) return;
+
+      try {
+        const timestamp = Date.now();
+        await db.ref(DB_DESIGNS).push({
+          name:      name,
+          status:    status,
+          url:       url,
+          type:      'link',    // 링크 타입 표시
+          createdAt: timestamp,
+          updatedAt: timestamp
+        });
+        showToast('디자인 링크가 등록되었습니다.', 'success');
+        closeLinkModal();
+      } catch(err) {
+        showToast('등록에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    /* ────────────────────────────────
+       10. Figma 내보내기
+       — html-to-design 캡처 스크립트를 복사해 Figma에 붙여넣을 수 있도록 안내
+    ──────────────────────────────── */
+
+    // Figma 내보내기 오버레이 열기
+    function openFigmaExport() {
+      if (!currentDesignId) {
+        showToast('디자인을 먼저 선택해 주세요.', 'warning');
+        return;
+      }
+      document.getElementById('figmaOverlay').classList.add('open');
+    }
+
+    // Figma 내보내기 오버레이 닫기
+    function closeFigmaExport() {
+      document.getElementById('figmaOverlay').classList.remove('open');
+    }
+
+    // 현재 디자인 URL을 이용한 캡처 스크립트를 클립보드에 복사
+    function copyFigmaScript() {
+      const url = currentDesignData?.url || '';
+      if (!url) {
+        showToast('URL이 없는 디자인입니다.', 'error');
+        return;
+      }
+
+      // html-to-design 스크립트: 현재 디자인 URL을 Figma로 캡처
+      const script = `
+// Design Review → Figma 캡처 스크립트
+// 디자인 URL: ${url}
+
+const designUrl = "${url}";
+const scriptUrl = "https://mcp.figma.com/mcp/html-to-design/capture.js";
+
+// 스크립트 동적 로드 후 캡처 실행
+const s = document.createElement('script');
+s.src = scriptUrl;
+s.onload = () => {
+  if (window.htmlToDesign) {
+    window.htmlToDesign.capture({ url: designUrl, name: "${escapeHtml(currentDesignData?.name || '디자인')}" });
+  }
+};
+document.head.appendChild(s);
+`.trim();
+
+      navigator.clipboard.writeText(script)
+        .then(() => showToast('스크립트가 클립보드에 복사되었습니다.', 'success'))
+        .catch(() => {
+          // 클립보드 API를 못 쓸 경우 폴백
+          const ta = document.createElement('textarea');
+          ta.value = script;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('스크립트가 복사되었습니다.', 'success');
+        });
+    }
+
+    /* ────────────────────────────────
+       11. 유틸리티 함수
+       — 날짜 포맷, XSS 방지, 색상 생성 등 공통 기능
+    ──────────────────────────────── */
+
+    // 상태 코드 → 한글 레이블 변환
+    function statusLabel(status) {
+      const map = { review:'검토중', request:'수정요청', approved:'승인', done:'완료' };
+      return map[status] || '검토중';
+    }
+
+    // 타임스탬프 → 날짜 문자열 (예: 3.3)
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      return `${d.getMonth()+1}.${d.getDate()}`;
+    }
+
+    // 타임스탬프 → 한국어 날짜 (예: 3월 3일)
+    function formatDateKR(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      return `${d.getMonth()+1}월 ${d.getDate()}일`;
+    }
+
+    // 타임스탬프 → 시각 (예: 오후 2:30)
+    function formatTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      const h = d.getHours();
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${m}`;
+    }
+
+    // 파일 크기 포맷 (예: 1.2 MB)
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+      return (bytes/1024/1024).toFixed(1) + ' MB';
+    }
+
+    // XSS 방지: HTML 특수문자를 안전하게 변환
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 닉네임 문자열에서 고유 색상 생성 (채팅 아바타 색상)
+    function strToColor(str) {
+      const colors = [
+        '#6366f1','#8b5cf6','#ec4899','#ef4444',
+        '#f59e0b','#10b981','#06b6d4','#3b82f6'
+      ];
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    // 토스트 알림 표시 (잠깐 나타났다 사라지는 메시지)
+    function showToast(msg, type = 'default', duration = 3000) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      // 타입별 아이콘
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '!' : 'ℹ';
+      toast.innerHTML = `<span>${icon}</span>${escapeHtml(msg)}`;
+      container.appendChild(toast);
+
+      // 지정 시간 후 자동 제거
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, duration);
+    }
+
+    /* ────────────────────────────────
+       초기화 — 페이지 로딩 시 실행
+    ──────────────────────────────── */
+
+    // 검색창 입력 이벤트 연결 (입력할 때마다 목록 필터링)
+    document.getElementById('searchInput').addEventListener('input', function() {
+      searchQuery = this.value.trim();
+      renderDesignList();
+    });
+
+    // 모달 오버레이 클릭 시 닫기 (모달 외부 영역 클릭)
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('open');
+        }
+      });
+    });
+
+    // Figma 오버레이 클릭 시 닫기
+    document.getElementById('figmaOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeFigmaExport();
+    });
+
+    // Enter 키로 닉네임 저장
+    document.getElementById('nicknameInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') saveNickname();
+    });
+
+    /* ────────────────────────────────
+       초기 디자인 시딩
+       — 앱 첫 실행 시 기존 작업 디자인들을 자동으로 등록
+       — 이미 등록된 경우 중복 등록하지 않음
+    ──────────────────────────────── */
+    async function seedInitialDesigns() {
+      // 이미 시딩된 적 있으면 건너뛰기 (DB에 데이터가 있으면 패스)
+      const snapshot = await db.ref(DB_DESIGNS).once('value');
+      if (snapshot.exists()) return;
+
+      // 시딩할 디자인 목록 (로컬 HTML 파일을 읽어서 Firebase Storage에 업로드)
+      const seedDesigns = [
+        {
+          name: '바로이집 AI 에이전트 리뉴얼 카드뉴스',
+          localPath: '../01_baroezip/05_AI에이전트_리뉴얼/디자인/카드뉴스.html',
+          fileName: 'baroezip-ai-agent-cardnews.html',
+          status: 'review'
+        },
+        {
+          name: 'G-DRAGON Beer 랜딩페이지',
+          localPath: '../05_gdragon-beer/index.html',
+          fileName: 'gdragon-beer-landing.html',
+          status: 'review'
+        }
+      ];
+
+      for (const seed of seedDesigns) {
+        try {
+          // 로컬 파일을 fetch로 읽어옴
+          const response = await fetch(seed.localPath);
+          if (!response.ok) throw new Error(`파일 로드 실패: ${seed.localPath}`);
+          const htmlBlob = await response.blob();
+
+          // Firebase Storage에 업로드
+          const timestamp = Date.now();
+          const storagePath = `design-review/${timestamp}_${seed.fileName}`;
+          const storageRef = storage.ref(storagePath);
+          await storageRef.put(htmlBlob, { contentType: 'text/html' });
+          const url = await storageRef.getDownloadURL();
+
+          // DB에 메타데이터 등록
+          await db.ref(DB_DESIGNS).push({
+            name:      seed.name,
+            status:    seed.status,
+            url:       url,
+            fileName:  seed.fileName,
+            type:      'file',
+            createdAt: timestamp,
+            updatedAt: timestamp
+          });
+
+          console.log(`시딩 완료: ${seed.name}`);
+        } catch (err) {
+          console.warn(`시딩 실패 (${seed.name}):`, err.message);
+        }
+      }
+
+      showToast('기존 디자인 2개가 자동 등록되었습니다.', 'success');
+    }
+
+    // 앱 초기화 순서: 닉네임 로드 → 초기 시딩 → 디자인 목록 로드
+    loadNickname();
+    seedInitialDesigns().then(() => loadDesigns());
+  </script>
+</body>
+</html>

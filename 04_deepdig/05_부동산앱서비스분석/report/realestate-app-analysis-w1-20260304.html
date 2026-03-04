@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<!--
+  파일명: realestate-app-analysis-w1-20260304.html
+  역할: 2025~2026년 국내 부동산 앱/서비스 및 유튜브 채널 종합 분석 보고서
+  작성일: 2026-03-04
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준: 2024~2026년 (와이즈앱, 나무위키, 각 서비스 공식, 언론 기사 기반)
+  보고서 주기: 주간(Weekly) — 3월 1주차
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[3월1주차] 부동산 앱서비스 분석</title>
+
+  <!-- 구글 폰트에서 Noto Sans KR 웹폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       브런치(brunch.co.kr) 스타일의 깔끔한 아티클 형태를 목표로 합니다
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 전체 페이지 배경과 폰트 설정 */
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 보고서 본문 최대 너비를 900px로 설정하고 가운데 정렬 */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* ===================================================
+       표지 (Cover) 영역
+    =================================================== */
+    .cover {
+      padding: 60px 0 56px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 56px;
+    }
+
+    /* 카테고리 레이블 - 작은 회색 텍스트 */
+    .cover-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    /* 보고서 연도 뱃지 */
+    .cover-year {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* 메인 타이틀 */
+    .cover-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #111;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 서브 타이틀 */
+    .cover-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    /* 보고서 메타 정보 (날짜, 출처 등) */
+    .cover-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ===================================================
+       목차 (Table of Contents) 영역
+    =================================================== */
+    .toc {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 28px 32px;
+      margin-bottom: 56px;
+      border-radius: 2px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+
+    .toc li {
+      counter-increment: toc-counter;
+      padding: 5px 0;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      gap: 12px;
+    }
+
+    .toc li:last-child { border-bottom: none; }
+
+    .toc li::before {
+      content: counter(toc-counter, decimal-leading-zero);
+      font-size: 11px;
+      font-weight: 600;
+      color: #bbb;
+      min-width: 22px;
+      padding-top: 2px;
+    }
+
+    /* ===================================================
+       섹션 공통 스타일
+    =================================================== */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    /* 섹션 헤더: "01", "02" 등 번호와 제목 */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* 섹션 번호 (01, 02...) */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      padding-top: 6px;
+      min-width: 24px;
+    }
+
+    /* 섹션 제목 */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    /* 섹션 부제목 (섹션 제목 아래 작은 설명) */
+    .section-desc {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* ===================================================
+       본문 텍스트 스타일
+    =================================================== */
+    p {
+      margin-bottom: 16px;
+      color: #333;
+      font-weight: 400;
+    }
+
+    /* 소제목 (h3) */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin: 28px 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    /* 소소제목 (h4) */
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin: 20px 0 8px;
+    }
+
+    /* 강조 텍스트 */
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ===================================================
+       핵심 수치 강조 카드 (숫자 강조 블록)
+    =================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    /* 작은 화면에서는 2열로 변환 */
+    @media (max-width: 540px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    .stat-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* 각 수치 카드 */
+    .stat-card {
+      background: #fafafa;
+      border: 1px solid #ebebeb;
+      padding: 16px 14px;
+      border-radius: 2px;
+    }
+
+    /* 수치 카드 - 라벨 텍스트 */
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    /* 수치 카드 - 숫자 */
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    /* 수치 카드 - 단위나 설명 */
+    .stat-unit {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    /* ===================================================
+       테이블 스타일 (thin-line 테이블)
+    =================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    /* 테이블 헤더 행 - 회색 배경 */
+    thead tr {
+      background: #f5f5f5;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ebebeb;
+      color: #333;
+      vertical-align: top;
+    }
+
+    /* 홀수 행에 아주 연한 배경 */
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    /* 테이블 하단 테두리 제거 */
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* 표 캡션 */
+    .table-caption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===================================================
+       분석 노트 박스 (좌측 border 컬러 포인트)
+    =================================================== */
+
+    /* 공통 노트 박스 스타일 */
+    .note-box {
+      padding: 16px 18px;
+      margin: 20px 0;
+      border-radius: 2px;
+      border-left: 3px solid;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+
+    /* 인사이트 노트 (파란 계열) */
+    .note-insight {
+      background: #f7f9ff;
+      border-color: #4a6cf7;
+      color: #2d3a6b;
+    }
+
+    /* 주의점 노트 (주황 계열) */
+    .note-warning {
+      background: #fff8f3;
+      border-color: #e07b1a;
+      color: #6b3a10;
+    }
+
+    /* 전망 노트 (초록 계열) */
+    .note-forecast {
+      background: #f4faf6;
+      border-color: #2a9d5c;
+      color: #1a4a30;
+    }
+
+    /* 제언 노트 (회색 계열) */
+    .note-suggest {
+      background: #f9f9f9;
+      border-color: #888;
+      color: #333;
+    }
+
+    /* 노트 박스 제목 */
+    .note-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      opacity: 0.65;
+    }
+
+    /* ===================================================
+       Executive Summary (핵심 요약) 스타일
+    =================================================== */
+    .exec-summary {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      padding: 28px 28px;
+      margin-bottom: 48px;
+      border-radius: 2px;
+    }
+
+    .exec-summary-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 18px;
+    }
+
+    /* 핵심 포인트 리스트 */
+    .exec-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .exec-points li {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      color: #222;
+      line-height: 1.65;
+    }
+
+    /* 포인트 앞 번호 */
+    .exec-points li::before {
+      content: attr(data-num);
+      font-size: 10px;
+      font-weight: 700;
+      color: #bbb;
+      min-width: 16px;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ===================================================
+       출처 목록 스타일
+    =================================================== */
+    .source-list {
+      list-style: none;
+    }
+
+    .source-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .source-list li:last-child { border-bottom: none; }
+
+    .source-grade {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* A급 출처 - 진한 회색 */
+    .grade-a { background: #333; color: #fff; }
+    /* B급 출처 - 중간 회색 */
+    .grade-b { background: #aaa; color: #fff; }
+    /* C급 출처 - 연한 회색 */
+    .grade-c { background: #ddd; color: #555; }
+
+    .source-list a {
+      color: #555;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .source-list a:hover { text-decoration: underline; }
+
+    /* ===================================================
+       푸터 스타일
+    =================================================== */
+    .report-footer {
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    /* ===================================================
+       배지 (Badge) - 앱 순위 등에 사용
+    =================================================== */
+    .rank-badge {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-right: 4px;
+      vertical-align: middle;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .up-badge {
+      font-size: 10px;
+      color: #2a9d5c;
+      font-weight: 600;
+    }
+
+    .new-badge {
+      font-size: 10px;
+      background: #e8f4ff;
+      color: #1a6bbf;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+
+    /* ===================================================
+       구분선
+    =================================================== */
+    .divider {
+      border: none;
+      border-top: 1px solid #ebebeb;
+      margin: 36px 0;
+    }
+
+    /* 카테고리 칩 */
+    .chip {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      background: #f0f0f0;
+      color: #555;
+      border-radius: 100px;
+      margin: 2px 2px 2px 0;
+    }
+
+    /* 퍼센트 변화 표시 */
+    .pct-up { color: #2a9d5c; font-weight: 600; }
+    .pct-down { color: #d94e4e; font-weight: 600; }
+    .pct-neutral { color: #888; font-weight: 500; }
+
+    /* ===================================================
+       서비스 카드 (각 앱 상세 섹션용)
+    =================================================== */
+    /* 앱 서비스별 상세 구역 - 구분선으로 분리 */
+    .service-block {
+      border: 1px solid #ebebeb;
+      border-radius: 2px;
+      padding: 24px 24px 20px;
+      margin-bottom: 24px;
+      background: #fff;
+    }
+
+    /* 서비스 블록 헤더 (앱 이름 + 운영사) */
+    .service-block-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .service-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -0.02em;
+    }
+
+    .service-operator {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* 인용 블록 (원문 발췌) */
+    blockquote {
+      border-left: 3px solid #ddd;
+      padding: 10px 16px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #555;
+      background: #fafafa;
+      font-style: normal;
+    }
+
+    blockquote cite {
+      display: block;
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+
+    /* 인쇄 시 스타일 조정 */
+    @media print {
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+      .service-block { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- =====================================================
+       표지 영역
+  ===================================================== -->
+  <div class="cover">
+    <div class="cover-category">Research Report &middot; PropTech &amp; Real Estate Digital Services</div>
+    <div class="cover-year">[3월1주차]</div>
+    <h1 class="cover-title">부동산 앱서비스 분석</h1>
+    <p class="cover-subtitle">국내 주요 부동산 앱/웹 서비스 이용자 현황·기능·트렌드 및 부동산 유튜브 채널 종합 분석</p>
+    <div class="cover-meta">
+      <span>작성일: 2026년 3월 4일</span>
+      <span>데이터 기준: 2024~2026년</span>
+      <span>출처: 와이즈앱, 모바일인덱스, 나무위키, 각 서비스 공식, 언론 기사 등</span>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       목차
+  ===================================================== -->
+  <div class="toc">
+    <div class="toc-title">Table of Contents</div>
+    <ol>
+      <li>조사 개요 &amp; 방법론</li>
+      <li>핵심 발견 요약 (Executive Summary)</li>
+      <li>부동산 앱/서비스 종합 비교표</li>
+      <li>개별 서비스 상세 분석</li>
+      <li>부동산 유튜브 채널 분석</li>
+      <li>시장 트렌드 및 시사점</li>
+      <li>출처 목록</li>
+    </ol>
+  </div>
+
+  <!-- =====================================================
+       01. 조사 개요 & 방법론
+  ===================================================== -->
+  <div class="section" id="s01">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">조사 개요 &amp; 방법론</div>
+        <div class="section-desc">데이터 수집 범위, 출처 등급 기준, 조사 한계</div>
+      </div>
+    </div>
+
+    <p>본 보고서는 2025~2026년 기준 국내 주요 부동산 앱/웹 서비스 및 부동산 유튜브 채널을 종합 분석합니다. 각 서비스의 이용자 현황, 핵심 기능, 최신 업데이트, 소비자 반응을 공개된 공식 자료와 언론 보도를 중심으로 수집하였습니다.</p>
+
+    <p><strong>본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.</strong></p>
+
+    <div class="stat-grid stat-grid-4">
+      <div class="stat-card">
+        <div class="stat-label">분석 서비스</div>
+        <div class="stat-value">9+</div>
+        <div class="stat-unit">부동산 앱/웹 서비스</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">유튜브 채널</div>
+        <div class="stat-value">8</div>
+        <div class="stat-unit">부동산 전문 채널</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">데이터 기준</div>
+        <div class="stat-value">2025~</div>
+        <div class="stat-unit">2026년 3월까지</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">출처 등급</div>
+        <div class="stat-value">A·B급</div>
+        <div class="stat-unit">공식 + 언론 기사</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>등급</th>
+            <th>기준</th>
+            <th>주요 출처 예시</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="source-grade grade-a">A</span> 공식</td>
+            <td>기업 공식 발표, IR, 공식 보도자료, 정부 통계</td>
+            <td>와이즈앱 공식 리포트, 구글플레이 공식 앱 정보</td>
+          </tr>
+          <tr>
+            <td><span class="source-grade grade-b">B</span> 언론</td>
+            <td>기자명·날짜 확인 가능한 주요 언론 기사</td>
+            <td>전자신문, 뉴시스, 네이트뉴스, 스마트투데이 등</td>
+          </tr>
+          <tr>
+            <td><span class="source-grade grade-c">C</span> 참고</td>
+            <td>블로그, 커뮤니티 (별도 미검증 표기)</td>
+            <td>나무위키, 월급쟁이부자들 커뮤니티 등</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box note-warning">
+      <div class="note-label">조사 한계</div>
+      MAU(월간활성사용자) 등 앱 이용자 지표는 와이즈앱·모바일인덱스 등 유료 분석 플랫폼 가입 없이는 최신 수치 확인이 제한됩니다. 본 보고서에 수록된 이용자 수치는 확인 가능한 최신 공개 데이터 기준이며, 일부 수치는 2024년 또는 이전 데이터임을 명시합니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       02. Executive Summary
+  ===================================================== -->
+  <div class="section" id="s02">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">핵심 발견 요약 (Executive Summary)</div>
+        <div class="section-desc">가장 중요한 5가지 발견</div>
+      </div>
+    </div>
+
+    <div class="exec-summary">
+      <div class="exec-summary-title">Executive Summary</div>
+      <ul class="exec-points">
+        <li data-num="01"><strong>네이버페이 부동산의 AI 전환 가속</strong> — 네이버부동산이 2025년 6월 'AI 집찾기' 챗봇 서비스를 출시하여 하루 1만건 이상의 매물 검색을 기록했으며, 빌라 AI 추정 시세 서비스까지 추가하며 단순 매물 플랫폼에서 AI 부동산 어시스턴트로 진화 중입니다.</li>
+        <li data-num="02"><strong>직방·호갱노노의 시장 이원화</strong> — 직방은 매물·중개 플랫폼(MAU 약 145만, 2025년 10월), 호갱노노는 실거래가·입지 분석 특화로 각각의 영역을 확보. 두 서비스는 '집 내놓기' 기능을 공동 운영하며 시너지를 내고 있습니다.</li>
+        <li data-num="03"><strong>부동산114의 법인 해산과 HDC 흡수합병</strong> — 2025년 4월 30일 부동산114 법인이 해산되며 HDC그룹에 흡수합병. 서비스 브랜드는 유지되나 독립 플레이어로서의 위상이 사라졌습니다.</li>
+        <li data-num="04"><strong>AI 추정 시세 경쟁 본격화</strong> — 네이버페이 부동산, 리치고, 부동산플래닛 등이 AI 기반 시세 예측 모델을 경쟁적으로 출시. 아파트뿐 아니라 빌라·상가·오피스텔까지 AI 시세 범위가 확대되는 추세입니다.</li>
+        <li data-num="05"><strong>부동산 유튜브 채널의 구독자 급등</strong> — 월급쟁이부자들TV(189만), 머니인사이드(151만), 재테크읽어주는파일럿(112만) 등 100만 이상 부동산/재테크 채널이 다수 등장. 집코노미(한국경제) 등 언론사 채널도 성장 중이며, 유튜브가 부동산 정보 소비의 핵심 채널로 자리잡았습니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       03. 종합 비교표
+  ===================================================== -->
+  <div class="section" id="s03">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">부동산 앱/서비스 종합 비교표</div>
+        <div class="section-desc">주요 8개 서비스 한눈에 비교</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>서비스명</th>
+            <th>운영사</th>
+            <th>MAU / 다운로드</th>
+            <th>핵심 강점</th>
+            <th>플랫폼</th>
+            <th>앱스토어 평점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>네이버페이 부동산</strong></td>
+            <td>네이버</td>
+            <td>약 61만(2024년) <span class="pct-neutral">[B]</span></td>
+            <td>매물 수 최다, AI 집찾기, VR 투어</td>
+            <td>웹·iOS·Android</td>
+            <td>미확인</td>
+          </tr>
+          <tr>
+            <td><strong>직방</strong></td>
+            <td>(주)직방</td>
+            <td>MAU 145만(2025.10) <span class="pct-neutral">[C]</span></td>
+            <td>매물 플랫폼 1위, 누적 3,500만 다운로드</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.4</td>
+          </tr>
+          <tr>
+            <td><strong>호갱노노</strong></td>
+            <td>(주)직방(자회사)</td>
+            <td>MAU 약 179만(2024년 1월) <span class="pct-neutral">[B]</span></td>
+            <td>실거래가 1등, 학군·인프라 분석, 저이탈률</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.6</td>
+          </tr>
+          <tr>
+            <td><strong>다방</strong></td>
+            <td>(주)스테이션3</td>
+            <td>누적 1,800만 다운로드 <span class="pct-neutral">[B]</span></td>
+            <td>원룸·빌라 특화, 1인가구 타겟</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.1</td>
+          </tr>
+          <tr>
+            <td><strong>KB부동산</strong></td>
+            <td>KB국민은행</td>
+            <td>미공개</td>
+            <td>공식 KB시세, 대출 연계, 금융기관 신뢰도</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.0</td>
+          </tr>
+          <tr>
+            <td><strong>부동산114</strong></td>
+            <td>HDC(합병, 2025.04)</td>
+            <td>미공개</td>
+            <td>리서치·빅데이터, B2B 솔루션</td>
+            <td>웹 중심</td>
+            <td>해당없음</td>
+          </tr>
+          <tr>
+            <td><strong>아실 (아파트실거래가)</strong></td>
+            <td>한국차트</td>
+            <td>2.8만+ 다운로드(2025) <span class="pct-neutral">[B]</span></td>
+            <td>지도 기반 실거래가, 무료 조회</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.6 (7,000개 리뷰)</td>
+          </tr>
+          <tr>
+            <td><strong>리치고</strong></td>
+            <td>(주)데이터노우즈</td>
+            <td>미공개</td>
+            <td>투자 분석 특화, AI 경매, 빅데이터</td>
+            <td>iOS·Android·웹</td>
+            <td>★4.4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">※ MAU 수치는 각 출처 기준일이 다르며, 공개 자료 기반으로 정확도에 한계가 있습니다. [B]=언론기사 인용, [C]=커뮤니티·비공식 출처</div>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      부동산 앱 시장은 매물 탐색(직방·네이버·다방)과 시세·분석(호갱노노·아실·리치고) 두 축으로 분화되고 있습니다. KB부동산은 금융 기관 신뢰도를 기반으로 대출 연계라는 독자 영역을 구축했으며, 이 세 축이 앱 시장의 핵심 경쟁 구도입니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       04. 개별 서비스 상세 분석
+  ===================================================== -->
+  <div class="section" id="s04">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">개별 서비스 상세 분석</div>
+        <div class="section-desc">기본 정보 · 이용자 현황 · 기능 · 신규 서비스 · 소비자 반응</div>
+      </div>
+    </div>
+
+    <!-- 네이버페이 부동산 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">네이버페이 부동산</div>
+        <div class="service-operator">운영사: 네이버(주) &nbsp;|&nbsp; 구 서비스명: 네이버부동산</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>네이버의 부동산 서비스로, 과거 '네이버부동산' 앱이 2024년 8월 종료되고 현재는 <strong>네이버페이 부동산</strong>으로 통합·운영됩니다. 웹(부동산.naver.com)과 네이버페이 앱 내 부동산 탭으로 제공합니다. 플랫폼: iOS·Android(네이버페이 앱 내)·웹.</p>
+
+      <h4>이용자 현황</h4>
+      <p>2024년 12월 기준 MAU 약 61만 명(부동산 앱 카테고리 3위, CEO스코어데일리)으로 확인됩니다. 별도 앱 종료 이후 웹 중심으로 전환되어 앱 기준 MAU는 하락 추세이나, 네이버 플랫폼 트래픽 기반으로 실질 이용자는 훨씬 많을 것으로 추정됩니다.</p>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>전국 아파트·오피스텔·빌라·원룸 매물 검색</li>
+        <li>실거래가, KB시세, AI 추정 시세 확인</li>
+        <li>VR 투어(네이버랩스 협업, 360도 내부 3D 구현)</li>
+        <li>청약 정보, 분양 일정</li>
+        <li>공인중개사 연결 및 대출 상품 연계</li>
+      </ul>
+
+      <h4>2025년 신규 서비스 / 업데이트</h4>
+      <blockquote>
+        "업계 최초로 초거대언어모델(LLM)을 적용한 부동산 매물 찾기 AI 챗봇 서비스입니다. 지난 6월 26일 베타 출시 이후 검색되는 매물량은 하루 약 1만 건에 달합니다."
+        <cite>— 뉴스1, 2025년 7월 7일 [B] <a href="https://www.news1.kr/it-science/general-it/5838115" target="_blank">[원문]</a></cite>
+      </blockquote>
+      <p>→ 해석: 자연어로 "신혼부부가 살 OO동 집 찾아줘", "주차 가능한 집"처럼 말하면 AI가 매물을 직접 추천합니다. 2025년 9월에는 빌라 AI 추정 시세(빅밸류 협업)도 추가했습니다.</p>
+
+      <h4>소비자 반응</h4>
+      <p>매물 수가 가장 많아 탐색 용이하다는 평가가 많습니다. 다만 앱 서비스 종료 후 모바일 접근성이 떨어졌다는 불만이 커뮤니티에서 확인됩니다. AI 집찾기 서비스는 정확도에 대한 긍정 리뷰와 "원하는 조건이 정확히 반영 안 된다"는 혼재된 반응을 보입니다.</p>
+
+      <div class="note-box note-forecast">
+        <div class="note-label">전망</div>
+        네이버페이 AI 에이전트 확장 계획(중개사 연결→대출 조회까지 원스톱)이 실현되면, 네이버는 단순 매물 플랫폼을 넘어 부동산 거래 전체 여정의 허브로 부상할 가능성이 높습니다.
+      </div>
+    </div>
+
+    <!-- 직방 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">직방</div>
+        <div class="service-operator">운영사: (주)직방 &nbsp;|&nbsp; 설립: 2010년 11월</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>2010년 설립된 국내 1위 부동산 중개 플랫폼. 원룸·오피스텔에서 아파트·빌라까지 전국 매물을 제공하며, 2021년 한국의 12번째 유니콘 기업으로 인정받았습니다. 호갱노노(2018년 인수)를 자회사로 보유합니다. 현재 비상장 기업으로 IPO 일정이 계속 미뤄지고 있습니다.</p>
+
+      <h4>이용자 현황</h4>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">누적 다운로드</div>
+          <div class="stat-value">3,500만+</div>
+          <div class="stat-unit">공식 발표 기준 [C]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">MAU (2025.10)</div>
+          <div class="stat-value">145만</div>
+          <div class="stat-unit">나무위키 인용 [C]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">앱스토어 평점</div>
+          <div class="stat-value">★4.4</div>
+          <div class="stat-unit">구글플레이 기준</div>
+        </div>
+      </div>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>아파트·원룸·오피스텔·빌라 매물 검색 (전국)</li>
+        <li>중개라이브: 모바일로 공인중개사와 실시간 상담·거래</li>
+        <li>헛걸음보상제: 실제 매물과 다를 경우 보상</li>
+        <li>VR 홈투어</li>
+        <li>가상오피스 'Soma'(기업 고객 대상)</li>
+        <li>SmartHome: 삼성SDS 홈IoT 인수 기반 스마트홈 서비스</li>
+      </ul>
+
+      <h4>2025년 신규 서비스 / 업데이트</h4>
+      <p>호갱노노와 공동 운영하는 <strong>'집 내놓기'</strong> 서비스 — 아파트 매도·임대를 원하는 이용자가 직방·호갱노노 앱에서 중개 의뢰 시 인근 부동산 최대 20곳에 매물 정보를 전달합니다 <span class="pct-neutral">[B]</span>. 2025년 기준 IPO 추진은 실적 부진(2024년 MAU 162만에서 추가 하락 추정)으로 계획이 흔들리고 있다는 보도가 있습니다.</p>
+
+      <h4>소비자 반응</h4>
+      <p>구글플레이에서 "허위매물이 많다"는 불만이 지속적으로 제기되나, 헛걸음보상제로 부분적 개선. VR 투어에 대한 긍정 반응이 높으며, 중개라이브 서비스에 대한 편의성 호평이 많습니다.</p>
+
+      <div class="note-box note-warning">
+        <div class="note-label">주의점</div>
+        직방은 2022년 이후 IPO를 여러 차례 연기했습니다. 2025년 4월 기준 실적 부진 보도가 나왔으며(네이트뉴스, 2025.04.16), 성장성 정체가 우려됩니다. 비상장 상태로 재무 데이터가 공개되지 않아 검증이 어렵습니다.
+      </div>
+    </div>
+
+    <!-- 호갱노노 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">호갱노노</div>
+        <div class="service-operator">운영사: (주)직방(자회사) &nbsp;|&nbsp; 브랜드 독립 운영</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>아파트 실거래가 분석 및 입지·학군 정보 제공 특화 서비스. 2018년 직방이 인수했으나 브랜드와 서비스는 독립적으로 운영 중. '실거래가 1등 앱'이라는 포지셔닝이 강점입니다.</p>
+
+      <h4>이용자 현황</h4>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">MAU (2024.01)</div>
+          <div class="stat-value">179만</div>
+          <div class="stat-unit">부동산 앱 2위 [B]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">평균 지속 사용</div>
+          <div class="stat-value">519일</div>
+          <div class="stat-unit">직방(379일) 대비 +140일 [B]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">이탈률</div>
+          <div class="stat-value">21.8%</div>
+          <div class="stat-unit">부동산 앱 중 최저 [B]</div>
+        </div>
+      </div>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>아파트 단지별 실거래가 추이 시각화</li>
+        <li>학군 분석 (초·중·고 학업 성취도, 학원가 지도)</li>
+        <li>생활인프라(편의점·병원·공원 등) 도보 접근성</li>
+        <li>경쟁률·청약 정보</li>
+        <li>30대 이상 사용자 비율 82% 이상 (실수요자 중심) [B]</li>
+      </ul>
+
+      <h4>2024~2025년 신규 서비스</h4>
+      <blockquote>
+        "호갱노노 앱에서 중개를 의뢰하면 호갱노노와 직방 앱에서 모두 매물을 노출합니다. 인근 부동산 최대 20곳에 매물 정보를 전달하며, 전국 30세대 이상 아파트 단지라면 어디서나 이용할 수 있습니다."
+        <cite>— 뉴시스, 2024년 10월 18일 [B] <a href="https://www.newsis.com/view/NISX20241018_0002924910" target="_blank">[원문]</a></cite>
+      </blockquote>
+
+      <h4>소비자 반응</h4>
+      <p>앱스토어 리뷰에서 "학군 정보가 가장 정확하다", "시세 흐름 파악에 최적"이라는 호평이 많습니다. 아파트 외 원룸·빌라 정보가 부족하다는 단점도 지적됩니다.</p>
+
+      <div class="note-box note-insight">
+        <div class="note-label">인사이트</div>
+        호갱노노의 이탈률(21.8%)은 경쟁사 다방(54.7%)·직방(38.3%)보다 압도적으로 낮습니다. 이는 집 구매를 고민하는 실수요자들이 장기적으로 시세를 추적하는 수단으로 사용하기 때문입니다. 단순 매물 탐색 앱과는 사용 패턴이 본질적으로 다릅니다.
+      </div>
+    </div>
+
+    <!-- 다방 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">다방</div>
+        <div class="service-operator">운영사: (주)스테이션3 &nbsp;|&nbsp; 설립: 2013년</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>원룸·빌라·오피스텔 중심의 1인가구·청년층 타겟 부동산 중개 플랫폼. 공인중개사 B2B 플랫폼 '다방프로'와 임대인 공실관리 솔루션 '방주인'도 운영합니다. 서울 서초구 소재, 직원 약 73명 규모의 중소 스타트업입니다.</p>
+
+      <h4>이용자 현황</h4>
+      <div class="stat-grid stat-grid-2">
+        <div class="stat-card">
+          <div class="stat-label">누적 다운로드</div>
+          <div class="stat-value">1,800만+</div>
+          <div class="stat-unit">공식 홈페이지 기준 [B]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">3개월 이탈률</div>
+          <div class="stat-value">54.7%</div>
+          <div class="stat-unit">부동산 앱 중 최고 [B]</div>
+        </div>
+      </div>
+
+      <h4>핵심 기능 및 차별점</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>원룸·고시원·빌라·오피스텔 전문 매물 탐색</li>
+        <li>조건 필터링 편의성 높음 (가격·면적·옵션·교통)</li>
+        <li>다방프로: 공인중개사 매물 관리 SaaS 플랫폼</li>
+        <li>방주인: 임대인 전용 공실 관리 서비스</li>
+      </ul>
+
+      <h4>소비자 반응</h4>
+      <p>"원룸 찾을 때 다방이 가장 편하다"는 평가가 많습니다. 다만 이탈률이 높아 집 구한 뒤에는 앱을 삭제하는 일회성 사용 패턴이 두드러집니다. 구글플레이 평점 4.1점.</p>
+
+      <div class="note-box note-suggest">
+        <div class="note-label">제언</div>
+        다방은 1인가구 원룸 시장에서 강점이 있으나, 이탈률이 높아 충성 이용자 확보가 과제입니다. 이사 완료 후에도 앱을 계속 사용하게 하는 주거 커뮤니티·생활 서비스 확장이 필요해 보입니다.
+      </div>
+    </div>
+
+    <!-- KB부동산 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">KB부동산</div>
+        <div class="service-operator">운영사: KB국민은행 &nbsp;|&nbsp; URL: kbland.kr</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>KB국민은행이 운영하는 부동산 플랫폼으로, 금융기관이 직접 제공하는 'KB시세'가 핵심 차별점입니다. KB시세는 금융기관의 담보대출 기준 시세로 활용되어 공신력이 높습니다.</p>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>KB시세·AI시세·실거래가 조회</li>
+        <li>매물 검색, 분양 정보</li>
+        <li>대출 가능 금액 및 금리 조회 (국민은행 연계)</li>
+        <li>대출 신청 원스톱 (KB국민은행 앱 연동)</li>
+        <li>KB부동산 데이터허브: B2B 빅데이터 통계 플랫폼</li>
+      </ul>
+
+      <h4>차별화 포인트</h4>
+      <p>금융 서비스와의 연계가 핵심입니다. 매물을 검색한 뒤 바로 해당 주택에 대한 KB국민은행 대출 상품을 조회하고 신청할 수 있는 금융-부동산 원스톱 서비스입니다. 이 점에서 순수 프롭테크 앱들과 차별됩니다.</p>
+
+      <h4>소비자 반응</h4>
+      <p>시세 신뢰도에 대한 호평이 많으나, UI/UX가 다른 앱 대비 불편하다는 의견이 있습니다. 주로 대출을 앞두고 시세 확인 용도로 활용하는 목적형 사용이 많습니다.</p>
+    </div>
+
+    <!-- 부동산114 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">부동산114</div>
+        <div class="service-operator">운영사: HDC(합병) &nbsp;|&nbsp; URL: r114.com</div>
+      </div>
+
+      <h4>2025년 합병 이슈 (주요 변화)</h4>
+      <blockquote>
+        "HDC그룹이 신사업 확장과 디지털 전환을 위해 지주사 HDC와 부동산114를 합병하며... 부동산114는 법인으로서는 해산하지만 HDC그룹 브랜드로 계속 서비스를 제공합니다. 이 합병은 2025년 4월 30일까지 마무리될 예정"
+        <cite>— 스마트투데이, 이코노미톡뉴스 [B] <a href="https://www.smarttoday.co.kr/news/articleView.html?idxno=78562" target="_blank">[원문]</a></cite>
+      </blockquote>
+      <p>→ 해석: 2025년 4월 이후 부동산114는 독립 법인이 아닌 HDC그룹의 일부로 편입됐습니다. 서비스 브랜드는 유지되나 회사 구조가 완전히 바뀌었습니다.</p>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>매물·시세·실거래가·분양 정보</li>
+        <li>부동산 리서치 리포트 (정기 시장 보고서)</li>
+        <li>B2B 솔루션 (공인중개사·건설사 대상)</li>
+        <li>창업 지원·컨설팅·빅데이터 서비스</li>
+      </ul>
+
+      <div class="note-box note-warning">
+        <div class="note-label">주의점</div>
+        HDC 합병 이후 서비스 운영 방향과 독립성이 변화할 수 있습니다. B2B 및 빅데이터 서비스 중심으로 재편될 가능성이 있으며, 일반 소비자 대상 서비스의 우선순위는 낮아질 수 있습니다.
+      </div>
+    </div>
+
+    <!-- 아실 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">아실 (아파트실거래가)</div>
+        <div class="service-operator">운영사: 한국차트 &nbsp;|&nbsp; URL: asil.kr</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>아파트·오피스텔·빌라 등 전국 부동산의 실거래가를 지도 기반으로 무료 조회하는 서비스. 국토교통부 실거래가 공개시스템 데이터를 직관적으로 시각화합니다. 웹과 앱 모두 지원합니다.</p>
+
+      <h4>이용자 현황</h4>
+      <div class="stat-grid stat-grid-2">
+        <div class="stat-card">
+          <div class="stat-label">앱스토어 평점</div>
+          <div class="stat-value">★4.6</div>
+          <div class="stat-unit">7,000개 이상 리뷰 기준 [B]</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">최근 업데이트</div>
+          <div class="stat-value">2025.03</div>
+          <div class="stat-unit">2025년 3월 19일 [B]</div>
+        </div>
+      </div>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>지도 기반 실거래가 실시간 확인</li>
+        <li>관심 지역 설정 시 거래가 변화 알림</li>
+        <li>가격 추이 그래프 (특정 단지·지역별)</li>
+        <li>분양 정보, 매물 정보</li>
+        <li>매매·전세·월세 구분 조회</li>
+      </ul>
+
+      <h4>차별화 포인트</h4>
+      <p>무료로 제공되는 지도형 실거래가 데이터가 핵심 강점입니다. 호갱노노와 유사하지만 웹 접근성이 더 좋아 PC에서 많이 활용됩니다. 초보 투자자들이 특정 단지의 시세 흐름을 파악할 때 많이 사용합니다.</p>
+
+      <h4>소비자 반응</h4>
+      <p>앱스토어 리뷰(★4.6)에서 "실거래가 조회가 직관적", "무료 서비스인데 너무 좋다"는 평이 많습니다. 광고가 많다는 불만과 함께 UI 개선을 요청하는 목소리도 있습니다.</p>
+    </div>
+
+    <!-- 리치고 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">리치고 (부동산 리치고)</div>
+        <div class="service-operator">운영사: (주)데이터노우즈 &nbsp;|&nbsp; URL: richgo.ai</div>
+      </div>
+
+      <h4>기본 정보</h4>
+      <p>AI와 빅데이터 기반 부동산 투자 분석에 특화된 플랫폼. 단순 매물 탐색이 아닌 투자 관점의 분석·경매·청약 정보를 제공합니다. '부동산 투자 분석 No.1 앱'이라는 포지셔닝입니다.</p>
+
+      <h4>핵심 기능</h4>
+      <ul style="margin-left:20px; margin-bottom:16px; color:#333; font-size:14px;">
+        <li>AI 투자점수: 아파트별 투자 가치 AI 평가</li>
+        <li>AI 경매: 낙찰가 예측 + 권리분석 지원</li>
+        <li>청약 정보 및 분양 분석</li>
+        <li>학군·수요·공급·인구 종합 분석</li>
+        <li>부동산 지도: 지역별 투자 점수 시각화</li>
+        <li>전문가(리치고 전문가): 저평가 지역 분석 서비스</li>
+      </ul>
+
+      <h4>2025년 신규 서비스</h4>
+      <p>AI를 활용한 경매 입찰가 자동 산정 기능 고도화. 10가지 이상 데이터를 학습한 AI 모델이 지역·아파트 분석과 투자 체크리스트를 제공합니다. 상업용 부동산(오피스·상가) 영역으로도 서비스를 확대하는 추세입니다.</p>
+
+      <div class="note-box note-insight">
+        <div class="note-label">인사이트</div>
+        리치고는 부동산 앱 시장에서 '투자자 타겟'이라는 뚜렷한 포지셔닝을 갖습니다. 일반 소비자가 아닌 수익형 부동산을 찾는 중·상급 투자자를 타겟으로 하며, 경쟁사들과 다른 세그먼트를 공략합니다. AI 경매 기능은 경쟁 서비스가 없어 독자적인 영역입니다.
+      </div>
+    </div>
+
+  </div><!-- /section 04 -->
+
+  <!-- =====================================================
+       05. 부동산 유튜브 채널 분석
+  ===================================================== -->
+  <div class="section" id="s05">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">부동산 유튜브 채널 분석</div>
+        <div class="section-desc">주요 8개 채널 구독자·콘텐츠·반응 분석</div>
+      </div>
+    </div>
+
+    <p>부동산 정보 소비 채널로 유튜브의 위상이 빠르게 높아지고 있습니다. 특히 100만 구독자를 넘긴 채널이 다수 등장하며, 전통 언론(신문·방송)의 부동산 정보 독점이 해체되는 양상입니다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>채널명</th>
+            <th>운영 주체</th>
+            <th>구독자</th>
+            <th>콘텐츠 유형</th>
+            <th>특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>월급쟁이부자들TV</strong></td>
+            <td>월부닷컴</td>
+            <td>189만 명 <span class="pct-neutral">[B]</span></td>
+            <td>투자전략·재테크·부동산 입문</td>
+            <td>커뮤니티(월부닷컴) 월 100만 방문. 목요 라이브 '구해줘월부'</td>
+          </tr>
+          <tr>
+            <td><strong>머니인사이드</strong></td>
+            <td>개인 운영</td>
+            <td>151만 명 <span class="pct-neutral">[B]</span></td>
+            <td>경제·국제정세·부동산</td>
+            <td>자매채널 '머니스토리' 현장 중심. 네이버 카페·프리미엄 콘텐츠 병행</td>
+          </tr>
+          <tr>
+            <td><strong>재테크읽어주는파일럿</strong></td>
+            <td>개인 운영</td>
+            <td>112만 명 <span class="pct-neutral">[B]</span></td>
+            <td>부동산·주식·경제 종합</td>
+            <td>항공사 기장 운영. 10분 이내 쉽게 설명하는 방식. 2030 직장인 인기</td>
+          </tr>
+          <tr>
+            <td><strong>하와이대저택</strong></td>
+            <td>개인 운영</td>
+            <td>79만 명 <span class="pct-neutral">[B]</span></td>
+            <td>동기부여·투자 마인드셋</td>
+            <td>정신건강 전문의·PD 등 게스트. 투자 철학 중심</td>
+          </tr>
+          <tr>
+            <td><strong>김짠부</strong></td>
+            <td>개인 운영</td>
+            <td>68만 명 <span class="pct-neutral">[B]</span></td>
+            <td>절약·재테크·부동산 입문</td>
+            <td>2030 여성 타겟. 너나위 대담 영상 266만 조회</td>
+          </tr>
+          <tr>
+            <td><strong>집코노미TV</strong></td>
+            <td>한국경제신문</td>
+            <td>약 32만 명(2022년) <span class="pct-neutral">[B]</span></td>
+            <td>시세분석·정책해설·현장리뷰</td>
+            <td>한국경제 미디어그룹 운영. 언론사 공신력 기반 시세·정책 분석</td>
+          </tr>
+          <tr>
+            <td><strong>부동산 꼭봐용</strong></td>
+            <td>개인 운영</td>
+            <td>약 15만 명 <span class="pct-neutral">[C]</span></td>
+            <td>시세분석·투자전략</td>
+            <td>소셜러스 채널 분석 기준. 실전 투자 사례 중심</td>
+          </tr>
+          <tr>
+            <td><strong>33부동산</strong></td>
+            <td>개인 운영</td>
+            <td>미확인 <span class="pct-neutral">[C]</span></td>
+            <td>현장리뷰·매물 분석</td>
+            <td>소셜러스 채널 분석 등록 확인. 현장 방문형 콘텐츠</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">※ 구독자 수는 각 출처 기준일이 다르며, 2025년 3월 기준 실제 수치와 차이가 있을 수 있습니다.</div>
+
+    <hr class="divider">
+
+    <h3>채널별 상세 분석</h3>
+
+    <!-- 월급쟁이부자들TV -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">월급쟁이부자들TV</div>
+        <div class="service-operator">구독자 189만 · 영상 약 3,000개</div>
+      </div>
+      <p><strong>콘텐츠 유형:</strong> 부동산 투자전략, 재테크 입문, 성공 사례 인터뷰</p>
+      <p><strong>운영 구조:</strong> 월부닷컴 커뮤니티(월 100만 방문)와 연계하여 유튜브→커뮤니티→강의의 생태계를 구축했습니다. 매주 목요일 라이브 방송 '구해줘월부'를 정기 진행합니다.</p>
+      <p><strong>시청자 반응:</strong> "부동산 입문자에게 제일 좋은 채널", "너무 상업적으로 변했다"는 양측 반응이 공존. 강의 상품 판매와 유튜브 콘텐츠의 경계에 대한 비판도 있습니다.</p>
+      <div class="note-box note-insight">
+        <div class="note-label">인사이트</div>
+        유튜브 채널을 핵심 마케팅 채널로 활용하면서 커뮤니티·강의 플랫폼과 연결하는 '에듀테크+부동산' 복합 비즈니스 모델의 대표 사례입니다.
+      </div>
+    </div>
+
+    <!-- 머니인사이드 -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">머니인사이드</div>
+        <div class="service-operator">구독자 151만 · 경제·부동산·국제정세 종합</div>
+      </div>
+      <p><strong>콘텐츠 유형:</strong> 경제 이슈, 부동산 정책, 국제정세가 부동산에 미치는 영향 분석</p>
+      <p><strong>특징:</strong> 자매채널 '머니스토리'를 통해 현장 중심 콘텐츠를 분리 운영합니다. 네이버 카페 및 네이버 프리미엄 콘텐츠도 병행하여 다채널 미디어 전략을 구사합니다.</p>
+      <p><strong>시청자 반응:</strong> 시황 분석의 신뢰도가 높다는 평가. 구체적 매물 추천보다 거시 경제 관점의 분석을 선호하는 시청자층에 인기.</p>
+    </div>
+
+    <!-- 집코노미TV -->
+    <div class="service-block">
+      <div class="service-block-header">
+        <div class="service-name">집코노미TV</div>
+        <div class="service-operator">한국경제신문 운영 · 약 32만 구독자(2022년 기준)</div>
+      </div>
+      <p><strong>콘텐츠 유형:</strong> 정책 해설, 시세 분석, 청약 정보, 현장 리뷰, 부동산 전문가 인터뷰</p>
+      <p><strong>특징:</strong> 한국경제 미디어그룹의 디지털 콘텐츠로, 언론사 공신력을 기반으로 정책 변화·시황 분석에 강점이 있습니다. 개인 채널과 달리 기자·전문가 패널을 활용합니다.</p>
+      <p><strong>시청자 반응:</strong> "정책 해설이 가장 빠르고 정확하다", "전문가 인터뷰 퀄리티가 높다"는 평. 언론사 채널 특성상 특정 입장 편향 우려도 있습니다.</p>
+    </div>
+
+    <h3>부동산 유튜브 채널 비교 (구독자 기준)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>채널명</th>
+            <th>구독자</th>
+            <th>주요 타겟</th>
+            <th>수익화 방식</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="rank-badge">1</span></td>
+            <td>월급쟁이부자들TV</td>
+            <td><strong>189만</strong></td>
+            <td>3040 직장인 부동산 입문</td>
+            <td>유튜브광고·커뮤니티·강의</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">2</span></td>
+            <td>머니인사이드</td>
+            <td><strong>151만</strong></td>
+            <td>3050 경제·투자 관심층</td>
+            <td>유튜브광고·네이버 프리미엄</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">3</span></td>
+            <td>재테크읽어주는파일럿</td>
+            <td><strong>112만</strong></td>
+            <td>2030 직장인</td>
+            <td>유튜브광고·협찬</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">4</span></td>
+            <td>하와이대저택</td>
+            <td><strong>79만</strong></td>
+            <td>투자 마인드셋 관심층</td>
+            <td>유튜브광고·강연</td>
+          </tr>
+          <tr>
+            <td><span class="rank-badge">5</span></td>
+            <td>김짠부</td>
+            <td><strong>68만</strong></td>
+            <td>2030 여성 절약·재테크</td>
+            <td>유튜브광고·협찬</td>
+          </tr>
+          <tr>
+            <td>—</td>
+            <td>집코노미TV (한국경제)</td>
+            <td>약 <strong>32만+</strong></td>
+            <td>실수요자·투자자 전반</td>
+            <td>언론사 운영 (광고 기반)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-caption">※ 구독자 수는 2025년 기준 웹 검색 공개 데이터 [B] 기준. 실제와 다를 수 있음.</div>
+
+    <div class="note-box note-forecast">
+      <div class="note-label">전망</div>
+      부동산 유튜브 채널은 단순 정보 제공에서 '커뮤니티+교육+컨설팅' 생태계로 진화하고 있습니다. 월급쟁이부자들(월부닷컴)의 성공 모델이 복제될 가능성이 높으며, 2026년에도 100만 구독자 돌파 채널이 추가로 등장할 전망입니다.
+    </div>
+  </div>
+
+  <!-- =====================================================
+       06. 시장 트렌드 및 시사점
+  ===================================================== -->
+  <div class="section" id="s06">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">시장 트렌드 및 시사점</div>
+        <div class="section-desc">2025~2026년 부동산 디지털 서비스의 방향성</div>
+      </div>
+    </div>
+
+    <h3>트렌드 1: AI가 부동산 시세 조회를 대체한다</h3>
+    <p>2025년을 기점으로 네이버페이(AI 집찾기), 리치고(AI 투자점수·경매), 부동산플래닛(AI 추정가), 빅밸류(빌라 AI 시세) 등이 AI 기반 시세 추정 서비스를 연달아 출시했습니다. 아파트는 물론 기존에 시세 확인이 어려웠던 빌라·상가·오피스텔까지 AI 추정가 범위가 확대되고 있습니다.</p>
+
+    <div class="note-box note-insight">
+      <div class="note-label">인사이트</div>
+      전통적으로 부동산 시세는 공인중개사와의 직접 상담을 통해서만 알 수 있었습니다. AI 추정가의 확산은 중개사 의존도를 낮추고 소비자 정보 접근성을 크게 높일 것입니다. 장기적으로는 중개 수수료 하락 압력이나 중개업 구조 변화로 이어질 가능성이 있습니다.
+    </div>
+
+    <h3>트렌드 2: 매물 탐색 vs 시세 분석의 서비스 양극화</h3>
+    <p>직방·다방·네이버는 매물 탐색과 중개에 집중하고, 호갱노노·아실·리치고는 시세 분석과 투자 판단에 집중하는 구조로 시장이 분화되고 있습니다. 소비자들은 매물 탐색 앱과 시세 분석 앱을 동시에 사용하는 멀티앱 패턴을 보입니다.</p>
+
+    <h3>트렌드 3: 부동산 정보 채널의 유튜브 이동</h3>
+    <p>전통 언론(신문·TV)이 독점하던 부동산 정보가 유튜브로 급격히 이동하고 있습니다. 100만 구독자 이상의 채널이 다수 등장했고, 이들은 단순 정보 제공을 넘어 커뮤니티·강의·컨설팅 생태계를 구축하며 새로운 비즈니스 모델을 만들고 있습니다.</p>
+
+    <div class="note-box note-warning">
+      <div class="note-label">주의점</div>
+      부동산 유튜브 채널의 급성장과 함께 "뻥튀기 매물·투자금 먹튀 조심"(뉴시스, 2024.01.15)이라는 소비자 피해 경고도 함께 등장하고 있습니다. 유튜버의 투자 추천이 광고·협찬과 혼재되어 있는지 여부를 소비자가 직접 판단하기 어렵다는 구조적 문제가 있습니다.
+    </div>
+
+    <h3>트렌드 4: 금융-부동산 서비스의 융합</h3>
+    <p>KB부동산의 대출 연계, 네이버페이 부동산의 금융상품 조회, 리치고의 AI 경매 등 부동산과 금융 서비스의 경계가 허물어지고 있습니다. 앞으로는 '집 탐색→시세 확인→대출 조회→거래'의 전 과정을 하나의 앱에서 처리하는 방향으로 수렴할 가능성이 높습니다.</p>
+
+    <h3>시사점 요약</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>핵심 인사이트</th>
+            <th>비즈니스 시사점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>AI 시세</td>
+            <td>빌라·상가까지 AI 추정가 확산</td>
+            <td>정보 비대칭 해소 → 중개 수수료 압박</td>
+          </tr>
+          <tr>
+            <td>서비스 분화</td>
+            <td>매물 탐색 vs 투자 분석 양극화</td>
+            <td>명확한 타겟 세그먼트 설정이 필수</td>
+          </tr>
+          <tr>
+            <td>유튜브</td>
+            <td>100만 채널 다수 등장</td>
+            <td>부동산 정보 마케팅 채널로 유튜브 필수</td>
+          </tr>
+          <tr>
+            <td>금융 융합</td>
+            <td>부동산+금융 원스톱 서비스 가속</td>
+            <td>플랫폼 록인(lock-in) 전략 강화 경쟁</td>
+          </tr>
+          <tr>
+            <td>사용자 패턴</td>
+            <td>멀티앱 사용 (탐색+분석 분리)</td>
+            <td>통합 서비스 vs 전문화 선택 기로</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       07. 출처 목록
+  ===================================================== -->
+  <div class="section" id="s07">
+    <div class="section-header">
+      <div class="section-number">07</div>
+      <div>
+        <div class="section-title">출처 목록</div>
+        <div class="section-desc">본 보고서에서 인용한 전체 자료 목록 (등급 표기 포함)</div>
+      </div>
+    </div>
+
+    <ul class="source-list">
+      <li>
+        <span class="source-grade grade-b">B</span>
+        뉴스1 (2025.07.07) — "집도 AI가 찾아준다…네이버페이 AI 집찾기 매물검색 하루 1만건"
+        <a href="https://www.news1.kr/it-science/general-it/5838115" target="_blank">https://www.news1.kr/it-science/general-it/5838115</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        네이트뉴스 (2025.08.29) — "네이버페이 부동산, 빌라 시세·실거래가 서비스 오픈…'AI 기반 추정 시세 제공'"
+        <a href="https://news.nate.com/view/20250829n12542" target="_blank">https://news.nate.com/view/20250829n12542</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        데이텀 뉴스 (2025.09.22) — "빅밸류 'AI 시세' 네이버페이 부동산 적용…빌라 시세 확인"
+        <a href="https://v.daum.net/v/20250922094350798" target="_blank">https://v.daum.net/v/20250922094350798</a>
+      </li>
+      <li>
+        <span class="source-grade grade-c">C</span>
+        나무위키 — "직방" 항목 (직방 MAU 145만, 누적 다운로드 3,500만 등 기재)
+        <a href="https://namu.wiki/w/%EC%A7%81%EB%B0%A9" target="_blank">https://namu.wiki/w/직방</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        CEO스코어데일리 (2024년 1월) — "1월 부동산 앱 MAU: 호갱노노 179만·직방 229만·네이버부동산 61만"
+        <a href="http://m.ceoscoredaily.com/m/m_article.html?no=64869" target="_blank">http://m.ceoscoredaily.com</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        뉴시스 (2024.10.18) — "'아파트 매물 검색도 호갱노노서'…집 내놓기 서비스 개시"
+        <a href="https://www.newsis.com/view/NISX20241018_0002924910" target="_blank">https://www.newsis.com/view/NISX20241018_0002924910</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        스마트투데이 — "HDC, 부동산114 합병...디지털 전환 가속"
+        <a href="https://www.smarttoday.co.kr/news/articleView.html?idxno=78562" target="_blank">https://www.smarttoday.co.kr/news/articleView.html?idxno=78562</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        이코노미톡뉴스 — "HDC그룹, 디지털 전환 위한 구조 개편 단행‥'부동산114 합병'"
+        <a href="http://www.economytalk.kr/news/articleView.html?idxno=406054" target="_blank">http://www.economytalk.kr/news/articleView.html?idxno=406054</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        구글플레이 앱 정보 — 아실(아파트실거래가) 앱 평점 4.6, 리뷰 7,000개, 2025.03.19 업데이트
+        <a href="https://play.google.com/store/apps/details?id=kr.co.koreachart.city" target="_blank">https://play.google.com/store/apps/details?id=kr.co.koreachart.city</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        네이트뉴스 (2025.04.16) — "부동산 '앱' 1위 직방, 최대 3조 IPO 추진계획 흔들…실적부진 발목"
+        <a href="https://news.nate.com/view/20250416n41520" target="_blank">https://news.nate.com/view/20250416n41520</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        월급쟁이부자들 커뮤니티 (2025년) — "부동산 유튜브 추천 TOP5" (채널 구독자 현황)
+        <a href="https://weolbu.com/community/2527983" target="_blank">https://weolbu.com/community/2527983</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        뉴시스 (2024.01.15) — "부동산 정보도 유튜브 시대…'뻥튀기 매물·투자금 먹튀 조심해야'"
+        <a href="https://www.newsis.com/view/NISX20240115_0002592687" target="_blank">https://www.newsis.com/view/NISX20240115_0002592687</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        한국경제 (2022.10.04) — "한국경제TV 유튜브 구독자 100만명 돌파" (집코노미 채널 기재)
+        <a href="https://www.hankyung.com/article/2022100450381" target="_blank">https://www.hankyung.com/article/2022100450381</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        알체라 블로그 (2025년) — "최적의 거래 전략 제시하는 부동산 AI가 뜨고 있다" (AI 시세 트렌드)
+        <a href="https://www.alchera.ai/resource/blog/real-estate-AI" target="_blank">https://www.alchera.ai/resource/blog/real-estate-AI</a>
+      </li>
+      <li>
+        <span class="source-grade grade-b">B</span>
+        스마트투데이 (2025년) — "1위 네이버부동산·2위 오늘의집·3위 호갱노노, 4월 4주차 랭키파이 플레이스토어 순위"
+        <a href="https://www.smarttoday.co.kr/news/articleView.html?idxno=48629" target="_blank">https://www.smarttoday.co.kr/news/articleView.html?idxno=48629</a>
+      </li>
+      <li>
+        <span class="source-grade grade-a">A</span>
+        데이터노우즈 공식 홈페이지 — 리치고 서비스 개요
+        <a href="https://www.dataknows.ai/service" target="_blank">https://www.dataknows.ai/service</a>
+      </li>
+      <li>
+        <span class="source-grade grade-a">A</span>
+        KB부동산 공식 홈페이지 — KB시세, AI시세, 서비스 안내
+        <a href="https://kbland.kr/" target="_blank">https://kbland.kr/</a>
+      </li>
+      <li>
+        <span class="source-grade grade-a">A</span>
+        아실 공식 홈페이지 — 서비스 안내
+        <a href="https://asil.kr/" target="_blank">https://asil.kr/</a>
+      </li>
+    </ul>
+
+    <div class="note-box note-suggest" style="margin-top:24px;">
+      <div class="note-label">출처 등급 요약</div>
+      A급(공식): 3건 &nbsp;|&nbsp; B급(언론·공개 데이터): 14건 &nbsp;|&nbsp; C급(참고·커뮤니티): 2건 &nbsp;|&nbsp; 합계: 19건<br>
+      ※ MAU 등 일부 수치는 공개 데이터 한계로 최신성·정확성에 한계가 있음을 명시합니다.
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="report-footer">
+    <p>본 보고서는 research-crawler 에이전트가 공개 데이터를 기반으로 작성한 것으로,<br>
+    투자 자문이나 매매 권유를 목적으로 하지 않습니다.</p>
+    <p style="margin-top:8px;">DeepDig Research Archive &nbsp;|&nbsp; 2026년 3월 4일 &nbsp;|&nbsp; 3월 1주차 부동산 앱서비스 분석</p>
+  </div>
+
+</div><!-- /container -->
+</body>
+</html>

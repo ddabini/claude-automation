@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Pikbox 레퍼런스 이미지 — 누구나 읽기/쓰기 허용 (팀 협업용)
+    match /pikbox/{allPaths=**} {
+      allow read, write: if true;
+    }
+    // 디자인 리뷰 파일 — 누구나 읽기/쓰기 허용 (팀 협업용)
+    match /design-review/{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
