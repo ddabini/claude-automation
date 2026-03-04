@@ -1001,6 +1001,7 @@
     }
     .dr-btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
     /* 이미지 배경 — 점 패턴으로 캔버스처럼 보임 */
+    /* position:relative — 화살표/인디케이터 absolute 배치의 기준점 */
     .dr-viewer-frame {
       flex: 1;
       overflow: auto;
@@ -1012,6 +1013,7 @@
       background-image: radial-gradient(circle, #c8c8c8 1px, transparent 1px);
       background-size: 20px 20px;
       background-color: #e8eaed;
+      position: relative; /* 화살표 버튼의 절대 위치 기준점 */
     }
     /* iframe 흰 배경 래퍼 */
     .dr-iframe-wrap {
