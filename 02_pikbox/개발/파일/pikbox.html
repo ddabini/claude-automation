@@ -8639,6 +8639,34 @@
       return drGetCookie(key);
     }
 
+    /* ─── 닉네임 해시 컬러 — 닉네임마다 고유한 색상 자동 배정 ─── */
+    // 닉네임 문자열을 숫자로 변환해서 팔레트에서 색상 고르기
+    // 같은 닉네임은 항상 같은 색상이 나옴 (해시 기반)
+    const DR_NICK_COLORS = [
+      '#e84393', // 핫핑크
+      '#7c3aed', // 바이올렛
+      '#2563eb', // 블루
+      '#0891b2', // 시안
+      '#059669', // 에메랄드
+      '#d97706', // 앰버
+      '#dc2626', // 레드
+      '#9333ea', // 퍼플
+      '#0284c7', // 스카이블루
+      '#16a34a', // 그린
+      '#b45309', // 오렌지
+      '#db2777', // 핑크
+    ];
+    function drNickColor(nickname) {
+      // 닉네임 각 글자의 유니코드 코드포인트 합산
+      let hash = 0;
+      for (let i = 0; i < (nickname || '').length; i++) {
+        hash = (hash * 31 + nickname.charCodeAt(i)) & 0xffffffff;
+      }
+      // 항상 양수로 만들고 팔레트 인덱스로 변환
+      const idx = Math.abs(hash) % DR_NICK_COLORS.length;
+      return DR_NICK_COLORS[idx];
+    }
+
     /* ─── 초기화 — 탭에 처음 진입할 때 한 번만 실행 ─── */
     function drInit() {
       // 닉네임 불러오기 (이전에 사용한 닉네임 기억)
