@@ -2668,7 +2668,8 @@
     // 보고서 뷰어에서 뒤로가기
     document.getElementById('backFromReport').addEventListener('click', () => {
       // 삽입된 리포트 내용 초기화 (메모리 해제)
-      document.getElementById('reportEmbed').innerHTML = '';
+      const embed = document.getElementById('reportEmbed');
+      if (embed.shadowRoot) embed.shadowRoot.innerHTML = '';
       if (currentCategoryId) {
         showView('viewTimeline');
       } else {
