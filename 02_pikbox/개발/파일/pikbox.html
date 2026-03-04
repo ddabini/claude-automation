@@ -8806,6 +8806,69 @@
       window.open(drState.currentDesignData.url, '_blank');
     }
 
+    /* ─── Figma 버튼 상태 업데이트 ─── */
+    // figma_url이 있으면 검정 버튼, 없으면 회색 버튼으로 표시
+    function drUpdateFigmaBtn(figmaUrl) {
+      const btn = document.getElementById('drFigmaBtn');
+      if (!btn) return;
+      if (figmaUrl) {
+        // URL이 있으면 활성 상태 (검정 배경)
+        btn.classList.remove('no-url');
+        btn.title = 'Figma에서 열기';
+      } else {
+        // URL이 없으면 비활성 상태 (회색) — 클릭하면 URL 입력 팝업
+        btn.classList.add('no-url');
+        btn.title = 'Figma URL 등록하기';
+      }
+    }
+
+    /* ─── Figma 열기 또는 URL 등록 ─── */
+    // URL이 있으면 새 탭에서 열고, 없으면 URL 입력 팝업
+    function drOpenFigma() {
+      if (!drState.currentDesignId) return;
+      const figmaUrl = drState.currentDesignData?.figma_url;
+      if (figmaUrl) {
+        // 등록된 Figma URL을 새 탭에서 열기
+        window.open(figmaUrl, '_blank');
+      } else {
+        // URL이 없으면 입력 프롬프트
+        drRegisterFigmaUrl();
+      }
+    }
+
+    /* ─── Figma URL 등록 / 수정 ─── */
+    // 기존에 등록된 URL이 없거나, 나중에 수정하고 싶을 때 사용
+    async function drRegisterFigmaUrl() {
+      if (!drState.currentDesignId) return;
+      const current = drState.currentDesignData?.figma_url || '';
+      const newUrl = prompt(
+        'Figma URL을 입력하세요:\n(예: https://figma.com/design/...)',
+        current
+      );
+      if (newUrl === null) return; // 취소
+      const trimmed = newUrl.trim();
+      try {
+        // Firebase DB에 figma_url 저장
+        await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update({
+          figma_url: trimmed || null, // 빈 값이면 null로 삭제
+          updated_at: new Date().toISOString()
+        });
+        // 로컬 상태도 즉시 업데이트
+        if (drState.currentDesignData) {
+          drState.currentDesignData.figma_url = trimmed || null;
+        }
+        drUpdateFigmaBtn(trimmed || null);
+        if (trimmed) {
+          toast('Figma URL이 등록되었습니다', 'success');
+          window.open(trimmed, '_blank'); // 등록 후 바로 열기
+        } else {
+          toast('Figma URL이 삭제되었습니다', 'success');
+        }
+      } catch (e) {
+        toast('저장 실패: ' + e.message, 'error');
+      }
+    }
+
     /* ─── 줌 제어 ─── */
     function drZoom(delta) {
       // 줌 레벨을 delta만큼 증가/감소 (10%~200% 범위 제한)
