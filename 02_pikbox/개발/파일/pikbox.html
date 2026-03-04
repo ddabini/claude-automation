@@ -9553,14 +9553,55 @@
       // CSS transform으로 실제 줌 적용
       const wrap = document.getElementById('drIframeWrap');
       if (!wrap) return;
-      const scale = drState.zoom / 100;
-      wrap.style.transform = `scale(${scale})`;
-      // 줌 적용 후 높이도 조정 (transform은 레이아웃에 영향 없어서 수동 조정)
-      const iframe = document.getElementById('drViewerIframe');
-      if (iframe) {
-        const origH = parseFloat(iframe.style.height) || 1200;
-        wrap.style.marginBottom = `${origH * (scale - 1)}px`;
+
+      const scale        = drState.zoom / 100;
+      const totalPages   = drState.viewerTotalPages || 1;
+      const pageH        = drState.viewerPageHeight  || 1200;
+      const viewerPage   = drState.viewerPage        || 1; // 1-based
+
+      // ── 다중 페이지(카드뉴스) 처리 ──
+      if (totalPages > 1) {
+        // 1장만 보이도록 wrap을 클리핑 (overflow:hidden + 1장 높이만큼 크기 고정)
+        const visibleH = pageH * scale;         // 화면에 보이는 1장 높이(px)
+        wrap.style.overflow    = 'hidden';
+        wrap.style.height      = visibleH + 'px';
+        wrap.style.width       = 1080 * scale + 'px';
+        wrap.style.borderRadius = '10px';
+
+        // iframe은 전체 높이를 scale로 축소한 크기
+        const iframe = document.getElementById('drViewerIframe');
+        if (iframe) {
+          // transform: scale로 iframe 전체를 줄이면서 top에 현재 페이지 오프셋을 음수 마진으로 적용
+          const offsetY = (viewerPage - 1) * pageH * scale;
+          iframe.style.transformOrigin = 'top left';
+          iframe.style.transform       = `scale(${scale})`;
+          // 현재 장의 시작 위치로 이동 (이미 scale된 값)
+          iframe.style.marginTop       = `-${offsetY}px`;
+          // transform으로 줄어든 남은 공간 정리
+          iframe.style.marginBottom    = `${(pageH * totalPages) * (scale - 1)}px`;
+        }
+
+        // 줌 적용 후 wrap 부모(.dr-viewer-frame)의 marginBottom 초기화
+        // (wrap이 height 고정이라 더 이상 필요 없음)
+        wrap.style.marginBottom = '';
+      } else {
+        // ── 1장짜리 디자인 — 기존 방식 그대로 ──
+        wrap.style.overflow  = '';
+        wrap.style.height    = '';
+        wrap.style.width     = '';
+        wrap.style.transform = `scale(${scale})`;
+
+        const iframe = document.getElementById('drViewerIframe');
+        if (iframe) {
+          // transform 초기화 (1장은 iframe 자체를 scale하지 않고 wrap을 scale)
+          iframe.style.transform    = '';
+          iframe.style.marginTop    = '';
+          const origH = parseFloat(iframe.style.height) || 1200;
+          // transform이 레이아웃에 영향 없으므로 marginBottom으로 공간 확보
+          wrap.style.marginBottom = `${origH * (scale - 1)}px`;
+        }
       }
+
       document.getElementById('drZoomLabel').textContent = drState.zoom + '%';
     }
 
