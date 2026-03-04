@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<!-- AI 영상 제작/편집 프로그램 기술 조사 보고서 -->
+<!-- 조사일: 2026-03-05 | 작성: research-crawler 에이전트 -->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 영상 제작 기술 조사 보고서 2026 | DeepDig Research</title>
+
+  <!-- Noto Sans KR 웹폰트 (Google CDN) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== 기본 리셋 및 전역 스타일 ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* 브런치 스타일 디자인 토큰 */
+      --white: #ffffff;
+      --bg: #f9f9f9;
+      --border: #e8e8e8;
+      --text-primary: #1a1a1a;
+      --text-secondary: #555555;
+      --text-muted: #888888;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --accent-dark: #1d4ed8;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --orange: #ea580c;
+      --orange-light: #fff7ed;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --purple: #7c3aed;
+      --purple-light: #f5f3ff;
+      --yellow: #d97706;
+      --yellow-light: #fffbeb;
+      --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      background: var(--bg);
+    }
+
+    /* ===== 컨테이너 (최대 900px 가운데 정렬) ===== */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ===== 헤더 영역 ===== */
+    .report-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 56px 0 48px;
+    }
+
+    .report-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .report-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .report-date {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    h1.report-title {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .report-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 640px;
+    }
+
+    /* 소스 신뢰도 배지 */
+    .source-badges {
+      display: flex;
+      gap: 16px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .source-badge-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .badge-dot.a { background: var(--green); }
+    .badge-dot.b { background: var(--accent); }
+    .badge-dot.c { background: var(--yellow); }
+
+    /* ===== 목차 ===== */
+    .toc {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px 32px;
+      margin: 32px 0;
+    }
+
+    .toc h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: none;
+      counter-reset: toc;
+    }
+
+    .toc li {
+      counter-increment: toc;
+      margin-bottom: 8px;
+    }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .toc a::before {
+      content: counter(toc) ".";
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 18px;
+    }
+
+    .toc a:hover { color: var(--accent-dark); text-decoration: underline; }
+
+    /* ===== 본문 레이아웃 ===== */
+    .report-body {
+      padding: 40px 0 80px;
+    }
+
+    /* ===== 섹션 공통 ===== */
+    .section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 40px;
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    h2.section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+
+    h3.sub-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 28px 0 12px;
+    }
+
+    h3.sub-title:first-of-type {
+      margin-top: 0;
+    }
+
+    h4.item-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 20px 0 8px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+
+    /* ===== 이그제큐티브 서머리 ===== */
+    .exec-summary {
+      background: var(--accent-light);
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+
+    .exec-summary h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-dark);
+      margin-bottom: 16px;
+    }
+
+    .exec-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .exec-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+
+    .exec-points li::before {
+      content: "▸";
+      color: var(--accent);
+      font-size: 12px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ===== 가격 비교 테이블 ===== */
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 16px 0;
+    }
+
+    .price-table thead tr {
+      background: #f1f5f9;
+    }
+
+    .price-table th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .price-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .price-table tr:hover td { background: #fafafa; }
+
+    .price-table tr:last-child td { border-bottom: none; }
+
+    /* 가격 강조 */
+    .price-highlight {
+      font-weight: 600;
+      color: var(--accent-dark);
+    }
+
+    /* 가용 배지 */
+    .avail-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .avail-badge.open { background: var(--green-light); color: var(--green); }
+    .avail-badge.limited { background: var(--yellow-light); color: var(--yellow); }
+    .avail-badge.closed { background: var(--red-light); color: var(--red); }
+    .avail-badge.waitlist { background: var(--orange-light); color: var(--orange); }
+
+    /* ===== API 카드 ===== */
+    .api-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .api-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      background: var(--white);
+    }
+
+    .api-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .api-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .api-details {
+      list-style: none;
+      font-size: 13px;
+    }
+
+    .api-details li {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-secondary);
+    }
+
+    .api-details li:last-child { border-bottom: none; }
+    .api-details li span:first-child { color: var(--text-muted); font-size: 12px; }
+    .api-details li span:last-child { font-weight: 500; color: var(--text-primary); font-size: 13px; }
+
+    /* ===== 인사이트 블록 ===== */
+    .insight-block {
+      border-left: 3px solid var(--accent);
+      padding: 14px 18px;
+      background: var(--accent-light);
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #1e40af;
+      line-height: 1.7;
+    }
+
+    .insight-block.warning {
+      border-color: var(--orange);
+      background: var(--orange-light);
+      color: #9a3412;
+    }
+
+    .insight-block.success {
+      border-color: var(--green);
+      background: var(--green-light);
+      color: #15803d;
+    }
+
+    .insight-block.purple {
+      border-color: var(--purple);
+      background: var(--purple-light);
+      color: #5b21b6;
+    }
+
+    .insight-label {
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* ===== 원문 인용 ===== */
+    blockquote.source-quote {
+      margin: 16px 0;
+      padding: 14px 18px;
+      background: #f8fafc;
+      border-left: 3px solid var(--border);
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.7;
+    }
+
+    blockquote.source-quote cite {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: normal;
+      margin-top: 6px;
+    }
+
+    /* ===== 비교 매트릭스 ===== */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 16px 0;
+    }
+
+    .comparison-table th {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .comparison-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    .comparison-table tr:nth-child(even) td { background: #fafafa; }
+
+    /* 체크/엑스 아이콘 */
+    .check { color: var(--green); font-weight: 700; }
+    .cross { color: var(--red); }
+    .partial { color: var(--yellow); }
+
+    /* ===== 태그 목록 ===== */
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .tag.green { background: var(--green-light); color: var(--green); border-color: #86efac; }
+    .tag.blue { background: var(--accent-light); color: var(--accent-dark); border-color: #93c5fd; }
+    .tag.orange { background: var(--orange-light); color: var(--orange); border-color: #fed7aa; }
+
+    /* ===== 섹션 구분선 ===== */
+    hr.section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    /* ===== 출처 번호 ===== */
+    .ref {
+      font-size: 11px;
+      color: var(--accent);
+      vertical-align: super;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* ===== 출처 목록 ===== */
+    .sources-list {
+      list-style: none;
+      font-size: 13px;
+    }
+
+    .sources-list li {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+      align-items: flex-start;
+    }
+
+    .sources-list li:last-child { border-bottom: none; }
+
+    .source-num {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 28px;
+    }
+
+    .source-info { flex: 1; }
+
+    .source-title {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .source-url {
+      font-size: 11px;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .source-grade {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .grade-a { background: var(--green-light); color: var(--green); }
+    .grade-b { background: var(--accent-light); color: var(--accent-dark); }
+    .grade-c { background: var(--yellow-light); color: var(--yellow); }
+
+    /* ===== 스택 박스 ===== */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .stack-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .stack-box h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .stack-box p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* ===== 비용 계산기 스타일 ===== */
+    .cost-calc {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .cost-calc h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .cost-row:last-child { border-bottom: none; font-weight: 700; background: none; }
+    .cost-row span:first-child { color: var(--text-secondary); }
+    .cost-row span:last-child { color: var(--text-primary); font-weight: 500; }
+
+    /* ===== 경쟁사 분석 카드 ===== */
+    .competitor-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 16px 0;
+    }
+
+    .competitor-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .competitor-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .competitor-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .competitor-pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .pros h5, .cons h5 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .pros h5 { color: var(--green); }
+    .cons h5 { color: var(--red); }
+
+    .pros ul, .cons ul {
+      list-style: none;
+      font-size: 13px;
+    }
+
+    .pros li, .cons li {
+      padding: 3px 0;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 6px;
+    }
+
+    .pros li::before { content: "+"; color: var(--green); font-weight: 700; }
+    .cons li::before { content: "−"; color: var(--red); font-weight: 700; }
+
+    /* ===== 인쇄 최적화 ===== */
+    @media print {
+      body { font-size: 12px; background: white; }
+      .container { max-width: 100%; padding: 0; }
+      .section { page-break-inside: avoid; border: 1px solid #ddd; }
+      .api-grid { grid-template-columns: 1fr 1fr; }
+      .stack-grid { grid-template-columns: 1fr 1fr 1fr; }
+      a { color: inherit; text-decoration: none; }
+    }
+
+    /* ===== 반응형 ===== */
+    @media (max-width: 640px) {
+      h1.report-title { font-size: 24px; }
+      .api-grid { grid-template-columns: 1fr; }
+      .stack-grid { grid-template-columns: 1fr; }
+      .competitor-pros-cons { grid-template-columns: 1fr; }
+      .section { padding: 24px 20px; }
+      .price-table { font-size: 12px; }
+      .price-table th, .price-table td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 보고서 헤더 ===== -->
+<header class="report-header">
+  <div class="container">
+    <div class="report-meta">
+      <span class="report-badge">기술 조사</span>
+      <span class="report-date">2026-03-05 | DeepDig Research</span>
+    </div>
+    <h1 class="report-title">AI 영상 제작/편집 프로그램 기술 조사 보고서</h1>
+    <p class="report-subtitle">
+      2025~2026년 기준 AI 영상 생성 API, 편집 보조 도구, 웹 기반 기술 스택,
+      경쟁 제품 분석, 데스크톱 앱 확장 시 고려사항을 종합 정리한 개발자 가이드
+    </p>
+    <p style="font-size: 12px; color: #888; margin-top: 16px; font-style: italic;">
+      본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다. 미검증 정보는 "미검증" 태그로 표기합니다.
+    </p>
+    <div class="source-badges">
+      <div class="source-badge-item"><span class="badge-dot a"></span>A급 출처 22개 (공식/학술)</div>
+      <div class="source-badge-item"><span class="badge-dot b"></span>B급 출처 20개 (언론)</div>
+      <div class="source-badge-item"><span class="badge-dot c"></span>C급 출처 4개 (참고용)</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 목차 ===== -->
+<div class="container">
+  <nav class="toc">
+    <h2>목차</h2>
+    <ol>
+      <li><a href="#exec">핵심 발견 요약 (Executive Summary)</a></li>
+      <li><a href="#api-video">AI 영상 생성 API 현황 (2025~2026)</a></li>
+      <li><a href="#api-edit">AI 보조 편집 기능 API/라이브러리</a></li>
+      <li><a href="#web-stack">웹 기반 영상 편집 기술 스택</a></li>
+      <li><a href="#competitor">경쟁 제품 분석</a></li>
+      <li><a href="#electron">Electron 데스크톱 앱 확장 고려사항</a></li>
+      <li><a href="#synthesis">종합 분석 및 개발 제언</a></li>
+      <li><a href="#sources">전체 출처 목록</a></li>
+    </ol>
+  </nav>
+</div>
+
+<!-- ===== 본문 ===== -->
+<main class="report-body">
+<div class="container">
+
+  <!-- 1. 이그제큐티브 서머리 -->
+  <section id="exec">
+    <div class="exec-summary">
+      <h2>핵심 발견 요약 (Executive Summary)</h2>
+      <ul class="exec-points">
+        <li>AI 영상 생성 API 시장은 2025~2026년 급성장 — 10초짜리 영상 생성 비용이 <strong>$0.25~$5</strong> 수준으로 실용화 단계 진입. 가성비 1위는 Kling($0.029/초), 품질 1위는 Runway Gen-4.5(Elo 1,247점)</li>
+        <li>Google Veo 3.1이 유일하게 <strong>네이티브 4K + 오디오 동시 생성</strong>을 지원하나 비용($0.35~0.50/초)이 높아 프로덕션 환경에서만 권장. Sora 2는 API 접근이 여전히 제한적</li>
+        <li>자막 자동 생성은 <strong>Whisper API $0.006/분</strong>으로 사실상 무료 수준. 씬 감지·배경 제거·업스케일링 모두 fal.ai 경유로 통합 가능</li>
+        <li>브라우저 영상 처리 기술 분기점 도달 — FFmpeg.wasm(CPU 전용, 25fps)보다 <strong>WebCodecs가 8배 빠른 200fps</strong>. WebGPU는 2025년 11월 4대 브라우저 공식 지원으로 AI 추론 19~100배 가속</li>
+        <li>CapCut(소셜 특화)·Vrew(자막 특화)·Descript(트랜스크립트 특화)·InVideo(AI 생성 특화)로 경쟁사 포지션이 명확히 분리 — 통합 AI 생성+편집 경험이 블루오션</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2. AI 영상 생성 API -->
+  <section id="api-video" class="section">
+    <div class="section-label">섹션 1</div>
+    <h2 class="section-title">AI 영상 생성 API 현황 (2025~2026)</h2>
+
+    <!-- 전체 비교 테이블 -->
+    <h3 class="sub-title">1-1. 주요 API 한눈에 비교</h3>
+
+    <table class="price-table">
+      <thead>
+        <tr>
+          <th>API</th>
+          <th>가격 (10초 기준)</th>
+          <th>최대 해상도</th>
+          <th>최대 길이</th>
+          <th>주요 기능</th>
+          <th>API 접근</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>OpenAI Sora 2</strong></td>
+          <td class="price-highlight">$1.00 (720p)<br>$5.00 (1080p)</td>
+          <td>1024p<br>(1792×1024)</td>
+          <td>25초</td>
+          <td>T2V, I2V, 오디오</td>
+          <td><span class="avail-badge limited">제한적</span></td>
+        </tr>
+        <tr>
+          <td><strong>Google Veo 2/3.1</strong></td>
+          <td class="price-highlight">$3.50 (Gemini API)<br>$5.00 (Vertex)</td>
+          <td>4K 네이티브</td>
+          <td>8초 (v2)<br>~30초 (v3.1)</td>
+          <td>T2V, I2V, 4K, 오디오</td>
+          <td><span class="avail-badge open">공개</span></td>
+        </tr>
+        <tr>
+          <td><strong>Runway Gen-4 Turbo</strong></td>
+          <td class="price-highlight">~$0.80~1.50</td>
+          <td>1080p</td>
+          <td>10초</td>
+          <td>T2V, I2V, V2V, 편집</td>
+          <td><span class="avail-badge open">공개</span></td>
+        </tr>
+        <tr>
+          <td><strong>Kling AI 2.6</strong></td>
+          <td class="price-highlight">$0.29 (fal.ai 기준)</td>
+          <td>4K 네이티브</td>
+          <td>3분 (연장)</td>
+          <td>T2V, I2V, 오디오</td>
+          <td><span class="avail-badge open">공개</span></td>
+        </tr>
+        <tr>
+          <td><strong>MiniMax Hailuo 2.3</strong></td>
+          <td class="price-highlight">$0.25 (6초 768p)<br>$0.52 (10초)</td>
+          <td>768p</td>
+          <td>10초</td>
+          <td>T2V, I2V</td>
+          <td><span class="avail-badge open">공개</span></td>
+        </tr>
+        <tr>
+          <td><strong>Pika 2.2</strong></td>
+          <td class="price-highlight">$0.20 (720p)<br>$0.45 (1080p)</td>
+          <td>1080p</td>
+          <td>10초</td>
+          <td>T2V, I2V, 키프레임</td>
+          <td><span class="avail-badge open">공개 (fal.ai)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Luma Dream Machine 2</strong></td>
+          <td class="price-highlight">$0.50 (10초)</td>
+          <td>1080p</td>
+          <td>10초</td>
+          <td>T2V, I2V</td>
+          <td><span class="avail-badge open">공개</span></td>
+        </tr>
+        <tr>
+          <td><strong>Seedance 1.5 Pro</strong></td>
+          <td class="price-highlight">~$0.50~0.80</td>
+          <td>1080p</td>
+          <td>8초</td>
+          <td>T2V, I2V, 멀티샷</td>
+          <td><span class="avail-badge open">BytePlus</span></td>
+        </tr>
+        <tr>
+          <td><strong>Stability AI SVD</strong></td>
+          <td>API 중단</td>
+          <td>—</td>
+          <td>—</td>
+          <td>셀프호스팅만</td>
+          <td><span class="avail-badge closed">API 종료</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-block">
+      <span class="insight-label">💡 인사이트</span>
+      Kling 2.6이 10초 $0.29(fal.ai 기준)로 Sora 2 대비 <strong>약 17배 저렴</strong>하면서도 4K 해상도를 지원합니다. 비용을 최소화해야 하는 MVP 개발 단계에서는 Kling + MiniMax Hailuo 조합이 최적입니다. 품질 최우선이라면 Runway Gen-4.5(벤치마크 1위)를 권장합니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Sora 2 상세 -->
+    <h3 class="sub-title">1-2. OpenAI Sora 2 상세</h3>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Sora 2 (Standard)</span>
+          <span class="avail-badge limited">제한적</span>
+        </div>
+        <ul class="api-details">
+          <li><span>가격</span><span>$0.10 / 초 (720p)</span></li>
+          <li><span>10초 기준</span><span>$1.00</span></li>
+          <li><span>최대 해상도</span><span>720p</span></li>
+          <li><span>최대 길이</span><span>25초</span></li>
+          <li><span>오디오 지원</span><span>포함 (동시 생성)</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Sora 2 Pro</span>
+          <span class="avail-badge limited">제한적</span>
+        </div>
+        <ul class="api-details">
+          <li><span>가격 (720p)</span><span>$0.30 / 초</span></li>
+          <li><span>가격 (1080p)</span><span>$0.50 / 초</span></li>
+          <li><span>10초 기준</span><span>$3.00~$5.00</span></li>
+          <li><span>최대 해상도</span><span>1024p (API)</span></li>
+          <li><span>구독 포함</span><span>ChatGPT Pro $200/월</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <blockquote class="source-quote">
+      "Sora 2 API operates on a straightforward per-second billing model, charging based on video duration rather than tokens like GPT models."
+      <cite>— OpenAI API 공식 가격 페이지 <a class="ref">[1]</a></cite>
+    </blockquote>
+
+    <p>2026년 1월 10일부터 무료 사용자의 Sora 접근이 차단되어 ChatGPT Plus($20/월) 이상 구독자만 이용 가능합니다. <strong>API 접근은 여전히 제한적</strong>이며 대기 리스트 또는 Enterprise 계약이 필요한 경우가 많습니다. <a class="ref" href="#src-1">[1]</a></p>
+
+    <div class="insight-block warning">
+      <span class="insight-label">⚠️ 주의</span>
+      Sora API는 공개 문서화가 불충분하고 접근 제한이 있어 프로덕션 서비스에 바로 적용하기 어렵습니다. kie.ai, glbgpt.com 등 비공식 레이어 서비스가 "Sora API"를 제공하고 있으나 실제로는 공식 API를 랩핑한 중간 서비스입니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Runway 상세 -->
+    <h3 class="sub-title">1-3. Runway ML Gen-3 / Gen-4 Turbo 상세</h3>
+
+    <p>Runway는 2025년 3월 Gen-4를 출시하며 캐릭터 일관성, 공간 이해도, 시간적 일관성이 크게 향상되었습니다. 독립 AI 분석 기관의 텍스트-투-비디오 벤치마크에서 <strong>Elo 점수 1,247점으로 1위</strong>를 기록 중입니다. <a class="ref" href="#src-24">[24]</a></p>
+
+    <table class="price-table">
+      <thead>
+        <tr>
+          <th>모델</th>
+          <th>크레딧 비용</th>
+          <th>실제 달러 환산</th>
+          <th>특징</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gen-3 Alpha</td>
+          <td>10 크레딧/초</td>
+          <td>$0.10~$0.48/초 (플랜별)</td>
+          <td>고품질 생성</td>
+        </tr>
+        <tr>
+          <td>Gen-3 Alpha Turbo</td>
+          <td>5 크레딧/초</td>
+          <td>$0.05~$0.24/초</td>
+          <td>속도 우선</td>
+        </tr>
+        <tr>
+          <td>Gen-4 Turbo (API)</td>
+          <td>5 크레딧/초</td>
+          <td>$0.17~$0.48/초 (플랜별)</td>
+          <td>최고 품질, 4K 업스케일</td>
+        </tr>
+        <tr>
+          <td>Runway Aleph API</td>
+          <td>구독 없이 PAYG</td>
+          <td>1,000크레딧=$5 (최소)</td>
+          <td>개발자 전용, 크레딧 구매</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote class="source-quote">
+      "Gen-4 Turbo API now generates 5-8 second videos within a minute, a 5x speed boost over previous iterations."
+      <cite>— Runway API 공식 가격 문서 <a class="ref" href="#src-2">[2]</a></cite>
+    </blockquote>
+
+    <div class="insight-block">
+      <span class="insight-label">💡 인사이트</span>
+      Runway는 단순 영상 생성을 넘어 <strong>Video-to-Video 변환, 인페인팅, 모션 브러시</strong> 등 편집 기능을 제공하는 유일한 주요 API입니다. 편집 기능 통합이 중요한 앱이라면 Runway가 사실상 유일한 선택지입니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Kling AI 상세 -->
+    <h3 class="sub-title">1-4. Kling AI 2.6 상세</h3>
+
+    <p>쿠아이쇼우(快手)의 Kling AI는 2025년 12월 "Omni Launch Week"에서 Kling 2.6, Video O1, Image O1을 동시 출시하며 4K 해상도를 지원하는 <strong>현존 가장 고해상도 AI 영상 모델</strong>이 되었습니다. <a class="ref" href="#src-7">[7]</a></p>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Kling AI (공식 API)</span>
+          <span class="avail-badge limited">선불 패키지</span>
+        </div>
+        <ul class="api-details">
+          <li><span>가격 범위</span><span>$0.07~$0.14/초</span></li>
+          <li><span>최대 해상도</span><span>4K 네이티브</span></li>
+          <li><span>최대 길이</span><span>3분 (연장 기능)</span></li>
+          <li><span>FPS</span><span>30~48 FPS</span></li>
+          <li><span>지불 방식</span><span>90일 유효 선불 패키지</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Kling AI (fal.ai 경유)</span>
+          <span class="avail-badge open">PAYG</span>
+        </div>
+        <ul class="api-details">
+          <li><span>가격</span><span>~$0.029/초</span></li>
+          <li><span>10초 기준</span><span>~$0.29</span></li>
+          <li><span>접근 방식</span><span>REST API, 즉시 사용</span></li>
+          <li><span>상업 이용</span><span>가능</span></li>
+          <li><span>비고</span><span>Sora 2 대비 ~17배 저렴</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Google Veo 상세 -->
+    <h3 class="sub-title">1-5. Google Veo 2 / Veo 3.1 상세</h3>
+
+    <p>Google Veo는 개발자가 Gemini API를 통해 접근할 수 있으며 Vertex AI보다 <strong>30% 저렴</strong>합니다. Veo 3.1은 2026년 2월 기준 Preview 상태이며 <strong>유일하게 네이티브 4K + 오디오 동시 생성</strong>을 지원합니다. <a class="ref" href="#src-8">[8]</a></p>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>모델</th><th>Gemini API 가격</th><th>Vertex AI 가격</th><th>특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Veo 2</td>
+          <td class="price-highlight">$0.35/초</td>
+          <td>$0.50/초</td>
+          <td>8초 클립, T2V·I2V, 물리 시뮬레이션</td>
+        </tr>
+        <tr>
+          <td>Veo 3.1 (Preview)</td>
+          <td class="price-highlight">미정 (Preview)</td>
+          <td>—</td>
+          <td>4K, 오디오, First-Last-Frame 모드</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote class="source-quote">
+      "Veo 2 excels at interpreting both simple and complex instructions from text or image prompts, generating eight second video clips that accurately simulate real-world physics."
+      <cite>— Google Cloud Vertex AI 공식 문서 <a class="ref" href="#src-8">[8]</a></cite>
+    </blockquote>
+
+    <hr class="section-divider">
+
+    <!-- 기타 API -->
+    <h3 class="sub-title">1-6. 기타 주목할 API</h3>
+
+    <h4 class="item-title">MiniMax Hailuo 2.3 (가성비 최고)</h4>
+    <p>2025년 10월 출시된 Hailuo 2.3은 애니메이션·일러스트·수묵화·게임 CG 스타일을 지원하며 <strong>6초 768p 영상에 $0.25</strong>로 가격 경쟁력이 뛰어납니다. 공식 API는 MiniMax 플랫폼에서 제공됩니다. <a class="ref" href="#src-17">[17]</a></p>
+
+    <h4 class="item-title">Pika 2.2 (키프레임 특화)</h4>
+    <p>2025년 12월 fal.ai 경유 API가 공개되었습니다. <strong>Pikaframes</strong>(5개 키프레임 보간), <strong>Pikascenes</strong>(다중 레퍼런스 합성) 등 독자 기능이 강점입니다. 720p $0.20 / 1080p $0.45 (5초 기준). <a class="ref" href="#src-32">[32]</a></p>
+
+    <h4 class="item-title">ByteDance Seedance 1.5/2.0 (멀티샷 스토리텔링)</h4>
+    <p>Seedance 2.0은 <strong>멀티샷 일관성 + 립싱크 + 오디오</strong>를 동시 지원하나 공식 API는 아직 출시 전(2026.03 기준). Seedance 1.5 Pro API는 BytePlus(ByteDance 엔터프라이즈)를 통해 $1.2/M 토큰으로 접근 가능합니다. <a class="ref" href="#src-18">[18]</a></p>
+
+    <h4 class="item-title">Stability AI SVD — API 중단 <span class="tag orange">주의</span></h4>
+    <p>Stable Video Diffusion API는 <strong>2025년 8월 서비스 종료</strong>되었습니다. 셀프호스팅 라이선스는 유지되므로 오픈소스 모델로는 계속 활용 가능합니다. <a class="ref" href="#src-6">[6]</a></p>
+
+    <div class="insight-block purple">
+      <span class="insight-label">🔮 전망</span>
+      2026년 하반기 내 Sora API 접근 정상화, Seedance 2.0 공식 API 출시, Veo 3.1 GA(정식 출시)가 예상됩니다. 멀티모달 오디오+비디오 동시 생성이 새로운 표준이 될 전망입니다.
+    </div>
+
+  </section>
+
+  <!-- 3. AI 보조 편집 기능 -->
+  <section id="api-edit" class="section">
+    <div class="section-label">섹션 2</div>
+    <h2 class="section-title">AI 보조 편집 기능 API/라이브러리</h2>
+
+    <!-- 자막 -->
+    <h3 class="sub-title">2-1. 자동 자막 생성</h3>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>서비스</th><th>가격</th><th>특징</th><th>한국어 지원</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>OpenAI Whisper-1</strong></td>
+          <td class="price-highlight">$0.006/분</td>
+          <td>단어 단위 타임스탬프, 파일당 25MB 제한</td>
+          <td><span class="check">O</span></td>
+        </tr>
+        <tr>
+          <td><strong>GPT-4o Transcribe</strong></td>
+          <td class="price-highlight">$0.006/분</td>
+          <td>향상된 정확도, 화자 분리 지원</td>
+          <td><span class="check">O</span></td>
+        </tr>
+        <tr>
+          <td><strong>GPT-4o Mini Transcribe</strong></td>
+          <td class="price-highlight">$0.003/분</td>
+          <td>비용 절감 최적화</td>
+          <td><span class="check">O</span></td>
+        </tr>
+        <tr>
+          <td><strong>Google Speech-to-Text</strong></td>
+          <td>$0.016/분 (표준)</td>
+          <td>스트리밍 실시간 지원</td>
+          <td><span class="check">O</span></td>
+        </tr>
+        <tr>
+          <td><strong>Whisper.cpp (로컬)</strong></td>
+          <td>무료 (오픈소스)</td>
+          <td>완전 로컬 실행, 양자화 모델 지원</td>
+          <td><span class="check">O</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote class="source-quote">
+      "Only the legacy Whisper model supports word-level and segment-level timestamps via the timestamp_granularities[] parameter."
+      <cite>— OpenAI Whisper 모델 공식 문서 <a class="ref" href="#src-11">[11]</a></cite>
+    </blockquote>
+
+    <div class="insight-block success">
+      <span class="insight-label">✅ 제언</span>
+      자막 타임스탬프가 필요하면 반드시 <strong>Whisper-1 (legacy)</strong>을 사용하세요. GPT-4o 계열은 정확도가 높지만 단어 단위 타임스탬프를 지원하지 않습니다. 비용은 1시간 영상 기준 <strong>약 $0.36</strong>으로 사실상 무료 수준입니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 배경 제거 -->
+    <h3 class="sub-title">2-2. 영상 배경 제거</h3>
+
+    <p><strong>Unscreen</strong>은 2025년 12월 1일 서비스를 완전 종료했습니다. <a class="ref" href="#src-33">[33]</a> 대체 서비스 현황은 다음과 같습니다:</p>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">VEED (fal.ai)</span>
+          <span class="avail-badge open">공개</span>
+        </div>
+        <ul class="api-details">
+          <li><span>접근</span><span>fal.ai REST API</span></li>
+          <li><span>특징</span><span>Unscreen 직접 대체</span></li>
+          <li><span>속도</span><span>Fast / Standard 선택</span></li>
+          <li><span>사용처</span><span>인물·제품 영상</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">VideoBGRemover</span>
+          <span class="avail-badge open">공개</span>
+        </div>
+        <ul class="api-details">
+          <li><span>모델 수</span><span>4종 (Original/Light/Pro/Human)</span>
+          <li><span>SDK</span><span>Python, Node.js</span></li>
+          <li><span>특징</span><span>텍스트 프롬프트 배경 지정</span></li>
+          <li><span>속도</span><span>Light 모델 2배 빠름</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 씬 감지 -->
+    <h3 class="sub-title">2-3. AI 기반 씬 감지 / 자동 컷 편집</h3>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>도구/라이브러리</th><th>방식</th><th>비용</th><th>특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>PySceneDetect</strong></td>
+          <td>오픈소스</td>
+          <td>무료</td>
+          <td>Python, 다양한 감지 알고리즘</td>
+        </tr>
+        <tr>
+          <td><strong>FFmpeg scene detection</strong></td>
+          <td>내장 필터</td>
+          <td>무료</td>
+          <td>-vf "select=gt(scene,0.4)" 명령어</td>
+        </tr>
+        <tr>
+          <td><strong>Amazon Rekognition Video</strong></td>
+          <td>클라우드 API</td>
+          <td>$0.10/분</td>
+          <td>컨텐츠 분석, 행동 인식</td>
+        </tr>
+        <tr>
+          <td><strong>Google Video Intelligence</strong></td>
+          <td>클라우드 API</td>
+          <td>$0.10/분</td>
+          <td>씬 감지, 레이블, 자막</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-block">
+      <span class="insight-label">💡 인사이트</span>
+      씬 감지는 FFmpeg 내장 필터나 PySceneDetect만으로도 충분합니다. 추가 비용 없이 구현 가능하며, 결과물을 JSON으로 내보내 타임라인 편집기에 통합하는 패턴이 일반적입니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 음악/사운드 -->
+    <h3 class="sub-title">2-4. AI 음악 / 사운드 생성</h3>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>서비스</th><th>가격</th><th>API 지원</th><th>특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ElevenLabs Music</strong></td>
+          <td class="price-highlight">$0.50/분 (API)</td>
+          <td><span class="check">O</span></td>
+          <td>유튜브 수익화 가능, Merlin/Kobalt 제휴</td>
+        </tr>
+        <tr>
+          <td><strong>Suno v5</strong></td>
+          <td>$8~24/월 (구독)</td>
+          <td><span class="cross">비공식</span></td>
+          <td>50크레딧/일 (무료), Warner 저작권 해결</td>
+        </tr>
+        <tr>
+          <td><strong>Udio Pro</strong></td>
+          <td>$8/월 (1200크레딧)</td>
+          <td><span class="cross">비공식</span></td>
+          <td>스타일 레퍼런스, 벌크 다운로드</td>
+        </tr>
+        <tr>
+          <td><strong>ElevenLabs 사운드 FX</strong></td>
+          <td>API 플랜 내 포함</td>
+          <td><span class="check">O</span></td>
+          <td>효과음 생성, 텍스트-투-사운드</td>
+        </tr>
+        <tr>
+          <td><strong>MusicGen (Meta, 오픈소스)</strong></td>
+          <td>무료</td>
+          <td><span class="check">셀프호스팅</span></td>
+          <td>조건부 음악 생성, 스테레오 지원</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-block warning">
+      <span class="insight-label">⚠️ 주의</span>
+      Suno, Udio는 2025년 저작권 소송에서 레이블과 합의했지만 <strong>공식 API가 없습니다</strong>. 상업 서비스에 통합하려면 ElevenLabs Music이 유일하게 명확한 상업 라이선스를 보유하고 있습니다. <a class="ref" href="#src-15">[15]</a>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 업스케일링 -->
+    <h3 class="sub-title">2-5. 업스케일링 / 화질 보정</h3>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Topaz Labs API</span>
+          <span class="avail-badge open">공개</span>
+        </div>
+        <ul class="api-details">
+          <li><span>기능</span><span>업스케일, 디노이즈, 안정화, FPS</span></li>
+          <li><span>최대 해상도</span><span>4K, 최대 120FPS</span></li>
+          <li><span>플랫폼</span><span>fal.ai 경유 + 직접 API</span></li>
+          <li><span>웹 버전</span><span>Higgsfield AI 통합 (2025.08)</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Real-ESRGAN (오픈소스)</span>
+          <span class="avail-badge open">무료</span>
+        </div>
+        <ul class="api-details">
+          <li><span>특징</span><span>2x/4x 업스케일</span></li>
+          <li><span>ONNX 변환</span><span>가능 (브라우저 실행)</span></li>
+          <li><span>GPU 지원</span><span>CUDA, WebGPU</span></li>
+          <li><span>영상 지원</span><span>Real-ESRGAN Video</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 4. 웹 기반 기술 스택 -->
+  <section id="web-stack" class="section">
+    <div class="section-label">섹션 3</div>
+    <h2 class="section-title">웹 기반 영상 편집 기술 스택</h2>
+
+    <!-- 핵심 기술 비교 -->
+    <h3 class="sub-title">3-1. 핵심 기술 성능 비교</h3>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>기술</th>
+          <th>성능 (1080p H.264)</th>
+          <th>GPU 가속</th>
+          <th>브라우저 지원</th>
+          <th>학습 난이도</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>FFmpeg.wasm</strong></td>
+          <td>~25 FPS <br><small>(CPU 100% 점유)</small></td>
+          <td><span class="cross">X (구조적 불가)</span></td>
+          <td>Chrome, Firefox, Edge</td>
+          <td>중간 (FFmpeg 명령어)</td>
+        </tr>
+        <tr>
+          <td><strong>WebCodecs API</strong></td>
+          <td>~200 FPS <br><small>(CPU 15% 점유)</small></td>
+          <td><span class="check">O (하드웨어 디코더)</span></td>
+          <td>Chrome 94+, Edge 94+, Firefox 130+</td>
+          <td>높음 (저수준 API)</td>
+        </tr>
+        <tr>
+          <td><strong>WebGL (GLSL Shader)</strong></td>
+          <td>실시간 (60fps+)</td>
+          <td><span class="check">O (GPU 직접)</span></td>
+          <td>전 브라우저</td>
+          <td>높음 (GLSL 필요)</td>
+        </tr>
+        <tr>
+          <td><strong>WebGPU</strong></td>
+          <td>네이티브 수준</td>
+          <td><span class="check">O (Compute Shader)</span></td>
+          <td>Chrome/Firefox/Safari/Edge<br>(2025.11 공식 지원)</td>
+          <td>매우 높음</td>
+        </tr>
+        <tr>
+          <td><strong>Canvas 2D API</strong></td>
+          <td>낮음~중간</td>
+          <td><span class="partial">부분 (브라우저별)</span></td>
+          <td>전 브라우저</td>
+          <td>낮음</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote class="source-quote">
+      "FFmpeg.wasm for 1080p H.264 encoding achieves around 25fps on a MacBook Pro 2018 with 100% CPU usage across all cores, 0% GPU usage, over 2GB memory. WebCodecs achieves around 200fps on identical hardware — 8x faster, with CPU usage only about 15%."
+      <cite>— DEV Community, "Building a video editor on the frontend" <a class="ref" href="#src-25">[25]</a></cite>
+    </blockquote>
+
+    <div class="insight-block warning">
+      <span class="insight-label">⚠️ FFmpeg.wasm GPU 가속 불가 이유</span>
+      WebAssembly는 브라우저 샌드박스 내에서 실행되므로 GPU 직접 접근이 구조적으로 불가능합니다. FFmpeg.wasm은 CPU 기반 소프트웨어 인코딩만 지원합니다. 이는 버그가 아니라 설계상의 제약입니다. <a class="ref" href="#src-35">[35]</a>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- FFmpeg.wasm -->
+    <h3 class="sub-title">3-2. FFmpeg.wasm</h3>
+
+    <p>GitHub 34,000+ Stars를 보유한 가장 널리 사용되는 브라우저 영상 처리 라이브러리입니다. 트랜스코딩, 자르기, 필터 적용 등 <strong>FFmpeg의 모든 기능을 브라우저에서 실행</strong>합니다.</p>
+
+    <div class="tag-list">
+      <span class="tag blue">npm 설치</span>
+      <span class="tag blue">SharedArrayBuffer 필요</span>
+      <span class="tag blue">COOP/COEP 헤더 설정 필요</span>
+      <span class="tag">멀티스레드 지원</span>
+      <span class="tag">트랜스코딩</span>
+    </div>
+
+    <div class="cost-calc">
+      <h4>FFmpeg.wasm vs WebCodecs 실제 성능 비교 (1080p, MacBook Pro M2 기준)</h4>
+      <div class="cost-row"><span>FFmpeg.wasm 인코딩 속도</span><span>25 FPS (CPU 100%)</span></div>
+      <div class="cost-row"><span>WebCodecs 인코딩 속도</span><span>200 FPS (CPU 15%)</span></div>
+      <div class="cost-row"><span>FFmpeg.wasm 메모리</span><span>2GB+</span></div>
+      <div class="cost-row"><span>WebCodecs 메모리</span><span>훨씬 적음</span></div>
+      <div class="cost-row"><span>권장 사용 사례</span><span>트랜스코딩/포맷변환 → FFmpeg.wasm, 실시간 편집 → WebCodecs</span></div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Remotion -->
+    <h3 class="sub-title">3-3. Remotion (React 기반 영상 생성)</h3>
+
+    <p>Remotion은 React 코드로 영상을 프로그래매틱하게 생성하는 프레임워크입니다. 뉴스레터 영상, 데이터 시각화, 템플릿 기반 영상 자동 생성에 최적화되어 있습니다.</p>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Remotion 핵심 기능</span>
+        </div>
+        <ul class="api-details">
+          <li><span>렌더링</span><span>서버사이드 + 브라우저 프리뷰</span></li>
+          <li><span>Lambda 렌더</span><span>AWS Lambda 병렬 렌더링</span></li>
+          <li><span>Player</span><span>React 컴포넌트 내 임베딩</span></li>
+          <li><span>WebCodecs</span><span>클라이언트 렌더 지원</span></li>
+          <li><span>스튜디오</span><span>로컬 타임라인 에디터</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">Remotion 라이선스/가격</span>
+        </div>
+        <ul class="api-details">
+          <li><span>무료</span><span>개인·3인 이하 팀, 상업 포함</span></li>
+          <li><span>Company</span><span>$100/월 (4인 이상)</span></li>
+          <li><span>Enterprise</span><span>$500/월</span></li>
+          <li><span>Lambda 비용</span><span>AWS Lambda 요금만 부담</span></li>
+          <li><span>GitHub Stars</span><span>22,000+</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="insight-block">
+      <span class="insight-label">💡 인사이트</span>
+      Remotion은 AI 영상 편집기보다는 <strong>템플릿 기반 자동 영상 생성</strong>(광고, 리포트, SNS 콘텐츠)에 특화되어 있습니다. 타임라인 기반의 자유로운 편집 UI를 구현하려면 Remotion보다는 WebCodecs + Custom Timeline UI 조합이 더 적합합니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 권장 기술 스택 -->
+    <h3 class="sub-title">3-4. 권장 기술 스택 조합</h3>
+
+    <div class="stack-grid">
+      <div class="stack-box">
+        <h5>영상 디코딩/인코딩</h5>
+        <p>WebCodecs API<br>(하드웨어 가속, 8배 빠름)</p>
+      </div>
+      <div class="stack-box">
+        <h5>포맷 변환/트랜스코딩</h5>
+        <p>FFmpeg.wasm<br>(범용 포맷 지원)</p>
+      </div>
+      <div class="stack-box">
+        <h5>실시간 렌더링/효과</h5>
+        <p>WebGL / WebGPU<br>(GPU 직접 활용)</p>
+      </div>
+      <div class="stack-box">
+        <h5>AI 추론 (로컬)</h5>
+        <p>ONNX Runtime Web<br>+ WebGPU 백엔드</p>
+      </div>
+      <div class="stack-box">
+        <h5>타임라인 UI</h5>
+        <p>Fabric.js / Konva.js<br>+ Canvas 2D</p>
+      </div>
+      <div class="stack-box">
+        <h5>AI 영상 생성</h5>
+        <p>Runway / Kling / Veo<br>REST API 호출</p>
+      </div>
+    </div>
+
+    <div class="insight-block success">
+      <span class="insight-label">✅ 제언</span>
+      WebGPU는 2025년 11월 Chrome/Firefox/Safari/Edge에서 공식 지원됩니다. ONNX Runtime Web + WebGPU 조합으로 <strong>배경 제거, 세그멘테이션 등의 AI 작업을 브라우저에서 네이티브급 속도</strong>로 실행할 수 있습니다(Segment Anything 인코더 19배 가속 확인). <a class="ref" href="#src-20">[20]</a>
+    </div>
+
+  </section>
+
+  <!-- 5. 경쟁사 분석 -->
+  <section id="competitor" class="section">
+    <div class="section-label">섹션 4</div>
+    <h2 class="section-title">경쟁 제품 분석</h2>
+
+    <!-- CapCut -->
+    <div class="competitor-card">
+      <div class="competitor-header">
+        <div>
+          <div class="competitor-name">CapCut</div>
+          <div class="competitor-tagline">소셜 미디어 특화 영상 편집기 | ByteDance</div>
+        </div>
+        <div>
+          <span class="tag blue">무료~$14.99/월</span>
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--text-secondary);">모바일(iOS/Android) + 데스크톱 + 웹 모두 지원. TikTok, Instagram Reels, YouTube Shorts 최적화 템플릿이 강점. AI 자동 캡션 정확도가 높고 트렌드 이펙트 업데이트가 빠름.</p>
+      <div class="competitor-pros-cons">
+        <div class="pros">
+          <h5>강점</h5>
+          <ul>
+            <li>모든 플랫폼(iOS/Android/Web/Desktop)</li>
+            <li>소셜 미디어 최적화 템플릿 수천 개</li>
+            <li>AI 자동 캡션 정확도 높음</li>
+            <li>무료 기능 범위가 넓음</li>
+            <li>실시간 협업 기능</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>약점</h5>
+          <ul>
+            <li>ByteDance 소유 → 규제 리스크 (미국 등)</li>
+            <li>장편 콘텐츠 편집 최적화 부족</li>
+            <li>처음부터 AI로 영상 생성하는 기능 약함</li>
+            <li>개발자 API 없음 (서비스 통합 불가)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vrew -->
+    <div class="competitor-card">
+      <div class="competitor-header">
+        <div>
+          <div class="competitor-name">Vrew</div>
+          <div class="competitor-tagline">자막 중심 AI 영상 편집기 | Vrew Inc.</div>
+        </div>
+        <div>
+          <span class="tag blue">무료~$8.99/월</span>
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--text-secondary);">텍스트 기반 편집 방식. 음성 인식으로 자동 자막 생성 후 텍스트를 수정하면 영상이 자동 편집됨. 60개 이상 언어 지원. 한국 스타트업으로 한국어 정확도가 특히 높음. 2025년 v3.0에서 AI 이미지 생성, 600개+ AI 보이스 추가.</p>
+      <div class="competitor-pros-cons">
+        <div class="pros">
+          <h5>강점</h5>
+          <ul>
+            <li>한국어 자막 인식률 최고 수준</li>
+            <li>텍스트 편집으로 영상 편집하는 직관적 UX</li>
+            <li>무음 구간 자동 제거</li>
+            <li>600개+ AI 보이스</li>
+            <li>무료 스톡 이미지·영상·음악</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>약점</h5>
+          <ul>
+            <li>정밀한 타임라인 편집 기능 부족</li>
+            <li>색보정·고급 이펙트 없음</li>
+            <li>자막 외 창의적 편집 기능 제한</li>
+            <li>API 없음</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Descript -->
+    <div class="competitor-card">
+      <div class="competitor-header">
+        <div>
+          <div class="competitor-name">Descript</div>
+          <div class="competitor-tagline">트랜스크립트 기반 영상·팟캐스트 편집기</div>
+        </div>
+        <div>
+          <span class="tag blue">무료~$55/월</span>
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--text-secondary);">텍스트(전사본)를 수정하면 영상이 자동으로 편집되는 혁신적인 UX. "음오"를 삭제하면 영상에서도 해당 구간이 제거됨. 팟캐스트·인터뷰·웨비나에 최적화. 2025년 9월 미디어 분 + AI 크레딧 기반 가격 체계로 개편.</p>
+      <div class="competitor-pros-cons">
+        <div class="pros">
+          <h5>강점</h5>
+          <ul>
+            <li>텍스트 편집 = 영상 편집 (혁신적 UX)</li>
+            <li>Studio Sound AI 노이즈 제거</li>
+            <li>팟캐스트·인터뷰 워크플로우 최적화</li>
+            <li>Mac/Windows/Web 지원</li>
+            <li>학생·비영리 $5/월</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>약점</h5>
+          <ul>
+            <li>모바일 앱 없음</li>
+            <li>소셜 미디어 특화 기능 부족</li>
+            <li>AI 영상 생성 기능 없음</li>
+            <li>2025년 가격 개편으로 복잡도 증가</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- InVideo -->
+    <div class="competitor-card">
+      <div class="competitor-header">
+        <div>
+          <div class="competitor-name">InVideo AI</div>
+          <div class="competitor-tagline">AI 텍스트-투-비디오 자동 생성 편집기</div>
+        </div>
+        <div>
+          <span class="tag blue">$20~96/월</span>
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--text-secondary);">2025년 10월 OpenAI Sora 2 + Google Veo 3.1과 파트너십 체결. 텍스트 스크립트 입력 → AI가 자동으로 영상, 자막, 음악, 내레이션까지 완성하는 End-to-End 자동화가 강점.</p>
+      <div class="competitor-pros-cons">
+        <div class="pros">
+          <h5>강점</h5>
+          <ul>
+            <li>스크립트 → 완성 영상 완전 자동화</li>
+            <li>Sora 2 + Veo 3.1 AI 영상 통합</li>
+            <li>5,000개+ 스톡 영상 포함</li>
+            <li>팀 협업 기능</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>약점</h5>
+          <ul>
+            <li>세밀한 편집 컨트롤 제한</li>
+            <li>AI 생성 영상 일관성 부족</li>
+            <li>$96/월 Generative 플랜만 AI 생성 풀 지원</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FlexClip -->
+    <div class="competitor-card">
+      <div class="competitor-header">
+        <div>
+          <div class="competitor-name">FlexClip</div>
+          <div class="competitor-tagline">AI 도구 특화 웹 기반 영상 편집기</div>
+        </div>
+        <div>
+          <span class="tag blue">$19.99~29.99/월</span>
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--text-secondary);">30개 이상의 AI 도구를 제공하는 종합 웹 편집기. 텍스트-투-비디오, 배경 제거, AI 자막, AI 이미지 생성 등이 포함.</p>
+      <div class="competitor-pros-cons">
+        <div class="pros">
+          <h5>강점</h5>
+          <ul>
+            <li>30개+ AI 도구 (CapCut보다 많음)</li>
+            <li>직관적 UI, 학습 곡선 낮음</li>
+            <li>대용량 스톡 미디어 라이브러리</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>약점</h5>
+          <ul>
+            <li>모바일 앱 없음 (웹 전용)</li>
+            <li>InVideo 대비 AI 생성 품질 낮음</li>
+            <li>고급 편집 기능 부족</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 포지셔닝 맵 텍스트 -->
+    <h3 class="sub-title">경쟁사 포지셔닝 요약</h3>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>제품</th>
+          <th>핵심 포지셔닝</th>
+          <th>타깃 사용자</th>
+          <th>AI 생성</th>
+          <th>자막</th>
+          <th>편집 깊이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CapCut</strong></td>
+          <td>소셜 미디어 최강</td>
+          <td>크리에이터, Z세대</td>
+          <td><span class="partial">제한적</span></td>
+          <td><span class="check">우수</span></td>
+          <td>중간</td>
+        </tr>
+        <tr>
+          <td><strong>Vrew</strong></td>
+          <td>자막·텍스트 편집</td>
+          <td>유튜버, 강의 제작자</td>
+          <td><span class="partial">이미지만</span></td>
+          <td><span class="check">최우수</span></td>
+          <td>낮음</td>
+        </tr>
+        <tr>
+          <td><strong>Descript</strong></td>
+          <td>팟캐스트·인터뷰</td>
+          <td>팟캐스터, 미디어</td>
+          <td><span class="cross">없음</span></td>
+          <td><span class="check">우수</span></td>
+          <td>중간</td>
+        </tr>
+        <tr>
+          <td><strong>InVideo</strong></td>
+          <td>AI 자동 생성</td>
+          <td>마케터, 비디오 뉴비</td>
+          <td><span class="check">최우수</span></td>
+          <td><span class="partial">기본</span></td>
+          <td>낮음</td>
+        </tr>
+        <tr>
+          <td><strong>FlexClip</strong></td>
+          <td>AI 도구 종합</td>
+          <td>소규모 비즈니스</td>
+          <td><span class="partial">중간</span></td>
+          <td><span class="partial">중간</span></td>
+          <td>중간</td>
+        </tr>
+        <tr>
+          <td><strong>블루오션 영역</strong></td>
+          <td>AI 생성 + 정밀 편집</td>
+          <td>전문 크리에이터</td>
+          <td><span class="check">완전 통합</span></td>
+          <td><span class="check">우수</span></td>
+          <td>높음</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-block purple">
+      <span class="insight-label">🔮 블루오션 분석</span>
+      현재 시장에는 <strong>AI 영상 생성 + 정밀한 타임라인 편집 + 자막 + 사운드 편집을 통합한 제품이 없습니다.</strong> CapCut은 정밀 편집이 약하고, Descript는 AI 생성이 없고, InVideo는 편집 깊이가 부족합니다. "Premiere Pro 수준의 편집 기능 + Runway/Kling 수준의 AI 생성"을 통합하는 제품이 명확한 블루오션입니다.
+    </div>
+
+  </section>
+
+  <!-- 6. Electron 고려사항 -->
+  <section id="electron" class="section">
+    <div class="section-label">섹션 5</div>
+    <h2 class="section-title">Electron 데스크톱 앱 확장 시 고려사항</h2>
+
+    <h3 class="sub-title">5-1. GPU 가속 활용 방법</h3>
+
+    <p>Electron 앱은 Chromium 기반이므로 웹 기술(WebGL, WebGPU)을 그대로 활용할 수 있습니다. 추가로 Node.js 네이티브 모듈을 통해 더 강력한 GPU 접근이 가능합니다.</p>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>접근 방법</th><th>GPU 접근 수준</th><th>구현 복잡도</th><th>권장 사용 사례</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WebGPU (Renderer Process)</strong></td>
+          <td>중상 (Metal/DX12/Vulkan 추상화)</td>
+          <td>중간</td>
+          <td>AI 추론, 실시간 필터</td>
+        </tr>
+        <tr>
+          <td><strong>WebGL (Renderer Process)</strong></td>
+          <td>중간</td>
+          <td>중간</td>
+          <td>영상 이펙트, 색보정</td>
+        </tr>
+        <tr>
+          <td><strong>ONNX Runtime Node (Main Process)</strong></td>
+          <td>높음 (CUDA/CoreML 직접)</td>
+          <td>높음</td>
+          <td>로컬 AI 모델 실행</td>
+        </tr>
+        <tr>
+          <td><strong>FFmpeg 네이티브 바이너리</strong></td>
+          <td>높음 (H/W 인코더)</td>
+          <td>중간</td>
+          <td>고속 트랜스코딩 (nvenc, videotoolbox)</td>
+        </tr>
+        <tr>
+          <td><strong>Python 자식 프로세스</strong></td>
+          <td>완전 (모든 GPU 라이브러리)</td>
+          <td>높음</td>
+          <td>로컬 AI 모델, 복잡한 처리</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-block">
+      <span class="insight-label">💡 핵심 차이점</span>
+      웹 앱에서는 FFmpeg.wasm(CPU 전용)을 사용해야 하지만, Electron에서는 <strong>FFmpeg 네이티브 바이너리를 child_process로 실행</strong>할 수 있습니다. macOS의 VideoToolbox, NVIDIA의 NVENC 등 하드웨어 가속 인코더를 활용해 10배 이상 빠른 인코딩이 가능합니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <h3 class="sub-title">5-2. 로컬 AI 모델 실행 가능성</h3>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">ONNX Runtime Web/Node</span>
+          <span class="avail-badge open">실용적</span>
+        </div>
+        <ul class="api-details">
+          <li><span>백엔드 (Electron Main)</span><span>onnxruntime-node</span></li>
+          <li><span>백엔드 (Renderer)</span><span>onnxruntime-web + WebGPU</span></li>
+          <li><span>GPU EP (Node.js)</span><span>CUDA, DirectML, CoreML</span></li>
+          <li><span>지원 모델</span><span>Whisper, SAM, SDXL-Turbo 등</span></li>
+          <li><span>SAM 가속</span><span>인코더 19x (WebGPU)</span></li>
+        </ul>
+      </div>
+      <div class="api-card">
+        <div class="api-card-header">
+          <span class="api-name">로컬 AI 활용 사례</span>
+          <span class="avail-badge open">권장</span>
+        </div>
+        <ul class="api-details">
+          <li><span>자막 생성</span><span>Whisper.cpp (완전 로컬)</span></li>
+          <li><span>배경 제거</span><span>REMBG / SAM (ONNX)</span></li>
+          <li><span>업스케일링</span><span>Real-ESRGAN (ONNX)</span></li>
+          <li><span>씬 감지</span><span>PySceneDetect / FFmpeg</span></li>
+          <li><span>영상 분류</span><span>CLIP (ONNX)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="insight-block success">
+      <span class="insight-label">✅ 제언 — 하이브리드 아키텍처</span>
+      <strong>비용이 적게 드는 AI 기능 (자막, 배경 제거, 업스케일)</strong>은 로컬 ONNX 모델로 처리하고, <strong>고품질 AI 영상 생성</strong>은 클라우드 API(Runway/Kling)를 호출하는 하이브리드 아키텍처를 권장합니다. 사용자가 오프라인이거나 비용을 절약하고 싶을 때 로컬 모드로 자동 전환하는 UX가 차별점이 될 수 있습니다.
+    </div>
+
+    <hr class="section-divider">
+
+    <h3 class="sub-title">5-3. Electron 영상 편집기 주요 오픈소스 레퍼런스</h3>
+
+    <table class="price-table">
+      <thead>
+        <tr><th>프로젝트</th><th>기술 스택</th><th>특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://github.com/cartesiancs/nugget-app" target="_blank">Nugget App</a></td>
+          <td>Electron + FFmpeg</td>
+          <td>레이어 기반 모션 이펙트, 한국 개발자</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/jestrux/simple-video-editor" target="_blank">Simple Video Editor</a></td>
+          <td>Electron + FFmpeg.wasm</td>
+          <td>기본 편집 기능 참고용</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/AcademySoftwareFoundation/OpenTimelineIO" target="_blank">OpenTimelineIO</a></td>
+          <td>C++/Python</td>
+          <td>할리우드 표준 타임라인 포맷, NLE 상호운용</td>
+        </tr>
+        <tr>
+          <td>IMG.LY CE SDK</td>
+          <td>Web/Electron SDK</td>
+          <td>상용 SDK, 타임라인+AI 편집 올인원</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- 7. 종합 분석 -->
+  <section id="synthesis" class="section">
+    <div class="section-label">섹션 6</div>
+    <h2 class="section-title">종합 분석 및 개발 제언</h2>
+
+    <h3 class="sub-title">7-1. 추천 API 선택 기준</h3>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>우선순위</th>
+          <th>상황</th>
+          <th>권장 선택</th>
+          <th>이유</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>비용 최소화</td>
+          <td>MVP, 스타트업 초기</td>
+          <td><strong>Kling AI (fal.ai)</strong></td>
+          <td>$0.029/초, 4K, 3분 지원</td>
+        </tr>
+        <tr>
+          <td>품질 최우선</td>
+          <td>광고, 프로덕션</td>
+          <td><strong>Runway Gen-4 Turbo</strong></td>
+          <td>벤치마크 1위 (Elo 1,247)</td>
+        </tr>
+        <tr>
+          <td>편집 기능 통합</td>
+          <td>편집+생성 동시 필요</td>
+          <td><strong>Runway API</strong></td>
+          <td>V2V, 인페인팅, 모션 브러시 지원</td>
+        </tr>
+        <tr>
+          <td>4K + 오디오</td>
+          <td>고해상도 컨텐츠</td>
+          <td><strong>Google Veo 3.1</strong></td>
+          <td>유일하게 4K + 오디오 동시 지원</td>
+        </tr>
+        <tr>
+          <td>멀티스타일</td>
+          <td>애니/일러스트 지원 필요</td>
+          <td><strong>MiniMax Hailuo 2.3</strong></td>
+          <td>애니·수묵화·게임CG 지원</td>
+        </tr>
+        <tr>
+          <td>키프레임 제어</td>
+          <td>정밀한 모션 제어</td>
+          <td><strong>Pika 2.2</strong></td>
+          <td>5개 키프레임 보간 (Pikaframes)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <h3 class="sub-title">7-2. 권장 개발 로드맵</h3>
+
+    <div class="cost-calc">
+      <h4>단계별 개발 전략</h4>
+      <div class="cost-row">
+        <span>Phase 1 (MVP) — 웹앱</span>
+        <span>WebCodecs + FFmpeg.wasm + Whisper API + Kling API</span>
+      </div>
+      <div class="cost-row">
+        <span>Phase 2 (베타) — 편집 고도화</span>
+        <span>타임라인 UI 고도화 + Runway API V2V + 배경 제거 + 업스케일</span>
+      </div>
+      <div class="cost-row">
+        <span>Phase 3 (정식) — Electron 확장</span>
+        <span>FFmpeg 네이티브 + ONNX 로컬 AI + GPU 가속</span>
+      </div>
+      <div class="cost-row">
+        <span>Phase 4 (고도화) — 멀티 AI</span>
+        <span>Veo API + ElevenLabs Music + 로컬 Whisper.cpp</span>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <h3 class="sub-title">7-3. 예상 비용 시뮬레이션 (월 1,000명 사용자 기준)</h3>
+
+    <div class="cost-calc">
+      <h4>월 비용 추정 (사용자 1인당 10초짜리 AI 영상 5편 생성 가정)</h4>
+      <div class="cost-row">
+        <span>AI 영상 생성 (Kling, 50초×1,000명)</span>
+        <span>$0.029/초 × 50,000초 = $1,450/월</span>
+      </div>
+      <div class="cost-row">
+        <span>자막 생성 (Whisper, 5분×1,000명)</span>
+        <span>$0.006/분 × 5,000분 = $30/월</span>
+      </div>
+      <div class="cost-row">
+        <span>배경 제거 (VEED fal.ai, 5회×1,000명)</span>
+        <span>~$0.02/건 × 5,000건 = $100/월</span>
+      </div>
+      <div class="cost-row">
+        <span>AI 음악 (ElevenLabs, 1분×1,000명)</span>
+        <span>$0.50/분 × 1,000분 = $500/월</span>
+      </div>
+      <div class="cost-row">
+        <span><strong>총 추정 비용</strong></span>
+        <span><strong>~$2,080/월 (약 ₩2,700,000)</strong></span>
+      </div>
+    </div>
+
+    <div class="insight-block warning">
+      <span class="insight-label">⚠️ 주의점</span>
+      AI 영상 생성 비용은 영상 길이와 해상도에 따라 선형적으로 증가합니다. 무제한 생성 구독 모델보다는 <strong>크레딧 기반 과금 모델</strong>이 수익성 측면에서 더 안전합니다. Runway 같이 고품질 API를 메인으로 사용하면 위 비용의 10~20배까지 증가할 수 있습니다.
+    </div>
+
+  </section>
+
+  <!-- 출처 목록 -->
+  <section id="sources" class="section">
+    <div class="section-label">섹션 7</div>
+    <h2 class="section-title">전체 출처 목록</h2>
+    <p style="font-size:13px; margin-bottom: 20px;">본 보고서에 인용된 모든 출처 목록입니다. A급(공식/학술) · B급(언론) · C급(참고) 등급으로 분류하였습니다.</p>
+
+    <ul class="sources-list">
+      <li id="src-1">
+        <span class="source-num">[1]</span>
+        <div class="source-info">
+          <div class="source-title">OpenAI API 공식 가격 페이지</div>
+          <div class="source-url">https://openai.com/api/pricing/ (2026)</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-2">
+        <span class="source-num">[2]</span>
+        <div class="source-info">
+          <div class="source-title">Runway API 공식 가격 문서</div>
+          <div class="source-url">https://docs.dev.runwayml.com/guides/pricing/</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-3">
+        <span class="source-num">[3]</span>
+        <div class="source-info">
+          <div class="source-title">Runway 공식 가격 페이지</div>
+          <div class="source-url">https://runwayml.com/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-4">
+        <span class="source-num">[4]</span>
+        <div class="source-info">
+          <div class="source-title">Luma AI Dream Machine 공식 API 가격</div>
+          <div class="source-url">https://lumaai-help.freshdesk.com/support/solutions/articles/151000210176</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-5">
+        <span class="source-num">[5]</span>
+        <div class="source-info">
+          <div class="source-title">Luma AI 공식 가격 페이지</div>
+          <div class="source-url">https://lumalabs.ai/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-6">
+        <span class="source-num">[6]</span>
+        <div class="source-info">
+          <div class="source-title">Stability AI API 가격 업데이트 공지 (SVD API 종료 포함)</div>
+          <div class="source-url">https://stability.ai/api-pricing-update-25 (2025.08)</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-7">
+        <span class="source-num">[7]</span>
+        <div class="source-info">
+          <div class="source-title">Kling AI 공식 개발자 가격 페이지</div>
+          <div class="source-url">https://klingai.com/global/dev/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-8">
+        <span class="source-num">[8]</span>
+        <div class="source-info">
+          <div class="source-title">Google Vertex AI Veo 2 공식 문서</div>
+          <div class="source-url">https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/veo/2-0-generate</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-9">
+        <span class="source-num">[9]</span>
+        <div class="source-info">
+          <div class="source-title">Google Gemini API 가격 페이지</div>
+          <div class="source-url">https://ai.google.dev/gemini-api/docs/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-10">
+        <span class="source-num">[10]</span>
+        <div class="source-info">
+          <div class="source-title">Google Developers Blog — Veo 2 GA 출시</div>
+          <div class="source-url">https://developers.googleblog.com/veo-2-video-generation-now-generally-available/</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-11">
+        <span class="source-num">[11]</span>
+        <div class="source-info">
+          <div class="source-title">OpenAI Whisper 모델 공식 문서</div>
+          <div class="source-url">https://platform.openai.com/docs/models/whisper-1</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-12">
+        <span class="source-num">[12]</span>
+        <div class="source-info">
+          <div class="source-title">Vrew 공식 가격 페이지</div>
+          <div class="source-url">https://vrew.ai/en/payment/pricepolicy</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-13">
+        <span class="source-num">[13]</span>
+        <div class="source-info">
+          <div class="source-title">Descript 공식 가격 페이지</div>
+          <div class="source-url">https://www.descript.com/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-14">
+        <span class="source-num">[14]</span>
+        <div class="source-info">
+          <div class="source-title">Pika 공식 가격 페이지</div>
+          <div class="source-url">https://pika.art/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-15">
+        <span class="source-num">[15]</span>
+        <div class="source-info">
+          <div class="source-title">ElevenLabs API 가격 페이지</div>
+          <div class="source-url">https://elevenlabs.io/pricing/api</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-16">
+        <span class="source-num">[16]</span>
+        <div class="source-info">
+          <div class="source-title">ONNX Runtime 공식 문서</div>
+          <div class="source-url">https://onnxruntime.ai/docs/</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-17">
+        <span class="source-num">[17]</span>
+        <div class="source-info">
+          <div class="source-title">MiniMax 공식 API 가격 문서</div>
+          <div class="source-url">https://platform.minimax.io/docs/guides/pricing</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-18">
+        <span class="source-num">[18]</span>
+        <div class="source-info">
+          <div class="source-title">BytePlus Seedance 공식 API 페이지</div>
+          <div class="source-url">https://www.byteplus.com/en/product/seedance</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-19">
+        <span class="source-num">[19]</span>
+        <div class="source-info">
+          <div class="source-title">Remotion 공식 라이선스 및 가격 페이지</div>
+          <div class="source-url">https://www.remotion.dev/docs/license</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-20">
+        <span class="source-num">[20]</span>
+        <div class="source-info">
+          <div class="source-title">ACM IMC 2025 — "From WebGL to WebGPU: A Reality Check of Browser-Based GPU Acceleration"</div>
+          <div class="source-url">https://dl.acm.org/doi/10.1145/3730567.3764504</div>
+        </div>
+        <span class="source-grade grade-a">A급</span>
+      </li>
+      <li id="src-23">
+        <span class="source-num">[23]</span>
+        <div class="source-info">
+          <div class="source-title">TechCrunch — "Google's new AI video model Veo 2 will cost 50 cents per second"</div>
+          <div class="source-url">https://techcrunch.com/2025/02/23/googles-new-ai-video-model-veo-2-will-cost-50-cents-per-second/</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+      <li id="src-24">
+        <span class="source-num">[24]</span>
+        <div class="source-info">
+          <div class="source-title">Skywork.ai — RunwayML Gen-3/Gen-4 리뷰 2025</div>
+          <div class="source-url">https://skywork.ai/blog/runwayml-review-2025-ai-video-controls-cost-comparison/</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+      <li id="src-25">
+        <span class="source-num">[25]</span>
+        <div class="source-info">
+          <div class="source-title">DEV Community — "Building a video editor completely on the frontend: FFMpeg, WebCodecs, WebAssembly and React"</div>
+          <div class="source-url">https://dev.to/danielfulop/building-a-video-editor-completely-on-the-frontend-ffmpeg-webcodecs-webassembly-and-react-1cfb</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+      <li id="src-32">
+        <span class="source-num">[32]</span>
+        <div class="source-info">
+          <div class="source-title">fal.ai — Pika 2.2 API 공식 페이지</div>
+          <div class="source-url">https://fal.ai/models/fal-ai/pika/v2.2/text-to-video</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+      <li id="src-33">
+        <span class="source-num">[33]</span>
+        <div class="source-info">
+          <div class="source-title">fal.ai — VEED 배경 제거 API (Unscreen 대체)</div>
+          <div class="source-url">https://fal.ai/models/veed/video-background-removal/fast</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+      <li id="src-35">
+        <span class="source-num">[35]</span>
+        <div class="source-info">
+          <div class="source-title">Dayverse — "Why FFmpeg.wasm Fails to Leverage GPU Acceleration in Modern Browsers"</div>
+          <div class="source-url">https://dayverse.id/en/articles/why-ffmpeg-wasm-fails-leverage-gpu-acceleration</div>
+        </div>
+        <span class="source-grade grade-b">B급</span>
+      </li>
+    </ul>
+
+    <p style="font-size: 12px; color: var(--text-muted); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+      전체 46개 출처는 <code>/08_AI영상제작기술조사/raw-data/sources.md</code>에서 확인 가능합니다.
+      수집일 기준: 2026-03-05 | 조사 도구: Genspark(AI 멀티소스), Google 검색, 공식 문서
+    </p>
+  </section>
+
+</div>
+</main>
+
+</body>
+</html>
