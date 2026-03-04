@@ -87,6 +87,31 @@ window.ARCHIVE_REGISTRY = {
   // 보고서 목록: 실제 조사 보고서들의 메타데이터(정보 요약)
   reports: [
     {
+      id: "rpt_011",                                                      // 보고서 고유 번호
+      categoryId: "cat_006",                                              // 소속 카테고리 — AI 최신 현황 위클리
+      title: "[3월1주차]AI 최신 현황 업데이트",                              // 보고서 제목
+      date: "2026-03-04",                                                 // 작성일
+      period: "2026년 3월 1주차",                                         // 데이터 기준 기간
+      folderPath: "07_AI최신현황위클리/report/",                           // 보고서가 저장된 폴더 경로
+      fileName: "ai-weekly-update-w1-20260304.html",                     // 보고서 파일명
+      summary: "Claude Opus/Sonnet 4.6 2월 연달아 출시(Sonnet이 처음으로 Opus급 성능 달성), GPT-5.3 Instant(3/3) 등 OpenAI GPT-5 계열 빠른 업데이트, Gemini 3 Flash·Nano Banana 2 출시, Cursor $29.3B·Devin 2.2·Replit Agent 3 등 AI 코딩 에이전트 3파전과 Perplexity Computer(19모델 오케스트레이션) 종합 브리핑.",
+      // 보고서 핵심 요약 포인트
+      summaryPoints: [
+        "Claude Sonnet 4.6(2/17) — 처음으로 Sonnet이 이전 세대 Opus 코딩 성능 달성, 에이전트 시대 도구 상향 평준화",
+        "OpenAI GPT-5 → 5.1 → 5.2 → 5.3 Instant(3/3)까지 7개월 4회 업데이트, GPT-4o 계열 전면 은퇴",
+        "Google Gemini 3 Flash(12월)·Nano Banana 2(2/26 출시) — 이미지 생성 Google Ads 연동으로 마케터 직접 영향",
+        "Cursor $29.3B·Cloud Agents(자율VM 코딩)+BugBot Autofix GA, Devin 2.2 GUI 컴퓨터 사용 지원",
+        "Perplexity Computer: 19개 AI 모델 오케스트레이션 $200/월 — 멀티모델 에이전트 플랫폼 경쟁 본격화"
+      ],
+      sources: {
+        total: 46,   // 전체 출처 수
+        gradeA: 24,  // A급 (Anthropic·Google·OpenAI·Cognition·Cursor·Genspark 공식)
+        gradeB: 19,  // B급 (CNBC·TechCrunch·VentureBeat·ZDNet Korea·Axios·Bloomberg 등)
+        gradeC: 3    // C급 (Brunch·클리앙·Gpters.org)
+      },
+      tags: ["Claude4.6", "Sonnet", "GPT-5.3", "Gemini3", "NanaBanana2", "GenSpark", "Cursor", "Windsurf", "Devin2.2", "Replit", "PerplexityComputer", "AI에이전트"]
+    },
+    {
       id: "rpt_010",                                                      // 보고서 고유 번호
       categoryId: "cat_005",                                              // 소속 카테고리 — 디지털 광고·마케팅 위클리
       title: "[3월1주차]디지털 광고·마케팅 위클리",                         // 보고서 제목
