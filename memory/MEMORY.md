@@ -92,7 +92,34 @@
 
 ---
 
+## 최근 세션 (2026-03-04 세션 10 추가)
+
+### Pikbox YouTube 탭 리디자인
+- **작업**: YouTube 탭 4필터(영상/쇼츠/광고/커뮤니티) → CSS Grid → masonic 레이아웃 전환 (Pinterest 스타일)
+- **API**: YouTube Data API v3 (auto-login-executor로 Google Cloud Console에서 자동 발급)
+  - API 키: AIzaSyDsJ7_tk2E8Wcp2kazlqg7fIri4BboRNrA (gogumiyo4@gmail.com)
+  - 검증: `https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key={KEY}`
+
+### 레퍼런스 탭 이미지 저장소 문제 해결
+- **근본 원인**: 이미지가 IndexedDB에만 저장 → IndexedDB는 브라우저 로컬 저장소 (다른 기기 접근 불가)
+- **해결책**: handleFileSelect를 Firebase Storage 업로드 방식으로 수정 + 자동 마이그레이션 함수 추가
+- **작업**:
+  - 11개 죽은 indexeddb:// 이미지 DB에서 삭제 (blob 복구 불가)
+  - 정상 Firebase Storage 이미지 4개만 유지
+  - 이미지 프록시 시스템 추가 (wsrv.nl, weserv.nl, corsproxy.io)
+- **배포**: Firebase Hosting (https://pikbox-app.web.app)
+
+### 핵심 학습 포인트
+| 항목 | 학습 내용 |
+|------|---------|
+| **IndexedDB 한계** | 브라우저 로컬 저장 → 기기 간 공유 불가. 이미지는 Firebase Storage 필수 |
+| **Google Cloud Console 자동화** | "사용" 버튼이 쿠키 배너에 가려질 수 있음 → JS scrollIntoView + click() 강제 클릭 필수 |
+| **YouTube API 키 표시** | "키 표시" 버튼 클릭 필수 (기본 마스킹 상태) — auto-login-executor에 "키 표시" 우클릭 좌표 클릭 로직 추가 |
+| **iCloud 동기화 갈등** | 파일 수정 중 동기화 충돌 가능 → Edit 전 반드시 Read로 최신 상태 확인 |
+| **이미지 CORS 프록시** | Firebase Storage + CORS 문제 → weserv.nl 등 프록시 서비스 활용 |
+
 ## 다음 세션 시 확인사항
+- Pikbox YouTube 탭 API 응답 속도 및 캐싱 전략 (월 할당량 1M 요청)
+- 마소닉 레이아웃 성능 (large scale 이미지 로드 시 reflow 최적화)
 - MCP 서버 연결 상태 (`.mcp.json` + GEMINI_API_KEY)
 - PADO 퍼퓸 프로젝트 상태 (테스트 프로젝트 정리 필요)
-- Pikbox 업로드 폴백 체인 검증
