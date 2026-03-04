@@ -3755,17 +3755,15 @@
     ];
 
     // ─── 콘텐츠 유형 목록 — 광고 소재 형태별 필터 ───
+    // 사용자 지정 7가지 유형 (화보사진 선택 시 Pinterest 사진 부문 추가 크롤링)
     const CONTENT_TYPES = [
-      { id: 'card_news', label: '카드뉴스', query: '카드뉴스 card news' },
-      { id: 'banner', label: '배너 광고', query: '배너 광고 banner ad' },
-      { id: 'reels', label: '릴스/숏폼', query: '릴스 reels shorts 숏폼' },
-      { id: 'story', label: '스토리', query: '스토리 story 세로형' },
-      { id: 'video_ad', label: '영상 광고', query: '영상 광고 video ad commercial' },
-      { id: 'event', label: '이벤트/프로모션', query: '이벤트 프로모션 세일 할인' },
-      { id: 'branding', label: '브랜딩', query: '브랜딩 branding 로고 아이덴티티' },
-      { id: 'ui_ux', label: 'UI/UX', query: 'UI UX 앱 디자인 웹 디자인' },
-      { id: 'poster', label: '포스터', query: '포스터 poster 전단지 플라이어' },
-      { id: 'sns_feed', label: 'SNS 피드', query: 'SNS 피드 feed 소셜미디어 콘텐츠' }
+      { id: 'sns', label: 'SNS', query: 'SNS 피드 feed 소셜미디어 콘텐츠 인스타그램' },
+      { id: 'banner', label: '배너광고', query: '배너 광고 banner ad 디스플레이 광고' },
+      { id: 'event', label: '이벤트/프로모션', query: '이벤트 프로모션 세일 할인 캠페인' },
+      { id: 'photo', label: '화보사진', query: '화보 촬영 lookbook editorial photography 제품 사진' },
+      { id: 'branding', label: '브랜딩', query: '브랜딩 branding 로고 아이덴티티 CI BI' },
+      { id: 'ui_ux', label: 'UI/UX', query: 'UI UX 앱 디자인 웹 디자인 dashboard' },
+      { id: 'poster', label: '포스터', query: '포스터 poster 전단지 플라이어' }
     ];
 
     // 카테고리 색상 팔레트
