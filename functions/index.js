@@ -26,8 +26,8 @@ const db = admin.database();
  */
 exports.searchPinterest = functions
   .runWith({
-    memory: "1GB",           // Puppeteer에 최소 1GB 메모리 필요
-    timeoutSeconds: 60,      // Pinterest 로딩에 최대 60초 허용
+    memory: "2GB",           // Puppeteer + Chromium에 넉넉한 메모리
+    timeoutSeconds: 120,     // Pinterest 로딩에 최대 120초 허용 (cold start 포함)
     maxInstances: 3,         // 동시 실행 제한 (비용 제어)
   })
   .https.onRequest(async (req, res) => {
