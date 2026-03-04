@@ -6821,14 +6821,12 @@
       { id: 'community', label: '커뮤니티' }
     ];
 
-    // 칩별 검색어 확장 키워드 — 한국 채널 중심 (영어 키워드 제외)
+    // 칩별 검색어 확장 키워드 — community는 별도 함수(ytSearchCommunity)에서 처리
     const YT_CHIP_QUERIES = {
-      all:    '',
-      ad:     '광고 영상 CF 티비 광고',
-      brand:  '브랜드 필름 기업 홍보 영상',
-      short:  '숏폼 쇼츠 릴스 짧은 영상',
-      viral:  '바이럴 영상 화제 인기',
-      review: '리뷰 영상 후기 언박싱'
+      video:     '',
+      shorts:    '쇼츠 shorts',
+      ad:        '광고 CF 레퍼런스',
+      community: ''
     };
 
     // YouTube 탭 상태 관리 — 검색 결과, 페이지네이션, 로딩, 정렬
