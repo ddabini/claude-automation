@@ -8349,7 +8349,6 @@
         if (videoData.isAd) {
           html += `<div style="background:linear-gradient(135deg,#fff8e1,#fff3e0);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #ffe0b2;">`;
           html += `<div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px;">📢 광고 소재 분석</div>`;
-          // 광고 길이 분류
           let adFormat = '';
           if (durationSec <= 6) adFormat = '범퍼 광고 (6초)';
           else if (durationSec <= 15) adFormat = '숏폼 광고 (15초)';
@@ -8358,6 +8357,105 @@
           else adFormat = '브랜디드 콘텐츠';
           html += `<div style="font-size:11px;color:#bf360c;">포맷: <strong>${escHtml(adFormat)}</strong></div>`;
           html += `<div style="font-size:11px;color:#bf360c;margin-top:2px;">채널: <strong>${escHtml(channel)}</strong></div>`;
+          html += `</div>`;
+        }
+
+        // ── Pikbox 코멘트: 영상 성과 원인 분석 ──
+        // 조회수·참여도·길이·채널·제목 등을 종합해 성과 원인을 추론
+        const commentLines = [];
+
+        // (A) 조회수 기반 코멘트
+        if (views >= 10000000) {
+          commentLines.push('조회수 1,000만 이상의 메가 히트 영상입니다. 이 수준의 도달은 알고리즘 추천이 강하게 작동했을 가능성이 높습니다.');
+          if (durationSec > 0 && durationSec <= 300) commentLines.push('짧은 영상 길이가 이탈률을 낮추고 완시청률을 높이는 데 기여한 것으로 보입니다.');
+          else if (durationSec > 600) commentLines.push('긴 영상임에도 이 조회수를 달성한 것은 콘텐츠의 몰입도가 매우 높다는 신호입니다.');
+        } else if (views >= 1000000) {
+          commentLines.push('100만 뷰 이상 영상으로, 타겟 시청자를 넘어 대중적으로 확산된 콘텐츠입니다.');
+        } else if (views >= 100000) {
+          commentLines.push('10만 뷰대의 인기 영상입니다. 검색 또는 추천을 통해 꾸준히 유입되고 있을 가능성이 높습니다.');
+        } else if (views >= 10000) {
+          commentLines.push('1만 뷰대 영상으로, 니치 타겟에게 잘 도달하고 있는 수준입니다.');
+        } else if (views >= 1000) {
+          commentLines.push('1천 뷰대 영상입니다. 아직 알고리즘 추천 단계에 진입하지 못했을 수 있습니다.');
+        } else if (views > 0) {
+          commentLines.push('조회수가 낮은 초기 단계 영상입니다. 썸네일이나 제목의 클릭 유도력, 또는 채널 구독자 규모가 원인일 수 있습니다.');
+        }
+
+        // (B) 참여도 기반 코멘트
+        if (views > 100) {
+          if (engagementRate >= 5) {
+            commentLines.push(`참여도 ${engagementRate.toFixed(1)}%는 매우 높은 수치입니다. 시청자가 공감하거나 논란이 있는 주제일 가능성이 있습니다.`);
+          } else if (engagementRate >= 2) {
+            commentLines.push(`참여도 ${engagementRate.toFixed(1)}%는 양호합니다. 시청자가 콘텐츠에 적극적으로 반응하고 있습니다.`);
+          } else if (engagementRate >= 0.5) {
+            commentLines.push(`참여도 ${engagementRate.toFixed(1)}%는 평균 수준입니다.`);
+          } else if (engagementRate > 0) {
+            commentLines.push(`참여도 ${engagementRate.toFixed(2)}%는 낮은 편입니다. 영상이 정보 전달 위주이거나, CTA(댓글·좋아요 유도)가 부족할 수 있습니다.`);
+          }
+
+          // 좋아요 대비 댓글 비율 분석
+          if (likes > 0 && comments > 0) {
+            const commentToLikeRatio = comments / likes;
+            if (commentToLikeRatio > 0.5) {
+              commentLines.push('댓글 비율이 좋아요 대비 높은 편으로, 토론이나 의견 교환이 활발한 영상입니다.');
+            } else if (commentToLikeRatio < 0.05 && likes > 100) {
+              commentLines.push('좋아요에 비해 댓글이 적어, 시청자가 감상은 하지만 의견을 남기지 않는 유형입니다.');
+            }
+          }
+        }
+
+        // (C) 영상 길이 + 유형 코멘트
+        if (videoData.isAd) {
+          if (durationSec <= 6) commentLines.push('6초 범퍼 광고는 브랜드 인지도 강화에 최적화된 포맷입니다. 핵심 메시지 하나에 집중하는 것이 중요합니다.');
+          else if (durationSec <= 15) commentLines.push('15초 숏폼 광고는 소셜 미디어 피드에서 주목도를 높이기에 적합한 길이입니다.');
+          else if (durationSec <= 30) commentLines.push('30초 TV CF급 광고로, 스토리텔링과 감정 호소가 가능한 표준 포맷입니다.');
+        } else {
+          if (durationSec > 0 && durationSec <= 60) commentLines.push('1분 이하 숏폼은 완시청률이 높아 알고리즘 추천에 유리하지만, 깊은 정보 전달에는 한계가 있습니다.');
+          else if (durationSec > 60 && durationSec <= 300) commentLines.push('1~5분 길이는 정보와 몰입의 균형이 좋은 구간으로, 대부분의 유튜브 시청자 집중력에 적합합니다.');
+          else if (durationSec > 300 && durationSec <= 900) commentLines.push('5~15분 중편은 깊이 있는 정보 전달에 적합하며, 광고 수익화 기준(8분)을 충족하는 길이입니다.');
+          else if (durationSec > 900) commentLines.push('15분 이상 롱폼은 높은 시청 시간을 확보할 수 있어 알고리즘 가중치가 높지만, 시청자 이탈 관리가 핵심입니다.');
+        }
+
+        // (D) 제목 분석
+        const titleLen = title.length;
+        if (titleLen > 0) {
+          const hasEmoji = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}]/u.test(title);
+          const hasNumber = /\d/.test(title);
+          const hasBracket = /[\[\]【】]/.test(title);
+          const hasQuestion = /\?|？/.test(title);
+
+          const titleTips = [];
+          if (hasEmoji) titleTips.push('이모지 사용');
+          if (hasNumber) titleTips.push('숫자 포함');
+          if (hasBracket) titleTips.push('대괄호 강조');
+          if (hasQuestion) titleTips.push('질문형');
+          if (titleLen <= 30) titleTips.push('간결한 제목');
+          else if (titleLen > 50) titleTips.push('긴 제목');
+
+          if (titleTips.length > 0) {
+            commentLines.push(`제목 특징: ${titleTips.join(', ')}. ${
+              hasNumber || hasQuestion ? '숫자와 질문형 제목은 클릭률을 높이는 효과적인 기법입니다.' :
+              hasEmoji ? '이모지는 피드에서 시선을 끌지만 과도하면 신뢰도가 떨어질 수 있습니다.' :
+              titleLen > 50 ? '제목이 긴 편으로, 모바일에서 잘릴 수 있어 핵심을 앞에 배치하는 것이 좋습니다.' :
+              '간결하고 명확한 제목 구성입니다.'
+            }`);
+          }
+        }
+
+        // (E) 타임스탬프/목차 유무 코멘트
+        if (timestamps.length >= 3) {
+          commentLines.push(`목차(${timestamps.length}개 챕터)가 포함되어 있어 시청자 탐색이 용이하고, 시청 유지율 향상에 도움됩니다.`);
+        } else if (durationSec > 600 && timestamps.length === 0) {
+          commentLines.push('10분 이상 영상이지만 목차가 없습니다. 타임스탬프를 추가하면 시청 경험과 SEO에 도움이 됩니다.');
+        }
+
+        // 코멘트 렌더링
+        if (commentLines.length > 0) {
+          html += `<div style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #bbdefb;">`;
+          html += `<div style="font-size:11px;font-weight:700;color:#1565c0;margin-bottom:8px;">💡 Pikbox 코멘트</div>`;
+          commentLines.forEach(line => {
+            html += `<div style="font-size:11px;line-height:1.7;color:#37474f;margin-bottom:6px;padding-left:8px;border-left:2px solid #90caf9;">${escHtml(line)}</div>`;
+          });
           html += `</div>`;
         }
 
