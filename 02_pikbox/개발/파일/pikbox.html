@@ -7683,16 +7683,37 @@
           if (appendMode && !pageToken) {
             ytState.hasMore = false;
           } else {
-            const result = await searchYouTubeAPI(fullQuery, apiOrder, pageToken, 25);
-            let newItems = result.items;
-            ytState.nextPageToken = result.nextPageToken;
-            if (!result.nextPageToken) ytState.hasMore = false;
+            let newItems = [];
 
-            // 칩별 클라이언트 필터링 — 영상/쇼츠 분리
-            if (chip === 'video') {
-              newItems = newItems.filter(r => !r.isShorts);
-            } else if (chip === 'shorts') {
-              newItems = newItems.filter(r => r.isShorts);
+            if (chip === 'video' && !appendMode) {
+              // 영상 칩: medium(4~20분) + long(20분+) 병렬 검색으로 롱폼 확보
+              const [medResult, longResult] = await Promise.all([
+                searchYouTubeAPI(fullQuery, apiOrder, '', 25, 'medium'),
+                searchYouTubeAPI(fullQuery, apiOrder, '', 25, 'long')
+              ]);
+              newItems = [...medResult.items, ...longResult.items];
+              // 페이지네이션은 medium 기준 (더 많은 결과)
+              ytState.nextPageToken = medResult.nextPageToken || longResult.nextPageToken;
+              if (!medResult.nextPageToken && !longResult.nextPageToken) ytState.hasMore = false;
+            } else if (chip === 'shorts' && !appendMode) {
+              // 쇼츠 칩: short(4분 이하) 서버 필터로 정확하게
+              const result = await searchYouTubeAPI(fullQuery, apiOrder, '', 25, 'short');
+              newItems = result.items.filter(r => r.isShorts);
+              ytState.nextPageToken = result.nextPageToken;
+              if (!result.nextPageToken) ytState.hasMore = false;
+            } else {
+              // 전체/더보기: 기존 방식
+              const result = await searchYouTubeAPI(fullQuery, apiOrder, pageToken, 25);
+              newItems = result.items;
+              ytState.nextPageToken = result.nextPageToken;
+              if (!result.nextPageToken) ytState.hasMore = false;
+
+              // 칩별 클라이언트 필터링 — 영상/쇼츠 분리
+              if (chip === 'video') {
+                newItems = newItems.filter(r => !r.isShorts);
+              } else if (chip === 'shorts') {
+                newItems = newItems.filter(r => r.isShorts);
+              }
             }
 
             // 중복 제거 — sourceUrl 기준
@@ -7703,7 +7724,7 @@
               return true;
             });
 
-            if (newItems.length === 0 && !result.nextPageToken) ytState.hasMore = false;
+            if (newItems.length === 0 && !ytState.nextPageToken) ytState.hasMore = false;
             ytState.results.push(...newItems);
 
             // YouTube API는 서버 정렬이 정확하므로 추가 정렬 없이 렌더링
