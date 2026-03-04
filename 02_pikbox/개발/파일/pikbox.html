@@ -6570,12 +6570,24 @@
     // 검색 결과 이미지 로드 실패 처리 — 카드 숨김으로 깔끔하게 처리
     function handleResultImgError(imgEl) {
       const retryCount = parseInt(imgEl.dataset.retryCount || '0');
+
       if (retryCount === 0) {
-        // 스켈레톤 제거 + 이미지 숨김 처리
+        // 1차: 스켈레톤 제거 + 원본 URL 기록
         imgEl.dataset.retryCount = '1';
         imgEl.parentElement.classList.add('loaded');
+        if (!imgEl.dataset.origSrc) imgEl.dataset.origSrc = imgEl.src;
       }
-      // 카드 숨김 처리 (빈 공간 없이 제거)
+
+      // 프록시 재시도 (IMG_PROXIES 배열 사용)
+      const proxyIdx = retryCount - 1;
+      if (proxyIdx >= 0 && proxyIdx < IMG_PROXIES.length) {
+        const origUrl = imgEl.dataset.origSrc || imgEl.src;
+        imgEl.dataset.retryCount = String(retryCount + 1);
+        imgEl.src = IMG_PROXIES[proxyIdx](origUrl);
+        return;
+      }
+
+      // 모든 프록시 실패: 카드 숨김 (검색 결과는 대안이 없으므로 제거)
       const card = imgEl.closest('.result-card');
       if (card) card.style.display = 'none';
     }
