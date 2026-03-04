@@ -11,6 +11,18 @@ window.ARCHIVE_REGISTRY = {
   // 카테고리 목록: 각 조사 주제를 분류하는 그룹
   categories: [
     {
+      // 카테고리 고유 식별자 — AI 최신 현황 위클리 (신규)
+      id: "cat_006",
+      // 카테고리 이름
+      name: "AI 최신 현황 위클리",
+      // 카테고리 설명
+      description: "Claude·ChatGPT·Gemini·Nano Banana·GenSpark·Cursor·Windsurf·Devin·Replit 등 주요 AI 서비스·플랫폼의 최신 모델, 기능 업데이트, 가격 변동, 업계 반응 종합 위클리 브리핑",
+      // 카테고리 생성일
+      createdAt: "2026-03-04",
+      // 보고서 발행 주기 — weekly(주간) 브리핑
+      frequency: "weekly"
+    },
+    {
       // 카테고리 고유 식별자 — 디지털 광고·마케팅 위클리 (신규)
       id: "cat_005",
       // 카테고리 이름
