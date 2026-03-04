@@ -9312,6 +9312,24 @@
       });
 
       drState.initialized = true;
+
+      // 키보드 좌우 화살표로 카드뉴스 페이지 이동
+      // — 텍스트 입력 중이면 무시 (채팅 입력창 등)
+      document.addEventListener('keydown', (e) => {
+        // 입력창에 포커스가 있으면 페이지 이동 무시 (채팅, 검색 등)
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        // 디자인 리뷰 탭이 활성화된 상태일 때만 동작
+        const drView = document.getElementById('designReviewView');
+        if (!drView || drView.style.display === 'none') return;
+
+        // 다중 페이지 카드뉴스일 때만 화살표 키 작동
+        if ((drState.viewerTotalPages || 1) <= 1) return;
+
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); drPrevPage(); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); drNextPage(); }
+      });
     }
 
     /* ─── 디자인 목록 렌더링 — 필터 + 검색 적용 ─── */
