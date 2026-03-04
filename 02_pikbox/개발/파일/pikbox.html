@@ -3435,6 +3435,24 @@
   </div><!-- /#youtubeView -->
 
   <!-- ══════════════════════════════════════════
+       YouTube 인라인 플레이어 모달 — 영상 클릭 시 표시
+       좌: iframe 플레이어 / 우: 인사이트 패널
+  ══════════════════════════════════════════ -->
+  <div class="yt-player-modal" id="ytPlayerModal" style="display:none;" onclick="if(event.target===this)ytClosePlayer()">
+    <div class="yt-player-content">
+      <button class="yt-player-close" onclick="ytClosePlayer()">✕</button>
+      <!-- 좌측: YouTube iframe 플레이어 -->
+      <div class="yt-player-left">
+        <iframe id="ytPlayerIframe" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      </div>
+      <!-- 우측: 영상 인사이트 패널 -->
+      <div class="yt-player-right" id="ytPlayerInsight">
+        <!-- JS에서 동적으로 채움 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
        우클릭 컨텍스트 메뉴 — 카테고리 관리
   ══════════════════════════════════════════ -->
   <div class="ctx-menu" id="ctxMenu">
