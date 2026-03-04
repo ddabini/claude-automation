@@ -6025,6 +6025,45 @@
     }
 
     // ─── Serper.dev — 이미지 검색 (핵심 엔진: Instagram/Meta/Pinterest) ───
+    // ─── Pinterest 네이티브 검색 — Cloud Function 경유 ───
+    // Firebase Cloud Function(Puppeteer)으로 Pinterest를 직접 검색하여 네이티브 품질의 결과를 가져옴
+    // Serper(Google 이미지 검색) 대비 Pinterest 자체 알고리즘의 고퀄 결과 제공
+    // 실패 시 자동으로 Serper 폴백
+    async function searchPinterestNative(query, limit = 25) {
+      if (!config.pinterestFnUrl) return null; // Cloud Function 미설정 시 스킵
+
+      try {
+        const url = `${config.pinterestFnUrl}?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(45000) }); // 45초 타임아웃
+
+        if (!res.ok) {
+          console.warn('Pinterest Cloud Function 에러:', res.status);
+          return null; // Serper 폴백으로 넘어감
+        }
+
+        const data = await res.json();
+        if (!data.pins || data.pins.length === 0) return null;
+
+        // Cloud Function 결과를 Pikbox 내부 형식으로 변환
+        return data.pins.map(pin => ({
+          title: pin.title || '',
+          imageUrl: pin.imageUrl || '',
+          normalizedUrl: normalizeImageUrl(pin.imageUrl || ''),
+          thumbUrl: pin.thumbUrl || pin.imageUrl || '',
+          sourceUrl: pin.pinUrl || '',
+          platform: 'pinterest',
+          width: 736,  // Pinterest 기본 해상도
+          height: 0,   // 높이는 미확정 (Masonry 레이아웃)
+          color: '#E60023', // Pinterest 브랜드 컬러
+          source: pin.cached ? 'pinterest_native_cached' : 'pinterest_native'
+        }));
+      } catch (err) {
+        // 타임아웃, 네트워크 에러 등 — Serper 폴백으로 넘어감
+        console.warn('Pinterest 네이티브 검색 실패, Serper 폴백:', err.message);
+        return null;
+      }
+    }
+
     // Google 이미지 검색 API로 SNS 플랫폼별 광고 소재를 수집
     // tbs 파라미터: 최신 게시물 우선 (1년 이내)
     // opts.gl: 'us' 전달 시 글로벌(미국) 구글에서 검색 (해외 고퀄 결과 수집용)
