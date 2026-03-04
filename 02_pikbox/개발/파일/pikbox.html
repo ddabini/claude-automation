@@ -9886,7 +9886,11 @@
     }
 
     /* ─── 페이지 탭 선택 ─── */
-    function drSelectPageTab(page) {
+    /**
+     * page: 0 = 전체, 1이상 = 해당 장
+     * fromViewer: true면 뷰어에서 호출된 것 — 뷰어로 역방향 이동 안 함 (무한 루프 방지)
+     */
+    function drSelectPageTab(page, fromViewer) {
       drState.currentPage = page;
 
       // 탭 활성화 표시 업데이트
@@ -9902,6 +9906,15 @@
 
       // 필터링된 메시지 다시 렌더링
       drRenderFilteredMessages(true);
+
+      // 채팅 탭에서 직접 클릭한 경우 → 뷰어도 해당 장으로 이동 (단, 전체 탭은 이동 안 함)
+      // fromViewer가 true이면 이미 뷰어에서 왔으므로 역방향 호출 안 함 (무한 루프 방지)
+      if (!fromViewer && page > 0 && (drState.viewerTotalPages || 1) > 1) {
+        // 뷰어 페이지를 채팅 탭과 동기화 (채팅 → 뷰어 방향)
+        drState.viewerPage = page;
+        drApplyZoom();
+        drUpdatePageNav();
+      }
     }
 
     /* ─── 안 읽은 알림 — localStorage로 마지막 읽은 시간 저장 ─── */
