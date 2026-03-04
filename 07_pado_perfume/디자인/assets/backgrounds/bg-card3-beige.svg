@@ -1,0 +1,78 @@
+<!--
+  PADO (파도) — 3장 배경: 세이지 베이지 + 라인업 용
+  용도: 제품 라인업 + CTA 카드 배경 (1080×1350px)
+  톤: 흰 모래와 바닷바람이 만나는 공간, 절제된 프리미엄 여백
+  특징: 세이지 베이지 기반, 매우 미묘한 수직 패턴으로 제품 진열 분위기
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350" width="1080" height="1350">
+  <defs>
+    <!--
+      세이지 베이지 그라디언트: 상단 크리스탈 화이트 → 하단 세이지 베이지
+      자연스럽게 따뜻해지는 전환
+    -->
+    <linearGradient id="sageBeige" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F7F5F2;stop-opacity:1"/>
+      <stop offset="35%" style="stop-color:#EDE9E1;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#C9B99A;stop-opacity:1"/>
+    </linearGradient>
+
+    <!-- 자연광: 중앙 상단에서 퍼지는 따뜻한 빛 -->
+    <radialGradient id="warmLight" cx="50%" cy="10%" r="65%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.5"/>
+      <stop offset="100%" style="stop-color:#C9B99A;stop-opacity:0"/>
+    </radialGradient>
+
+    <!--
+      하단 딥 오션 블루 그림자: 브랜드 컬러 연결
+      3장의 하단에 블루 톤을 아주 미묘하게 넣어 1장과 연결감 생성
+    -->
+    <linearGradient id="blueHint" x1="0%" y1="80%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B4965;stop-opacity:0"/>
+      <stop offset="100%" style="stop-color:#1B4965;stop-opacity:0.06"/>
+    </linearGradient>
+
+    <!-- 가는 세로선용 패턴 -->
+    <pattern id="verticalLines" x="0" y="0" width="120" height="1" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="1350" stroke="#C9B99A" stroke-width="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- 메인 배경: 세이지 베이지 그라디언트 -->
+  <rect width="1080" height="1350" fill="url(#sageBeige)"/>
+
+  <!-- 자연광 레이어 -->
+  <rect width="1080" height="1350" fill="url(#warmLight)"/>
+
+  <!--
+    매우 미묘한 수직 선 패턴: 제품 진열대 분위기
+    실제로 보이기보다는 공간의 구조감을 주는 역할
+  -->
+  <line x1="360" y1="0" x2="360" y2="1350" stroke="#C9B99A" stroke-width="0.4" opacity="0.15"/>
+  <line x1="720" y1="0" x2="720" y2="1350" stroke="#C9B99A" stroke-width="0.4" opacity="0.15"/>
+
+  <!--
+    3단 구분선: 라인업 3종 제품 영역 암시
+    세이지 베이지 계열로 눈에 띄지 않게
+  -->
+  <!-- 상단 브랜드 영역 구분선 -->
+  <line x1="120" y1="240" x2="960" y2="240" stroke="#A89070" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- 라인업 영역 내부 구분선 2개 -->
+  <line x1="120" y1="680" x2="960" y2="680" stroke="#A89070" stroke-width="0.5" opacity="0.15"/>
+  <line x1="120" y1="960" x2="960" y2="960" stroke="#A89070" stroke-width="0.5" opacity="0.15"/>
+
+  <!-- CTA 영역 구분선 -->
+  <line x1="120" y1="1150" x2="960" y2="1150" stroke="#1B4965" stroke-width="0.5" opacity="0.12"/>
+
+  <!-- 하단 블루 그림자 (1장과의 컬러 연결) -->
+  <rect x="0" y="900" width="1080" height="450" fill="url(#blueHint)"/>
+
+  <!--
+    파도 물결 흔적: 하단에 매우 미묘한 파도 곡선
+    배경에 스며든 느낌으로 분위기 형성
+  -->
+  <path d="M0 1240 Q270 1228 540 1244 Q810 1260 1080 1240"
+        stroke="#1B4965" stroke-width="1" fill="none" opacity="0.06"/>
+  <path d="M0 1270 Q270 1256 540 1272 Q810 1288 1080 1270"
+        stroke="#1B4965" stroke-width="0.5" fill="none" opacity="0.04"/>
+</svg>

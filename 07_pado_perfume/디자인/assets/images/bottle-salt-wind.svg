@@ -1,0 +1,120 @@
+<!--
+  PADO (파도) — 향수 보틀: SALT WIND (소금 바람)
+  용도: 3장 라인업 카드 + 2장 스토리 카드
+  스타일: 미니멀 실루엣 + 크리스탈 하이라이트
+  형태: 약간 넓고 둥근 어깨의 보틀 (바람의 부드러운 흐름 암시)
+  컬러: 크리스탈 화이트/반투명 실루엣 + 세이지 베이지 캡
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">
+  <defs>
+    <!-- 보틀 메인: 반투명 크리스탈 (소금기 머금은 공기 느낌) -->
+    <linearGradient id="saltBottle" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D8D4CC;stop-opacity:0.9"/>
+      <stop offset="35%" style="stop-color:#F7F5F2;stop-opacity:0.85"/>
+      <stop offset="100%" style="stop-color:#E8E3D8;stop-opacity:0.9"/>
+    </linearGradient>
+
+    <!-- 유리 내면 컬러: 소금 크리스탈 느낌 -->
+    <linearGradient id="saltInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F7F5F2;stop-opacity:0.4"/>
+      <stop offset="60%" style="stop-color:#C9B99A;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#1B4965;stop-opacity:0.08"/>
+    </linearGradient>
+
+    <!-- 유리 반사광 -->
+    <linearGradient id="saltGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.5"/>
+      <stop offset="20%" style="stop-color:#FFFFFF;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0"/>
+    </linearGradient>
+
+    <!-- 캡 컬러: 딥 오션 블루 (보틀과 대비) -->
+    <linearGradient id="saltCap" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#142F4A;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#1B4965;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D2137;stop-opacity:1"/>
+    </linearGradient>
+
+    <!-- 보틀 하단 그림자 -->
+    <radialGradient id="saltShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#2D2D2D;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#2D2D2D;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 보틀 그림자 -->
+  <ellipse cx="100" cy="390" rx="58" ry="8" fill="url(#saltShadow)"/>
+
+  <!--
+    캡: 원통형 + 둥근 상단 (바람의 곡선 암시)
+  -->
+  <!-- 캡 하단부 (넥과 연결부) -->
+  <rect x="68" y="88" width="64" height="14" rx="2" ry="2" fill="#142F4A"/>
+  <!-- 캡 몸체 — 약간 넓고 원통형 -->
+  <rect x="62" y="50" width="76" height="42" rx="4" ry="4" fill="url(#saltCap)"/>
+  <!-- 캡 상단 (반원형) -->
+  <ellipse cx="100" cy="50" rx="38" ry="8" fill="#1B4965"/>
+  <!-- 캡 하이라이트 -->
+  <rect x="65" y="52" width="10" height="38" rx="3" ry="3" fill="#5FA8D3" opacity="0.25"/>
+  <!-- 캡 상단 마감 장식선 -->
+  <line x1="70" y1="68" x2="130" y2="68" stroke="#5FA8D3" stroke-width="0.8" opacity="0.3"/>
+
+  <!--
+    넥: 세련되게 좁아지는 목 부분
+  -->
+  <!-- 넥 상단 (좁음) -->
+  <rect x="82" y="100" width="36" height="10" rx="1" ry="1" fill="#D8D4CC"/>
+  <!-- 넥-바디 연결부 (어깨) -->
+  <path d="M65 108 Q65 124 55 130 L55 375 L145 375 L145 130 Q135 124 135 108 Z"
+        fill="url(#saltBottle)"/>
+
+  <!--
+    보틀 바디: 둥근 어깨 형태 (트래피조이드 + 둥근 상단)
+    SALT WIND — 바람처럼 부드럽게 퍼지는 어깨선
+  -->
+  <!-- 어깨 곡선 처리 -->
+  <rect x="55" y="128" width="90" height="245" rx="3" ry="3" fill="url(#saltBottle)"/>
+
+  <!-- 보틀 내면 컬러 레이어 (반투명 유리 느낌) -->
+  <rect x="55" y="128" width="90" height="245" rx="3" ry="3" fill="url(#saltInner)"/>
+
+  <!-- 유리 반사광 -->
+  <rect x="55" y="128" width="90" height="245" rx="3" ry="3" fill="url(#saltGlass)"/>
+
+  <!--
+    보틀 테두리 (유리 두께 표현)
+    크리스탈 화이트 기반 보틀의 엣지 라인
+  -->
+  <rect x="55" y="128" width="90" height="245" rx="3" ry="3"
+        fill="none" stroke="#C9B99A" stroke-width="0.8" opacity="0.4"/>
+
+  <!--
+    내용물 색상 암시:
+    소금 바람 — 연한 세이지 베이지 (향수 액체색)
+  -->
+  <rect x="60" y="200" width="80" height="165" rx="2" ry="2"
+        fill="#C9B99A" opacity="0.12"/>
+
+  <!--
+    라벨 영역: 유리 위에 붙은 반투명 라벨
+  -->
+  <rect x="68" y="170" width="64" height="80" rx="1" ry="1"
+        fill="#F7F5F2" opacity="0.15"
+        stroke="#C9B99A" stroke-width="0.5" opacity="0.2"/>
+
+  <!--
+    보틀 바닥면
+  -->
+  <rect x="55" y="366" width="90" height="9" rx="2" ry="2"
+        fill="#C9B99A" opacity="0.3"/>
+
+  <!--
+    우측 엣지 반사선
+  -->
+  <line x1="142" y1="130" x2="142" y2="370" stroke="#FFFFFF" stroke-width="1.5" opacity="0.3"/>
+
+  <!--
+    좌측 엣지 미묘한 그림자
+  -->
+  <line x1="58" y1="130" x2="58" y2="370" stroke="#A89070" stroke-width="1" opacity="0.15"/>
+</svg>

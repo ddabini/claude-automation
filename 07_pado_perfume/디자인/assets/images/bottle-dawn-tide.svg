@@ -1,0 +1,100 @@
+<!--
+  PADO (파도) — 향수 보틀: DAWN TIDE (새벽 파도)
+  용도: 3장 라인업 카드 + 2장 스토리 카드
+  스타일: 미니멀 실루엣 + 크리스탈 하이라이트
+  형태: 높고 슬림한 직사각형 보틀 (새벽의 고요함 암시)
+  컬러: 딥 오션 블루 실루엣 + 터쿼이즈 하이라이트
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">
+  <defs>
+    <!-- 보틀 메인 컬러: 딥 오션 블루 → 미드나이트 네이비 -->
+    <linearGradient id="dawnBottle" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0D2137;stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#1B4965;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#142F4A;stop-opacity:1"/>
+    </linearGradient>
+
+    <!-- 유리 하이라이트: 보틀 좌측 반사광 -->
+    <linearGradient id="dawnGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5FA8D3;stop-opacity:0.3"/>
+      <stop offset="25%" style="stop-color:#F7F5F2;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#1B4965;stop-opacity:0"/>
+    </linearGradient>
+
+    <!-- 보틀 하단 그림자 -->
+    <radialGradient id="dawnShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#0D2137;stop-opacity:0.25"/>
+      <stop offset="100%" style="stop-color:#0D2137;stop-opacity:0"/>
+    </radialGradient>
+
+    <!-- 캡 메인: 세이지 베이지 (보틀과 대비) -->
+    <linearGradient id="dawnCap" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#A89070;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#C9B99A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#B8A080;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 보틀 그림자 (바닥에 놓인 느낌) -->
+  <ellipse cx="100" cy="390" rx="55" ry="8" fill="url(#dawnShadow)"/>
+
+  <!--
+    캡(뚜껑): 직사각형 + 둥근 상단
+    DAWN TIDE — 새벽의 직선적 고요함을 표현하는 단순한 직각 캡
+  -->
+  <!-- 캡 몸체 -->
+  <rect x="65" y="48" width="70" height="52" rx="3" ry="3" fill="url(#dawnCap)"/>
+  <!-- 캡 상단 마감 -->
+  <rect x="72" y="44" width="56" height="8" rx="2" ry="2" fill="#C9B99A"/>
+  <!-- 캡 하이라이트 -->
+  <rect x="68" y="50" width="8" height="48" rx="2" ry="2" fill="#F7F5F2" opacity="0.2"/>
+
+  <!--
+    넥(목 부분): 보틀 바디와 캡 연결
+    얇은 목이 슬림함 강조
+  -->
+  <rect x="80" y="96" width="40" height="18" rx="1" ry="1" fill="#142F4A"/>
+  <rect x="78" y="108" width="44" height="8" rx="1" ry="1" fill="#0D2137"/>
+
+  <!--
+    보틀 바디: 슬림한 직사각형 (새벽의 고요한 수직선)
+    약간의 곡면으로 유리 느낌
+  -->
+  <rect x="55" y="114" width="90" height="262" rx="4" ry="4" fill="url(#dawnBottle)"/>
+
+  <!-- 유리 반사광 레이어 -->
+  <rect x="55" y="114" width="90" height="262" rx="4" ry="4" fill="url(#dawnGlass)"/>
+
+  <!--
+    보틀 상단 라벨 영역: 흰색 라벨 암시
+    실제 텍스트는 HTML에서 별도 레이어로 처리
+  -->
+  <rect x="68" y="160" width="64" height="90" rx="1" ry="1"
+        fill="#F7F5F2" opacity="0.08"/>
+
+  <!--
+    내용물 컬러 암시: 보틀 안쪽 향수 색상
+    새벽 파도 — 터쿼이즈 블루 (매우 연하게)
+  -->
+  <rect x="58" y="200" width="84" height="170" rx="3" ry="3"
+        fill="#5FA8D3" opacity="0.06"/>
+
+  <!--
+    보틀 하단 바닥면: 약간 두껍게 처리
+    고급 유리 보틀의 묵직한 바닥 느낌
+  -->
+  <rect x="55" y="368" width="90" height="8" rx="2" ry="2" fill="#0D2137" opacity="0.5"/>
+
+  <!--
+    유리 하이라이트 — 우측 엣지 반사:
+    보틀 우측 가장자리의 얇은 빛 반사선
+  -->
+  <line x1="140" y1="120" x2="140" y2="366" stroke="#5FA8D3" stroke-width="1.5" opacity="0.2"/>
+
+  <!--
+    보틀 전면 미묘한 텍스처 라인:
+    유리 표면의 압인(embossing) 느낌
+  -->
+  <line x1="88" y1="150" x2="112" y2="150" stroke="#F7F5F2" stroke-width="0.5" opacity="0.15"/>
+  <line x1="88" y1="270" x2="112" y2="270" stroke="#F7F5F2" stroke-width="0.5" opacity="0.12"/>
+</svg>
