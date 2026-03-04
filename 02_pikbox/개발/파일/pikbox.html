@@ -9589,6 +9589,9 @@
     function drOpenLinkModal() {
       document.getElementById('drLinkName').value = '';
       document.getElementById('drLinkUrl').value  = '';
+      // Figma URL 필드도 초기화
+      const figmaField = document.getElementById('drLinkFigmaUrl');
+      if (figmaField) figmaField.value = '';
       document.getElementById('drLinkModal').classList.add('show');
     }
     function drCloseLinkModal() {
