@@ -2477,11 +2477,39 @@
       // 같은 카테고리 보고서 내비게이션 렌더링
       renderReportNav(report);
 
-      // 보고서 HTML 파일 iframe에 로드
+      // 보고서 HTML 파일을 가져와서 페이지에 직접 삽입 (iframe 대신)
       const reportPath = report.folderPath
         ? report.folderPath + report.fileName
         : 'reports/' + report.fileName;
-      document.getElementById('reportIframe').src = reportPath;
+      const embedEl = document.getElementById('reportEmbed');
+      embedEl.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로딩 중...</div>';
+      fetch(reportPath)
+        .then(res => res.text())
+        .then(html => {
+          // 리포트 HTML에서 <style>과 <body> 내용을 추출
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          // 리포트 스타일을 scoped 형태로 삽입 (다른 요소에 영향 안 주게)
+          let styles = '';
+          doc.querySelectorAll('style').forEach(s => {
+            // body, html, * 전역 셀렉터를 .report-embed 하위로 범위 제한
+            let css = s.textContent;
+            css = css.replace(/\bbody\b\s*\{/g, '.report-embed {');
+            css = css.replace(/\bhtml\b\s*\{/g, '.report-embed-html {');
+            styles += '<style>' + css + '</style>';
+          });
+
+          // 리포트 본문(body 안의 내용)을 삽입
+          const bodyContent = doc.body ? doc.body.innerHTML : html;
+          embedEl.innerHTML = styles + bodyContent;
+
+          // 페이지 상단으로 스크롤 (리포트 시작점)
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        })
+        .catch(() => {
+          embedEl.innerHTML = '<div style="padding:40px;text-align:center;color:#e53e3e;">보고서를 불러올 수 없습니다.</div>';
+        });
       showView('viewReport');
     }
 
