@@ -41,7 +41,6 @@
 | Pikbox | `02_pikbox/` | 단일 HTML + Firebase | https://pikbox-app.web.app |
 | DID 광고 매니저 | `03_did-ad-manager/` | 단일 HTML + Firebase | https://did-ad-manager.web.app |
 | DeepDig | `04_deepdig/` | 단일 HTML + registry.js | https://deepdig-app.web.app |
-| PADO 퍼퓸 | `07_pado_perfume/` | 테스트 프로젝트 | 미배포 |
 
 ---
 
