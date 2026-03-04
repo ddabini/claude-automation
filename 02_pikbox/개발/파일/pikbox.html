@@ -4146,6 +4146,13 @@
       loadCategories();
       // Firebase 연결 상태 모니터링 시작
       monitorFirebaseConnection();
+      // 마지막으로 보던 탭 복원 (새로고침 시 같은 탭 유지)
+      try {
+        const savedView = localStorage.getItem('pikbox_activeView');
+        if (savedView && ['reference','adInsight','youtube','designReview'].includes(savedView)) {
+          switchView(savedView);
+        }
+      } catch(e) {}
     });
 
     // 아무 곳 클릭 → 우클릭 메뉴 닫기
