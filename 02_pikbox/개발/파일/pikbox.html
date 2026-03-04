@@ -10,6 +10,8 @@
   <!-- Firebase SDK (compat v10.8.0) — 앱 데이터를 클라우드에 영구 저장하기 위한 라이브러리 -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <!-- Firebase Storage SDK — 디자인 리뷰 탭의 HTML 파일 업로드를 위한 라이브러리 -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <!-- Chart.js v4.4.0 — 광고 인사이트 탭의 차트 시각화 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
@@ -342,22 +344,25 @@
       overflow-y: auto;
       padding: 20px;
     }
+    /* 메이슨리 그리드 — Pinterest 스타일, 카드들이 계단식으로 배치됨 */
     .image-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
+      position: relative;  /* 자식 카드들이 absolute로 배치될 기준점 */
+      width: 100%;
     }
 
-    /* 이미지 카드 하나 */
+    /* 이미지 카드 하나 — 메이슨리에서는 absolute로 위치 직접 지정 */
     .img-card {
+      position: absolute;  /* 메이슨리 레이아웃을 위해 절대 위치 사용 */
       background: var(--surface);
       border-radius: var(--radius);
       border: 1px solid var(--border);
       overflow: hidden;
-      position: relative;
-      transition: all 0.15s;
+      transition: opacity 0.3s, box-shadow 0.15s, border-color 0.15s;
       cursor: pointer;
+      opacity: 0;          /* 처음엔 투명, 위치 계산 후 placed 클래스로 표시 */
     }
+    /* 위치 계산 완료된 카드만 화면에 표시 */
+    .img-card.placed { opacity: 1; }
     .img-card:hover {
       border-color: var(--border-hover);
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -416,21 +421,31 @@
     .platform-badge.adfolio { background: rgba(0,102,204,0.85); color: #fff; }
     .platform-badge.web { background: rgba(0,0,0,0.6); color: #fff; }
 
-    /* 카드 하단 정보 */
+    /* 카드 하단 정보 — 메이슨리에서 이미지 위에 그라디언트 오버레이로 표시 */
     .img-info {
-      padding: 10px 12px;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 28px 10px 10px;   /* 상단 패딩을 크게 줘서 그라디언트 공간 확보 */
+      background: linear-gradient(transparent, rgba(0,0,0,0.65));
+      opacity: 0;                 /* 평소엔 숨김, 호버 시 표시 */
+      transition: opacity 0.2s;
+      pointer-events: none;       /* 마우스 이벤트는 이미지로 통과 */
+      border-radius: 0 0 var(--radius) var(--radius);
     }
+    .img-card:hover .img-info { opacity: 1; }
     .img-title {
       font-size: 12px;
       font-weight: 500;
-      white-space: nowrap;
+      color: #fff;               /* 어두운 그라디언트 위 흰 글씨 */
       overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;     /* 최대 2줄까지 표시 */
+      -webkit-box-orient: vertical;
+      margin-bottom: 3px;
     }
     .img-keywords {
       font-size: 11px;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.7);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -438,7 +453,7 @@
     /* 호버 시 액션 오버레이 */
     .img-actions {
       position: absolute;
-      bottom: 50px;
+      bottom: 44px;
       left: 0; right: 0;
       padding: 8px;
       display: flex;
@@ -766,6 +781,554 @@
       margin-bottom: 16px;
     }
 
+    /* ══════════════════════════════════════════════════════
+       디자인 리뷰 탭 CSS — dr- 접두사로 기존 스타일과 구분
+       3단 레이아웃: 좌측 사이드바 + 중앙 뷰어 + 우측 채팅
+    ══════════════════════════════════════════════════════ */
+
+    /* 전체 뷰 컨테이너 — 헤더 아래 전체 화면을 꽉 채움 */
+    #designReviewView {
+      display: flex;
+      height: calc(100vh - var(--header-h));
+      margin-top: var(--header-h);
+      overflow: hidden;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+    }
+
+    /* ── 좌측 사이드바 — 디자인 목록 ── */
+    .dr-sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .dr-sidebar-header {
+      padding: 14px 14px 0;
+      flex-shrink: 0;
+    }
+    .dr-sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    /* 상태 필터 탭 — 전체/검토중/수정요청/승인/완료 */
+    .dr-filter-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .dr-filter-tab {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .dr-filter-tab:hover { background: #f3f4f6; }
+    .dr-filter-tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    /* 디자인 목록 검색 입력 */
+    .dr-search-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      background: #f9fafb;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .dr-search-input:focus { border-color: var(--primary); background: #fff; }
+    /* 디자인 목록 스크롤 영역 */
+    .dr-design-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    /* 디자인 카드 한 줄 */
+    .dr-design-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .dr-design-card:hover { background: #f9fafb; }
+    /* 활성 카드 — 현재 선택된 디자인 강조 */
+    .dr-design-card.active {
+      background: var(--primary-bg);
+      border-left: 3px solid var(--primary);
+      padding-left: 11px;
+    }
+    .dr-card-body { flex: 1; min-width: 0; }
+    .dr-card-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dr-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+    .dr-card-date { font-size: 11px; color: var(--text-muted); }
+    /* 상태 뱃지 — 색상으로 진행 상황 표시 */
+    .dr-badge {
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .dr-badge-review   { background: #fef3c7; color: #92400e; }   /* 검토중: 노란색 */
+    .dr-badge-request  { background: #fee2e2; color: #991b1b; }   /* 수정요청: 빨간색 */
+    .dr-badge-approved { background: #d1fae5; color: #065f46; }   /* 승인: 초록색 */
+    .dr-badge-done     { background: var(--primary-light); color: var(--primary); } /* 완료: 보라색 */
+    /* 빈 상태 안내 문구 */
+    .dr-empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ── 중앙 뷰어 ── */
+    .dr-viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+      background: #f0f0f0;
+    }
+    /* 뷰어 상단 툴바 — 제목, 상태, 버튼 */
+    .dr-viewer-toolbar {
+      height: 50px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .dr-viewer-title {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .dr-viewer-title:hover { color: var(--primary); }
+    /* 인라인 제목 편집 입력창 */
+    .dr-viewer-title-input {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      padding: 2px 8px;
+      outline: none;
+      font-family: inherit;
+    }
+    /* 사이즈 정보 표시 (예: 1080 × 1350px · 6장) */
+    .dr-viewer-size {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    /* 상태 선택 드롭다운 */
+    .dr-status-select {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    /* 뷰어 내의 공통 버튼 */
+    .dr-btn {
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      font-family: inherit;
+    }
+    .dr-btn:hover { background: #f3f4f6; border-color: var(--border-hover); }
+    .dr-btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .dr-btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    /* 이미지 배경 — 점 패턴으로 캔버스처럼 보임 */
+    .dr-viewer-frame {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+      padding: 48px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background-image: radial-gradient(circle, #c8c8c8 1px, transparent 1px);
+      background-size: 20px 20px;
+      background-color: #e8eaed;
+    }
+    /* iframe 흰 배경 래퍼 */
+    .dr-iframe-wrap {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      transform-origin: top center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    /* 실제 디자인 iframe */
+    .dr-viewer-iframe {
+      border: none;
+      width: 1080px;
+      display: block;
+    }
+    /* 줌 컨트롤 바 */
+    .dr-zoom-bar {
+      height: 40px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .dr-zoom-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .dr-zoom-btn:hover { background: #f3f4f6; }
+    .dr-zoom-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      min-width: 42px;
+      text-align: center;
+    }
+    /* 뷰어 빈 상태 — 디자인을 아직 선택 안 했을 때 */
+    .dr-viewer-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .dr-viewer-empty h3 { font-size: 16px; color: var(--text-secondary); font-weight: 600; }
+    .dr-viewer-empty p  { font-size: 13px; text-align: center; line-height: 1.6; }
+    .dr-viewer-empty-btns { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* ── 우측 채팅 패널 ── */
+    .dr-chat-panel {
+      width: 320px;
+      min-width: 320px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .dr-chat-panel.hidden { display: none; }
+    .dr-chat-header {
+      height: 50px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+    .dr-chat-header-left { display: flex; align-items: center; gap: 8px; }
+    /* 온라인 상태 표시 초록 점 */
+    .dr-online-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+    .dr-chat-title-text { font-size: 13px; font-weight: 600; }
+    .dr-chat-close {
+      border: none; background: none;
+      font-size: 16px; color: var(--text-secondary);
+      cursor: pointer; padding: 4px;
+      border-radius: 4px;
+    }
+    .dr-chat-close:hover { background: #f3f4f6; }
+    /* 디자인 미선택 시 안내 문구 */
+    .dr-chat-no-design {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    /* 채팅 메시지 스크롤 영역 */
+    .dr-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    /* 메시지 하나 */
+    .dr-msg { margin-bottom: 12px; }
+    .dr-msg-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+    /* 닉네임 아바타 — 이니셜 표시 원형 */
+    .dr-msg-avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--primary); color: #fff;
+      font-size: 10px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dr-msg-name { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .dr-msg-time { font-size: 10px; color: var(--text-muted); }
+    /* 답글 원문 인용 박스 */
+    .dr-msg-reply-quote {
+      background: #f3f4f6;
+      border-left: 3px solid var(--primary);
+      border-radius: 0 6px 6px 0;
+      padding: 4px 8px;
+      font-size: 11px; color: var(--text-secondary);
+      margin-bottom: 4px;
+      cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dr-msg-reply-quote:hover { background: #e5e7eb; }
+    /* 메시지 본문 */
+    .dr-msg-text {
+      font-size: 13px; line-height: 1.5;
+      word-break: break-all;
+      background: #f9fafb;
+      border-radius: 0 8px 8px 8px;
+      padding: 8px 10px;
+    }
+    /* 메시지 액션 버튼 (수정/삭제/답글/확인) */
+    .dr-msg-actions {
+      display: flex; gap: 4px; margin-top: 4px;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .dr-msg:hover .dr-msg-actions { opacity: 1; }
+    .dr-msg-action-btn {
+      padding: 2px 6px; border: none; background: none;
+      font-size: 11px; color: var(--text-muted);
+      cursor: pointer; border-radius: 4px; font-family: inherit;
+    }
+    .dr-msg-action-btn:hover { background: #f3f4f6; color: var(--text); }
+    /* 확인 반응 — 누가 읽었는지 표시 */
+    .dr-confirm-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+    .dr-confirm-chip {
+      font-size: 10px; padding: 1px 5px;
+      border-radius: 8px; background: #e0f2fe; color: #0369a1;
+    }
+    /* 답글 모드 표시 바 */
+    .dr-reply-bar {
+      background: #f0f0ff; border-top: 1px solid var(--primary-light);
+      padding: 6px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--primary); flex-shrink: 0;
+    }
+    .dr-reply-bar-cancel {
+      border: none; background: none;
+      font-size: 14px; cursor: pointer; color: var(--primary);
+      padding: 2px 6px; font-family: inherit;
+    }
+
+    /* ── 닉네임 인라인 드롭다운 ── */
+    .dr-nick-selector {
+      border-top: 1px solid var(--border);
+      padding: 8px 12px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .dr-nick-current {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; padding: 4px 6px;
+      border-radius: 6px; transition: background 0.1s;
+    }
+    .dr-nick-current:hover { background: #f3f4f6; }
+    .dr-nick-current-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dr-nick-current-label { flex: 1; font-size: 12px; font-weight: 500; color: var(--text); }
+    .dr-nick-arrow { font-size: 10px; color: var(--text-muted); }
+    /* 닉네임 드롭다운 패널 */
+    .dr-nick-dropdown {
+      position: absolute; bottom: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      z-index: 50; overflow: hidden;
+    }
+    .dr-nick-list { padding: 6px; max-height: 180px; overflow-y: auto; }
+    .dr-nick-chip {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; border-radius: 6px;
+      cursor: pointer; font-size: 12px; transition: background 0.1s;
+    }
+    .dr-nick-chip:hover { background: #f3f4f6; }
+    .dr-nick-chip.selected { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .dr-nick-del-btn {
+      border: none; background: none; color: var(--danger);
+      cursor: pointer; font-size: 13px; padding: 2px 4px;
+      display: none; border-radius: 4px;
+    }
+    .dr-nick-del-btn:hover { background: #fee2e2; }
+    .dr-nick-admin-mode .dr-nick-del-btn { display: block; }
+    .dr-nick-new-row {
+      display: flex; gap: 4px; padding: 6px;
+      border-top: 1px solid var(--border);
+    }
+    .dr-nick-new-row input {
+      flex: 1; padding: 5px 8px;
+      border: 1px solid var(--border); border-radius: 4px;
+      font-size: 12px; font-family: inherit; outline: none;
+    }
+    .dr-nick-new-row input:focus { border-color: var(--primary); }
+    .dr-nick-new-row button {
+      padding: 4px 8px; border-radius: 4px;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 11px; cursor: pointer; font-family: inherit;
+    }
+    .dr-nick-new-row button:hover { background: #f3f4f6; }
+    /* 입력창 및 전송 버튼 */
+    .dr-chat-input-area {
+      border-top: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex; gap: 6px; flex-shrink: 0;
+    }
+    .dr-chat-input {
+      flex: 1; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; outline: none;
+    }
+    .dr-chat-input:focus { border-color: var(--primary); }
+    .dr-chat-send {
+      padding: 8px 12px; border-radius: var(--radius-sm);
+      border: none; background: var(--primary); color: #fff;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: background 0.15s; flex-shrink: 0;
+    }
+    .dr-chat-send:hover { background: var(--primary-hover); }
+
+    /* ── 업로드 / 링크 등록 모달 ── */
+    .dr-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      display: none; align-items: center; justify-content: center;
+    }
+    .dr-modal-overlay.show { display: flex; }
+    .dr-modal {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 24px; width: 420px; max-width: 90vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .dr-modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .dr-modal-field { margin-bottom: 12px; }
+    .dr-modal-field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 4px;
+    }
+    .dr-modal-field input,
+    .dr-modal-field select {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; outline: none;
+      box-sizing: border-box;
+    }
+    .dr-modal-field input:focus,
+    .dr-modal-field select:focus { border-color: var(--primary); }
+    .dr-modal-file-area {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 24px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .dr-modal-file-area:hover,
+    .dr-modal-file-area.dragover { border-color: var(--primary); color: var(--primary); }
+    .dr-modal-file-name { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .dr-modal-footer {
+      display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+    }
+    /* 드래그 선택 박스 — 마우스 드래그로 여러 카드를 한 번에 선택 */
+    .drag-select-box {
+      position: fixed;
+      border: 2px solid var(--primary);
+      background: rgba(99,102,241,0.08);
+      z-index: 9999; pointer-events: none;
+      display: none; border-radius: 4px;
+    }
+    /* 모바일 반응형 — 작은 화면에서 사이드바 숨김 */
+    @media (max-width: 768px) {
+      .dr-sidebar { display: none; }
+      .dr-chat-panel { width: 260px; min-width: 260px; }
+    }
+
     /* ── 라이트박스 — 이미지 크게 보기 ── */
     .lightbox-overlay {
       position: fixed;
@@ -779,28 +1342,30 @@
     }
     .lightbox-overlay.show { display: flex; }
     /* 라이트박스 이미지 — 화면에 맞게 크게 표시 */
+    /* 라이트박스 이미지 — 우측 340px 상세 패널 공간 확보 */
     .lightbox-img {
-      max-width: 92vw;
+      max-width: calc(100vw - 380px); /* 상세 패널 340px + 여백 40px 제외 */
       max-height: 88vh;
       object-fit: contain;
       border-radius: 6px;
       cursor: default;
       animation: lightboxIn 0.2s ease;
       user-select: none;
+      margin-right: 340px; /* 상세 패널 너비만큼 왼쪽으로 밀림 */
     }
     @keyframes lightboxIn { from { opacity: 0; transform: scale(0.95); } }
     /* 닫기 버튼 */
     .lightbox-close {
       position: absolute;
       top: 16px;
-      right: 20px;
+      right: 360px; /* 상세 패널 오른쪽에 표시 */
       background: none;
       border: none;
       color: rgba(255,255,255,0.8);
       font-size: 28px;
       cursor: pointer;
       padding: 4px 8px;
-      z-index: 2;
+      z-index: 10002;
       transition: color 0.15s;
     }
     .lightbox-close:hover { color: #fff; }
@@ -821,25 +1386,25 @@
       align-items: center;
       justify-content: center;
       transition: all 0.15s;
-      z-index: 2;
+      z-index: 10002;
     }
     .lightbox-nav:hover { background: rgba(255,255,255,0.25); color: #fff; }
     .lightbox-prev { left: 16px; }
-    .lightbox-next { right: 16px; }
+    .lightbox-next { right: 360px; } /* 상세 패널 왼쪽 바깥에 표시 */
     /* 하단 이미지 정보 */
     .lightbox-info {
       position: absolute;
       bottom: 16px;
-      left: 50%;
+      left: calc(50% - 170px); /* 상세 패널 고려해서 약간 왼쪽 */
       transform: translateX(-50%);
       color: rgba(255,255,255,0.7);
       font-size: 13px;
       text-align: center;
-      max-width: 80vw;
+      max-width: 60vw;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      z-index: 2;
+      z-index: 10002;
     }
     .lightbox-counter {
       position: absolute;
@@ -847,8 +1412,92 @@
       left: 20px;
       color: rgba(255,255,255,0.6);
       font-size: 13px;
-      z-index: 2;
+      z-index: 10002;
     }
+    /* ── 라이트박스 상세 정보 패널 (우측 고정) ── */
+    .lb-detail-panel {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 340px;
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      z-index: 10001;
+      border-radius: 0;
+    }
+    .lb-detail-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .lb-detail-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .lb-detail-close {
+      border: none;
+      background: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .lb-detail-close:hover { background: #f3f4f6; }
+    .lb-detail-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .lb-detail-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    /* 상세 필드 — 레이블 + 입력창 한 쌍 */
+    .lb-field {
+      margin-bottom: 16px;
+    }
+    .lb-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 5px;
+    }
+    .lb-field input,
+    .lb-field textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Pretendard', sans-serif;
+      color: #111827;
+      outline: none;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .lb-field input:focus,
+    .lb-field textarea:focus { border-color: var(--primary); }
+    .lb-field textarea { min-height: 80px; resize: vertical; }
+    .lb-field .lb-meta {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 3px;
+    }
+    /* 라이트박스 열린 동안 스크롤 방지 — body에 overflow:hidden 적용 (JS에서 처리) */
 
     /* ── 토스트 알림 ── */
     .toast-container {
@@ -1183,15 +1832,9 @@
       }
       .sidebar.open { left: 0; }
       .menu-btn { display: block; }
-      .image-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      }
+      /* 모바일: 메이슨리 컬럼 최소 너비 줄임 (JS에서 MASONRY_MIN_COL_W로 제어) */
     }
     @media (max-width: 480px) {
-      .image-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-      }
       .action-bar { padding: 10px 12px; }
     }
 
@@ -1711,6 +2354,258 @@
       .ai-ad-grid { grid-template-columns: 1fr; }
       .view-switcher { display: none; } /* 모바일에서 스위처 숨김 → 아래 별도 표시 */
     }
+
+    /* ══════════════════════════════════════════════════════════
+       YouTube 탭 — yt- 접두사로 기존 스타일과 충돌 방지
+       영상 레퍼런스 전용 검색 공간
+    ══════════════════════════════════════════════════════════ */
+
+    /* YouTube 탭 전체 레이아웃 — 전체 높이 스크롤 */
+    #youtubeView {
+      height: calc(100vh - var(--header-h));
+      margin-top: var(--header-h);
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    /* 상단 검색 헤더 — 스크롤 시 상단 고정 */
+    .yt-header {
+      position: sticky;
+      top: -20px;
+      z-index: 5;
+      background: var(--bg);
+      padding: 20px 0 0;
+      margin: -20px 0 16px;
+    }
+
+    /* 검색 바 — 입력창 + 검색 버튼 가로 배치 */
+    .yt-search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .yt-search-input {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .yt-search-input:focus { border-color: var(--primary); }
+    .yt-search-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* 카테고리 칩 바 — 횡스크롤 (레퍼런스 큐레이션 칩과 동일 패턴) */
+    .yt-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 2px 0 10px;
+    }
+    .yt-chips::-webkit-scrollbar { display: none; }
+    .yt-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .yt-chip:hover {
+      border-color: #ff0000;
+      color: #ff0000;
+      background: rgba(255,0,0,0.05);
+    }
+    .yt-chip.active {
+      background: #ff0000;
+      color: #fff;
+      border-color: #ff0000;
+    }
+
+    /* 영상 그리드 — 균일 16:9 카드 (CSS Grid) */
+    .yt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    /* 영상 카드 — 둥근 모서리 + 호버 효과 */
+    .yt-card {
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .yt-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    /* 썸네일 래퍼 — 16:9 고정 비율 */
+    .yt-thumb {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: #0f0f0f;
+    }
+    .yt-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* 재생 버튼 오버레이 — 중앙, 호버 시 확대 */
+    .yt-play-btn {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px; height: 52px;
+      background: rgba(255,0,0,0.85);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.15s, opacity 0.15s;
+      opacity: 0.9;
+    }
+    .yt-play-btn::after {
+      content: '';
+      width: 0; height: 0;
+      border-left: 16px solid #fff;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      margin-left: 3px;
+    }
+    .yt-card:hover .yt-play-btn {
+      transform: translate(-50%, -50%) scale(1.1);
+      opacity: 1;
+    }
+
+    /* 영상 길이 뱃지 — 우하단 */
+    .yt-duration {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      z-index: 2;
+      font-weight: 500;
+    }
+
+    /* 영상 정보 — 타이틀 + 채널 */
+    .yt-info { padding: 10px 12px 12px; }
+    .yt-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .yt-channel {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 로딩 스피너 */
+    .yt-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .yt-spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid var(--border);
+      border-top-color: #ff0000;
+      border-radius: 50%;
+      animation: ytSpin 0.8s linear infinite;
+    }
+    @keyframes ytSpin { to { transform: rotate(360deg); } }
+
+    /* 빈 상태 안내 */
+    .yt-empty { text-align: center; padding: 60px 20px; }
+
+    /* 정렬 바 — 결과 개수 + 정렬 버튼 */
+    .yt-sort-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .yt-result-count {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .yt-sort-btns {
+      display: flex;
+      gap: 2px;
+    }
+    .yt-sort-btn {
+      padding: 4px 12px;
+      border: none;
+      background: none;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .yt-sort-btn:hover { background: var(--primary-light); color: var(--primary); }
+    .yt-sort-btn.active { background: var(--primary); color: #fff; }
+
+    /* 조회수 뱃지 — 카드 좌하단 */
+    .yt-views {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 반응형 — 모바일 최적화 */
+    @media (max-width: 640px) {
+      #youtubeView { padding: 12px; }
+      .yt-grid { grid-template-columns: 1fr; gap: 12px; }
+      .yt-search-bar { flex-direction: column; }
+      .yt-search-btn { width: 100%; }
+      .yt-sort-bar { flex-direction: column; gap: 6px; align-items: flex-start; }
+    }
+
   </style>
 </head>
 <body>
@@ -1728,6 +2623,13 @@
         </button>
         <button class="view-tab" id="viewTabAd" onclick="switchView('adInsight')">
           📊 광고 인사이트
+        </button>
+        <button class="view-tab" id="viewTabYoutube" onclick="switchView('youtube')">
+          ▶ YouTube
+        </button>
+        <!-- 디자인 리뷰 탭 버튼 — 팀원과 HTML 디자인을 공유하고 피드백을 주고받는 탭 -->
+        <button class="view-tab" id="viewTabDesign" onclick="switchView('designReview')">
+          ✏ 디자인 리뷰
         </button>
       </div>
     </div>
@@ -1817,6 +2719,215 @@
   </div>
 
   </div><!-- /#referenceView 끝 -->
+
+  <!-- ══════════════════════════════════════════
+       디자인 리뷰 뷰 — 팀원과 HTML 디자인을 공유하고 피드백을 주고받는 공간
+       (처음엔 숨겨져 있고, 탭 클릭 시 표시)
+  ══════════════════════════════════════════ -->
+  <div id="designReviewView" style="display:none;">
+
+    <!-- 좌측 사이드바 — 디자인 목록 -->
+    <aside class="dr-sidebar">
+      <div class="dr-sidebar-header">
+        <div class="dr-sidebar-title">디자인 목록</div>
+        <!-- 상태 필터 탭 -->
+        <div class="dr-filter-tabs">
+          <button class="dr-filter-tab active" onclick="drSetFilter('all', this)">전체</button>
+          <button class="dr-filter-tab" onclick="drSetFilter('review', this)">검토중</button>
+          <button class="dr-filter-tab" onclick="drSetFilter('request', this)">수정요청</button>
+          <button class="dr-filter-tab" onclick="drSetFilter('approved', this)">승인</button>
+          <button class="dr-filter-tab" onclick="drSetFilter('done', this)">완료</button>
+        </div>
+        <!-- 검색 입력창 -->
+        <input class="dr-search-input" id="drSearchInput" placeholder="디자인 검색..."
+               oninput="drRenderDesignList()">
+      </div>
+      <!-- 디자인 카드 목록이 여기에 동적으로 생성됨 -->
+      <div class="dr-design-list" id="drDesignList"></div>
+      <!-- 하단 버튼 — 링크 등록 + 파일 업로드 -->
+      <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;">
+        <button class="dr-btn" onclick="drOpenLinkModal()" style="flex:1;">🔗 링크</button>
+        <button class="dr-btn dr-btn-primary" onclick="drOpenUploadModal()" style="flex:1;">↑ 업로드</button>
+      </div>
+    </aside>
+
+    <!-- 중앙 뷰어 — iframe으로 디자인 파일을 표시 -->
+    <main class="dr-viewer">
+      <!-- 툴바 — 디자인을 선택했을 때만 표시 -->
+      <div class="dr-viewer-toolbar" id="drViewerToolbar" style="display:none;">
+        <span class="dr-viewer-title" id="drViewerTitle" onclick="drStartEditTitle()">-</span>
+        <span class="dr-viewer-size" id="drViewerSize"></span>
+        <select class="dr-status-select" id="drStatusSelect" onchange="drChangeStatus(this.value)">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+        <button class="dr-btn" onclick="drOpenInNewTab()">↗ 새 탭</button>
+        <button class="dr-btn" onclick="drToggleChat()" id="drChatToggleBtn">💬 채팅</button>
+      </div>
+
+      <!-- iframe이 실제 디자인을 보여주는 영역 -->
+      <div class="dr-viewer-frame" id="drViewerFrame" style="display:none;">
+        <div class="dr-iframe-wrap" id="drIframeWrap">
+          <!-- sandbox: 스크립트 실행 허용 (디자인이 JS 쓸 수 있게), 외부 접근 차단 -->
+          <iframe class="dr-viewer-iframe" id="drViewerIframe"
+                  sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+      </div>
+
+      <!-- 줌 컨트롤 바 — 디자인을 크게/작게 볼 수 있는 버튼들 -->
+      <div class="dr-zoom-bar" id="drZoomBar" style="display:none;">
+        <button class="dr-zoom-btn" onclick="drZoom(-10)">−</button>
+        <span class="dr-zoom-label" id="drZoomLabel">70%</span>
+        <button class="dr-zoom-btn" onclick="drZoom(10)">+</button>
+        <button class="dr-zoom-btn" style="width:auto;padding:0 8px;" onclick="drZoomFit()">맞춤</button>
+        <button class="dr-zoom-btn" style="width:auto;padding:0 8px;" onclick="drZoomReset()">100%</button>
+      </div>
+
+      <!-- 빈 상태 — 디자인 미선택 시 안내 화면 -->
+      <div class="dr-viewer-empty" id="drViewerEmpty">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="8" width="40" height="32" rx="4" stroke="#d1d5db" stroke-width="2"/>
+          <path d="M4 16h40" stroke="#d1d5db" stroke-width="2"/>
+          <rect x="10" y="22" width="12" height="10" rx="2" fill="#e5e7eb"/>
+          <rect x="26" y="22" width="12" height="4" rx="2" fill="#e5e7eb"/>
+          <rect x="26" y="30" width="8" height="4" rx="2" fill="#e5e7eb"/>
+        </svg>
+        <h3>디자인 리뷰에 오신 것을 환영합니다</h3>
+        <p>좌측 목록에서 디자인을 선택하거나<br>상단 버튼으로 새 디자인을 등록하세요.</p>
+        <div class="dr-viewer-empty-btns">
+          <button class="dr-btn" onclick="drOpenUploadModal()">↑ 파일 업로드</button>
+          <button class="dr-btn dr-btn-primary" onclick="drOpenLinkModal()">🔗 링크 등록</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 우측 채팅 패널 — 피드백 메시지 주고받기 -->
+    <aside class="dr-chat-panel" id="drChatPanel">
+      <!-- 채팅 헤더 -->
+      <div class="dr-chat-header">
+        <div class="dr-chat-header-left">
+          <div class="dr-online-dot"></div>
+          <span class="dr-chat-title-text" id="drChatTitle">피드백 채팅</span>
+        </div>
+        <button class="dr-chat-close" onclick="drToggleChat()">✕</button>
+      </div>
+
+      <!-- 디자인 미선택 시 안내 -->
+      <div class="dr-chat-no-design" id="drChatNoDesign">
+        디자인을 선택하면<br>피드백 채팅이 시작됩니다.
+      </div>
+
+      <!-- 채팅 메시지 스크롤 영역 — 디자인 선택 후 표시 -->
+      <div class="dr-chat-messages" id="drChatMessages" style="display:none;"></div>
+
+      <!-- 답글 모드 표시 바 — 누군가의 메시지에 답글 달 때 표시 -->
+      <div class="dr-reply-bar" id="drReplyBar" style="display:none;">
+        <span id="drReplyPreview">답글 대상: </span>
+        <button class="dr-reply-bar-cancel" onclick="drCancelReply()">✕</button>
+      </div>
+
+      <!-- 닉네임 선택기 — 채팅 참여 전 닉네임을 고르는 인라인 드롭다운 -->
+      <div class="dr-nick-selector" id="drNickSelector" style="display:none;">
+        <div class="dr-nick-current" onclick="drToggleNickDropdown()">
+          <div class="dr-nick-current-avatar" id="drNicknameAvatar">?</div>
+          <span class="dr-nick-current-label" id="drNicknameLabel">닉네임을 선택하세요</span>
+          <span class="dr-nick-arrow">▾</span>
+        </div>
+        <!-- 닉네임 목록 드롭다운 -->
+        <div class="dr-nick-dropdown" id="drNickDropdown" style="display:none;">
+          <div class="dr-nick-list" id="drNicknameList"></div>
+          <div class="dr-nick-new-row">
+            <input id="drNicknameInput" placeholder="새 닉네임" maxlength="20"
+                   onkeydown="if(event.key==='Enter') drSaveNickname()">
+            <button onclick="drSaveNickname()">추가</button>
+            <button onclick="drToggleNicknameAdmin()" id="drNicknameAdminBtn">관리</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메시지 입력창 + 전송 버튼 -->
+      <div class="dr-chat-input-area" id="drChatInputArea" style="display:none;">
+        <input class="dr-chat-input" id="drChatInput"
+               placeholder="피드백을 입력하세요..." maxlength="500"
+               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();drSendMessage();}">
+        <button class="dr-chat-send" onclick="drSendMessage()">전송</button>
+      </div>
+    </aside>
+
+  </div><!-- /#designReviewView 끝 -->
+
+  <!-- 디자인 업로드 모달 — HTML 파일을 Firebase Storage에 올리는 폼 -->
+  <div class="dr-modal-overlay" id="drUploadModal">
+    <div class="dr-modal">
+      <h3>디자인 업로드</h3>
+      <div class="dr-modal-field">
+        <label>프로젝트명 *</label>
+        <input id="drUploadName" placeholder="예: 바로이집 5월 카드뉴스">
+      </div>
+      <div class="dr-modal-field">
+        <label>초기 상태</label>
+        <select id="drUploadStatus">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+      <div class="dr-modal-field">
+        <label>HTML 파일 선택 *</label>
+        <!-- 드래그앤드롭 또는 클릭으로 파일 선택 -->
+        <div class="dr-modal-file-area" id="drFileArea"
+             onclick="document.getElementById('drFileInput').click()"
+             ondragover="event.preventDefault();this.classList.add('dragover')"
+             ondragleave="this.classList.remove('dragover')"
+             ondrop="event.preventDefault();this.classList.remove('dragover');drHandleFileDrop(event.dataTransfer.files)">
+          <div>📄 HTML 파일을 드래그하거나 클릭하여 선택</div>
+          <div class="dr-modal-file-name" id="drFileName">파일 미선택</div>
+        </div>
+        <input type="file" id="drFileInput" accept="text/html,.html" style="display:none"
+               onchange="drHandleFileSelect(this.files)">
+      </div>
+      <!-- 업로드 진행률 표시 -->
+      <div id="drUploadProgress" style="display:none;font-size:12px;color:var(--text-secondary);margin-bottom:8px;">업로드 중...</div>
+      <div class="dr-modal-footer">
+        <button class="dr-btn" onclick="drCloseUploadModal()">취소</button>
+        <button class="dr-btn dr-btn-primary" onclick="drSubmitUpload()">업로드하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 링크 등록 모달 — 외부 URL(예: Figma 공유 링크)을 디자인으로 등록 -->
+  <div class="dr-modal-overlay" id="drLinkModal">
+    <div class="dr-modal">
+      <h3>링크로 디자인 등록</h3>
+      <div class="dr-modal-field">
+        <label>프로젝트명 *</label>
+        <input id="drLinkName" placeholder="예: 바로이집 로고 리뉴얼">
+      </div>
+      <div class="dr-modal-field">
+        <label>URL *</label>
+        <input id="drLinkUrl" type="url" placeholder="https://...">
+      </div>
+      <div class="dr-modal-field">
+        <label>초기 상태</label>
+        <select id="drLinkStatus">
+          <option value="review">검토중</option>
+          <option value="request">수정요청</option>
+          <option value="approved">승인</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+      <div class="dr-modal-footer">
+        <button class="dr-btn" onclick="drCloseLinkModal()">취소</button>
+        <button class="dr-btn dr-btn-primary" onclick="drSubmitLink()">등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 드래그 선택 박스 — 마우스 드래그로 카드를 여러 개 선택할 때 나타나는 파란 사각형 -->
+  <div class="drag-select-box" id="dragSelectBox"></div>
 
   <!-- ══════════════════════════════════════════
        광고 인사이트 뷰 — 광고 성과 대시보드
@@ -1998,6 +3109,47 @@
 
     </div><!-- /.ai-main -->
   </div><!-- /#adInsightView -->
+
+  <!-- ══════════════════════════════════════════
+       YouTube 탭 — 독립 영상 검색 공간
+  ══════════════════════════════════════════ -->
+  <div id="youtubeView" style="display:none;">
+    <!-- 상단 검색 영역 -->
+    <div class="yt-header">
+      <div class="yt-search-bar">
+        <input type="text" id="ytSearchInput" class="yt-search-input"
+               placeholder="YouTube 영상 검색 (예: 브랜드 광고, 바이럴 영상...)"
+               onkeydown="if(event.key==='Enter') ytSearch()">
+        <button class="btn btn-primary yt-search-btn" onclick="ytSearch()">검색</button>
+      </div>
+      <!-- 카테고리 퀵 칩 — ytInit()에서 동적 렌더링 -->
+      <div class="yt-chips" id="ytChips"></div>
+      <!-- 정렬 바 — 검색 결과 있을 때만 표시 -->
+      <div class="yt-sort-bar" id="ytSortBar" style="display:none;">
+        <span class="yt-result-count" id="ytResultCount"></span>
+        <div class="yt-sort-btns">
+          <button class="yt-sort-btn active" data-sort="recommend" onclick="ytSetSort('recommend')">추천순</button>
+          <button class="yt-sort-btn" data-sort="newest" onclick="ytSetSort('newest')">최신순</button>
+          <button class="yt-sort-btn" data-sort="views" onclick="ytSetSort('views')">조회수순</button>
+        </div>
+      </div>
+    </div>
+    <!-- 영상 그리드 — ytRenderCards()가 동적으로 채움 -->
+    <div class="yt-grid" id="ytGrid"></div>
+    <!-- 로딩 표시 -->
+    <div class="yt-loading" id="ytLoading" style="display:none;">
+      <div class="yt-spinner"></div>
+      <span>영상 검색 중...</span>
+    </div>
+    <!-- 빈 상태 안내 -->
+    <div class="yt-empty" id="ytEmpty">
+      <div style="font-size:48px;margin-bottom:16px;">▶</div>
+      <h3 style="margin:0 0 8px;color:var(--text-primary);">YouTube 영상 레퍼런스</h3>
+      <p style="color:var(--text-muted);font-size:14px;">광고·브랜드 필름·숏폼·바이럴 영상을 검색하세요</p>
+    </div>
+    <!-- 무한 스크롤 감시 지점 -->
+    <div id="ytSentinel" style="height:1px;"></div>
+  </div><!-- /#youtubeView -->
 
   <!-- ══════════════════════════════════════════
        우클릭 컨텍스트 메뉴 — 카테고리 관리
@@ -2277,6 +3429,21 @@
     <img class="lightbox-img" id="lightboxImg" src="" alt="" onclick="event.stopPropagation()">
     <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1, event)">▶</button>
     <div class="lightbox-info" id="lightboxInfo"></div>
+
+    <!-- 우측 상세 정보 패널 — 제목/메모/키워드/출처 편집 가능 -->
+    <div class="lb-detail-panel" id="lbDetailPanel" onclick="event.stopPropagation()">
+      <div class="lb-detail-header">
+        <h3>상세 정보</h3>
+        <button class="lb-detail-close" onclick="closeLightbox(event)">✕</button>
+      </div>
+      <div class="lb-detail-body" id="lbDetailBody">
+        <!-- showLightboxImage()가 이미지 정보로 채워줌 -->
+      </div>
+      <div class="lb-detail-footer">
+        <button class="btn btn-sm" onclick="closeLightbox(event)">닫기</button>
+        <button class="btn btn-sm btn-primary" id="lbSaveBtn" onclick="lbSaveDetail()">저장</button>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════════
@@ -3188,7 +4355,8 @@
       }
 
       empty.style.display = 'none';
-      grid.style.display = 'grid';
+      // 메이슨리: display는 block으로, 자식 카드는 absolute 위치
+      grid.style.display = 'block';
 
       // 로컬 이미지의 Blob URL을 미리 변환
       const resolvedUrls = {};
@@ -3220,19 +4388,19 @@
           <span class="platform-badge ${img.type === 'uploaded' ? 'uploaded' : (img.platform || 'web')}">
             ${platformIcon} ${img.type === 'uploaded' ? '업로드' : (img.platform || 'web')}
           </span>
-          <!-- 즐겨찾기 별 버튼 — snipit.im 성과순 대체 (내가 중요하다고 판단한 레퍼런스 표시) -->
+          <!-- 즐겨찾기 별 버튼 -->
           <button class="star-btn ${favs.includes(img.id) ? 'starred' : ''}"
                   onclick="toggleFavorite('${img.id}'); event.stopPropagation();"
                   title="즐겨찾기">${favs.includes(img.id) ? '★' : '☆'}</button>
           <!-- 이미지 래퍼 — 스켈레톤 로딩 + blur→선명 전환 -->
           <div class="img-thumb-wrap" id="wrap-${img.id}">
-            <!-- 스켈레톤: 이미지 로드 전에 반짝이는 회색 박스 표시 -->
             <div class="img-skeleton"></div>
+            <!-- onload: masonryOnImgLoad로 이미지 로드 완료 시 메이슨리 재계산 -->
             <img class="img-thumb"
                  ${imgSrc ? `src="${escHtml(imgSrc)}"` : ''}
                  alt="${escHtml(img.title || '')}"
                  loading="lazy"
-                 onload="this.parentElement.classList.add('loaded')"
+                 onload="masonryOnImgLoad(this)"
                  onerror="handleImgError(this, '${img.id}')">
           </div>
           <div class="img-actions">
@@ -3248,6 +4416,8 @@
       `}).join('');
 
       grid.classList.toggle('multi-mode', multiMode);
+      // 초기 메이슨리 레이아웃 계산 (이미지 로드 전이라도 구조 확정)
+      requestAnimationFrame(() => masonryLayout());
     }
 
     /* ═══════════════════════════════════════
@@ -3456,6 +4626,98 @@
       const total = lightboxState.imageList.length;
       const current = lightboxState.currentIndex + 1;
       document.getElementById('lightboxCounter').textContent = `${current} / ${total}`;
+
+      // 우측 상세 패널 채우기
+      lbFillDetailPanel(img);
+    }
+
+    /* ─── 라이트박스 상세 패널 채우기 — 현재 이미지의 정보를 편집 가능한 폼으로 표시 ─── */
+    function lbFillDetailPanel(img) {
+      const body = document.getElementById('lbDetailBody');
+      if (!body) return;
+
+      // 생성일 포맷
+      let dateStr = '';
+      if (img.created_at) {
+        try {
+          dateStr = new Date(img.created_at).toLocaleString('ko-KR');
+        } catch(e) { dateStr = img.created_at; }
+      }
+
+      // 편집 가능한 입력 필드로 채움 (data-img-id로 현재 이미지 추적)
+      body.setAttribute('data-img-id', img.id);
+      body.innerHTML = `
+        <div class="lb-field">
+          <label>제목</label>
+          <input id="lbFieldTitle" value="${escHtml(img.title || '')}"
+                 placeholder="이미지 제목을 입력하세요">
+        </div>
+        <div class="lb-field">
+          <label>메모</label>
+          <textarea id="lbFieldMemo" placeholder="메모를 남겨보세요...">${escHtml(img.memo || '')}</textarea>
+        </div>
+        <div class="lb-field">
+          <label>키워드 (쉼표로 구분)</label>
+          <input id="lbFieldKeywords" value="${escHtml((img.keywords || []).join(', '))}"
+                 placeholder="예: 미니멀, 인테리어, 화이트">
+        </div>
+        <div class="lb-field">
+          <label>출처 URL</label>
+          <input id="lbFieldSourceUrl" type="url" value="${escHtml(img.source_url || '')}"
+                 placeholder="https://...">
+          ${img.source_url
+            ? `<div class="lb-meta"><a href="${escHtml(img.source_url)}" target="_blank"
+                  style="color:var(--primary);font-size:11px;text-decoration:none;">↗ 원본 열기</a></div>`
+            : ''}
+        </div>
+        <div class="lb-field">
+          <label>플랫폼</label>
+          <div class="lb-meta">${escHtml(img.platform || img.type || '-')}</div>
+        </div>
+        ${img.type !== 'uploaded' ? `
+        <div class="lb-field">
+          <label>이미지 URL</label>
+          <div class="lb-meta" style="word-break:break-all;">${escHtml((img.image_url || '').substring(0,80))}${img.image_url?.length > 80 ? '...' : ''}</div>
+        </div>` : ''}
+        ${dateStr ? `
+        <div class="lb-field">
+          <label>수집일</label>
+          <div class="lb-meta">${dateStr}</div>
+        </div>` : ''}
+      `;
+    }
+
+    /* ─── 상세 패널 저장 — 입력된 값을 Firebase DB에 업데이트 ─── */
+    async function lbSaveDetail() {
+      const body = document.getElementById('lbDetailBody');
+      if (!body) return;
+      const imgId = body.getAttribute('data-img-id');
+      if (!imgId) return;
+
+      // 입력 필드 값 수집
+      const title      = document.getElementById('lbFieldTitle')?.value.trim() || '';
+      const memo       = document.getElementById('lbFieldMemo')?.value.trim() || '';
+      const kwRaw      = document.getElementById('lbFieldKeywords')?.value.trim() || '';
+      const source_url = document.getElementById('lbFieldSourceUrl')?.value.trim() || '';
+
+      // 키워드: 쉼표로 나누어 공백 제거
+      const keywords = kwRaw
+        ? kwRaw.split(',').map(k => k.trim()).filter(Boolean)
+        : [];
+
+      const updateData = { title, memo, keywords, source_url };
+
+      try {
+        await fbUpdate(FB_IMGS, imgId, updateData);
+        // 로컬 캐시 업데이트 (다음 탐색 시 최신 값 반영)
+        const img = images.find(i => i.id === imgId);
+        if (img) Object.assign(img, updateData);
+        toast('저장되었습니다', 'success');
+        // 라이트박스 하단 제목도 갱신
+        document.getElementById('lightboxInfo').textContent = title || '제목 없음';
+      } catch (e) {
+        toast('저장 실패: ' + e.message, 'error');
+      }
     }
 
     // 라이트박스 닫기
@@ -4958,40 +6220,712 @@
        모든 CSS 클래스/JS 함수는 ai- 접두사로 기존과 충돌 방지
     ══════════════════════════════════════════════════════════════ */
 
+    /* ══════════════════════════════════════════════════════════════
+       Pinterest 메이슨리 레이아웃 — 이미지 카드를 계단식으로 배치
+       이미지마다 높이가 달라서 일반 grid보다 자연스러운 배치 가능
+    ══════════════════════════════════════════════════════════════ */
+
+    // 메이슨리 설정값
+    const MASONRY_GAP     = 12;   // 카드 사이 간격 (px)
+    const MASONRY_MIN_COL_W = 220; // 최소 컬럼 너비 (px) — 이보다 좁으면 컬럼 수 줄임
+
+    let _masonryRafId = null; // requestAnimationFrame ID (디바운스용)
+
+    // 메이슨리 레이아웃 계산 — 모든 카드의 위치(left, top)를 직접 지정
+    function masonryLayout() {
+      const grid = document.getElementById('imageGrid');
+      if (!grid || grid.style.display === 'none') return;
+
+      const cards = grid.querySelectorAll('.img-card');
+      if (cards.length === 0) {
+        grid.style.height = '0px';
+        return;
+      }
+
+      const gridW = grid.clientWidth;
+      if (gridW === 0) return; // 아직 렌더링 안 된 경우 건너뜀
+
+      // 화면 너비에 따라 컬럼 수 자동 결정
+      const cols  = Math.max(2, Math.floor((gridW + MASONRY_GAP) / (MASONRY_MIN_COL_W + MASONRY_GAP)));
+      const colW  = (gridW - (cols - 1) * MASONRY_GAP) / cols; // 각 컬럼 너비
+      const colHeights = new Array(cols).fill(0); // 각 컬럼의 현재 쌓인 높이
+
+      cards.forEach(card => {
+        // 가장 짧은 컬럼 찾기 — 거기에 카드를 배치
+        const shortCol = colHeights.indexOf(Math.min(...colHeights));
+        const x = shortCol * (colW + MASONRY_GAP); // 좌측 위치
+        const y = colHeights[shortCol];             // 상단 위치
+
+        card.style.left  = x + 'px';
+        card.style.top   = y + 'px';
+        card.style.width = colW + 'px';
+        card.classList.add('placed'); // 이제 opacity: 1로 표시
+
+        // 카드 실제 높이 계산
+        // 이미지가 로드됐으면 비율로 계산, 아직 안 됐으면 offsetHeight 사용
+        const img = card.querySelector('.img-thumb');
+        let cardH = card.offsetHeight;
+        if (img && img.naturalHeight && img.naturalWidth) {
+          // 이미지 원본 비율로 현재 너비에 맞는 높이 계산
+          cardH = (colW / img.naturalWidth) * img.naturalHeight;
+          // img-info 오버레이는 절대위치라 레이아웃에 영향 없음
+        }
+
+        colHeights[shortCol] += cardH + MASONRY_GAP;
+      });
+
+      // 그리드 전체 높이를 가장 긴 컬럼 기준으로 설정
+      grid.style.height = Math.max(...colHeights) + 'px';
+    }
+
+    // 이미지 로드 완료 시 메이슨리 재계산 — 로드 전/후 높이가 달라지기 때문
+    function masonryOnImgLoad(imgEl) {
+      // 부모 래퍼에 loaded 클래스 추가 (스켈레톤 → 실제 이미지 전환)
+      if (imgEl.parentElement) imgEl.parentElement.classList.add('loaded');
+      // 여러 이미지가 동시에 로드되면 requestAnimationFrame으로 한 번만 재계산
+      if (_masonryRafId) cancelAnimationFrame(_masonryRafId);
+      _masonryRafId = requestAnimationFrame(() => masonryLayout());
+    }
+
+    // 창 크기 변경 시 메이슨리 재계산 (디바운스로 성능 최적화)
+    let _masonryResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(_masonryResizeTimer);
+      _masonryResizeTimer = setTimeout(() => masonryLayout(), 150);
+    });
+
+    /* ══════════════════════════════════════════════════════════════
+       드래그 선택 — 마우스 드래그로 여러 이미지 카드를 한 번에 선택
+       빈 배경을 드래그하면 파란 점선 사각형이 나타나고,
+       그 안에 있는 카드들이 자동으로 선택됨
+    ══════════════════════════════════════════════════════════════ */
+
+    // 드래그 선택 상태값
+    let _dragSel = { active: false, startX: 0, startY: 0 };
+
+    // 마우스 버튼 누를 때 — 드래그 선택 시작
+    document.addEventListener('mousedown', function(e) {
+      const grid = document.getElementById('imageGrid');
+      // 이미지 그리드가 없거나 숨겨진 상태면 무시
+      if (!grid || grid.style.display === 'none') return;
+
+      // gridContainer 안에서 일어난 클릭인지 확인
+      const container = document.getElementById('gridContainer');
+      if (!container || !container.contains(e.target)) return;
+
+      // 카드, 버튼, 입력창 위에서는 드래그 선택 시작하지 않음
+      if (e.target.closest('.img-card') || e.target.closest('button') ||
+          e.target.closest('input') || e.target.closest('.empty-state')) return;
+
+      // 좌클릭만 처리
+      if (e.button !== 0) return;
+
+      _dragSel.active = true;
+      _dragSel.startX = e.clientX;
+      _dragSel.startY = e.clientY;
+
+      // 다중 선택 모드 자동 활성화
+      if (!multiMode) {
+        multiMode = true;
+        document.getElementById('multiSelectBtn')?.classList.add('btn-primary');
+        document.getElementById('imageGrid')?.classList.add('multi-mode');
+      }
+
+      // Shift 없이 시작하면 기존 선택 초기화
+      if (!e.shiftKey) {
+        selectedIds.clear();
+      }
+
+      // 선택 박스 초기 위치 설정 후 표시
+      const box = document.getElementById('dragSelectBox');
+      if (box) {
+        box.style.left   = e.clientX + 'px';
+        box.style.top    = e.clientY + 'px';
+        box.style.width  = '0px';
+        box.style.height = '0px';
+        box.style.display = 'block';
+      }
+
+      e.preventDefault(); // 텍스트 선택 방지
+    });
+
+    // 마우스 이동 — 선택 박스 크기 업데이트 + 카드 선택 계산
+    document.addEventListener('mousemove', function(e) {
+      if (!_dragSel.active) return;
+
+      const box = document.getElementById('dragSelectBox');
+      if (!box) return;
+
+      // 현재 드래그 박스의 사각형 좌표 계산
+      const x = Math.min(e.clientX, _dragSel.startX);
+      const y = Math.min(e.clientY, _dragSel.startY);
+      const w = Math.abs(e.clientX - _dragSel.startX);
+      const h = Math.abs(e.clientY - _dragSel.startY);
+
+      box.style.left   = x + 'px';
+      box.style.top    = y + 'px';
+      box.style.width  = w + 'px';
+      box.style.height = h + 'px';
+
+      // 드래그 사각형과 각 카드가 겹치는지 확인 → 겹치면 선택
+      const selRect = { left: x, top: y, right: x + w, bottom: y + h };
+      document.querySelectorAll('#imageGrid .img-card').forEach(card => {
+        const cr = card.getBoundingClientRect();
+        // 두 사각형이 겹치면 선택 (하나라도 겹치면 OK)
+        const overlap = !(cr.right  < selRect.left  ||
+                          cr.left   > selRect.right  ||
+                          cr.bottom < selRect.top    ||
+                          cr.top    > selRect.bottom);
+        const id = card.id.replace('card-', '');
+        if (overlap) {
+          selectedIds.add(id);
+          card.classList.add('selected');
+          const check = card.querySelector('.img-check');
+          if (check) check.textContent = '✓';
+        } else if (!e.shiftKey) {
+          // Shift 없이 드래그하면 박스 밖 카드는 선택 해제
+          selectedIds.delete(id);
+          card.classList.remove('selected');
+          const check = card.querySelector('.img-check');
+          if (check) check.textContent = '';
+        }
+      });
+
+      updateBulkBar();
+    });
+
+    // 마우스 버튼 뗄 때 — 드래그 선택 종료
+    document.addEventListener('mouseup', function() {
+      if (!_dragSel.active) return;
+      _dragSel.active = false;
+
+      // 선택 박스 숨기기
+      const box = document.getElementById('dragSelectBox');
+      if (box) box.style.display = 'none';
+
+      // 아무것도 선택 안 됐으면 다중 선택 모드 종료
+      if (selectedIds.size === 0) {
+        multiMode = false;
+        document.getElementById('multiSelectBtn')?.classList.remove('btn-primary');
+        document.getElementById('imageGrid')?.classList.remove('multi-mode');
+        updateBulkBar();
+      }
+    });
+
     /* ──────────────────────────────────────
        뷰 전환 — 레퍼런스 ↔ 광고 인사이트
     ────────────────────────────────────── */
 
     // activeView는 전역 상태 블록(위 2460줄)에서 이미 선언됨
 
-    // 뷰 전환 함수 — 탭 버튼 클릭 시 호출
+    // 뷰 전환 함수 — 탭 버튼 클릭 시 호출 (레퍼런스 / 광고 인사이트 / YouTube)
     function switchView(view) {
       activeView = view;
+      // 모든 뷰 컨테이너와 탭 버튼 가져오기
       const refView  = document.getElementById('referenceView');
       const adView   = document.getElementById('adInsightView');
-      const tabRef   = document.getElementById('viewTabRef');
-      const tabAd    = document.getElementById('viewTabAd');
+      const ytView   = document.getElementById('youtubeView');
+      const drView   = document.getElementById('designReviewView');
+      const tabRef    = document.getElementById('viewTabRef');
+      const tabAd     = document.getElementById('viewTabAd');
+      const tabYt     = document.getElementById('viewTabYoutube');
+      const tabDesign = document.getElementById('viewTabDesign');
       const exportBtn = document.getElementById('exportAgentBtn');
+
+      // 모든 뷰 숨기기 + 모든 탭 비활성화
+      refView.style.display = 'none';
+      adView.style.display  = 'none';
+      ytView.style.display  = 'none';
+      if (drView) drView.style.display = 'none';
+      tabRef.classList.remove('active');
+      tabAd.classList.remove('active');
+      tabYt.classList.remove('active');
+      if (tabDesign) tabDesign.classList.remove('active');
 
       if (view === 'reference') {
         // 레퍼런스 뷰 표시
         refView.style.display = '';
-        adView.style.display  = 'none';
         tabRef.classList.add('active');
-        tabAd.classList.remove('active');
         if (exportBtn) exportBtn.style.display = '';
-      } else {
+      } else if (view === 'adInsight') {
         // 광고 인사이트 뷰 표시
-        refView.style.display = 'none';
-        adView.style.display  = '';
-        tabRef.classList.remove('active');
+        adView.style.display = '';
         tabAd.classList.add('active');
         if (exportBtn) exportBtn.style.display = 'none';
         // 광고 인사이트 탭에 처음 진입했을 때만 초기화
         if (!adState.initialized) {
           initAdInsightView();
         }
+      } else if (view === 'youtube') {
+        // YouTube 뷰 표시
+        ytView.style.display = '';
+        tabYt.classList.add('active');
+        if (exportBtn) exportBtn.style.display = 'none';
+        // 첫 진입 시 lazy 초기화 (칩 렌더링 + 무한 스크롤 설정)
+        if (!ytState.initialized) {
+          ytInit();
+        }
+      } else if (view === 'designReview') {
+        // 디자인 리뷰 뷰 표시 — 팀원과 HTML 디자인을 공유하고 피드백 주고받기
+        if (drView) drView.style.display = 'flex';
+        if (tabDesign) tabDesign.classList.add('active');
+        if (exportBtn) exportBtn.style.display = 'none';
+        // 처음 진입했을 때만 Firebase 초기화
+        if (!drState.initialized) {
+          drInit();
+        }
       }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       ▼▼▼ YouTube 탭 전체 코드 ▼▼▼
+       - Serper.dev /videos 엔드포인트 활용한 영상 검색
+       - 카테고리 퀵 칩으로 빠른 필터링
+       - IntersectionObserver 무한 스크롤
+       모든 함수/변수는 yt 접두사로 기존과 충돌 방지
+    ══════════════════════════════════════════════════════════════ */
+
+    // YouTube 카테고리 퀵 칩 — 클릭 시 해당 키워드로 검색어 확장
+    const YT_CHIPS = [
+      { id: 'all',    label: '전체' },
+      { id: 'ad',     label: '광고' },
+      { id: 'brand',  label: '브랜드 필름' },
+      { id: 'short',  label: '숏폼' },
+      { id: 'viral',  label: '바이럴' },
+      { id: 'review', label: '리뷰' }
+    ];
+
+    // 칩별 검색어 확장 키워드 — 한국 채널 중심 (영어 키워드 제외)
+    const YT_CHIP_QUERIES = {
+      all:    '',
+      ad:     '광고 영상 CF 티비 광고',
+      brand:  '브랜드 필름 기업 홍보 영상',
+      short:  '숏폼 쇼츠 릴스 짧은 영상',
+      viral:  '바이럴 영상 화제 인기',
+      review: '리뷰 영상 후기 언박싱'
+    };
+
+    // YouTube 탭 상태 관리 — 검색 결과, 페이지네이션, 로딩, 정렬
+    const ytState = {
+      initialized: false,  // 초기화 여부
+      query: '',           // 현재 검색어
+      results: [],         // 검색 결과 배열
+      page: 1,             // 현재 Serper 페이지
+      loading: false,      // 로딩 중 여부
+      hasMore: true,       // 추가 결과 존재 여부
+      activeChip: 'all',   // 활성 카테고리 칩
+      sort: 'recommend',   // 정렬 기준: 'recommend' | 'newest' | 'views'
+      observer: null       // IntersectionObserver 인스턴스
+    };
+
+    // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
+    // Serper가 주는 thumbnail은 저화질(120x90)일 수 있으므로
+    // videoId로 직접 고화질 URL 생성 (hqdefault: 480x360)
+    function ytGetHqThumb(videoUrl, fallbackThumb) {
+      try {
+        const url = new URL(videoUrl);
+        let videoId = url.searchParams.get('v');
+        // /shorts/ 형식 처리
+        if (!videoId && url.pathname.includes('/shorts/')) {
+          videoId = url.pathname.split('/shorts/')[1]?.split('/')[0];
+        }
+        if (videoId) {
+          return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+        }
+      } catch (e) { /* URL 파싱 실패 시 폴백 */ }
+      return fallbackThumb || '';
+    }
+
+    // ─── YouTube videoId에서 최고화질 썸네일 URL 생성 ───
+    // maxresdefault는 모든 영상에 존재하지 않을 수 있어 로드 실패 시 hqdefault로 폴백
+    function ytGetMaxThumb(videoUrl) {
+      try {
+        const url = new URL(videoUrl);
+        let videoId = url.searchParams.get('v');
+        if (!videoId && url.pathname.includes('/shorts/')) {
+          videoId = url.pathname.split('/shorts/')[1]?.split('/')[0];
+        }
+        if (videoId) {
+          return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+        }
+      } catch (e) { /* URL 파싱 실패 */ }
+      return '';
+    }
+
+    // ─── 조회수 텍스트 → 숫자 변환 ───
+    // "12.3만회", "1,234,567 views", "1.2M views" 등을 숫자로 파싱
+    function ytParseViews(viewStr) {
+      if (!viewStr) return 0;
+      const s = viewStr.toString().replace(/,/g, '').toLowerCase();
+      // "12.3만회" 형태 (한국어)
+      const wanMatch = s.match(/([\d.]+)\s*만/);
+      if (wanMatch) return Math.round(parseFloat(wanMatch[1]) * 10000);
+      // "1.2억회" 형태
+      const eokMatch = s.match(/([\d.]+)\s*억/);
+      if (eokMatch) return Math.round(parseFloat(eokMatch[1]) * 100000000);
+      // "1.2M views" 형태 (영어)
+      const mMatch = s.match(/([\d.]+)\s*m/);
+      if (mMatch) return Math.round(parseFloat(mMatch[1]) * 1000000);
+      // "12.3K views" 형태
+      const kMatch = s.match(/([\d.]+)\s*k/);
+      if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
+      // "1.2B views" 형태
+      const bMatch = s.match(/([\d.]+)\s*b/);
+      if (bMatch) return Math.round(parseFloat(bMatch[1]) * 1000000000);
+      // 순수 숫자만 추출
+      const numMatch = s.match(/([\d]+)/);
+      if (numMatch) return parseInt(numMatch[1], 10);
+      return 0;
+    }
+
+    // ─── 날짜 텍스트 → 타임스탬프 변환 ───
+    // "3일 전", "2 weeks ago", "2025. 1. 15." 등을 비교 가능한 숫자로 변환
+    function ytParseDate(dateStr) {
+      if (!dateStr) return 0;
+      const s = dateStr.toLowerCase();
+      const now = Date.now();
+      // "N시간 전" / "N hours ago"
+      const hourMatch = s.match(/(\d+)\s*(시간|hour)/);
+      if (hourMatch) return now - parseInt(hourMatch[1]) * 3600000;
+      // "N일 전" / "N days ago"
+      const dayMatch = s.match(/(\d+)\s*(일|day)/);
+      if (dayMatch) return now - parseInt(dayMatch[1]) * 86400000;
+      // "N주 전" / "N weeks ago"
+      const weekMatch = s.match(/(\d+)\s*(주|week)/);
+      if (weekMatch) return now - parseInt(weekMatch[1]) * 604800000;
+      // "N개월 전" / "N months ago"
+      const monthMatch = s.match(/(\d+)\s*(개월|month)/);
+      if (monthMatch) return now - parseInt(monthMatch[1]) * 2592000000;
+      // "N년 전" / "N years ago"
+      const yearMatch = s.match(/(\d+)\s*(년|year)/);
+      if (yearMatch) return now - parseInt(yearMatch[1]) * 31536000000;
+      // "2025. 1. 15." 또는 "Jan 15, 2025" 형태
+      const parsed = Date.parse(dateStr.replace(/\.\s*/g, '-').replace(/-$/, ''));
+      if (!isNaN(parsed)) return parsed;
+      return 0;
+    }
+
+    // ─── 한국 채널 판별 — 제목·채널명·날짜에 한글이 포함되어 있는지 확인 ───
+    // 한글(가-힣)이 하나라도 있으면 한국 콘텐츠로 판별
+    function ytIsKorean(video) {
+      const koRegex = /[가-힣]/;
+      const title = video.title || '';
+      const channel = video.channel || '';
+      const date = video.date || '';
+      // 제목이나 채널명에 한글이 있으면 한국 채널
+      return koRegex.test(title) || koRegex.test(channel) || koRegex.test(date);
+    }
+
+    // ─── Serper.dev YouTube 영상 검색 (/videos 엔드포인트) ───
+    // 한국 채널 중심 — gl:kr + hl:ko + 한국어 결과만 필터링
+    async function searchSerperVideos(query, page) {
+      const res = await fetch('https://google.serper.dev/videos', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': config.serperKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          q: query,
+          num: 10,
+          page: Math.max(1, page),
+          gl: 'kr',     // 한국 로컬 결과 우선
+          hl: 'ko'      // 한국어 인터페이스
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.videos) return [];
+
+      // YouTube 영상 중 한국 채널만 필터링하여 카드 데이터로 변환
+      return data.videos
+        .filter(v => v.link && v.link.includes('youtube.com'))
+        .filter(v => ytIsKorean(v))
+        .map(v => {
+          // 고화질 썸네일 생성 (Serper 기본 썸네일은 저화질일 수 있음)
+          const hqThumb = ytGetHqThumb(v.link, v.thumbnail);
+          const maxThumb = ytGetMaxThumb(v.link);
+          // 조회수 파싱 — 정렬에 사용
+          const viewsRaw = v.views || '';
+          const viewsNum = ytParseViews(viewsRaw);
+          // 날짜 파싱 — 정렬에 사용
+          const dateRaw = v.date || '';
+          const dateNum = ytParseDate(dateRaw);
+          return {
+            title: v.title || '',
+            imageUrl: hqThumb,
+            thumbUrl: hqThumb,          // 기본: hqdefault (480x360)
+            maxThumbUrl: maxThumb,       // 최고화질 시도용 (maxresdefault)
+            sourceUrl: v.link || '',
+            platform: 'youtube',
+            width: 1280, height: 720,
+            isVideo: true,
+            duration: v.duration || '',
+            channel: v.channel || '',
+            date: dateRaw,
+            dateNum: dateNum,            // 정렬용 타임스탬프
+            viewsRaw: viewsRaw,          // 원본 조회수 텍스트 ("12만회" 등)
+            viewsNum: viewsNum           // 정렬용 숫자
+          };
+        });
+    }
+
+    // YouTube 탭 초기화 — 칩 렌더링 + 무한 스크롤 설정
+    function ytInit() {
+      ytState.initialized = true;
+
+      // 카테고리 칩 렌더링
+      const chipsEl = document.getElementById('ytChips');
+      if (chipsEl) {
+        chipsEl.innerHTML = YT_CHIPS.map(c =>
+          `<button class="yt-chip ${c.id === ytState.activeChip ? 'active' : ''}"
+                   data-chip="${c.id}"
+                   onclick="ytSwitchChip('${c.id}')">${c.label}</button>`
+        ).join('');
+      }
+
+      // 무한 스크롤 — 하단 감시 지점이 화면에 나타나면 추가 로드
+      const sentinel = document.getElementById('ytSentinel');
+      if (sentinel) {
+        ytState.observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && !ytState.loading && ytState.hasMore && ytState.results.length > 0) {
+            ytLoadMore();
+          }
+        }, { rootMargin: '200px' });
+        ytState.observer.observe(sentinel);
+      }
+    }
+
+    // YouTube 검색 실행 — 검색어로 영상 검색 (appendMode: 더 보기 여부)
+    async function ytSearch(appendMode) {
+      const input = document.getElementById('ytSearchInput');
+      const query = input?.value?.trim();
+      if (!query) {
+        toast('검색어를 입력하세요');
+        return;
+      }
+      if (!config.serperKey) {
+        toast('Serper.dev API 키가 필요합니다. 설정에서 입력하세요.', 'error');
+        return;
+      }
+
+      // 새 검색이면 상태 초기화
+      if (!appendMode) {
+        ytState.query = query;
+        ytState.results = [];
+        ytState.page = 1;
+        ytState.hasMore = true;
+        document.getElementById('ytGrid').innerHTML = '';
+        // 정렬 바 숨기기 (결과 나오면 다시 표시)
+        const sortBar = document.getElementById('ytSortBar');
+        if (sortBar) sortBar.style.display = 'none';
+      }
+
+      ytState.loading = true;
+      document.getElementById('ytLoading').style.display = 'flex';
+      document.getElementById('ytEmpty').style.display = 'none';
+
+      try {
+        // 칩에 따른 쿼리 확장
+        const chipExtra = YT_CHIP_QUERIES[ytState.activeChip] || '';
+        const fullQuery = chipExtra ? `${query} ${chipExtra}` : query;
+
+        // 병렬 호출로 다양한 결과 수집
+        const promises = [];
+        if (!appendMode) {
+          // 첫 검색: 한국어 쿼리 변형 5호출 (한국 채널 중심)
+          promises.push(searchSerperVideos(fullQuery, 1));
+          promises.push(searchSerperVideos(fullQuery, 2));
+          promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
+          promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
+          if (chipExtra) {
+            promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
+          }
+        } else {
+          // 더 보기: 다음 페이지 3호출
+          for (let i = 0; i < 3; i++) {
+            ytState.page++;
+            promises.push(searchSerperVideos(fullQuery, ytState.page));
+          }
+        }
+
+        const results = await Promise.allSettled(promises);
+
+        // 결과 합치기
+        let newItems = [];
+        results.forEach(r => {
+          if (r.status === 'fulfilled' && r.value?.length > 0) {
+            newItems.push(...r.value);
+          }
+        });
+
+        // 중복 제거 — sourceUrl 기준
+        const existingUrls = new Set(ytState.results.map(r => r.sourceUrl));
+        newItems = newItems.filter(r => {
+          if (existingUrls.has(r.sourceUrl)) return false;
+          existingUrls.add(r.sourceUrl);
+          return true;
+        });
+
+        // 결과가 적으면 더 이상 로드할 것이 없음
+        if (newItems.length < 5) {
+          ytState.hasMore = false;
+        }
+
+        ytState.results.push(...newItems);
+
+        // 현재 정렬이 추천순이 아니면 전체 재정렬, 아니면 새 항목만 추가
+        if (ytState.sort !== 'recommend' || !appendMode) {
+          ytSortAndRerender();
+        } else {
+          ytRenderCards(newItems);
+        }
+
+        // 결과 없으면 빈 상태 표시
+        if (ytState.results.length === 0) {
+          document.getElementById('ytEmpty').style.display = '';
+          document.getElementById('ytEmpty').innerHTML = `
+            <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+            <h3 style="margin:0 0 8px;color:var(--text-primary);">검색 결과가 없습니다</h3>
+            <p style="color:var(--text-muted);font-size:14px;">다른 키워드로 검색해보세요</p>
+          `;
+        }
+      } catch (e) {
+        toast('YouTube 검색 오류: ' + e.message, 'error');
+      } finally {
+        ytState.loading = false;
+        document.getElementById('ytLoading').style.display = 'none';
+      }
+    }
+
+    // ─── 썸네일 단계적 로드 — 고화질부터 순서대로 시도, 실패 시 다음 후보 ───
+    // 인라인 onerror 대신 JS로 제어하여 무한루프·이스케이프 문제 방지
+    function ytLoadThumb(img, candidates) {
+      if (!candidates || candidates.length === 0) {
+        // 모든 후보 실패 → 이미지 숨기고 배경색으로 대체
+        img.style.display = 'none';
+        img.parentElement.style.background = '#1a1a1a';
+        return;
+      }
+      const next = candidates.shift();
+      img.onerror = () => ytLoadThumb(img, candidates);
+      img.src = next;
+    }
+
+    // 영상 카드를 그리드에 추가 렌더링
+    function ytRenderCards(items) {
+      const grid = document.getElementById('ytGrid');
+      if (!grid) return;
+
+      items.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'yt-card';
+        // 클릭 시 YouTube 새 탭 열기
+        card.onclick = () => window.open(r.sourceUrl, '_blank');
+
+        card.innerHTML = `
+          <div class="yt-thumb">
+            <img alt="${escHtml(r.title)}" loading="lazy">
+            <div class="yt-play-btn"></div>
+            ${r.duration ? `<span class="yt-duration">${escHtml(r.duration)}</span>` : ''}
+          </div>
+          <div class="yt-info">
+            <div class="yt-title">${escHtml(r.title)}</div>
+            <div class="yt-channel">${escHtml(r.channel || '')}${r.date ? ' · ' + escHtml(r.date) : ''}</div>
+            ${r.viewsRaw ? `<div class="yt-views">조회수 ${escHtml(r.viewsRaw)}</div>` : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // 썸네일 후보 목록 — 고화질부터 순서대로 시도
+        const img = card.querySelector('img');
+        const candidates = [];
+        if (r.maxThumbUrl) candidates.push(r.maxThumbUrl);          // maxresdefault (1280x720)
+        // sddefault 추가 (640x480, 대부분 존재)
+        try {
+          const vid = new URL(r.sourceUrl).searchParams.get('v');
+          if (vid) candidates.push(`https://i.ytimg.com/vi/${vid}/sddefault.jpg`);
+        } catch(e) {}
+        if (r.thumbUrl) candidates.push(r.thumbUrl);                 // hqdefault (480x360)
+        if (r.imageUrl && r.imageUrl !== r.thumbUrl) candidates.push(r.imageUrl); // Serper 원본
+        ytLoadThumb(img, candidates);
+      });
+
+      // 정렬 바 표시 + 결과 개수 업데이트
+      const sortBar = document.getElementById('ytSortBar');
+      const countEl = document.getElementById('ytResultCount');
+      if (sortBar && ytState.results.length > 0) {
+        sortBar.style.display = 'flex';
+        if (countEl) countEl.textContent = `영상 ${ytState.results.length}개`;
+      }
+    }
+
+    // 무한 스크롤 — 추가 페이지 로드
+    function ytLoadMore() {
+      if (ytState.loading || !ytState.hasMore || !ytState.query) return;
+      ytSearch(true); // appendMode = true
+    }
+
+    // 카테고리 칩 전환 — 칩 변경 시 재검색
+    function ytSwitchChip(chipId) {
+      ytState.activeChip = chipId;
+      // 칩 활성 상태 UI 업데이트
+      document.querySelectorAll('.yt-chip').forEach(el => {
+        el.classList.toggle('active', el.dataset.chip === chipId);
+      });
+      // 검색어가 있으면 재검색
+      if (ytState.query) {
+        ytSearch();
+      }
+    }
+
+    // 정렬 전환 — 추천순 / 최신순 / 조회수순
+    // 추천순: 조회수(60%) + 최신성(40%) 복합 점수
+    function ytSetSort(sortType) {
+      ytState.sort = sortType;
+      // 정렬 버튼 활성 상태 업데이트
+      document.querySelectorAll('.yt-sort-btn').forEach(el => {
+        el.classList.toggle('active', el.dataset.sort === sortType);
+      });
+      // 현재 결과를 정렬 후 그리드 다시 렌더링
+      if (ytState.results.length > 0) {
+        ytSortAndRerender();
+      }
+    }
+
+    // 결과 정렬 후 그리드 전체 다시 그리기
+    function ytSortAndRerender() {
+      const sorted = [...ytState.results];
+
+      if (ytState.sort === 'views') {
+        // 조회수 내림차순 — 가장 많이 본 영상 먼저
+        sorted.sort((a, b) => (b.viewsNum || 0) - (a.viewsNum || 0));
+      } else if (ytState.sort === 'newest') {
+        // 최신순 — 가장 최근 업로드된 영상 먼저
+        sorted.sort((a, b) => (b.dateNum || 0) - (a.dateNum || 0));
+      } else {
+        // 추천순 — 조회수(60%) + 최신성(40%) 복합 점수
+        // 조회수와 날짜를 0~1 범위로 정규화 후 가중 합산
+        const maxViews = Math.max(...sorted.map(r => r.viewsNum || 0), 1);
+        const maxDate = Math.max(...sorted.map(r => r.dateNum || 0), 1);
+        const minDate = Math.min(...sorted.filter(r => r.dateNum > 0).map(r => r.dateNum), maxDate);
+        const dateRange = maxDate - minDate || 1;
+
+        sorted.sort((a, b) => {
+          const aViewScore = (a.viewsNum || 0) / maxViews;
+          const bViewScore = (b.viewsNum || 0) / maxViews;
+          const aDateScore = ((a.dateNum || 0) - minDate) / dateRange;
+          const bDateScore = ((b.dateNum || 0) - minDate) / dateRange;
+          // 복합 점수: 조회수 60% + 최신성 40%
+          const aScore = aViewScore * 0.6 + aDateScore * 0.4;
+          const bScore = bViewScore * 0.6 + bDateScore * 0.4;
+          return bScore - aScore;
+        });
+      }
+
+      // 그리드 초기화 후 정렬된 결과로 다시 렌더링
+      const grid = document.getElementById('ytGrid');
+      if (grid) grid.innerHTML = '';
+      ytRenderCards(sorted);
     }
 
     /* ──────────────────────────────────────
@@ -6558,6 +8492,832 @@
     });
 
     /* ▲▲▲ 광고 인사이트 탭 전체 코드 끝 ▲▲▲ */
+
+    /* ══════════════════════════════════════════════════════════════
+       ▼▼▼ 디자인 리뷰 탭 전체 코드 ▼▼▼
+       - Firebase RTDB: design-review/designs, messages, nicknames
+       - Firebase Storage: HTML 파일 업로드
+       - 3단 레이아웃: 디자인 목록 + 뷰어 + 채팅
+       모든 함수/변수는 dr 접두사로 기존과 충돌 방지
+    ══════════════════════════════════════════════════════════════ */
+
+    // Firebase 경로 상수 — 디자인 리뷰 전용 경로
+    const DR_ROOT      = 'design-review';
+    const DR_DESIGNS   = `${DR_ROOT}/designs`;    // 디자인 목록
+    const DR_MESSAGES  = `${DR_ROOT}/messages`;   // 채팅 메시지
+    const DR_NICKNAMES = `${DR_ROOT}/nicknames`;  // 닉네임 목록 (디자인별)
+
+    // 디자인 리뷰 탭 전역 상태 — 이 객체 하나에 모든 상태를 모아서 관리
+    const drState = {
+      allDesigns: [],           // 전체 디자인 목록
+      currentDesignId: null,    // 현재 선택된 디자인 ID
+      currentDesignData: null,  // 현재 선택된 디자인 데이터
+      filter: 'all',            // 상태 필터 ('all'|'review'|'request'|'approved'|'done')
+      zoom: 70,                 // 줌 레벨 (%)
+      chatListener: null,       // Firebase 실시간 채팅 리스너 해제 함수
+      designsListener: null,    // Firebase 디자인 목록 리스너 해제 함수
+      initialized: false,       // 최초 초기화 완료 여부
+      currentNickname: '',      // 현재 사용자 닉네임
+      nicknameList: [],         // 해당 디자인의 닉네임 목록
+      replyTo: null,            // 답글 대상 메시지 { key, text, name }
+      uploadFile: null,         // 업로드 대기 중인 HTML 파일
+      isNickAdmin: false,       // 닉네임 관리 모드 여부
+    };
+
+    /* ─── 쿠키 / 영속 저장 — 브라우저를 닫아도 닉네임이 유지되도록 ─── */
+    function drSetCookie(name, value, days) {
+      // days 일 뒤에 쿠키가 만료되도록 설정
+      const expires = new Date(Date.now() + days * 86400000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/`;
+    }
+    function drGetCookie(name) {
+      // 쿠키에서 값 읽기
+      const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    function drPersistSet(key, value) {
+      // localStorage와 쿠키 양쪽에 저장 (한쪽이 막혀도 대비)
+      try { localStorage.setItem(key, value); } catch(e) {}
+      drSetCookie(key, value, 365);
+    }
+    function drPersistGet(key) {
+      // localStorage 우선, 없으면 쿠키에서 읽기
+      try {
+        const v = localStorage.getItem(key);
+        if (v !== null) return v;
+      } catch(e) {}
+      return drGetCookie(key);
+    }
+
+    /* ─── 초기화 — 탭에 처음 진입할 때 한 번만 실행 ─── */
+    function drInit() {
+      // 닉네임 불러오기 (이전에 사용한 닉네임 기억)
+      drState.currentNickname = drPersistGet('dr_nickname') || '';
+      drUpdateNicknameUI();
+
+      // Firebase에서 디자인 목록을 실시간으로 가져오기
+      // on('value'): 데이터가 바뀔 때마다 자동으로 다시 불러옴
+      firebaseDb.ref(DR_DESIGNS).on('value', snap => {
+        const data = snap.val() || {};
+        // 객체를 배열로 변환하고 최신순 정렬
+        drState.allDesigns = Object.entries(data)
+          .map(([id, d]) => ({ id, ...d }))
+          .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+        drRenderDesignList();
+      });
+
+      drState.initialized = true;
+    }
+
+    /* ─── 디자인 목록 렌더링 — 필터 + 검색 적용 ─── */
+    function drRenderDesignList() {
+      const list   = document.getElementById('drDesignList');
+      const search = (document.getElementById('drSearchInput')?.value || '').toLowerCase();
+
+      // 필터와 검색어를 동시에 적용
+      let filtered = drState.allDesigns;
+      if (drState.filter !== 'all') {
+        filtered = filtered.filter(d => d.status === drState.filter);
+      }
+      if (search) {
+        filtered = filtered.filter(d =>
+          (d.name || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="dr-empty-state">등록된 디자인이 없습니다</div>';
+        return;
+      }
+
+      // 각 디자인을 카드 형태로 렌더링
+      list.innerHTML = filtered.map(d => `
+        <div class="dr-design-card ${d.id === drState.currentDesignId ? 'active' : ''}"
+             onclick="drSelectDesign('${d.id}')">
+          <div class="dr-card-body">
+            <div class="dr-card-name">${escHtml(d.name || '이름 없음')}</div>
+            <div class="dr-card-meta">
+              <span class="dr-badge dr-badge-${d.status || 'review'}">${drStatusLabel(d.status)}</span>
+              <span class="dr-card-date">${drFormatDate(d.created_at)}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ─── 필터 변경 — 탭 버튼 클릭 시 호출 ─── */
+    function drSetFilter(filter, btn) {
+      drState.filter = filter;
+      // 모든 탭 비활성화 후 현재 탭만 활성화
+      document.querySelectorAll('.dr-filter-tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      drRenderDesignList();
+    }
+
+    /* ─── 디자인 선택 — 목록에서 디자인 카드를 클릭했을 때 ─── */
+    async function drSelectDesign(id) {
+      drState.currentDesignId = id;
+      const design = drState.allDesigns.find(d => d.id === id);
+      if (!design) return;
+      drState.currentDesignData = design;
+
+      // 목록에서 선택 표시 업데이트
+      drRenderDesignList();
+
+      // 툴바 표시 및 내용 채우기
+      const toolbar = document.getElementById('drViewerToolbar');
+      toolbar.style.display = 'flex';
+      document.getElementById('drViewerTitle').textContent = design.name || '이름 없음';
+      document.getElementById('drStatusSelect').value = design.status || 'review';
+
+      // 사이즈 정보 표시 (저장된 메타데이터가 있으면)
+      if (design.meta_width && design.meta_height) {
+        const pages = design.meta_pages || 1;
+        document.getElementById('drViewerSize').textContent =
+          `${design.meta_width} × ${design.meta_height}px${pages > 1 ? ` · ${pages}장` : ''}`;
+      } else {
+        document.getElementById('drViewerSize').textContent = '';
+      }
+
+      // iframe 로드
+      const frame  = document.getElementById('drViewerFrame');
+      const iframe = document.getElementById('drViewerIframe');
+      const empty  = document.getElementById('drViewerEmpty');
+      const zoomBar = document.getElementById('drZoomBar');
+
+      frame.style.display  = 'flex';
+      empty.style.display  = 'none';
+      zoomBar.style.display = 'flex';
+
+      iframe.src = design.url || '';
+
+      // 메타데이터에 저장된 높이로 iframe 높이 설정
+      if (design.meta_height) {
+        const pages = design.meta_pages || 1;
+        iframe.style.height = (design.meta_height * pages) + 'px';
+      } else {
+        iframe.style.height = '1200px'; // 기본 높이
+      }
+
+      // 줌 70%로 고정 (일관된 초기 스케일 제공)
+      drState.zoom = 70;
+      drApplyZoom();
+
+      // 채팅 불러오기
+      drLoadChat(id);
+
+      // 닉네임 선택기 표시
+      const nickSel = document.getElementById('drNickSelector');
+      if (nickSel) nickSel.style.display = '';
+
+      // 닉네임 목록 로드
+      await drLoadNicknameList(id);
+    }
+
+    /* ─── 새 탭에서 열기 ─── */
+    function drOpenInNewTab() {
+      if (!drState.currentDesignData?.url) return;
+      window.open(drState.currentDesignData.url, '_blank');
+    }
+
+    /* ─── 줌 제어 ─── */
+    function drZoom(delta) {
+      // 줌 레벨을 delta만큼 증가/감소 (10%~200% 범위 제한)
+      drState.zoom = Math.max(10, Math.min(200, drState.zoom + delta));
+      drApplyZoom();
+    }
+    function drZoomReset() {
+      drState.zoom = 100;
+      drApplyZoom();
+    }
+    function drZoomFit() {
+      // 뷰어 너비에 맞게 자동 줌 계산
+      const frame = document.getElementById('drViewerFrame');
+      if (!frame) return;
+      const frameW = frame.clientWidth - 96; // padding 96px 제외
+      drState.zoom = Math.floor((frameW / 1080) * 100);
+      drApplyZoom();
+    }
+    function drApplyZoom() {
+      // CSS transform으로 실제 줌 적용
+      const wrap = document.getElementById('drIframeWrap');
+      if (!wrap) return;
+      const scale = drState.zoom / 100;
+      wrap.style.transform = `scale(${scale})`;
+      // 줌 적용 후 높이도 조정 (transform은 레이아웃에 영향 없어서 수동 조정)
+      const iframe = document.getElementById('drViewerIframe');
+      if (iframe) {
+        const origH = parseFloat(iframe.style.height) || 1200;
+        wrap.style.marginBottom = `${origH * (scale - 1)}px`;
+      }
+      document.getElementById('drZoomLabel').textContent = drState.zoom + '%';
+    }
+
+    /* ─── 상태 변경 ─── */
+    async function drChangeStatus(newStatus) {
+      if (!drState.currentDesignId) return;
+      try {
+        await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        });
+        // 로컬 상태도 즉시 업데이트
+        if (drState.currentDesignData) {
+          drState.currentDesignData.status = newStatus;
+        }
+        toast('상태가 변경되었습니다', 'success');
+      } catch (e) {
+        toast('상태 변경 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 인라인 제목 편집 ─── */
+    function drStartEditTitle() {
+      // 제목 span을 input으로 교체
+      const titleEl = document.getElementById('drViewerTitle');
+      const currentName = drState.currentDesignData?.name || '';
+      const input = document.createElement('input');
+      input.className = 'dr-viewer-title-input';
+      input.value = currentName;
+      input.onblur = drSaveEditTitle;
+      input.onkeydown = e => {
+        if (e.key === 'Enter') drSaveEditTitle();
+        if (e.key === 'Escape') {
+          // 취소: 원래 span으로 복구
+          titleEl.textContent = currentName;
+          input.replaceWith(titleEl);
+        }
+      };
+      titleEl.replaceWith(input);
+      input.focus();
+      input.select();
+    }
+    async function drSaveEditTitle() {
+      // input을 span으로 되돌리고 Firebase에 새 이름 저장
+      const input = document.querySelector('.dr-viewer-title-input');
+      if (!input) return;
+      const newName = input.value.trim();
+      const span = document.createElement('span');
+      span.className = 'dr-viewer-title';
+      span.id = 'drViewerTitle';
+      span.onclick = drStartEditTitle;
+      span.textContent = newName || '이름 없음';
+      input.replaceWith(span);
+
+      if (!drState.currentDesignId || !newName) return;
+      try {
+        await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update({ name: newName });
+      } catch (e) {
+        toast('이름 저장 실패', 'error');
+      }
+    }
+
+    /* ─── 채팅 패널 토글 ─── */
+    function drToggleChat() {
+      const panel = document.getElementById('drChatPanel');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      const btn = document.getElementById('drChatToggleBtn');
+      if (btn) btn.textContent = panel.classList.contains('hidden') ? '💬 채팅 열기' : '💬 채팅';
+    }
+
+    /* ─── 채팅 메시지 로드 — 선택된 디자인의 채팅을 실시간으로 표시 ─── */
+    function drLoadChat(designId) {
+      // 이전 리스너 해제 (다른 디자인 선택 시 이전 채팅 멈추기)
+      if (drState.chatListener) {
+        drState.chatListener();
+        drState.chatListener = null;
+      }
+
+      const noDesign  = document.getElementById('drChatNoDesign');
+      const msgArea   = document.getElementById('drChatMessages');
+      const inputArea = document.getElementById('drChatInputArea');
+      const nickSel   = document.getElementById('drNickSelector');
+
+      // 채팅 영역 표시
+      noDesign.style.display  = 'none';
+      msgArea.style.display   = 'flex';
+      msgArea.style.flexDirection = 'column';
+      inputArea.style.display = 'flex';
+      if (nickSel) nickSel.style.display = '';
+
+      // 채팅 제목 업데이트
+      const titleEl = document.getElementById('drChatTitle');
+      if (titleEl) titleEl.textContent = drState.currentDesignData?.name || '피드백 채팅';
+
+      msgArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">메시지 불러오는 중...</div>';
+
+      // 이벤트 위임 — 채팅 영역 클릭을 한 곳에서 처리 (특수문자 이스케이프 문제 방지)
+      msgArea.onclick = null;
+      msgArea.addEventListener('click', drHandleChatClick);
+
+      let msgMap = {}; // 메시지 키 → 데이터 저장
+
+      // Firebase 실시간 리스너 — 새 메시지가 오면 자동으로 화면에 추가
+      const ref = firebaseDb.ref(`${DR_MESSAGES}/${designId}`);
+      let firstLoad = true;
+      let firstLoadBuffer = [];
+
+      const handler = ref.on('value', snap => {
+        const data = snap.val() || {};
+        msgMap = data;
+
+        if (firstLoad) {
+          // 첫 로드: 전체 메시지 한 번에 렌더링
+          firstLoad = false;
+          const msgs = Object.entries(data)
+            .map(([k, v]) => ({ key: k, ...v }))
+            .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+
+          if (msgs.length === 0) {
+            msgArea.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px;">아직 메시지가 없습니다.<br>첫 피드백을 남겨보세요!</div>';
+          } else {
+            msgArea.innerHTML = '';
+            msgs.forEach(m => drRenderMessage(m, msgMap));
+          }
+          // 스크롤 맨 아래로
+          setTimeout(() => { msgArea.scrollTop = msgArea.scrollHeight; }, 50);
+        } else {
+          // 실시간 업데이트: 전체 재렌더링
+          const msgs = Object.entries(data)
+            .map(([k, v]) => ({ key: k, ...v }))
+            .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+          const wasAtBottom = msgArea.scrollHeight - msgArea.scrollTop - msgArea.clientHeight < 60;
+          msgArea.innerHTML = '';
+          if (msgs.length === 0) {
+            msgArea.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px;">아직 메시지가 없습니다.</div>';
+          } else {
+            msgs.forEach(m => drRenderMessage(m, msgMap));
+          }
+          if (wasAtBottom) {
+            setTimeout(() => { msgArea.scrollTop = msgArea.scrollHeight; }, 50);
+          }
+        }
+      });
+
+      // 리스너 해제 함수 저장
+      drState.chatListener = () => ref.off('value', handler);
+    }
+
+    /* ─── 채팅 클릭 이벤트 위임 처리 ─── */
+    // data-action 속성으로 어떤 버튼인지 구분 (인라인 onclick 대신 사용)
+    function drHandleChatClick(e) {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action  = btn.dataset.action;
+      const msgKey  = btn.dataset.msgKey;
+      const quoteKey = btn.dataset.quoteKey;
+
+      if (action === 'edit-msg')    drEditMessage(msgKey);
+      if (action === 'delete-msg')  drDeleteMessage(msgKey);
+      if (action === 'reply-msg')   drReplyTo(msgKey);
+      if (action === 'confirm-msg') drConfirmMessage(msgKey);
+      if (action === 'goto-msg')    drScrollToMessage(quoteKey);
+    }
+
+    /* ─── 메시지 렌더링 — 메시지 하나를 HTML로 만들어 채팅창에 추가 ─── */
+    function drRenderMessage(msg, msgMap) {
+      const msgArea = document.getElementById('drChatMessages');
+      const el = document.createElement('div');
+      el.className = 'dr-msg';
+      el.id = 'drmsg-' + msg.key;
+
+      // 닉네임 이니셜 (첫 글자)
+      const avatar = (msg.nickname || '?')[0].toUpperCase();
+      const timeStr = drFormatDate(msg.created_at);
+
+      // 답글 인용 부분 (replyTo가 있으면)
+      let replyHtml = '';
+      if (msg.reply_to_key && msgMap[msg.reply_to_key]) {
+        const orig = msgMap[msg.reply_to_key];
+        const origText = (orig.text || '').substring(0, 40) + (orig.text?.length > 40 ? '...' : '');
+        replyHtml = `
+          <div class="dr-msg-reply-quote"
+               data-action="goto-msg" data-quote-key="${escHtml(msg.reply_to_key)}">
+            ↩ ${escHtml(orig.nickname || '?')}: ${escHtml(origText)}
+          </div>`;
+      }
+
+      // 확인 반응(체크) 목록
+      const checks = msg.checks || {};
+      const checkNames = Object.values(checks).filter(Boolean);
+      const confirmHtml = checkNames.length > 0
+        ? `<div class="dr-confirm-row">${checkNames.map(n => `<span class="dr-confirm-chip">✓ ${escHtml(n)}</span>`).join('')}</div>`
+        : '';
+
+      el.innerHTML = `
+        <div class="dr-msg-header">
+          <div class="dr-msg-avatar">${escHtml(avatar)}</div>
+          <span class="dr-msg-name">${escHtml(msg.nickname || '익명')}</span>
+          <span class="dr-msg-time">${timeStr}</span>
+        </div>
+        ${replyHtml}
+        <div class="dr-msg-text">${escHtml(msg.text || '')}</div>
+        ${confirmHtml}
+        <div class="dr-msg-actions">
+          <button class="dr-msg-action-btn"
+                  data-action="confirm-msg" data-msg-key="${escHtml(msg.key)}"
+                  title="확인 표시">✓ 확인</button>
+          <button class="dr-msg-action-btn"
+                  data-action="reply-msg" data-msg-key="${escHtml(msg.key)}"
+                  title="답글 달기">↩ 답글</button>
+          <button class="dr-msg-action-btn"
+                  data-action="edit-msg" data-msg-key="${escHtml(msg.key)}"
+                  title="수정">✏</button>
+          <button class="dr-msg-action-btn"
+                  data-action="delete-msg" data-msg-key="${escHtml(msg.key)}"
+                  title="삭제">🗑</button>
+        </div>
+      `;
+      msgArea.appendChild(el);
+    }
+
+    /* ─── 메시지 수정 ─── */
+    async function drEditMessage(key) {
+      if (!drState.currentDesignId || !key) return;
+      const ref = firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}/${key}`);
+      const snap = await ref.get();
+      if (!snap.exists()) return;
+
+      const msg = snap.val();
+      const newText = prompt('메시지를 수정하세요:', msg.text || '');
+      if (newText === null || newText.trim() === '') return;
+
+      try {
+        await ref.update({ text: newText.trim(), edited_at: new Date().toISOString() });
+        toast('메시지가 수정되었습니다', 'success');
+      } catch (e) {
+        toast('수정 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 메시지 삭제 ─── */
+    async function drDeleteMessage(key) {
+      if (!drState.currentDesignId || !key) return;
+      if (!confirm('이 메시지를 삭제할까요?')) return;
+      try {
+        await firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}/${key}`).remove();
+        toast('메시지가 삭제되었습니다', 'success');
+      } catch (e) {
+        toast('삭제 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 확인 반응 (✓ 체크) — 내가 읽었다는 표시를 토글 ─── */
+    async function drConfirmMessage(key) {
+      if (!drState.currentDesignId || !key) return;
+      const nick = drState.currentNickname;
+      if (!nick) {
+        toast('먼저 닉네임을 선택하세요', 'error');
+        return;
+      }
+      const checkRef = firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}/${key}/checks/${nick}`);
+      const snap = await checkRef.get();
+      if (snap.exists()) {
+        // 이미 확인했으면 취소
+        await checkRef.remove();
+      } else {
+        // 확인 추가
+        await checkRef.set(nick);
+      }
+    }
+
+    /* ─── 답글 설정 ─── */
+    function drReplyTo(key) {
+      const msgEl = document.getElementById('drmsg-' + key);
+      if (!msgEl) return;
+      const textEl = msgEl.querySelector('.dr-msg-text');
+      const nameEl = msgEl.querySelector('.dr-msg-name');
+      drState.replyTo = {
+        key,
+        text: textEl?.textContent || '',
+        name: nameEl?.textContent || '?'
+      };
+      // 답글 바 표시
+      const bar = document.getElementById('drReplyBar');
+      bar.style.display = 'flex';
+      document.getElementById('drReplyPreview').textContent =
+        `↩ ${drState.replyTo.name}: ${drState.replyTo.text.substring(0, 30)}`;
+      // 입력창 포커스
+      document.getElementById('drChatInput')?.focus();
+    }
+    function drCancelReply() {
+      drState.replyTo = null;
+      document.getElementById('drReplyBar').style.display = 'none';
+    }
+
+    /* ─── 답글 대상 메시지로 스크롤 ─── */
+    function drScrollToMessage(key) {
+      const el = document.getElementById('drmsg-' + key);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /* ─── 메시지 전송 ─── */
+    async function drSendMessage() {
+      const input = document.getElementById('drChatInput');
+      const text  = (input?.value || '').trim();
+      if (!text) return;
+      if (!drState.currentDesignId) return;
+
+      // 닉네임 없으면 선택 요구
+      if (!drState.currentNickname) {
+        toast('닉네임을 먼저 선택하세요', 'error');
+        drToggleNickDropdown();
+        return;
+      }
+
+      const msgData = {
+        text,
+        nickname: drState.currentNickname,
+        created_at: new Date().toISOString(),
+      };
+      // 답글 정보 추가
+      if (drState.replyTo) {
+        msgData.reply_to_key  = drState.replyTo.key;
+        msgData.reply_to_name = drState.replyTo.name;
+      }
+
+      try {
+        await firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}`).push(msgData);
+        input.value = '';
+        drCancelReply();
+      } catch (e) {
+        toast('전송 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 닉네임 관련 ─── */
+    // 닉네임 목록을 Firebase에서 불러오기
+    async function drLoadNicknameList(designId) {
+      const snap = await firebaseDb.ref(`${DR_NICKNAMES}/${designId}`).get();
+      drState.nicknameList = snap.exists() ? (snap.val() || []) : [];
+      drRenderNicknameList();
+    }
+
+    // 닉네임 드롭다운 목록 렌더링
+    function drRenderNicknameList() {
+      const listEl = document.getElementById('drNicknameList');
+      if (!listEl) return;
+      if (drState.nicknameList.length === 0) {
+        listEl.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text-muted);text-align:center;">닉네임을 추가하세요</div>';
+        return;
+      }
+      listEl.className = `dr-nick-list ${drState.isNickAdmin ? 'dr-nick-admin-mode' : ''}`;
+      listEl.innerHTML = drState.nicknameList.map(name => `
+        <div class="dr-nick-chip ${name === drState.currentNickname ? 'selected' : ''}"
+             onclick="drSelectNickname('${escHtml(name)}')">
+          <span>${escHtml(name)}</span>
+          <button class="dr-nick-del-btn" onclick="event.stopPropagation();drDeleteNickname('${escHtml(name)}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // 닉네임 선택
+    function drSelectNickname(name) {
+      drState.currentNickname = name;
+      drPersistSet('dr_nickname', name);
+      drUpdateNicknameUI();
+      drRenderNicknameList();
+      // 드롭다운 닫기
+      const dropdown = document.getElementById('drNickDropdown');
+      if (dropdown) dropdown.style.display = 'none';
+    }
+
+    // 새 닉네임 추가
+    async function drSaveNickname() {
+      const input = document.getElementById('drNicknameInput');
+      const name  = (input?.value || '').trim();
+      if (!name) return;
+      if (!drState.currentDesignId) { toast('디자인을 먼저 선택하세요', 'error'); return; }
+
+      // 중복 방지
+      if (!drState.nicknameList.includes(name)) {
+        drState.nicknameList.push(name);
+        await firebaseDb.ref(`${DR_NICKNAMES}/${drState.currentDesignId}`).set(drState.nicknameList);
+      }
+      if (input) input.value = '';
+      drSelectNickname(name);
+    }
+
+    // 닉네임 삭제 (관리 모드)
+    async function drDeleteNickname(name) {
+      if (!drState.currentDesignId) return;
+      drState.nicknameList = drState.nicknameList.filter(n => n !== name);
+      await firebaseDb.ref(`${DR_NICKNAMES}/${drState.currentDesignId}`).set(drState.nicknameList);
+      if (drState.currentNickname === name) {
+        drState.currentNickname = '';
+        drPersistSet('dr_nickname', '');
+        drUpdateNicknameUI();
+      }
+      drRenderNicknameList();
+    }
+
+    // 닉네임 드롭다운 열기/닫기
+    function drToggleNickDropdown() {
+      const dropdown = document.getElementById('drNickDropdown');
+      if (!dropdown) return;
+      const isOpen = dropdown.style.display !== 'none';
+      dropdown.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) drRenderNicknameList();
+    }
+
+    // 닉네임 관리 모드 토글 (삭제 버튼 보이기/숨기기)
+    function drToggleNicknameAdmin() {
+      drState.isNickAdmin = !drState.isNickAdmin;
+      const btn = document.getElementById('drNicknameAdminBtn');
+      if (btn) btn.textContent = drState.isNickAdmin ? '완료' : '관리';
+      drRenderNicknameList();
+    }
+
+    // 닉네임 UI 업데이트 (아바타 + 레이블)
+    function drUpdateNicknameUI() {
+      const avatar = document.getElementById('drNicknameAvatar');
+      const label  = document.getElementById('drNicknameLabel');
+      if (drState.currentNickname) {
+        if (avatar) avatar.textContent = drState.currentNickname[0].toUpperCase();
+        if (label)  label.textContent  = drState.currentNickname;
+      } else {
+        if (avatar) avatar.textContent = '?';
+        if (label)  label.textContent  = '닉네임을 선택하세요';
+      }
+    }
+
+    /* ─── 업로드 모달 ─── */
+    function drOpenUploadModal() {
+      // 폼 초기화
+      document.getElementById('drUploadName').value = '';
+      document.getElementById('drFileName').textContent = '파일 미선택';
+      document.getElementById('drUploadProgress').style.display = 'none';
+      drState.uploadFile = null;
+      document.getElementById('drUploadModal').classList.add('show');
+    }
+    function drCloseUploadModal() {
+      document.getElementById('drUploadModal').classList.remove('show');
+      drState.uploadFile = null;
+    }
+    function drHandleFileSelect(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      drState.uploadFile = file;
+      document.getElementById('drFileName').textContent = file.name;
+      // 파일명이 비어있으면 자동으로 프로젝트명 채우기
+      const nameInput = document.getElementById('drUploadName');
+      if (!nameInput.value) {
+        nameInput.value = file.name.replace(/\.html?$/i, '');
+      }
+      // 파일을 읽어서 메타데이터(사이즈/페이지 수) 자동 추출
+      drExtractHtmlMeta(file);
+    }
+    function drHandleFileDrop(files) {
+      drHandleFileSelect(files);
+    }
+
+    // HTML 파일에서 사이즈 / 페이지 수 자동 추출
+    // cross-origin iframe은 접근 불가 → 클라이언트에서 FileReader로 직접 읽기
+    function drExtractHtmlMeta(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(e.target.result, 'text/html');
+          // .card 클래스를 가진 첫 번째 요소의 인라인 스타일에서 width/height 읽기
+          const card = doc.querySelector('.card');
+          if (card) {
+            const w = parseInt(card.style.width) || 1080;
+            const h = parseInt(card.style.height) || 1350;
+            const pages = doc.querySelectorAll('.card').length || 1;
+            drState._extractedMeta = { width: w, height: h, pages };
+          }
+        } catch(ex) {
+          // 파싱 실패해도 무시 (기본값 사용)
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 실제 업로드 실행
+    async function drSubmitUpload() {
+      const name   = document.getElementById('drUploadName').value.trim();
+      const status = document.getElementById('drUploadStatus').value;
+      const file   = drState.uploadFile;
+
+      if (!name)   { toast('프로젝트명을 입력하세요', 'error'); return; }
+      if (!file)   { toast('HTML 파일을 선택하세요', 'error'); return; }
+
+      // Firebase Storage 초기화 확인
+      let storage;
+      try {
+        storage = firebase.storage();
+      } catch(e) {
+        toast('Storage SDK가 로드되지 않았습니다', 'error');
+        return;
+      }
+
+      const progressEl = document.getElementById('drUploadProgress');
+      progressEl.style.display = 'block';
+      progressEl.textContent = '업로드 중...';
+
+      try {
+        // Firebase Storage에 파일 업로드
+        const storageRef = storage.ref(`design-review/${Date.now()}_${file.name}`);
+        const uploadTask = storageRef.put(file);
+
+        // 업로드 진행률 표시
+        uploadTask.on('state_changed',
+          snap => {
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            progressEl.textContent = `업로드 중... ${pct}%`;
+          }
+        );
+
+        await uploadTask;
+        const url = await storageRef.getDownloadURL();
+
+        // 메타데이터 준비
+        const meta = drState._extractedMeta || {};
+        drState._extractedMeta = null;
+
+        // Firebase DB에 디자인 정보 저장
+        const newRef = firebaseDb.ref(DR_DESIGNS).push();
+        await newRef.set({
+          name,
+          status,
+          url,
+          type: 'upload',
+          created_at: new Date().toISOString(),
+          ...(meta.width  && { meta_width:  meta.width  }),
+          ...(meta.height && { meta_height: meta.height }),
+          ...(meta.pages  && { meta_pages:  meta.pages  }),
+        });
+
+        drCloseUploadModal();
+        toast('업로드 완료!', 'success');
+        // 새로 등록된 디자인 자동 선택
+        drSelectDesign(newRef.key);
+      } catch (e) {
+        progressEl.style.display = 'none';
+        toast('업로드 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 링크 등록 모달 ─── */
+    function drOpenLinkModal() {
+      document.getElementById('drLinkName').value = '';
+      document.getElementById('drLinkUrl').value  = '';
+      document.getElementById('drLinkModal').classList.add('show');
+    }
+    function drCloseLinkModal() {
+      document.getElementById('drLinkModal').classList.remove('show');
+    }
+    async function drSubmitLink() {
+      const name   = document.getElementById('drLinkName').value.trim();
+      const url    = document.getElementById('drLinkUrl').value.trim();
+      const status = document.getElementById('drLinkStatus').value;
+
+      if (!name) { toast('프로젝트명을 입력하세요', 'error'); return; }
+      if (!url)  { toast('URL을 입력하세요', 'error'); return; }
+
+      try {
+        const newRef = firebaseDb.ref(DR_DESIGNS).push();
+        await newRef.set({
+          name,
+          status,
+          url,
+          type: 'link',
+          created_at: new Date().toISOString(),
+        });
+        drCloseLinkModal();
+        toast('링크가 등록되었습니다', 'success');
+        drSelectDesign(newRef.key);
+      } catch (e) {
+        toast('등록 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 유틸 함수 ─── */
+    // 날짜 포맷 — ISO 날짜를 "MM.DD HH:mm" 형식으로 변환
+    function drFormatDate(iso) {
+      if (!iso) return '';
+      try {
+        const d = new Date(iso);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        return `${mm}.${dd} ${hh}:${mi}`;
+      } catch(e) { return ''; }
+    }
+
+    // 상태 코드를 한국어 레이블로 변환
+    function drStatusLabel(status) {
+      const labels = {
+        review: '검토중', request: '수정요청',
+        approved: '승인', done: '완료'
+      };
+      return labels[status] || '검토중';
+    }
+
+    /* ▲▲▲ 디자인 리뷰 탭 전체 코드 끝 ▲▲▲ */
 
     /* ═══════════════════════════════════════
        에이전트 내보내기 — 현재 카테고리를 MD 파일로 다운로드
