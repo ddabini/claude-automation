@@ -8608,6 +8608,10 @@
       replyTo: null,            // 답글 대상 메시지 { key, text, name }
       uploadFile: null,         // 업로드 대기 중인 HTML 파일
       isNickAdmin: false,       // 닉네임 관리 모드 여부
+      // ── 신규 추가 필드 ──
+      currentPage: 0,           // 현재 선택된 페이지 탭 (0 = 전체)
+      allMessages: [],          // 전체 메시지 (페이지 필터링용 원본 데이터)
+      allMsgMap: {},            // 메시지 키 → 데이터 맵 (답글 인용에 사용)
     };
 
     /* ─── 쿠키 / 영속 저장 — 브라우저를 닫아도 닉네임이 유지되도록 ─── */
