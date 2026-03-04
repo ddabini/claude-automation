@@ -4115,7 +4115,10 @@
       pixabayKey: '27509389-50a62cff1493138db37e536ee',       // Pixabay (보조 — 스톡 이미지)
       unsplashKey: '',
       pexelsKey: '',
-      youtubeApiKey: 'AIzaSyDsJ7_tk2E8Wcp2kazlqg7fIri4BboRNrA' // YouTube Data API v3 (검색 + 통계, 무료 10,000 units/일)
+      youtubeApiKey: 'AIzaSyDsJ7_tk2E8Wcp2kazlqg7fIri4BboRNrA', // YouTube Data API v3 (검색 + 통계, 무료 10,000 units/일)
+      // Pinterest 네이티브 검색 — Firebase Cloud Function 엔드포인트
+      // Cloud Function 배포 후 URL이 자동 할당됨 (예: https://us-central1-did-ads.cloudfunctions.net/searchPinterest)
+      pinterestFnUrl: 'https://us-central1-did-ads.cloudfunctions.net/searchPinterest'
     };
     let config = { ...DEFAULT_CONFIG };
 
