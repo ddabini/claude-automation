@@ -9456,15 +9456,22 @@
       drRenderNicknameList();
     }
 
-    // 닉네임 UI 업데이트 (아바타 + 레이블)
+    // 닉네임 UI 업데이트 (아바타 + 레이블 + 해시 컬러)
     function drUpdateNicknameUI() {
       const avatar = document.getElementById('drNicknameAvatar');
       const label  = document.getElementById('drNicknameLabel');
       if (drState.currentNickname) {
-        if (avatar) avatar.textContent = drState.currentNickname[0].toUpperCase();
+        if (avatar) {
+          avatar.textContent = drState.currentNickname[0].toUpperCase();
+          // 닉네임별 고유 색상으로 아바타 배경색 설정
+          avatar.style.background = drNickColor(drState.currentNickname);
+        }
         if (label)  label.textContent  = drState.currentNickname;
       } else {
-        if (avatar) avatar.textContent = '?';
+        if (avatar) {
+          avatar.textContent = '?';
+          avatar.style.background = 'var(--primary)'; // 선택 전 기본 색상
+        }
         if (label)  label.textContent  = '닉네임을 선택하세요';
       }
     }
