@@ -7033,6 +7033,8 @@
       results: [],           // 영상 검색 결과 (video/shorts/ad 공유)
       communityResults: [],  // 커뮤니티 검색 결과 (이미지 기반)
       page: 1,               // 현재 Serper 페이지
+      nextPageToken: '',     // YouTube Data API 페이지 토큰
+      useYouTubeAPI: false,  // YouTube API 사용 여부 (키 존재 시 true)
       loading: false,        // 로딩 중 여부
       hasMore: true,         // 추가 결과 존재 여부
       activeChip: 'video',   // 활성 칩 (기본: 영상)
