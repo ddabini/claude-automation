@@ -1175,6 +1175,63 @@
     .dr-msg-action-btn:hover { background: #f3f4f6; color: var(--text); }
     /* 확인 반응 — 누가 읽었는지 표시 */
     .dr-confirm-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+
+    /* ── 페이지별 채팅 탭 ── */
+    /* 채팅 패널 상단의 페이지 탭 선택 바 */
+    .dr-page-tabs {
+      display: flex; gap: 0; overflow-x: auto; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none; /* 파이어폭스에서 스크롤바 숨김 */
+    }
+    .dr-page-tabs::-webkit-scrollbar { display: none; } /* 크롬에서 스크롤바 숨김 */
+    .dr-page-tab {
+      padding: 6px 12px; font-size: 12px; font-weight: 500;
+      border: none; background: none; cursor: pointer;
+      color: var(--text-secondary); white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all 0.15s; font-family: inherit; position: relative;
+      flex-shrink: 0;
+    }
+    .dr-page-tab:hover { color: var(--primary); background: #f3f4f6; }
+    .dr-page-tab.active {
+      color: var(--primary); border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    /* 안 읽은 메시지 뱃지 — 빨간 점 */
+    .dr-unread-badge {
+      position: absolute; top: 5px; right: 5px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #ef4444; display: none;
+    }
+    .dr-unread-badge.show { display: block; }
+    /* 채팅 헤더 안 읽은 수 표시 */
+    .dr-unread-count {
+      background: #ef4444; color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 1px 5px; border-radius: 8px;
+      margin-left: 4px; display: none;
+    }
+    .dr-unread-count.show { display: inline-block; }
+
+    /* ── 메시지 액션 버튼 항상 표시 (모바일 지원) ── */
+    /* 기존 hover 시만 보이던 것을 항상 표시하되 약하게 */
+    .dr-msg-actions {
+      display: flex; gap: 4px; margin-top: 4px;
+      opacity: 0.45; transition: opacity 0.15s;
+    }
+    .dr-msg:hover .dr-msg-actions { opacity: 1; }
+
+    /* ── Figma 버튼 스타일 ── */
+    /* Figma 이동 버튼 — 등록된 URL이 없으면 흐리게 표시 */
+    .dr-btn-figma {
+      background: #1e1e1e; color: #fff; border-color: #1e1e1e;
+    }
+    .dr-btn-figma:hover { background: #383838; border-color: #383838; }
+    .dr-btn-figma.no-url {
+      background: var(--surface); color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .dr-btn-figma.no-url:hover { background: #f3f4f6; border-color: var(--border-hover); }
     .dr-confirm-chip {
       font-size: 10px; padding: 1px 5px;
       border-radius: 8px; background: #e0f2fe; color: #0369a1;
