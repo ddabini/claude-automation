@@ -2503,7 +2503,10 @@
             headContent += link.outerHTML;
           });
           doc.querySelectorAll('style').forEach(s => {
-            headContent += s.outerHTML;
+            // body 스타일을 Shadow DOM의 :host로 변환 (폰트, 색상 등 적용)
+            let css = s.textContent;
+            css = css.replace(/\bbody\s*\{/g, ':host {');
+            headContent += '<style>' + css + '</style>';
           });
 
           // 리포트 본문(body 안의 내용) 추출
