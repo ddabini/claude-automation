@@ -8010,6 +8010,29 @@
           </div>` : ''}
         </div>
         <div id="ytInsightStats"></div>
+
+        ${videoData.description ? `
+        <hr class="yt-insight-divider">
+        <div style="margin-top:8px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">📝 영상 설명</div>
+          <div id="ytInsightDesc" style="
+            font-size:12px;line-height:1.6;color:var(--text-muted);
+            max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;
+            background:var(--bg);border-radius:8px;padding:10px;
+          ">${escHtml(videoData.description.substring(0, 1000))}${videoData.description.length > 1000 ? '...' : ''}</div>
+        </div>` : ''}
+
+        <hr class="yt-insight-divider" style="margin-top:10px;">
+        <div id="ytInsightAnalysis" style="margin-top:8px;">
+          <button onclick="ytAnalyzeVideo('${videoId}')" style="
+            width:100%;padding:10px;border:1px dashed var(--border);border-radius:8px;
+            background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;
+            color:var(--primary);display:flex;align-items:center;justify-content:center;gap:6px;
+          ">
+            🔍 영상 구성 분석
+          </button>
+        </div>
+
         <a class="yt-insight-link" href="${escHtml(videoData.sourceUrl)}" target="_blank" rel="noopener">
           ▶ YouTube에서 보기
         </a>
