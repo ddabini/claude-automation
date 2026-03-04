@@ -2650,13 +2650,218 @@
       margin-top: 2px;
     }
 
+    /* ─── 쇼츠 세로 그리드 — 9:16 비율 카드 ─── */
+    .yt-grid--shorts { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .yt-card--shorts .yt-thumb { aspect-ratio: 9/16; }
+    .yt-card--shorts .yt-play-btn { width: 40px; height: 40px; }
+    .yt-card--shorts .yt-play-btn::after {
+      border-left-width: 12px;
+      border-top-width: 7px;
+      border-bottom-width: 7px;
+      margin-left: 2px;
+    }
+    /* 쇼츠 뱃지 — 좌상단 */
+    .yt-shorts-badge {
+      position: absolute;
+      top: 8px; left: 8px;
+      background: rgba(255,0,0,0.9);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      z-index: 2;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── 커뮤니티 카드 — 이미지 중심 ─── */
+    .yt-grid--community { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .yt-card--community .yt-thumb { aspect-ratio: auto; max-height: 360px; }
+    .yt-card--community .yt-play-btn { display: none; }
+    .yt-community-source {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ─── 인라인 플레이어 모달 — 오버레이 + 2열 레이아웃 ─── */
+    .yt-player-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: ytFadeIn 0.2s ease;
+    }
+    @keyframes ytFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .yt-player-content {
+      display: flex;
+      max-width: 1200px;
+      width: 100%;
+      height: 70vh;
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    /* 좌측 — iframe 영역 */
+    .yt-player-left {
+      flex: 2;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+    .yt-player-left iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    /* 우측 — 인사이트 패널 */
+    .yt-player-right {
+      flex: 1;
+      padding: 24px;
+      min-width: 280px;
+      max-width: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-left: 1px solid var(--border);
+    }
+    .yt-player-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .yt-player-close:hover { background: rgba(0,0,0,0.8); }
+    /* 인사이트 타이틀 */
+    .yt-insight-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+    /* 인사이트 메타 정보 */
+    .yt-insight-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .yt-insight-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .yt-insight-row .yt-insight-icon {
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+    .yt-insight-row .yt-insight-label {
+      color: var(--text-muted);
+      min-width: 48px;
+    }
+    .yt-insight-row .yt-insight-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    /* 인사이트 구분선 */
+    .yt-insight-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+    /* 인사이트 통계 (YouTube API) */
+    .yt-insight-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .yt-insight-stat {
+      text-align: center;
+      padding: 10px 4px;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+    .yt-insight-stat-num {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .yt-insight-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    /* YouTube 링크 버튼 */
+    .yt-insight-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      background: #ff0000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+      margin-top: auto;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .yt-insight-link:hover { background: #cc0000; }
+
     /* 반응형 — 모바일 최적화 */
     @media (max-width: 640px) {
       #youtubeView { padding: 12px; }
       .yt-grid { grid-template-columns: 1fr; gap: 12px; }
+      .yt-grid--shorts { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
       .yt-search-bar { flex-direction: column; }
       .yt-search-btn { width: 100%; }
       .yt-sort-bar { flex-direction: column; gap: 6px; align-items: flex-start; }
+      /* 모바일 플레이어 — 세로 배치 */
+      .yt-player-modal { padding: 8px; }
+      .yt-player-content {
+        flex-direction: column;
+        height: 90vh;
+      }
+      .yt-player-left { flex: none; height: 30vh; min-height: 200px; }
+      .yt-player-right {
+        flex: 1;
+        min-width: unset;
+        max-width: unset;
+        padding: 16px;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
     }
 
   </style>
