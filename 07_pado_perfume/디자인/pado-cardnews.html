@@ -872,37 +872,46 @@
   <!-- ============================================================ -->
   <script>
     /*
-      URL의 ?page=N 파라미터를 읽어서 해당 카드를 보여주는 스크립트
-      ?page=1 → 1장 (브랜드 임팩트)
-      ?page=2 → 2장 (제품 스토리)
-      ?page=3 → 3장 (라인업 + CTA)
-      파라미터 없으면 → 기본값 1장 표시
+      URL의 ?page=N 파라미터로 장별 전환
+      ?page=1 → 1장만 표시
+      ?page=2 → 2장만 표시
+      ?page=3 → 3장만 표시
+      파라미터 없으면 → 3장 모두 세로로 스택 표시 (Pikbox 디자인 리뷰용)
     */
 
-    // URL에서 page 파라미터 값을 가져옴
+    // URL에서 page 파라미터 값을 가져옴 (없으면 null 반환)
     function getCurrentPage() {
       const params = new URLSearchParams(window.location.search);
-      const page = parseInt(params.get('page')) || 1;  // 없으면 1 반환
+      const raw = params.get('page');
+      if (raw === null) return null;  // 파라미터 없으면 null → 전체 표시
+      const page = parseInt(raw);
+      if (isNaN(page)) return null;
       // 유효 범위 1~3 으로 제한
       return Math.max(1, Math.min(3, page));
     }
 
-    // 해당 페이지 번호의 카드를 화면에 표시
-    function showCard(pageNumber) {
-      // 모든 카드를 먼저 숨김
-      document.querySelectorAll('.card').forEach(function(card) {
-        card.classList.remove('active');
-      });
+    // 카드 표시 처리
+    function showCards() {
+      const page = getCurrentPage();
+      const allCards = document.querySelectorAll('.card');
 
-      // 해당 카드만 활성화
-      const targetCard = document.getElementById('card' + pageNumber);
-      if (targetCard) {
-        targetCard.classList.add('active');
+      if (page === null) {
+        // 파라미터 없음 → 3장 모두 세로 스택으로 표시 (Pikbox용)
+        allCards.forEach(function(card) {
+          card.classList.add('active');
+        });
+      } else {
+        // 특정 페이지만 표시
+        allCards.forEach(function(card) {
+          card.classList.remove('active');
+        });
+        var target = document.getElementById('card' + page);
+        if (target) target.classList.add('active');
       }
     }
 
-    // 페이지 로드 시 현재 페이지 번호에 맞는 카드 표시
-    showCard(getCurrentPage());
+    // 페이지 로드 시 실행
+    showCards();
   </script>
 
 </body>
