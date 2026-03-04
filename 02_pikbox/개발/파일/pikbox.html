@@ -9399,21 +9399,28 @@
 
       iframe.src = design.url || '';
 
-      // 메타데이터에 저장된 높이로 iframe 높이 설정
-      if (design.meta_height) {
-        const pages = design.meta_pages || 1;
-        iframe.style.height = (design.meta_height * pages) + 'px';
-      } else {
-        iframe.style.height = '1200px'; // 기본 높이
-      }
+      // 메타데이터에 저장된 높이로 iframe 전체 높이 설정 (전체 장 높이)
+      const totalPages = design.meta_pages || 1;
+      const pageH = design.meta_height || 1200;
+
+      // iframe은 모든 장이 이어진 전체 높이로 설정
+      iframe.style.height = (pageH * totalPages) + 'px';
+
+      // 뷰어 페이지 상태 초기화 — 디자인 변경 시 항상 1장부터
+      drState.viewerPage      = 1;
+      drState.viewerTotalPages = totalPages;
+      drState.viewerPageHeight = pageH;
 
       // 줌 70%로 고정 (일관된 초기 스케일 제공)
       drState.zoom = 70;
       drApplyZoom();
 
+      // 뷰어 화살표/인디케이터 업데이트
+      drUpdatePageNav();
+
       // 페이지 탭 초기화 (다중 페이지 디자인이면 탭 생성)
       drState.currentPage = 0; // 디자인 변경 시 항상 "전체" 탭으로 리셋
-      const pages = design.meta_pages || 1;
+      const pages = totalPages;
       drBuildPageTabs(pages);
 
       // 채팅 불러오기
