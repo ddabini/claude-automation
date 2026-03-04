@@ -3984,6 +3984,8 @@
       firebaseApp = firebase.initializeApp(firebaseConfig);
     }
     firebaseDb = firebase.database();
+    // Firebase Storage 인스턴스 — 이미지 업로드용
+    const firebaseStorage = firebase.storage();
 
     // Firebase RTDB 경로 상수 — 모든 Pikbox 데이터는 이 경로 아래에 저장
     const FB_ROOT = 'pikbox';
