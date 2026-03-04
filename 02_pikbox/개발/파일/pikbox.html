@@ -7201,11 +7201,12 @@
     // ─── YouTube Data API v3 검색 — 정확한 날짜 + 통계 + 정렬 제공 ───
     // API 키가 있을 때만 사용, 없으면 Serper 폴백
     // order: 'date'(최신순), 'relevance'(관련순), 'viewCount'(조회수순)
-    async function searchYouTubeAPI(query, order = 'relevance', pageToken = '', maxResults = 25) {
+    async function searchYouTubeAPI(query, order = 'relevance', pageToken = '', maxResults = 25, videoDuration = '') {
       const apiKey = config.youtubeApiKey;
       if (!apiKey) return { items: [], nextPageToken: '' };
 
       // 1단계: search 엔드포인트로 videoId 목록 가져오기 (100 units)
+      // videoDuration: 'short'(4분 이하), 'medium'(4~20분), 'long'(20분 이상), ''(전체)
       const searchParams = new URLSearchParams({
         part: 'snippet',
         type: 'video',
@@ -7217,6 +7218,7 @@
         key: apiKey
       });
       if (pageToken) searchParams.set('pageToken', pageToken);
+      if (videoDuration) searchParams.set('videoDuration', videoDuration);
 
       const searchRes = await fetch(
         `https://www.googleapis.com/youtube/v3/search?${searchParams}`
