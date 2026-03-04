@@ -9595,22 +9595,28 @@
       document.getElementById('drLinkModal').classList.remove('show');
     }
     async function drSubmitLink() {
-      const name   = document.getElementById('drLinkName').value.trim();
-      const url    = document.getElementById('drLinkUrl').value.trim();
-      const status = document.getElementById('drLinkStatus').value;
+      const name     = document.getElementById('drLinkName').value.trim();
+      const url      = document.getElementById('drLinkUrl').value.trim();
+      const status   = document.getElementById('drLinkStatus').value;
+      // Figma URL (선택 입력) — 등록 후 Figma 버튼으로 바로 이동 가능
+      const figmaUrl = (document.getElementById('drLinkFigmaUrl')?.value || '').trim();
 
       if (!name) { toast('프로젝트명을 입력하세요', 'error'); return; }
       if (!url)  { toast('URL을 입력하세요', 'error'); return; }
 
       try {
         const newRef = firebaseDb.ref(DR_DESIGNS).push();
-        await newRef.set({
+        const designData = {
           name,
           status,
           url,
           type: 'link',
           created_at: new Date().toISOString(),
-        });
+        };
+        // Figma URL이 있으면 함께 저장
+        if (figmaUrl) designData.figma_url = figmaUrl;
+
+        await newRef.set(designData);
         drCloseLinkModal();
         toast('링크가 등록되었습니다', 'success');
         drSelectDesign(newRef.key);
