@@ -9506,9 +9506,9 @@
 
       iframe.src = design.url || '';
 
-      // 메타데이터에 저장된 높이로 iframe 전체 높이 설정 (전체 장 높이)
-      const totalPages = design.meta_pages || 1;
-      const pageH = design.meta_height || 1200;
+      // 메타데이터에서 페이지 수와 높이 읽기 — DB 필드: pages/height (또는 meta_ 접두사)
+      const totalPages = design.pages || design.meta_pages || 1;
+      const pageH = design.height || design.meta_height || 1200;
 
       // iframe은 모든 장이 이어진 전체 높이로 설정
       iframe.style.height = (pageH * totalPages) + 'px';
