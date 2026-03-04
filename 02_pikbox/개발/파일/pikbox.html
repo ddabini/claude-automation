@@ -1026,6 +1026,68 @@
       width: 1080px;
       display: block;
     }
+    /* ── 카드뉴스 페이지 네비게이션 — 뷰어 안에 겹쳐서 표시되는 화살표+인디케이터 ── */
+
+    /* 뷰어 프레임을 기준으로 화살표를 absolute 배치하기 위해 position:relative */
+    .dr-viewer-frame {
+      position: relative; /* 화살표 버튼의 기준점 */
+    }
+
+    /* 이전/다음 화살표 버튼 공통 스타일 */
+    .dr-page-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      backdrop-filter: blur(2px);
+      /* 선택 방지 */
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .dr-page-nav:hover { background: rgba(0,0,0,0.7); }
+    .dr-page-nav:active { transform: translateY(-50%) scale(0.92); }
+    /* 1장짜리 디자인, 또는 화살표를 숨겨야 할 때 */
+    .dr-page-nav.hidden { display: none !important; }
+
+    /* 이전 화살표: 왼쪽 16px */
+    .dr-page-prev { left: 16px; }
+    /* 다음 화살표: 오른쪽 16px */
+    .dr-page-next { right: 16px; }
+
+    /* 페이지 인디케이터 "2 / 4" — 뷰어 하단 중앙 */
+    .dr-page-indicator {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px 14px;
+      border-radius: 20px;
+      z-index: 10;
+      backdrop-filter: blur(2px);
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: none; /* 클릭 통과 */
+      transition: opacity 0.2s;
+    }
+    .dr-page-indicator.hidden { display: none; }
+
     /* 줌 컨트롤 바 */
     .dr-zoom-bar {
       height: 40px;
