@@ -9465,6 +9465,96 @@
       window.open(drState.currentDesignData.url, '_blank');
     }
 
+    /* ─── 이미지 저장 — 현재 보고 있는 장을 PNG로 다운로드 ─── */
+    /**
+     * 동작 방식:
+     * 1) html2canvas로 iframe을 PNG 캡처 시도 (same-origin일 때만 가능)
+     * 2) cross-origin(Firebase Storage URL)이면 html2canvas가 실패 → 새 탭에서 열기로 안내
+     * 파일명: "{디자인이름}_page{페이지번호}.png"
+     */
+    async function drSaveImage() {
+      if (!drState.currentDesignId) {
+        toast('디자인을 먼저 선택하세요', 'error');
+        return;
+      }
+
+      const design = drState.currentDesignData;
+      const iframe = document.getElementById('drViewerIframe');
+      if (!iframe) return;
+
+      // 현재 장 번호와 디자인 이름으로 파일명 생성
+      const pageName = (drState.viewerTotalPages || 1) > 1
+        ? `_page${drState.viewerPage}`
+        : '';
+      const safeName = (design?.name || '디자인').replace(/[/\\?%*:|"<>]/g, '_');
+      const filename  = `${safeName}${pageName}.png`;
+
+      const btn = document.getElementById('drSaveImgBtn');
+      if (btn) { btn.textContent = '⏳ 저장 중...'; btn.disabled = true; }
+
+      try {
+        // html2canvas로 iframe 내부 캡처 시도 (same-origin일 때만 동작)
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+
+        if (iframeDoc && iframeDoc.body) {
+          // ── same-origin: html2canvas 캡처 ──
+          const pageH   = drState.viewerPageHeight || 1200;
+          const pageIdx = (drState.viewerPage || 1) - 1; // 0-based offset
+
+          const canvas = await html2canvas(iframeDoc.body, {
+            scale: 2,          // 2배 해상도로 캡처 (고화질)
+            useCORS: true,
+            allowTaint: false,
+            // 현재 장 위치만 캡처 (y 오프셋, 높이 고정)
+            y: pageIdx * pageH,
+            height: pageH,
+            windowHeight: pageH,
+            scrollY: -(pageIdx * pageH),
+          });
+
+          // canvas를 PNG Blob으로 변환 후 다운로드
+          canvas.toBlob((blob) => {
+            if (!blob) { toast('이미지 생성 실패', 'error'); return; }
+            const url = URL.createObjectURL(blob);
+            const a   = document.createElement('a');
+            a.href     = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast(`${filename} 저장 완료!`, 'success');
+          }, 'image/png');
+
+        } else {
+          // ── cross-origin fallback: 새 탭에서 열기 안내 ──
+          drSaveImageFallback(design, filename);
+        }
+
+      } catch (e) {
+        // html2canvas가 cross-origin 오류를 던진 경우 — 새 탭 fallback
+        console.warn('[Pikbox] html2canvas cross-origin 캡처 실패, fallback 적용:', e.message);
+        drSaveImageFallback(design, filename);
+      } finally {
+        if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; }
+      }
+    }
+
+    /**
+     * drSaveImageFallback — cross-origin 제약으로 직접 캡처 불가할 때
+     * 디자인을 새 탭에서 열어 사용자가 직접 스크린샷을 찍도록 안내
+     */
+    function drSaveImageFallback(design, filename) {
+      // 새 탭에서 디자인 열기
+      if (design?.url) {
+        window.open(design.url, '_blank');
+        toast(
+          '외부 URL 디자인은 직접 캡처가 제한됩니다.\n새 탭에서 열었습니다 — 브라우저 스크린샷으로 저장해 주세요.',
+          'error'
+        );
+      } else {
+        toast('저장 가능한 URL이 없습니다', 'error');
+      }
+    }
+
     /* ─── Figma 버튼 상태 업데이트 ─── */
     // figma_url이 있으면 검정 버튼, 없으면 회색 버튼으로 표시
     function drUpdateFigmaBtn(figmaUrl) {
