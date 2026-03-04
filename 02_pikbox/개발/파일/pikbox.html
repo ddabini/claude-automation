@@ -6969,6 +6969,8 @@
           // 고화질 썸네일 생성 (Serper 기본 썸네일은 저화질일 수 있음)
           const hqThumb = ytGetHqThumb(v.link, v.thumbnail);
           const maxThumb = ytGetMaxThumb(v.link);
+          // 쇼츠 여부 감지 — URL에 /shorts/ 패턴 포함 여부
+          const isShorts = v.link.includes('/shorts/');
           // 조회수 파싱 — 정렬에 사용
           const viewsRaw = v.views || '';
           const viewsNum = ytParseViews(viewsRaw);
