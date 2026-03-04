@@ -9196,8 +9196,9 @@
       el.className = 'dr-msg';
       el.id = 'drmsg-' + msg.key;
 
-      // 닉네임 이니셜 (첫 글자)
+      // 닉네임 이니셜 (첫 글자) + 해시 기반 고유 컬러 적용
       const avatar = (msg.nickname || '?')[0].toUpperCase();
+      const nickColor = drNickColor(msg.nickname || '?'); // 닉네임별 고유 색상
       const timeStr = drFormatDate(msg.created_at);
 
       // 답글 인용 부분 (replyTo가 있으면)
