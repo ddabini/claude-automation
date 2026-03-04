@@ -6947,6 +6947,8 @@
     // 뷰 전환 함수 — 탭 버튼 클릭 시 호출 (레퍼런스 / 광고 인사이트 / YouTube)
     function switchView(view) {
       activeView = view;
+      // 현재 탭을 기억해서 새로고침 후에도 같은 탭으로 돌아오도록 저장
+      try { localStorage.setItem('pikbox_activeView', view); } catch(e) {}
       // 모든 뷰 컨테이너와 탭 버튼 가져오기
       const refView  = document.getElementById('referenceView');
       const adView   = document.getElementById('adInsightView');
