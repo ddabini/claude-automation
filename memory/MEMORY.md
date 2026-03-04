@@ -129,4 +129,3 @@
 - Pikbox YouTube 탭 API 응답 속도 및 캐싱 전략 (월 할당량 1M 요청)
 - 마소닉 레이아웃 성능 (large scale 이미지 로드 시 reflow 최적화)
 - MCP 서버 연결 상태 (`.mcp.json` + GEMINI_API_KEY)
-- PADO 퍼퓸 프로젝트 상태 (테스트 프로젝트 정리 필요)
