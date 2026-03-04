@@ -6813,14 +6813,12 @@
        모든 함수/변수는 yt 접두사로 기존과 충돌 방지
     ══════════════════════════════════════════════════════════════ */
 
-    // YouTube 카테고리 퀵 칩 — 클릭 시 해당 키워드로 검색어 확장
+    // YouTube 콘텐츠 타입 칩 — 영상/쇼츠/광고/커뮤니티 4개 타입
     const YT_CHIPS = [
-      { id: 'all',    label: '전체' },
-      { id: 'ad',     label: '광고' },
-      { id: 'brand',  label: '브랜드 필름' },
-      { id: 'short',  label: '숏폼' },
-      { id: 'viral',  label: '바이럴' },
-      { id: 'review', label: '리뷰' }
+      { id: 'video',     label: '영상' },
+      { id: 'shorts',    label: '쇼츠' },
+      { id: 'ad',        label: '광고' },
+      { id: 'community', label: '커뮤니티' }
     ];
 
     // 칩별 검색어 확장 키워드 — 한국 채널 중심 (영어 키워드 제외)
