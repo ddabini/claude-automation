@@ -3039,12 +3039,9 @@
       <!-- iframe이 실제 디자인을 보여주는 영역 -->
       <div class="dr-viewer-frame" id="drViewerFrame" style="display:none;">
         <div class="dr-iframe-wrap" id="drIframeWrap">
-          <!-- sandbox: 스크립트 실행 허용 (디자인이 JS 쓸 수 있게), 외부 접근 차단 -->
-          <!-- scrolling="no": iframe 자체 스크롤 비활성화 → 외부 .dr-viewer-frame만 스크롤 -->
+          <!-- sandbox: 스크립트 실행 허용 (카드뉴스 내 버튼 클릭 등), 외부 접근 차단 -->
           <iframe class="dr-viewer-iframe" id="drViewerIframe"
-                  sandbox="allow-scripts allow-same-origin"
-                  scrolling="no"
-                  style="overflow:hidden;"></iframe>
+                  sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
       </div>
 
@@ -9069,43 +9066,71 @@
 
     /* ─── Figma 열기 또는 URL 등록 ─── */
     // URL이 있으면 새 탭에서 열고, 없으면 URL 입력 팝업
-    function drOpenFigma() {
+    /* ─── Figma로 디자인 이동 ─── */
+    // 디자인 URL을 클립보드에 복사 → Figma에서 붙여넣기로 이미지 가져오기
+    // figma_url이 등록되어 있으면 해당 Figma 파일도 함께 열기
+    async function drOpenFigma() {
       if (!drState.currentDesignId) return;
+      const designUrl = drState.currentDesignData?.url;
       const figmaUrl = drState.currentDesignData?.figma_url;
+
+      if (!designUrl) {
+        toast('디자인 URL이 없습니다', 'error');
+        return;
+      }
+
+      // 1단계: 디자인 URL을 클립보드에 복사 (Figma에서 Place image용)
+      try {
+        await navigator.clipboard.writeText(designUrl);
+      } catch (e) {
+        // 클립보드 접근 실패 시 fallback
+        const ta = document.createElement('textarea');
+        ta.value = designUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+
+      // 2단계: Figma URL이 있으면 해당 파일 열기
       if (figmaUrl) {
-        // 등록된 Figma URL을 새 탭에서 열기
         window.open(figmaUrl, '_blank');
+        toast('URL 복사 완료! Figma에서 Ctrl+V로 붙여넣으세요', 'success');
       } else {
-        // URL이 없으면 입력 프롬프트
-        drRegisterFigmaUrl();
+        // Figma URL 미등록 시 → 등록 안내 + 새 탭에서 디자인 열기 (다운로드용)
+        toast('URL 복사 완료! Figma에서 Ctrl+Shift+K → 붙여넣기로 이미지를 가져오세요', 'success');
+        // Figma URL 등록할지 물어보기
+        setTimeout(() => {
+          if (confirm('이 디자인의 Figma 파일 URL을 등록하시겠습니까?\n(등록하면 다음부터 Figma 파일이 바로 열립니다)')) {
+            drRegisterFigmaUrl();
+          }
+        }, 500);
       }
     }
 
     /* ─── Figma URL 등록 / 수정 ─── */
-    // 기존에 등록된 URL이 없거나, 나중에 수정하고 싶을 때 사용
+    // 디자인에 대응하는 Figma 파일 URL을 저장 (다음 클릭 시 바로 열기)
     async function drRegisterFigmaUrl() {
       if (!drState.currentDesignId) return;
       const current = drState.currentDesignData?.figma_url || '';
       const newUrl = prompt(
-        'Figma URL을 입력하세요:\n(예: https://figma.com/design/...)',
+        'Figma 파일 URL을 입력하세요:\n(예: https://figma.com/design/abc123/...)',
         current
       );
-      if (newUrl === null) return; // 취소
+      if (newUrl === null) return;
       const trimmed = newUrl.trim();
       try {
         // Firebase DB에 figma_url 저장
         await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update({
-          figma_url: trimmed || null, // 빈 값이면 null로 삭제
+          figma_url: trimmed || null,
           updated_at: new Date().toISOString()
         });
-        // 로컬 상태도 즉시 업데이트
         if (drState.currentDesignData) {
           drState.currentDesignData.figma_url = trimmed || null;
         }
         drUpdateFigmaBtn(trimmed || null);
         if (trimmed) {
           toast('Figma URL이 등록되었습니다', 'success');
-          window.open(trimmed, '_blank'); // 등록 후 바로 열기
         } else {
           toast('Figma URL이 삭제되었습니다', 'success');
         }
