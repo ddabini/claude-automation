@@ -7283,10 +7283,102 @@
           viewsNum: viewCount,
           likeCount: parseInt(stats.likeCount || '0', 10),
           commentCount: parseInt(stats.commentCount || '0', 10),
+          description: snippet.description || '',  // 영상 본문(캡션)
         };
       });
 
       return { items, nextPageToken: searchData.nextPageToken || '' };
+    }
+
+    // ─── YouTube Data API v3 — 광고 소재 전용 검색 ───
+    // Google Ads Transparency Center는 공식 API가 없으므로
+    // YouTube에 업로드된 실제 광고 소재를 찾는 대안 전략:
+    // 1) 짧은 영상(광고 길이) 검색  2) 공식 브랜드 채널 광고 검색
+    // 3) TVCF/광고정보센터 등 광고 전문 채널 검색
+    async function searchYouTubeAds(query) {
+      const apiKey = config.youtubeApiKey;
+      if (!apiKey) return [];
+
+      // 광고 소재는 보통 6초(범퍼), 15초, 30초 → 짧은 영상으로 필터
+      const queries = [
+        { q: `${query} 광고`, order: 'relevance', duration: 'short' },
+        { q: `${query} CF 공식`, order: 'viewCount', duration: 'short' },
+        { q: `${query} TVC 30초`, order: 'date', duration: 'short' },
+      ];
+
+      const allItems = [];
+      for (const qObj of queries) {
+        try {
+          const searchParams = new URLSearchParams({
+            part: 'snippet',
+            type: 'video',
+            q: qObj.q,
+            order: qObj.order,
+            maxResults: '15',
+            videoDuration: qObj.duration,
+            regionCode: 'KR',
+            relevanceLanguage: 'ko',
+            key: apiKey
+          });
+
+          const searchRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?${searchParams}`
+          );
+          const searchData = await searchRes.json();
+          if (!searchRes.ok || !searchData.items) continue;
+
+          const videoIds = searchData.items
+            .map(item => item.id?.videoId)
+            .filter(Boolean);
+          if (videoIds.length === 0) continue;
+
+          // 상세 정보 가져오기
+          const videoParams = new URLSearchParams({
+            part: 'snippet,statistics,contentDetails',
+            id: videoIds.join(','),
+            key: apiKey
+          });
+          const videoRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?${videoParams}`
+          );
+          const videoData = await videoRes.json();
+          if (!videoRes.ok || !videoData.items) continue;
+
+          videoData.items.forEach(v => {
+            const snippet = v.snippet;
+            const stats = v.statistics || {};
+            const duration = v.contentDetails?.duration || '';
+            const totalSec = ytParseDurationISO(duration);
+            const publishedAt = new Date(snippet.publishedAt).getTime();
+            const viewCount = parseInt(stats.viewCount || '0', 10);
+
+            allItems.push({
+              title: snippet.title || '',
+              imageUrl: snippet.thumbnails?.high?.url || '',
+              thumbUrl: snippet.thumbnails?.high?.url || '',
+              maxThumbUrl: `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
+              sourceUrl: `https://www.youtube.com/watch?v=${v.id}`,
+              platform: 'youtube',
+              width: 1280, height: 720,
+              isVideo: true,
+              isShorts: totalSec > 0 && totalSec <= 60,
+              isAd: true,  // 광고 소재 표시 플래그
+              duration: ytFormatDurationISO(duration),
+              channel: snippet.channelTitle || '',
+              date: ytFormatRelativeDate(publishedAt),
+              dateNum: publishedAt,
+              viewsRaw: ytFormatViewCount(viewCount),
+              viewsNum: viewCount,
+              likeCount: parseInt(stats.likeCount || '0', 10),
+              commentCount: parseInt(stats.commentCount || '0', 10),
+              description: snippet.description || '',
+            });
+          });
+        } catch (e) {
+          console.warn('[Pikbox] 광고 검색 오류:', e.message);
+        }
+      }
+      return allItems;
     }
 
     // ISO 8601 재생시간 (PT1H2M3S) → 초 단위로 변환
