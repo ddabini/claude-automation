@@ -5841,13 +5841,14 @@
         sources.push('google_instagram');
 
         // ── 2) Meta/Facebook 광고 소재 (4호출 = 80개) ──
-        promises.push(searchSerperImages(baseQuery + ' facebook ad creative', '', 1));
+        // Meta 광고 라이브러리(실제 집행 광고) + 키워드 기반 광고 크리에이티브 병행
+        promises.push(searchSerperImages(baseQuery + ' 광고', 'site:facebook.com/ads/library', 1));
         sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' facebook ad creative', '', 2));
+        promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1));
         sources.push('google_meta_ads');
-        promises.push(searchSerperImages(expandedQueries[2], '', 1));
+        promises.push(searchSerperImages(baseQuery + ' facebook instagram ad creative design best', '', 1));
         sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' instagram facebook ad examples best', '', 1));
+        promises.push(searchSerperImages(baseQuery + ' meta ad creative 광고 소재 레퍼런스', '', 1));
         sources.push('google_meta_ads');
 
         // ── 3) Pinterest 집중 (5호출 = 100개) ──
