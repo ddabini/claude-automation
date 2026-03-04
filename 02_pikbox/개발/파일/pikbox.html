@@ -9351,6 +9351,8 @@
         text,
         nickname: drState.currentNickname,
         created_at: new Date().toISOString(),
+        // 현재 선택된 페이지 번호 저장 (0 = 전체, 1이상 = 해당 페이지)
+        page: drState.currentPage,
       };
       // 답글 정보 추가
       if (drState.replyTo) {
@@ -9360,6 +9362,8 @@
 
       try {
         await firebaseDb.ref(`${DR_MESSAGES}/${drState.currentDesignId}`).push(msgData);
+        // 메시지 전송 후 현재 탭 "읽은 것"으로 표시 (내가 보낸 메시지는 안 읽은 것으로 안 뜨게)
+        drMarkPageRead(drState.currentDesignId, drState.currentPage);
         input.value = '';
         drCancelReply();
       } catch (e) {
