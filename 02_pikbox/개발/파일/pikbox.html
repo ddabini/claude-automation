@@ -7352,7 +7352,12 @@
       document.querySelectorAll('.yt-chip').forEach(el => {
         el.classList.toggle('active', el.dataset.chip === chipId);
       });
-      // 검색어가 있으면 재검색
+      // 정렬 바 — 커뮤니티에서는 정렬 버튼 숨김 (정렬 의미 없음)
+      const sortBtns = document.querySelector('.yt-sort-btns');
+      if (sortBtns) {
+        sortBtns.style.display = chipId === 'community' ? 'none' : 'flex';
+      }
+      // 검색어가 있으면 재검색 (칩 변경 시 새 검색)
       if (ytState.query) {
         ytSearch();
       }
