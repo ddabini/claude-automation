@@ -1,36 +1,28 @@
 # 프로젝트 메모리 (2026-03-04 세션 13 기준)
 
-## 최근 세션 요약 (2026-03-05 세션 14)
+## 최근 세션 요약 (2026-03-05 세션 15 - 시안 삭제)
 
-### 핵심 작업 (3가지)
-1. **Pikbox YouTube 탭 고도화**:
-   - ytAnalyzeVideo() 함수: 영상 메타데이터 기반 자동 분석 (유형/길이/조회수/참여도/해시태그/광고 분석)
-   - **Pikbox 코멘트 블록** 추가: 성과 원인 분석 (조회수·참여도·제목·길이·목차 기반)
-   - 롱폼 영상 부족 해결: video 칩에서 medium(4~20분) + long(20분+) 병렬 검색 → 최대 50개 확보
-   - searchYouTubeAPI에 videoDuration 파라미터 추가
-   - 탭 상태 유지: localStorage 활용 → 새로고침 시 마지막 탭 복원
-   - **급상승 동영상** 자동 표시: ytLoadTrending() (YouTube API mostPopular 30건)
-   - 배포 완료: https://pikbox-app.web.app
+### 핵심 작업 (1가지)
+**테스트 시안 전체 삭제** - 사용자 요청으로 진행:
+1. **리뉴얼 홍보 시안** 삭제:
+   - 폴더: `01_baroezip/05_AI에이전트_리뉴얼/` (완전 삭제)
+   - Pikbox 설계 리뷰 DB: 관련 3건 삭제 (design-review/designs)
+   - Firebase Storage: HTML 1개 삭제
+2. **파도 퍼퓸(PADO) 시안** 삭제:
+   - 폴더: `07_pado_perfume/` (완전 삭제)
+   - Pikbox 설계 리뷰 DB: 관련 1건 삭제
+   - Firebase Storage: HTML 2개 삭제
+3. **Pikbox 초기화**:
+   - design-review/designs (4건) → null
+   - design-review/messages 전부 삭제
+   - design-review/nicknames 전부 삭제
+   - design-review/users 전부 삭제
+4. **Git 커밋**: `[auto-save] 테스트 시안 삭제 (리뉴얼 홍보 + 파도 퍼퓸)`
 
-2. **DeepDig AI 최신 현황 위클리 리포트 신규 생성**:
-   - `07_AI최신현황위클리/` 폴더 생성 (report/ + raw-data/)
-   - **cat_006** 카테고리 + **rpt_011** 보고서 등록
-   - 내용: Claude 4.6, ChatGPT GPT-5.3, Gemini 3 Flash, Cursor Cloud Agents, Windsurf 등 46개 출처
-   - registry.js 등록 완료
-   - 배포 완료: https://deepdig-app.web.app
-
-3. **DeepDig 리포트 수집 기간 규칙 확정**:
-   - 데일리: 직전 24시간
-   - 위클리: 7일간 (업로드일 기준)
-   - 먼슬리: 당월 전체
-   - 어뉴얼: 지난해 전체
-   - 콘텐츠 원칙: 직전 리포트 대비 변화점 + 신규 + 주목 이슈 중심
-
-### 핵심 학습
-- **YouTube 영상 분석 로직**: 길이·조회수·참여도 자동 판별 → 카테고리별 성과 인사이트 제공
-- **YouTube API 할당량**: 월 1M 요청 (구글 클라우드 무료 크레딧 범위 내)
-- **masonic 레이아웃 성능**: CSS grid 기반으로 대량 이미지 로드 시 reflow 최소화
-- **리포트 수집 원칙**: 정적 일관성 > 완전성 (수집 기간 고정으로 컨텐츠 비교 가능)
+### 메모리 정리
+- MEMORY.md §"프로젝트 구조"에서 `07_pado_perfume` 행 제거
+- MEMORY.md §"다음 세션 시 확인사항"에서 "PADO 퍼퓸 프로젝트 정리" 항목 제거
+- 메인 MEMORY.md에는 테스트 프로젝트 삭제 이력만 기록 (상세 내용 불필요)
 
 ---
 
