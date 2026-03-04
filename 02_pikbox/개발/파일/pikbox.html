@@ -2835,8 +2835,11 @@
       <div class="dr-viewer-frame" id="drViewerFrame" style="display:none;">
         <div class="dr-iframe-wrap" id="drIframeWrap">
           <!-- sandbox: 스크립트 실행 허용 (디자인이 JS 쓸 수 있게), 외부 접근 차단 -->
+          <!-- scrolling="no": iframe 자체 스크롤 비활성화 → 외부 .dr-viewer-frame만 스크롤 -->
           <iframe class="dr-viewer-iframe" id="drViewerIframe"
-                  sandbox="allow-scripts allow-same-origin"></iframe>
+                  sandbox="allow-scripts allow-same-origin"
+                  scrolling="no"
+                  style="overflow:hidden;"></iframe>
         </div>
       </div>
 
