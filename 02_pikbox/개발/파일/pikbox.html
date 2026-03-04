@@ -7266,20 +7266,24 @@
     }
 
     // 영상 카드를 그리드에 추가 렌더링
+    // 영상/쇼츠/광고 카드 렌더링 — 인라인 플레이어 클릭 연동
     function ytRenderCards(items) {
       const grid = document.getElementById('ytGrid');
       if (!grid) return;
+      const isShortsList = ytState.activeChip === 'shorts';
 
       items.forEach(r => {
         const card = document.createElement('div');
-        card.className = 'yt-card';
-        // 클릭 시 YouTube 새 탭 열기
-        card.onclick = () => window.open(r.sourceUrl, '_blank');
+        // 쇼츠이면 세로 카드 클래스 추가
+        card.className = 'yt-card' + (r.isShorts ? ' yt-card--shorts' : '');
+        // 클릭 시 인라인 플레이어 열기
+        card.onclick = () => ytOpenPlayer(r);
 
         card.innerHTML = `
           <div class="yt-thumb">
             <img alt="${escHtml(r.title)}" loading="lazy">
             <div class="yt-play-btn"></div>
+            ${r.isShorts ? '<span class="yt-shorts-badge">SHORTS</span>' : ''}
             ${r.duration ? `<span class="yt-duration">${escHtml(r.duration)}</span>` : ''}
           </div>
           <div class="yt-info">
@@ -7293,14 +7297,11 @@
         // 썸네일 후보 목록 — 고화질부터 순서대로 시도
         const img = card.querySelector('img');
         const candidates = [];
-        if (r.maxThumbUrl) candidates.push(r.maxThumbUrl);          // maxresdefault (1280x720)
-        // sddefault 추가 (640x480, 대부분 존재)
-        try {
-          const vid = new URL(r.sourceUrl).searchParams.get('v');
-          if (vid) candidates.push(`https://i.ytimg.com/vi/${vid}/sddefault.jpg`);
-        } catch(e) {}
-        if (r.thumbUrl) candidates.push(r.thumbUrl);                 // hqdefault (480x360)
-        if (r.imageUrl && r.imageUrl !== r.thumbUrl) candidates.push(r.imageUrl); // Serper 원본
+        if (r.maxThumbUrl) candidates.push(r.maxThumbUrl);
+        const vid = ytExtractVideoId(r.sourceUrl);
+        if (vid) candidates.push(`https://i.ytimg.com/vi/${vid}/sddefault.jpg`);
+        if (r.thumbUrl) candidates.push(r.thumbUrl);
+        if (r.imageUrl && r.imageUrl !== r.thumbUrl) candidates.push(r.imageUrl);
         ytLoadThumb(img, candidates);
       });
 
@@ -7309,8 +7310,33 @@
       const countEl = document.getElementById('ytResultCount');
       if (sortBar && ytState.results.length > 0) {
         sortBar.style.display = 'flex';
-        if (countEl) countEl.textContent = `영상 ${ytState.results.length}개`;
+        const chipLabel = isShortsList ? '쇼츠' : ytState.activeChip === 'ad' ? '광고' : '영상';
+        if (countEl) countEl.textContent = `${chipLabel} ${ytState.results.length}개`;
       }
+    }
+
+    // 커뮤니티 카드 렌더링 — 이미지 중심 레이아웃
+    function ytRenderCommunityCards(items) {
+      const grid = document.getElementById('ytGrid');
+      if (!grid) return;
+
+      items.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'yt-card yt-card--community';
+        // 클릭 시 원본 페이지 열기
+        card.onclick = () => window.open(r.sourceUrl, '_blank');
+
+        card.innerHTML = `
+          <div class="yt-thumb">
+            <img src="${escHtml(r.imageUrl)}" alt="${escHtml(r.title)}" loading="lazy">
+          </div>
+          <div class="yt-info">
+            <div class="yt-title">${escHtml(r.title)}</div>
+            <div class="yt-community-source">${escHtml(r.sourceUrl ? new URL(r.sourceUrl).hostname : '')}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
     }
 
     // 무한 스크롤 — 추가 페이지 로드
