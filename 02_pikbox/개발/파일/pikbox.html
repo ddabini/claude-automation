@@ -4925,7 +4925,8 @@
     }
 
     // 파일 선택 또는 드롭 시 — 이미지 업로드 처리
-    // 업로드된 이미지는 IndexedDB에 Blob 저장, 메타데이터는 Firebase RTDB에 저장
+    // Firebase Storage에 이미지 업로드 → 다운로드 URL을 RTDB에 저장
+    // (이전: IndexedDB 로컬 저장 → 다른 기기에서 안 보이는 문제 있었음)
     async function handleFileSelect(files) {
       if (!activeCatId) { toast('먼저 카테고리를 선택하세요', 'error'); return; }
 
@@ -4938,19 +4939,25 @@
         try {
           const imgId = genId();
           const title = file.name.replace(/\.[^.]+$/, '');
+          // 파일 확장자 추출
+          const ext = file.name.split('.').pop() || 'png';
 
-          // IndexedDB에 이미지 Blob 저장 (로컬 캐시 — 오프라인에서도 볼 수 있음)
+          // Firebase Storage에 이미지 업로드
+          const storageRef = firebaseStorage.ref(`pikbox/images/${imgId}_${title}.${ext}`);
+          await storageRef.put(file);
+          const downloadUrl = await storageRef.getDownloadURL();
+
+          // IndexedDB에도 로컬 캐시 저장 (오프라인 빠른 로드용)
           await saveBlob(imgId, file);
 
-          // Firebase RTDB에 메타데이터 저장
-          // image_url은 'indexeddb://[id]' 형식으로 로컬 참조를 표시
+          // Firebase RTDB에 메타데이터 저장 — image_url은 Storage 다운로드 URL
           await fbSet(FB_IMGS, imgId, {
             id: imgId,
             category_id: activeCatId,
             type: 'uploaded',
             title,
             source_url: null,
-            image_url: `indexeddb://${imgId}`, // 로컬 IndexedDB 참조 마커
+            image_url: downloadUrl,  // Firebase Storage URL (모든 기기에서 접근 가능)
             platform: null,
             keywords: [],
             memo: null,
