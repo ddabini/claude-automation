@@ -9653,21 +9653,91 @@
       }
     }
 
-    /* ─── Figma 열기 ─── */
-    // figma_url이 등록된 경우 해당 Figma 파일을 새 탭에서 열기
-    // 미등록인 경우 URL 등록 팝업 안내
+    /* ─── Figma로 이동 — 디자인 캡처 후 클립보드 복사 + Figma 파일 열기 ─── */
+    // 1) 현재 보고 있는 페이지를 이미지로 캡처
+    // 2) 클립보드에 복사 (Figma에서 Ctrl+V로 붙여넣기 가능)
+    // 3) Figma URL이 등록되어 있으면 자동으로 해당 파일 열기
     async function drOpenFigma() {
       if (!drState.currentDesignId) return;
-      const figmaUrl = drState.currentDesignData?.figma_url;
 
-      if (figmaUrl) {
-        // Figma URL이 있으면 바로 새 탭에서 열기
-        window.open(figmaUrl, '_blank');
-      } else {
-        // 미등록 → URL 등록 유도
-        if (confirm('Figma 파일 URL이 등록되어 있지 않습니다.\n지금 등록하시겠습니까?')) {
-          drRegisterFigmaUrl();
+      const iframe = document.getElementById('drViewerIframe');
+      if (!iframe) return;
+
+      const btn = document.getElementById('drFigmaBtn');
+      const originalHTML = btn ? btn.innerHTML : '';
+
+      // 로딩 표시
+      if (btn) { btn.innerHTML = '⏳ 캡처중...'; btn.disabled = true; }
+
+      try {
+        // iframe 내부 문서 접근 시도 (same-origin일 때만 가능)
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+
+        if (iframeDoc && iframeDoc.body) {
+          // ── same-origin: html2canvas로 현재 페이지 캡처 ──
+          const pageH = drState.viewerPageHeight || 1200;
+          const pageIdx = (drState.viewerPage || 1) - 1;
+
+          const canvas = await html2canvas(iframeDoc.body, {
+            scale: 2,            // 고해상도(2배) 캡처
+            useCORS: true,
+            allowTaint: false,
+            y: pageIdx * pageH,  // 현재 페이지 시작 위치
+            height: pageH,       // 1페이지 높이만 캡처
+            backgroundColor: '#ffffff',
+            logging: false,
+          });
+
+          // canvas → blob → 클립보드에 이미지 복사
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            toast('이미지가 클립보드에 복사되었습니다!\nFigma에서 Ctrl+V로 붙여넣으세요', 'success');
+          } catch (clipErr) {
+            // 클립보드 API 실패 시 → PNG 파일 다운로드로 대체
+            console.warn('클립보드 복사 실패, 다운로드로 전환:', clipErr);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeName = (drState.currentDesignData?.name || '디자인').replace(/[/\\?%*:|"<>]/g, '_');
+            a.download = `${safeName}_page${drState.viewerPage || 1}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast('이미지가 다운로드되었습니다.\nFigma에서 드래그앤드롭으로 가져오세요', 'success');
+          }
+
+          // Figma URL이 등록되어 있으면 자동으로 열기
+          const figmaUrl = drState.currentDesignData?.figma_url;
+          if (figmaUrl) {
+            window.open(figmaUrl, '_blank');
+          } else {
+            // 미등록 → 등록 안내
+            setTimeout(() => {
+              if (confirm('Figma 파일 URL을 등록하면 다음부터 자동으로 열립니다.\n지금 등록하시겠습니까?')) {
+                drRegisterFigmaUrl();
+              }
+            }, 300);
+          }
+
+        } else {
+          // ── cross-origin: html2canvas 불가 → 새 탭에서 열어 스크린샷 안내 ──
+          window.open(drState.currentDesignData?.url || '', '_blank');
+          toast('외부 URL은 직접 캡처할 수 없습니다.\n새 탭에서 열었습니다 — 스크린샷 후 Figma에 붙여넣으세요', 'error');
+
+          const figmaUrl = drState.currentDesignData?.figma_url;
+          if (figmaUrl) window.open(figmaUrl, '_blank');
         }
+      } catch (e) {
+        console.error('[Pikbox] Figma 캡처 오류:', e);
+        toast('캡처 실패: ' + e.message, 'error');
+      } finally {
+        // 버튼 원래 상태로 복원
+        if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
       }
     }
 
