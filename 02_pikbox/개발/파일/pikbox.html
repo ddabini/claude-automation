@@ -7192,7 +7192,8 @@
             date: dateRaw,
             dateNum: dateNum,            // 정렬용 타임스탬프
             viewsRaw: viewsRaw,          // 원본 조회수 텍스트 ("12만회" 등)
-            viewsNum: viewsNum           // 정렬용 숫자
+            viewsNum: viewsNum,          // 정렬용 숫자
+            description: v.snippet || '' // 영상 설명 (Serper는 snippet으로 제공)
           };
         });
     }
