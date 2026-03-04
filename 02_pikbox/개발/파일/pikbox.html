@@ -1161,12 +1161,8 @@
       border-radius: 0 8px 8px 8px;
       padding: 8px 10px;
     }
-    /* 메시지 액션 버튼 (수정/삭제/답글/확인) */
-    .dr-msg-actions {
-      display: flex; gap: 4px; margin-top: 4px;
-      opacity: 0; transition: opacity 0.15s;
-    }
-    .dr-msg:hover .dr-msg-actions { opacity: 1; }
+    /* 메시지 액션 버튼 (수정/삭제/답글/확인) — 항상 표시(모바일 접근 가능) */
+    /* 아래쪽에 추가된 .dr-msg-actions 오버라이드 스타일이 우선 적용됨 */
     .dr-msg-action-btn {
       padding: 2px 6px; border: none; background: none;
       font-size: 11px; color: var(--text-muted);
