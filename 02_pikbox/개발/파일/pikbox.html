@@ -7114,14 +7114,17 @@
         return;
       }
 
+      const chip = ytState.activeChip;
+      const grid = document.getElementById('ytGrid');
+
       // 새 검색이면 상태 초기화
       if (!appendMode) {
         ytState.query = query;
         ytState.results = [];
+        ytState.communityResults = [];
         ytState.page = 1;
         ytState.hasMore = true;
-        document.getElementById('ytGrid').innerHTML = '';
-        // 정렬 바 숨기기 (결과 나오면 다시 표시)
+        if (grid) grid.innerHTML = '';
         const sortBar = document.getElementById('ytSortBar');
         if (sortBar) sortBar.style.display = 'none';
       }
@@ -7130,70 +7133,115 @@
       document.getElementById('ytLoading').style.display = 'flex';
       document.getElementById('ytEmpty').style.display = 'none';
 
+      // 그리드 클래스 전환 — 칩별 레이아웃 적용
+      if (grid) {
+        grid.classList.remove('yt-grid--shorts', 'yt-grid--community');
+        if (chip === 'shorts') grid.classList.add('yt-grid--shorts');
+        if (chip === 'community') grid.classList.add('yt-grid--community');
+      }
+
       try {
-        // 칩에 따른 쿼리 확장
-        const chipExtra = YT_CHIP_QUERIES[ytState.activeChip] || '';
-        const fullQuery = chipExtra ? `${query} ${chipExtra}` : query;
-
-        // 병렬 호출로 다양한 결과 수집
-        const promises = [];
-        if (!appendMode) {
-          // 첫 검색: 한국어 쿼리 변형 5호출 (한국 채널 중심)
-          promises.push(searchSerperVideos(fullQuery, 1));
-          promises.push(searchSerperVideos(fullQuery, 2));
-          promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
-          promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
-          if (chipExtra) {
-            promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
+        // ─── 커뮤니티 칩: 별도 이미지 검색 ───
+        if (chip === 'community') {
+          const page = appendMode ? ++ytState.page : 1;
+          const items = await ytSearchCommunity(query, page);
+          // 중복 제거
+          const existingUrls = new Set(ytState.communityResults.map(r => r.imageUrl));
+          const newItems = items.filter(r => {
+            if (existingUrls.has(r.imageUrl)) return false;
+            existingUrls.add(r.imageUrl);
+            return true;
+          });
+          if (newItems.length < 3) ytState.hasMore = false;
+          ytState.communityResults.push(...newItems);
+          ytRenderCommunityCards(newItems);
+          // 결과 수 업데이트
+          const sortBar = document.getElementById('ytSortBar');
+          const countEl = document.getElementById('ytResultCount');
+          if (sortBar && ytState.communityResults.length > 0) {
+            sortBar.style.display = 'flex';
+            if (countEl) countEl.textContent = `게시물 ${ytState.communityResults.length}개`;
+          }
+          if (ytState.communityResults.length === 0) {
+            document.getElementById('ytEmpty').style.display = '';
+            document.getElementById('ytEmpty').innerHTML = `
+              <div style="font-size:48px;margin-bottom:16px;">💬</div>
+              <h3 style="margin:0 0 8px;color:var(--text-primary);">커뮤니티 게시물이 없습니다</h3>
+              <p style="color:var(--text-muted);font-size:14px;">다른 키워드로 검색해보세요</p>
+            `;
           }
         } else {
-          // 더 보기: 다음 페이지 3호출
-          for (let i = 0; i < 3; i++) {
-            ytState.page++;
-            promises.push(searchSerperVideos(fullQuery, ytState.page));
+          // ─── 영상/쇼츠/광고 칩: Serper /videos 검색 ───
+          const chipExtra = YT_CHIP_QUERIES[chip] || '';
+          const fullQuery = chipExtra ? `${query} ${chipExtra}` : query;
+
+          const promises = [];
+          if (!appendMode) {
+            // 첫 검색: 한국어 쿼리 변형 병렬 호출
+            promises.push(searchSerperVideos(fullQuery, 1));
+            promises.push(searchSerperVideos(fullQuery, 2));
+            if (chip === 'ad') {
+              // 광고 칩: 광고 특화 쿼리 추가
+              promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
+              promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
+            } else {
+              promises.push(searchSerperVideos(query + ' 유튜브', 1));
+              if (chipExtra) {
+                promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
+              }
+            }
+          } else {
+            // 더 보기: 다음 페이지
+            for (let i = 0; i < 3; i++) {
+              ytState.page++;
+              promises.push(searchSerperVideos(fullQuery, ytState.page));
+            }
           }
-        }
 
-        const results = await Promise.allSettled(promises);
+          const results = await Promise.allSettled(promises);
+          let newItems = [];
+          results.forEach(r => {
+            if (r.status === 'fulfilled' && r.value?.length > 0) {
+              newItems.push(...r.value);
+            }
+          });
 
-        // 결과 합치기
-        let newItems = [];
-        results.forEach(r => {
-          if (r.status === 'fulfilled' && r.value?.length > 0) {
-            newItems.push(...r.value);
+          // 칩별 클라이언트 필터링 — 영상/쇼츠 분리
+          if (chip === 'video') {
+            newItems = newItems.filter(r => !r.isShorts);
+          } else if (chip === 'shorts') {
+            newItems = newItems.filter(r => r.isShorts);
           }
-        });
+          // 광고 칩은 필터링 없이 전체 표시
 
-        // 중복 제거 — sourceUrl 기준
-        const existingUrls = new Set(ytState.results.map(r => r.sourceUrl));
-        newItems = newItems.filter(r => {
-          if (existingUrls.has(r.sourceUrl)) return false;
-          existingUrls.add(r.sourceUrl);
-          return true;
-        });
+          // 중복 제거 — sourceUrl 기준
+          const existingUrls = new Set(ytState.results.map(r => r.sourceUrl));
+          newItems = newItems.filter(r => {
+            if (existingUrls.has(r.sourceUrl)) return false;
+            existingUrls.add(r.sourceUrl);
+            return true;
+          });
 
-        // 결과가 적으면 더 이상 로드할 것이 없음
-        if (newItems.length < 5) {
-          ytState.hasMore = false;
-        }
+          if (newItems.length < 5) ytState.hasMore = false;
+          ytState.results.push(...newItems);
 
-        ytState.results.push(...newItems);
+          // 정렬 + 렌더링
+          if (ytState.sort !== 'recommend' || !appendMode) {
+            ytSortAndRerender();
+          } else {
+            ytRenderCards(newItems);
+          }
 
-        // 현재 정렬이 추천순이 아니면 전체 재정렬, 아니면 새 항목만 추가
-        if (ytState.sort !== 'recommend' || !appendMode) {
-          ytSortAndRerender();
-        } else {
-          ytRenderCards(newItems);
-        }
-
-        // 결과 없으면 빈 상태 표시
-        if (ytState.results.length === 0) {
-          document.getElementById('ytEmpty').style.display = '';
-          document.getElementById('ytEmpty').innerHTML = `
-            <div style="font-size:48px;margin-bottom:16px;">🔍</div>
-            <h3 style="margin:0 0 8px;color:var(--text-primary);">검색 결과가 없습니다</h3>
-            <p style="color:var(--text-muted);font-size:14px;">다른 키워드로 검색해보세요</p>
-          `;
+          // 결과 없으면 빈 상태
+          if (ytState.results.length === 0) {
+            document.getElementById('ytEmpty').style.display = '';
+            const chipLabel = chip === 'shorts' ? '쇼츠' : chip === 'ad' ? '광고 영상' : '영상';
+            document.getElementById('ytEmpty').innerHTML = `
+              <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+              <h3 style="margin:0 0 8px;color:var(--text-primary);">${chipLabel} 검색 결과가 없습니다</h3>
+              <p style="color:var(--text-muted);font-size:14px;">다른 키워드로 검색해보세요</p>
+            `;
+          }
         }
       } catch (e) {
         toast('YouTube 검색 오류: ' + e.message, 'error');
