@@ -7093,7 +7093,9 @@
       const sentinel = document.getElementById('ytSentinel');
       if (sentinel) {
         ytState.observer = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting && !ytState.loading && ytState.hasMore && ytState.results.length > 0) {
+          // 커뮤니티 칩에서는 communityResults도 체크
+          const hasResults = ytState.results.length > 0 || ytState.communityResults.length > 0;
+          if (entries[0].isIntersecting && !ytState.loading && ytState.hasMore && hasResults) {
             ytLoadMore();
           }
         }, { rootMargin: '200px' });
