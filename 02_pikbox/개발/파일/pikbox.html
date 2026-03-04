@@ -8997,55 +8997,180 @@
       msgArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">메시지 불러오는 중...</div>';
 
       // 이벤트 위임 — 채팅 영역 클릭을 한 곳에서 처리 (특수문자 이스케이프 문제 방지)
-      msgArea.onclick = null;
+      // removeEventListener로 중복 리스너 방지 (디자인을 여러 번 클릭해도 한 번만 등록)
+      msgArea.removeEventListener('click', drHandleChatClick);
       msgArea.addEventListener('click', drHandleChatClick);
-
-      let msgMap = {}; // 메시지 키 → 데이터 저장
 
       // Firebase 실시간 리스너 — 새 메시지가 오면 자동으로 화면에 추가
       const ref = firebaseDb.ref(`${DR_MESSAGES}/${designId}`);
       let firstLoad = true;
-      let firstLoadBuffer = [];
 
       const handler = ref.on('value', snap => {
         const data = snap.val() || {};
-        msgMap = data;
+        // 전체 메시지 맵을 상태에 저장 (페이지 필터링, 답글 인용에 사용)
+        drState.allMsgMap = data;
+        // 시간순 정렬
+        const allMsgs = Object.entries(data)
+          .map(([k, v]) => ({ key: k, ...v }))
+          .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+        drState.allMessages = allMsgs;
+
+        // 안 읽은 메시지 뱃지 업데이트
+        drUpdateUnreadBadges(designId, allMsgs);
 
         if (firstLoad) {
-          // 첫 로드: 전체 메시지 한 번에 렌더링
           firstLoad = false;
-          const msgs = Object.entries(data)
-            .map(([k, v]) => ({ key: k, ...v }))
-            .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-
-          if (msgs.length === 0) {
-            msgArea.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px;">아직 메시지가 없습니다.<br>첫 피드백을 남겨보세요!</div>';
-          } else {
-            msgArea.innerHTML = '';
-            msgs.forEach(m => drRenderMessage(m, msgMap));
-          }
           // 스크롤 맨 아래로
+          const wasAtBottom = true; // 첫 로드는 항상 맨 아래
+          drRenderFilteredMessages(wasAtBottom);
           setTimeout(() => { msgArea.scrollTop = msgArea.scrollHeight; }, 50);
         } else {
-          // 실시간 업데이트: 전체 재렌더링
-          const msgs = Object.entries(data)
-            .map(([k, v]) => ({ key: k, ...v }))
-            .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+          // 실시간 업데이트
           const wasAtBottom = msgArea.scrollHeight - msgArea.scrollTop - msgArea.clientHeight < 60;
-          msgArea.innerHTML = '';
-          if (msgs.length === 0) {
-            msgArea.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px;">아직 메시지가 없습니다.</div>';
-          } else {
-            msgs.forEach(m => drRenderMessage(m, msgMap));
-          }
-          if (wasAtBottom) {
-            setTimeout(() => { msgArea.scrollTop = msgArea.scrollHeight; }, 50);
-          }
+          drRenderFilteredMessages(wasAtBottom);
         }
       });
 
       // 리스너 해제 함수 저장
       drState.chatListener = () => ref.off('value', handler);
+    }
+
+    /* ─── 현재 페이지 탭에 맞는 메시지만 렌더링 ─── */
+    // drState.currentPage === 0: 전체 / 1이상: 해당 페이지 번호
+    function drRenderFilteredMessages(scrollToBottom) {
+      const msgArea = document.getElementById('drChatMessages');
+      if (!msgArea) return;
+
+      // 페이지 필터 적용 (0이면 전체, 1이상이면 해당 페이지)
+      const filtered = drState.currentPage === 0
+        ? drState.allMessages
+        : drState.allMessages.filter(m => (m.page || 0) === drState.currentPage);
+
+      msgArea.innerHTML = '';
+      if (filtered.length === 0) {
+        const label = drState.currentPage === 0
+          ? '아직 메시지가 없습니다.<br>첫 피드백을 남겨보세요!'
+          : `${drState.currentPage}p에 대한 메시지가 없습니다.`;
+        msgArea.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px;">${label}</div>`;
+      } else {
+        filtered.forEach(m => drRenderMessage(m, drState.allMsgMap));
+      }
+
+      if (scrollToBottom) {
+        setTimeout(() => { msgArea.scrollTop = msgArea.scrollHeight; }, 50);
+      }
+    }
+
+    /* ─── 페이지 탭 생성 — 페이지 수에 맞게 탭 버튼을 만들어 표시 ─── */
+    function drBuildPageTabs(pages) {
+      const tabsEl = document.getElementById('drPageTabs');
+      if (!tabsEl) return;
+
+      // 1페이지짜리 디자인은 탭 불필요 → 숨김
+      if (pages <= 1) {
+        tabsEl.style.display = 'none';
+        return;
+      }
+
+      tabsEl.style.display = 'flex';
+      tabsEl.innerHTML = '';
+
+      // "전체" 탭 생성
+      const allTab = document.createElement('button');
+      allTab.className = 'dr-page-tab active';
+      allTab.dataset.page = '0';
+      allTab.innerHTML = `전체<span class="dr-unread-badge" id="drBadgeAll"></span>`;
+      allTab.onclick = () => drSelectPageTab(0);
+      tabsEl.appendChild(allTab);
+
+      // 각 페이지 탭 생성 (1p, 2p, 3p...)
+      for (let i = 1; i <= pages; i++) {
+        const tab = document.createElement('button');
+        tab.className = 'dr-page-tab';
+        tab.dataset.page = String(i);
+        tab.innerHTML = `${i}p<span class="dr-unread-badge" id="drBadge${i}"></span>`;
+        tab.onclick = () => drSelectPageTab(i);
+        tabsEl.appendChild(tab);
+      }
+    }
+
+    /* ─── 페이지 탭 선택 ─── */
+    function drSelectPageTab(page) {
+      drState.currentPage = page;
+
+      // 탭 활성화 표시 업데이트
+      const tabsEl = document.getElementById('drPageTabs');
+      if (tabsEl) {
+        tabsEl.querySelectorAll('.dr-page-tab').forEach(tab => {
+          tab.classList.toggle('active', Number(tab.dataset.page) === page);
+        });
+      }
+
+      // 이 탭을 읽었으므로 읽은 시간 갱신
+      drMarkPageRead(drState.currentDesignId, page);
+
+      // 필터링된 메시지 다시 렌더링
+      drRenderFilteredMessages(true);
+    }
+
+    /* ─── 안 읽은 알림 — localStorage로 마지막 읽은 시간 저장 ─── */
+    // 각 디자인·페이지별로 마지막으로 읽은 시간을 localStorage에 저장
+    function drGetReadTime(designId, page) {
+      // 키: "dr_read_[디자인ID]_[페이지번호]"
+      try {
+        return localStorage.getItem(`dr_read_${designId}_${page}`) || '';
+      } catch(e) { return ''; }
+    }
+    function drMarkPageRead(designId, page) {
+      // 현재 시간을 "읽은 시간"으로 저장
+      try {
+        localStorage.setItem(`dr_read_${designId}_${page}`, new Date().toISOString());
+      } catch(e) {}
+    }
+
+    /* ─── 안 읽은 뱃지 업데이트 ─── */
+    // 각 페이지 탭에 새 메시지가 있으면 빨간 점 표시
+    function drUpdateUnreadBadges(designId, allMsgs) {
+      // 페이지별로 마지막 메시지 시간 계산
+      // page === 0(전체) 뱃지는 어느 페이지든 새 메시지가 있으면 표시
+      const readAll = drGetReadTime(designId, 0);
+      let totalUnread = 0;
+
+      // 페이지 탭 목록 수집
+      const tabsEl = document.getElementById('drPageTabs');
+      if (!tabsEl || tabsEl.style.display === 'none') return;
+
+      // 1이상 페이지 탭 뱃지 처리
+      tabsEl.querySelectorAll('.dr-page-tab').forEach(tab => {
+        const page = Number(tab.dataset.page);
+        const badge = tab.querySelector('.dr-unread-badge');
+        if (!badge) return;
+
+        if (page === 0) {
+          // "전체" 탭: 전체 메시지 중 읽지 않은 게 있으면 뱃지
+          const readTime = readAll;
+          const hasNew = allMsgs.some(m => (m.created_at || '') > readTime);
+          badge.classList.toggle('show', hasNew);
+        } else {
+          // 개별 페이지 탭: 해당 페이지 메시지 중 읽지 않은 게 있으면 뱃지
+          const readTime = drGetReadTime(designId, page);
+          const pageMsgs = allMsgs.filter(m => (m.page || 0) === page);
+          const hasNew = pageMsgs.some(m => (m.created_at || '') > readTime);
+          badge.classList.toggle('show', hasNew);
+          if (hasNew) totalUnread += pageMsgs.filter(m => (m.created_at || '') > readTime).length;
+        }
+      });
+
+      // 채팅 헤더 안 읽은 메시지 수 표시 (전체 읽지 않은 개수)
+      const countEl = document.getElementById('drUnreadCount');
+      if (countEl) {
+        if (totalUnread > 0) {
+          countEl.textContent = totalUnread > 99 ? '99+' : String(totalUnread);
+          countEl.classList.add('show');
+        } else {
+          countEl.classList.remove('show');
+        }
+      }
     }
 
     /* ─── 채팅 클릭 이벤트 위임 처리 ─── */
