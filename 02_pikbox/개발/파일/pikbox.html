@@ -6831,15 +6831,16 @@
 
     // YouTube 탭 상태 관리 — 검색 결과, 페이지네이션, 로딩, 정렬
     const ytState = {
-      initialized: false,  // 초기화 여부
-      query: '',           // 현재 검색어
-      results: [],         // 검색 결과 배열
-      page: 1,             // 현재 Serper 페이지
-      loading: false,      // 로딩 중 여부
-      hasMore: true,       // 추가 결과 존재 여부
-      activeChip: 'all',   // 활성 카테고리 칩
-      sort: 'recommend',   // 정렬 기준: 'recommend' | 'newest' | 'views'
-      observer: null       // IntersectionObserver 인스턴스
+      initialized: false,    // 초기화 여부
+      query: '',             // 현재 검색어
+      results: [],           // 영상 검색 결과 (video/shorts/ad 공유)
+      communityResults: [],  // 커뮤니티 검색 결과 (이미지 기반)
+      page: 1,               // 현재 Serper 페이지
+      loading: false,        // 로딩 중 여부
+      hasMore: true,         // 추가 결과 존재 여부
+      activeChip: 'video',   // 활성 칩 (기본: 영상)
+      sort: 'recommend',     // 정렬 기준: 'recommend' | 'newest' | 'views'
+      observer: null         // IntersectionObserver 인스턴스
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
