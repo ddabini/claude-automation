@@ -9480,11 +9480,13 @@
       document.getElementById('drViewerTitle').textContent = design.name || '이름 없음';
       document.getElementById('drStatusSelect').value = design.status || 'review';
 
-      // 사이즈 정보 표시 (저장된 메타데이터가 있으면)
-      if (design.meta_width && design.meta_height) {
-        const pages = design.meta_pages || 1;
+      // 사이즈 정보 표시 — DB 필드: width/height/pages (또는 meta_ 접두사 버전도 호환)
+      const dWidth  = design.width  || design.meta_width;
+      const dHeight = design.height || design.meta_height;
+      const dPages  = design.pages  || design.meta_pages || 1;
+      if (dWidth && dHeight) {
         document.getElementById('drViewerSize').textContent =
-          `${design.meta_width} × ${design.meta_height}px${pages > 1 ? ` · ${pages}장` : ''}`;
+          `${dWidth} × ${dHeight}px${dPages > 1 ? ` · ${dPages}장` : ''}`;
       } else {
         document.getElementById('drViewerSize').textContent = '';
       }
