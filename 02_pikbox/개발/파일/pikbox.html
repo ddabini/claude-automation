@@ -5854,17 +5854,26 @@
         promises.push(searchSerperImages(baseQuery + ' meta ad creative 광고 소재 레퍼런스', '', 1));
         sources.push('google_meta_ads');
 
-        // ── 3) Pinterest 집중 (5호출 = 100개) ──
-        // 한국 구글 2호출 + 글로벌(미국) 구글 3호출로 해외 고퀄 핀 수집 강화
-        promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1));
-        sources.push('google_pinterest');
-        promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 2));
-        sources.push('google_pinterest');
-        promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1, { gl: 'us' }));
-        sources.push('google_pinterest');
-        promises.push(searchSerperImages(expandedQueries[3], 'site:pinterest.com', 1, { gl: 'us' }));
-        sources.push('google_pinterest');
-        promises.push(searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1, { gl: 'us' }));
+        // ── 3) Pinterest — 네이티브 검색 우선, Serper 폴백 ──
+        // Cloud Function이 설정되어 있으면 Pinterest 자체 검색 알고리즘 결과를 가져옴
+        // 실패 시 기존 Serper(Google site:pinterest.com) 방식으로 자동 폴백
+        const pinterestNativePromise = searchPinterestNative(baseQuery, 30);
+        promises.push(pinterestNativePromise.then(nativeResults => {
+          if (nativeResults && nativeResults.length > 0) {
+            // 네이티브 결과 성공 — Serper 폴백 건너뜀
+            console.log(`Pinterest 네이티브: ${nativeResults.length}개 핀`);
+            return nativeResults;
+          }
+          // 네이티브 실패 — Serper 폴백 (한국 2호출 + 글로벌 3호출)
+          console.log('Pinterest 네이티브 실패, Serper 폴백');
+          return Promise.all([
+            searchSerperImages(searchQuery, 'site:pinterest.com', 1),
+            searchSerperImages(searchQuery, 'site:pinterest.com', 2),
+            searchSerperImages(searchQuery, 'site:pinterest.com', 1, { gl: 'us' }),
+            searchSerperImages(expandedQueries[3], 'site:pinterest.com', 1, { gl: 'us' }),
+            searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1, { gl: 'us' }),
+          ]).then(arrays => arrays.flat());
+        }));
         sources.push('google_pinterest');
 
         // ── 3-1) 화보사진 선택 시 Pinterest 사진 부문 추가 크롤링 ──
