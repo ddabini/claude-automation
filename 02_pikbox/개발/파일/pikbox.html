@@ -6997,6 +6997,84 @@
         });
     }
 
+    // ─── YouTube 커뮤니티 포스트 검색 (Serper /images 엔드포인트) ───
+    // 공식 API 없으므로 site:youtube.com/post 이미지 검색으로 대체
+    async function ytSearchCommunity(query, page) {
+      // 두 가지 쿼리를 병렬로 시도하여 결과 보강
+      const queries = [
+        `site:youtube.com/post ${query}`,
+        `${query} 유튜브 커뮤니티 게시물`
+      ];
+
+      const promises = queries.map(q =>
+        fetch('https://google.serper.dev/images', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': config.serperKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            q: q,
+            num: 20,
+            page: Math.max(1, page),
+            gl: 'kr',
+            hl: 'ko'
+          })
+        }).then(r => r.json()).catch(() => ({ images: [] }))
+      );
+
+      const results = await Promise.allSettled(promises);
+      let allImages = [];
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value?.images?.length > 0) {
+          allImages.push(...r.value.images);
+        }
+      });
+
+      // 중복 제거 (이미지 URL 기준) + 카드 데이터 변환
+      const seen = new Set();
+      return allImages
+        .filter(item => {
+          const url = item.imageUrl || '';
+          if (!url || seen.has(url)) return false;
+          seen.add(url);
+          return true;
+        })
+        .filter(item => {
+          // 저품질 제외
+          const w = item.imageWidth || 0;
+          const h = item.imageHeight || 0;
+          if (w === 0 && h === 0) return true;
+          return w >= 150 && h >= 150;
+        })
+        .map(item => ({
+          title: item.title || '',
+          imageUrl: item.imageUrl || '',
+          sourceUrl: item.link || item.source || '',
+          platform: 'youtube-community',
+          isCommunity: true
+        }));
+    }
+
+    // ─── YouTube videoId 추출 — URL에서 video ID를 파싱 ───
+    function ytExtractVideoId(url) {
+      try {
+        const u = new URL(url);
+        // /watch?v=xxx 형식
+        let vid = u.searchParams.get('v');
+        if (vid) return vid;
+        // /shorts/xxx 형식
+        if (u.pathname.includes('/shorts/')) {
+          return u.pathname.split('/shorts/')[1]?.split(/[/?#]/)[0] || '';
+        }
+        // youtu.be/xxx 형식
+        if (u.hostname === 'youtu.be') {
+          return u.pathname.slice(1).split(/[/?#]/)[0] || '';
+        }
+      } catch (e) { /* URL 파싱 실패 */ }
+      return '';
+    }
+
     // YouTube 탭 초기화 — 칩 렌더링 + 무한 스크롤 설정
     function ytInit() {
       ytState.initialized = true;
