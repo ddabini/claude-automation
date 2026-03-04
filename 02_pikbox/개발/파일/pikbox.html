@@ -7544,6 +7544,114 @@
         }, { rootMargin: '200px' });
         ytState.observer.observe(sentinel);
       }
+
+      // 첫 진입 시 급상승 동영상 자동 로드 (빈 화면 방지)
+      ytLoadTrending();
+    }
+
+    // ─── 한국 급상승 동영상 로드 ───
+    // YouTube Data API의 mostPopular 차트를 사용해 현재 인기 영상을 가져옴
+    async function ytLoadTrending() {
+      const apiKey = config.youtubeApiKey;
+      if (!apiKey) return; // API 키 없으면 기존 빈 화면 유지
+
+      const grid = document.getElementById('ytGrid');
+      const emptyEl = document.getElementById('ytEmpty');
+      const loadingEl = document.getElementById('ytLoading');
+      const sortBar = document.getElementById('ytSortBar');
+
+      // 로딩 표시
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (loadingEl) loadingEl.style.display = 'flex';
+
+      try {
+        // mostPopular: 키워드 없이 현재 한국에서 인기 있는 영상 가져오기
+        const params = new URLSearchParams({
+          part: 'snippet,statistics,contentDetails',
+          chart: 'mostPopular',
+          regionCode: 'KR',
+          maxResults: '30',
+          key: apiKey
+        });
+
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.items || data.items.length === 0) {
+          if (loadingEl) loadingEl.style.display = 'none';
+          return;
+        }
+
+        // 카드 데이터로 변환
+        const items = data.items.map(v => {
+          const snippet = v.snippet;
+          const stats = v.statistics || {};
+          const duration = v.contentDetails?.duration || '';
+          const totalSec = ytParseDurationISO(duration);
+          const isShorts = totalSec > 0 && totalSec <= 60;
+          const publishedAt = new Date(snippet.publishedAt).getTime();
+          const viewCount = parseInt(stats.viewCount || '0', 10);
+
+          return {
+            title: snippet.title || '',
+            imageUrl: snippet.thumbnails?.high?.url || '',
+            thumbUrl: snippet.thumbnails?.high?.url || '',
+            maxThumbUrl: `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
+            sourceUrl: isShorts
+              ? `https://www.youtube.com/shorts/${v.id}`
+              : `https://www.youtube.com/watch?v=${v.id}`,
+            platform: 'youtube',
+            width: 1280, height: 720,
+            isVideo: true,
+            isShorts: isShorts,
+            duration: ytFormatDurationISO(duration),
+            channel: snippet.channelTitle || '',
+            date: ytFormatRelativeDate(publishedAt),
+            dateNum: publishedAt,
+            viewsRaw: ytFormatViewCount(viewCount),
+            viewsNum: viewCount,
+            likeCount: parseInt(stats.likeCount || '0', 10),
+            commentCount: parseInt(stats.commentCount || '0', 10),
+            description: snippet.description || '',
+          };
+        });
+
+        // 급상승 상태 표시 (검색 결과와 구분)
+        ytState.results = items;
+        ytState.hasMore = false;
+        ytState.isTrending = true;
+
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        // 급상승 헤더 삽입
+        if (grid) {
+          grid.innerHTML = '';
+          const header = document.createElement('div');
+          header.id = 'ytTrendingHeader';
+          header.style.cssText = 'grid-column:1/-1;margin-bottom:4px;';
+          header.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+              <span style="font-size:20px;">🔥</span>
+              <span style="font-size:15px;font-weight:700;color:var(--text-primary);">지금 급상승 중</span>
+              <span style="font-size:12px;color:var(--text-muted);">한국에서 인기 있는 영상</span>
+            </div>
+          `;
+          grid.appendChild(header);
+        }
+
+        // 정렬 바 표시
+        if (sortBar) {
+          sortBar.style.display = 'flex';
+          const countEl = document.getElementById('ytResultCount');
+          if (countEl) countEl.textContent = `급상승 ${items.length}개`;
+        }
+
+        ytRenderCards(items);
+
+      } catch (e) {
+        console.warn('[Pikbox] 급상승 로드 실패:', e.message);
+        if (loadingEl) loadingEl.style.display = 'none';
+      }
     }
 
     // YouTube 검색 실행 — 검색어로 영상 검색 (appendMode: 더 보기 여부)
