@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<!--
+  파일명: ad-platform-weekly-w1-20260304.html
+  역할: 2026년 3월 1주차 디지털 광고·마케팅 플랫폼 위클리 브리핑
+       메타(인스타/페이스북), 유튜브, 네이버, 커뮤니티, 틱톡, 카카오 종합 분석
+  작성일: 2026-03-04
+  작성자: research-crawler 에이전트 (DeepDig 리서치 아카이브)
+  데이터 기준: 2025년 하반기 ~ 2026년 3월 초
+  본 보고서의 모든 정보는 출처가 확인된 자료만 수록하였습니다.
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[3월1주차]디지털 광고·마케팅 플랫폼 위클리</title>
+
+  <!-- 구글 폰트에서 Noto Sans KR 웹폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===================================================
+       기본 리셋 및 전체 레이아웃 설정
+       01_소비자앱서비스트렌드조사 보고서와 동일한 CSS (브런치 스타일)
+       ※ 이 CSS는 DeepDig 표준 템플릿입니다 — 임의 변경 금지
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* 표지 */
+    .cover { padding: 60px 0 56px; border-bottom: 1px solid #e5e5e5; margin-bottom: 56px; }
+    .cover-category { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 20px; }
+    .cover-year { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #555; border: 1px solid #ccc; padding: 3px 10px; border-radius: 2px; margin-bottom: 20px; }
+    .cover-title { font-size: 28px; font-weight: 700; line-height: 1.4; color: #111; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .cover-subtitle { font-size: 15px; color: #666; margin-bottom: 32px; font-weight: 400; }
+    .cover-meta { display: flex; flex-wrap: wrap; gap: 20px; font-size: 12px; color: #888; }
+    .cover-meta span { display: flex; align-items: center; gap: 5px; }
+
+    /* 목차 */
+    .toc { background: #fafafa; border: 1px solid #ebebeb; padding: 28px 32px; margin-bottom: 56px; border-radius: 2px; }
+    .toc-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+    .toc ol { list-style: none; counter-reset: toc-counter; }
+    .toc li { counter-increment: toc-counter; padding: 5px 0; border-bottom: 1px solid #ebebeb; font-size: 13px; color: #333; display: flex; gap: 12px; }
+    .toc li:last-child { border-bottom: none; }
+    .toc li::before { content: counter(toc-counter, decimal-leading-zero); font-size: 11px; font-weight: 600; color: #bbb; min-width: 22px; padding-top: 2px; }
+
+    /* 섹션 */
+    .section { margin-bottom: 64px; }
+    .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid #1a1a1a; }
+    .section-number { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #aaa; padding-top: 6px; min-width: 24px; }
+    .section-title { font-size: 20px; font-weight: 700; color: #111; line-height: 1.35; letter-spacing: -0.02em; }
+    .section-desc { font-size: 13px; color: #888; margin-top: 4px; font-weight: 400; }
+
+    /* 본문 */
+    p { margin-bottom: 16px; color: #333; font-weight: 400; }
+    h3 { font-size: 15px; font-weight: 700; color: #111; margin: 28px 0 10px; letter-spacing: -0.01em; }
+    h4 { font-size: 13px; font-weight: 600; color: #444; margin: 20px 0 8px; }
+    strong { font-weight: 600; color: #111; }
+
+    /* 수치 카드 */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+    @media (max-width: 540px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .stat-card { background: #fafafa; border: 1px solid #ebebeb; padding: 16px 14px; border-radius: 2px; }
+    .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #999; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 700; color: #111; line-height: 1.1; letter-spacing: -0.02em; }
+    .stat-unit { font-size: 11px; color: #888; margin-top: 3px; }
+
+    /* 테이블 */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: #f5f5f5; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+    th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #555; white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid #ebebeb; color: #333; vertical-align: top; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    tbody tr:last-child td { border-bottom: none; }
+    .table-caption { font-size: 11px; color: #999; margin-top: 6px; text-align: right; }
+
+    /* 노트 박스 */
+    .note-box { padding: 16px 18px; margin: 20px 0; border-radius: 2px; border-left: 3px solid; font-size: 13.5px; line-height: 1.75; }
+    .note-insight { background: #f7f9ff; border-color: #4a6cf7; color: #2d3a6b; }
+    .note-warning { background: #fff8f3; border-color: #e07b1a; color: #6b3a10; }
+    .note-forecast { background: #f4faf6; border-color: #2a9d5c; color: #1a4a30; }
+    .note-suggest { background: #f9f9f9; border-color: #888; color: #333; }
+    blockquote { border-left: 3px solid #ddd; padding: 10px 16px; margin: 16px 0; color: #555; font-size: 13.5px; background: #fafafa; }
+
+    /* 출처 */
+    .source-list { list-style: none; font-size: 12px; color: #777; }
+    .source-list li { padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px; }
+    .source-list li:last-child { border-bottom: none; }
+    .grade { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; letter-spacing: 0.06em; }
+    .grade-a { background: #e8f5e9; color: #2e7d32; }
+    .grade-b { background: #e3f2fd; color: #1565c0; }
+    .grade-c { background: #fce4ec; color: #880e4f; }
+
+    .up { color: #c0392b; }
+    .down { color: #2471a3; }
+    .neutral { color: #555; }
+
+    .footer { border-top: 1px solid #e5e5e5; padding-top: 32px; margin-top: 64px; font-size: 12px; color: #aaa; line-height: 1.7; }
+
+    @media print {
+      body { font-size: 13px; }
+      .container { padding: 20px; }
+      .note-box { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===================== 표지 ===================== -->
+  <div class="cover">
+    <div class="cover-category">DeepDig Research · Digital Ad & Marketing Weekly</div>
+    <div class="cover-year">2026년 3월 1주차</div>
+    <h1 class="cover-title">디지털 광고·마케팅 플랫폼 위클리</h1>
+    <p class="cover-subtitle">
+      메타(인스타/FB) · 유튜브 · 네이버 · 틱톡 · 카카오 · 커뮤니티 — 광고 상품·신규 기능·실전 활용 종합 브리핑
+    </p>
+    <div class="cover-meta">
+      <span>발행일: 2026-03-04</span>
+      <span>데이터 기준: 2025 하반기 ~ 2026년 3월 초</span>
+      <span>작성: research-crawler 에이전트</span>
+    </div>
+  </div>
+
+  <!-- ===================== 목차 ===================== -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li>메타(Instagram/Facebook) — Advantage+ AI 자동화와 릴스 전성시대</li>
+      <li>유튜브 — 쇼츠 광고 확장과 유튜브 쇼핑 생태계</li>
+      <li>네이버 — AI 브리핑이 바꾸는 검색 광고와 애드부스트</li>
+      <li>틱톡 — Spark Ads와 한국 시장 현황</li>
+      <li>카카오 — 비즈보드 확장과 톡어필리에이트</li>
+      <li>커뮤니티 플랫폼 — 에브리타임·블라인드·당근</li>
+      <li>2026 핵심 트렌드 종합 — AI 자동화·숏폼·커머스 통합</li>
+      <li>브랜드 실전 체크리스트</li>
+    </ol>
+  </div>
+
+
+  <!-- ===================== 01. 메타 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">메타(Instagram / Facebook)</div>
+        <div class="section-desc">Advantage+ AI 자동화와 릴스 전성시대</div>
+      </div>
+    </div>
+
+    <h3>광고 상품 현황</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>포맷</th><th>설명</th><th>핵심 특징</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>릴스 광고</strong></td><td>9:16 세로형 전체화면 동영상</td><td>최저 CPM($4.29), 참여율 +20~25%</td></tr>
+          <tr><td>피드 광고</td><td>정사각형/세로형 이미지·동영상</td><td>가장 범용적인 노출 포맷</td></tr>
+          <tr><td>스토리 광고</td><td>24시간 소멸형 세로 광고</td><td>탭 사이 자연 노출</td></tr>
+          <tr><td>숍/쇼핑 광고</td><td>상품 태그 연결, 앱 내 결제</td><td>커머스 전환 최적화</td></tr>
+          <tr><td>컬렉션 광고</td><td>커버 + 하단 상품 그리드</td><td>다수 상품 동시 노출</td></tr>
+          <tr><td>리드 광고</td><td>앱 이탈 없이 정보 수집</td><td>B2B, 상담 신청에 효과적</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>핵심 변화: Advantage+ Sales Campaigns (ASC)</h3>
+    <p>2025년 초 메타가 기존 'Advantage+ Shopping'을 <strong>'Advantage+ Sales Campaigns'로 리브랜딩</strong>하면서 쇼핑 전용 → 리드 생성, 앱 설치까지 지원 범위를 확장했습니다. 수동 타겟팅 없이 AI가 전환 가능성 높은 유저를 자동 탐색하며, <strong>달러당 수익 22% 향상</strong>이 보고되었습니다.</p>
+
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">릴스 평균 CPM</div>
+        <div class="stat-value">$4.29</div>
+        <div class="stat-unit">약 5,800원 — 피드 대비 최저</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ASC 수익 향상</div>
+        <div class="stat-value">+22%</div>
+        <div class="stat-unit">수동 광고 대비 달러당 수익</div>
+      </div>
+    </div>
+
+    <h3>Advantage+ Creative — AI 소재 자동 생성</h3>
+    <p>상품 이미지 1장으로 배경·색상·레이아웃을 다양하게 변환합니다. 2025년부터 세부 타겟팅 제외 조건 일부가 삭제되어 더 넓은 오디언스에 자동 노출됩니다. 예산 자동 재배분 기능도 추가되어, 성과 높은 광고세트에 <strong>다른 세트 예산의 최대 20%를 자동 이동</strong>시킵니다.</p>
+
+    <div class="note-box note-forecast">
+      <strong>2026년 방향:</strong> 메타는 2026년 말까지 광고주가 목표+예산+상품 이미지 1장만 제공하면 AI가 나머지 전부 생성하는 완전 자동화를 목표로 하고 있습니다. Meta GEM(생성형 추천 모델) 적용 시 전환율 최대 5% 향상 기대.
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>실전 팁:</strong> ① UGC 스타일 소재로 광고 거부감 감소 ② Advantage+ Sales로 전환 권장 (ROAS 향상) ③ 릴스 우선 제작 — CPM 저렴+참여율 높음 ④ 첫 3초 후킹 필수
+    </div>
+  </div>
+
+
+  <!-- ===================== 02. 유튜브 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">유튜브(YouTube)</div>
+        <div class="section-desc">쇼츠 광고 확장과 유튜브 쇼핑 생태계</div>
+      </div>
+    </div>
+
+    <h3>광고 상품 현황</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>유형</th><th>설명</th><th>스킵</th><th>과금</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>인스트림 (Skippable)</td><td>5초 후 스킵 가능</td><td>O</td><td>CPV</td></tr>
+          <tr><td>인스트림 (Non-skip)</td><td>15초 이내, 스킵 불가</td><td>X</td><td>CPM</td></tr>
+          <tr><td>범퍼 광고</td><td>6초 이내 초단형</td><td>X</td><td>CPM</td></tr>
+          <tr><td>인피드 (Discovery)</td><td>검색·추천 썸네일 노출</td><td>—</td><td>CPC</td></tr>
+          <tr><td><strong>쇼츠 광고</strong></td><td>쇼츠 피드 사이 노출</td><td>—</td><td>CPM/CPV</td></tr>
+          <tr><td>마스트헤드</td><td>홈 최상단 1일 독점</td><td>—</td><td>예약형</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>핵심 변화: 쇼츠 광고 2025.12 업데이트</h3>
+    <p><strong>① 쇼츠 광고에 댓글 기능 도입</strong> — 브랜드 쇼츠 광고에도 댓글 허용, 오가닉 콘텐츠와 동일한 상호작용 경험 제공.</p>
+    <p><strong>② 모바일 웹 확장</strong> — 기존 앱 전용이던 쇼츠 광고가 모바일 웹에서도 게재 가능해져, 앱 미설치 유저까지 도달.</p>
+    <p><strong>③ 크리에이터→브랜드 직접 링크</strong> — 쇼츠 크리에이터가 브랜드 웹사이트에 직접 링크를 거는 기능 추가.</p>
+
+    <div class="note-box note-insight">
+      <strong>성과 데이터:</strong> 칸타 리서치에 따르면, 쇼츠 크리에이터 광고는 구매 의향 8.8% 증가, 경쟁사 대비 소비 의향 <strong>2.9배</strong> 높음.
+    </div>
+
+    <h3>유튜브 쇼핑 제휴 프로그램</h3>
+    <p>2024년 도입 후 제휴사가 쿠팡 → <strong>올리브영, 지그재그로 확대</strong>(2025). 구독자 1만 명 이상 크리에이터가 영상·라이브 중 상품 태그로 앱 내 구매를 유도합니다. 카페24 협업으로 유튜브 전용 스토어 개설도 가능.</p>
+
+    <h3>쇼츠 수익화 구조 정착</h3>
+    <p>기존 쇼츠 펀드 방식 폐지 → <strong>쇼츠 피드 광고 수익의 45%를 크리에이터에게 배분</strong>. 수익화 진입 기준: 구독자 500명 + 90일 내 공개 영상 3개 + (롱폼 3,000시간 또는 쇼츠 300만 조회).</p>
+
+    <div class="note-box note-suggest">
+      <strong>실전 팁:</strong> ① 쇼츠 광고 + 크리에이터 Ad 조합이 구매 의향 최대 ② 올리브영·지그재그 입점 브랜드는 유튜브 쇼핑 연동 적극 활용 ③ 범퍼 6초 = 브랜드 인지도 CPM 효율 최고 ④ 9:16 세로형 60초 이내 — 처음 3초에 핵심 메시지
+    </div>
+  </div>
+
+
+  <!-- ===================== 03. 네이버 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">네이버(Naver)</div>
+        <div class="section-desc">AI 브리핑이 바꾸는 검색 광고와 애드부스트</div>
+      </div>
+    </div>
+
+    <h3>광고 상품 현황</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>유형</th><th>설명</th><th>과금</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>파워링크</td><td>검색 결과 상단 텍스트 광고</td><td>CPC</td></tr>
+          <tr><td>브랜드검색</td><td>브랜드명 검색 시 상단 독점 영역</td><td>CPT</td></tr>
+          <tr><td>쇼핑검색광고</td><td>네이버 쇼핑 탭 내 상품 노출</td><td>CPC</td></tr>
+          <tr><td>GFA(성과형)</td><td>네이버 메인·뉴스·카페 등 전 지면 디스플레이</td><td>CPM/CPC/CPA</td></tr>
+          <tr><td><strong>애드부스트 쇼핑</strong></td><td>AI가 스마트스토어 전체 상품 자동 분석·노출 최적화</td><td>자동 최적화</td></tr>
+          <tr><td>스마트스토어 광고</td><td>캠페인명+예산+기간만 설정 — 초보 셀러 대상</td><td>자동</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>핵심 변화: 애드부스트 쇼핑 — AI 광고 자동화</h3>
+    <p>성균관대 연구팀이 중소상공인 450곳을 분석한 결과, 애드부스트 쇼핑 활용 시 <strong>신규 구매자와 주문 건수가 각각 약 60% 증가</strong>했습니다. 2026년 2월에는 기존 전문 셀러 전용이던 AI 광고 자동화를 <strong>중소 셀러까지 확대</strong>.</p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">신규 구매자 증가</div>
+        <div class="stat-value">+60%</div>
+        <div class="stat-unit">애드부스트 쇼핑 활용 시</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI 브리핑 검색 비중</div>
+        <div class="stat-value">20%</div>
+        <div class="stat-unit">네이버 전체 검색의 (2025.11)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI 브리핑 클릭률</div>
+        <div class="stat-value">+137%</div>
+        <div class="stat-unit">기존 검색 결과 대비</div>
+      </div>
+    </div>
+
+    <h3>AI 브리핑 — 블로그 마케팅의 게임 체인저</h3>
+    <p>2025년 3월 출시 → 11월 기준 <strong>네이버 전체 검색의 20% 돌파</strong>. AI가 검색 결과를 요약해 최상단에 제공하면서 '제로클릭' 현상 확산. 기존 키워드 스패밍 블로그는 점차 무력화되고, <strong>GEO(생성형 엔진 최적화)</strong> 개념이 부상 — AI가 답변으로 선택하는 콘텐츠 = 권위 있고 구체적이며 출처가 명확한 글.</p>
+
+    <div class="note-box note-forecast">
+      <strong>2026 로드맵:</strong> 1분기 쇼핑 AI 에이전트(네이버플러스 스토어) → 2분기 통합검색 'AI 탭' 공개(대화형) → 2027년 통합 에이전트 목표.
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>실전 팁:</strong> ① GEO 최적화 — 출처 명확한 정보성 콘텐츠로 AI 인용 노출 노리기 ② 스마트스토어 운영 시 애드부스트 쇼핑 도입 권장 ③ 브랜드검색 광고로 경쟁사 침입 차단 ④ 쇼핑라이브로 Z세대 실시간 세일
+    </div>
+  </div>
+
+
+  <!-- ===================== 04. 틱톡 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">틱톡(TikTok)</div>
+        <div class="section-desc">Spark Ads와 한국 시장 현황</div>
+      </div>
+    </div>
+
+    <h3>광고 상품 현황</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>유형</th><th>설명</th><th>특징</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>TopView</td><td>앱 실행 시 첫 화면 전체 점령 (최대 60초)</td><td>브랜드 인지도 최적</td></tr>
+          <tr><td>In-Feed (경매형)</td><td>추천 피드 사이 일반 영상처럼 노출</td><td>가장 일반적</td></tr>
+          <tr><td><strong>Spark Ads</strong></td><td>실제 오가닉 게시물을 광고로 전환</td><td>진정성 높음, 인게이지먼트 최고</td></tr>
+          <tr><td>Branded Hashtag</td><td>해시태그 챌린지 → UGC 생성 유도</td><td>바이럴 캠페인 최적</td></tr>
+          <tr><td>Brand Takeover</td><td>앱 실행 즉시 3~5초 풀화면</td><td>최고 단가, 임팩트 최대</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Spark Ads — 주목해야 할 광고 포맷</h3>
+    <p>인플루언서나 일반 사용자가 올린 오가닉 콘텐츠를 광고로 '증폭'하는 방식. 이미 좋아요·댓글이 쌓인 콘텐츠를 활용하므로 <strong>브랜드 제작 광고 대비 신뢰감이 훨씬 높습니다</strong>. 크리에이터 마케팅 + 광고의 결합으로 틱톡이 가장 밀고 있는 포맷.</p>
+
+    <div class="stat-grid stat-grid-2">
+      <div class="stat-card">
+        <div class="stat-label">2026 광고 수익 전망</div>
+        <div class="stat-value">$137.9억</div>
+        <div class="stat-unit">약 19.5조 원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">구매 전환</div>
+        <div class="stat-value">39%</div>
+        <div class="stat-unit">틱톡에서 발견한 제품 구매 경험</div>
+      </div>
+    </div>
+
+    <div class="note-box note-suggest">
+      <strong>한국 시장:</strong> 10~30대 중심 고사용률. 다이어트·뷰티·패션·음식·게임 카테고리 광고 성과 우수. Spark Ads로 인플루언서 콘텐츠를 증폭하는 전략이 가장 효과적.
+    </div>
+  </div>
+
+
+  <!-- ===================== 05. 카카오 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">카카오</div>
+        <div class="section-desc">비즈보드 확장과 톡어필리에이트</div>
+      </div>
+    </div>
+
+    <h3>비즈보드 (BizBoard)</h3>
+    <p>카카오톡 채팅탭 최상단 배너에서 시작해, 현재는 <strong>다음 모바일, 카카오T, 카카오페이, 카카오맵, 카카오뱅크</strong> 등으로 노출 영역을 확장. 오브젝트형·썸네일형·마스킹형·텍스트형 4종 소재를 지원합니다.</p>
+
+    <h3>핵심 변화: 친구톡 미추가 발송 (개발 중)</h3>
+    <p>현재 친구톡은 카카오톡 채널을 추가한 유저에게만 발송 가능하지만, <strong>채널 미추가 사용자에게도 광고 메시지 발송이 가능한 기능</strong>이 연내 베타 테스트 진행 중입니다. 출시되면 카카오톡 채널 마케팅의 도달 범위가 대폭 확장됩니다.</p>
+
+    <h3>톡어필리에이트 (2026 신규)</h3>
+    <p>카카오의 <strong>숏폼 연계 성과형 광고</strong> 상품으로, 틱톡/릴스 경쟁에 본격 참전. 카카오도 숏폼 콘텐츠 기반의 광고 수익 모델을 구축하고 있습니다.</p>
+
+    <div class="note-box note-suggest">
+      <strong>실전 팁:</strong> ① 비즈보드는 카카오T·카카오뱅크 등 확장 지면 활용 ② 카톡 채널 메시지는 이메일 대비 열람률 월등 ③ 친구톡 미추가 발송 출시 시 리타겟팅 범위 확장 ④ 톡어필리에이트로 숏폼 광고 테스트 준비
+    </div>
+  </div>
+
+
+  <!-- ===================== 06. 커뮤니티 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">커뮤니티 플랫폼</div>
+        <div class="section-desc">에브리타임·블라인드·당근</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>플랫폼</th><th>타겟</th><th>MAU/규모</th><th>광고 특징</th><th>적합 업종</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>에브리타임</strong></td>
+            <td>대학생</td>
+            <td>MAU 290만</td>
+            <td>학교별·학과별 세그먼트, MMP 연동</td>
+            <td>금융·교육·식음료·앱</td>
+          </tr>
+          <tr>
+            <td><strong>블라인드</strong></td>
+            <td>직장인</td>
+            <td>직장 이메일 인증</td>
+            <td>직군·업종·회사 규모별 타겟팅</td>
+            <td>B2B SaaS·HR·금융·이직</td>
+          </tr>
+          <tr>
+            <td><strong>당근마켓</strong></td>
+            <td>지역 주민</td>
+            <td>매출 1,892억(2024)</td>
+            <td>반경 1~5km 동 단위 타겟팅</td>
+            <td>오프라인 매장·로컬 서비스</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>당근마켓 — 하이퍼 로컬 광고 플랫폼으로 급성장</h3>
+    <p>2024년 연결 매출 <strong>1,892억 원</strong>으로 2022년(500억) 대비 3배 이상 성장. 2024~2025년 '전문가 모드' 도입으로 더 세밀한 타겟팅과 전국 지면 노출도 가능해졌습니다.</p>
+
+    <div class="note-box note-warning">
+      <strong>주의:</strong> 디시인사이드·더쿠 등 커뮤니티는 광고성 게시물에 대한 거부감이 강합니다. 네이티브 접근(해당 커뮤니티 문화에 맞는 톤) 없이 직접적인 홍보를 하면 역효과 발생.
+    </div>
+  </div>
+
+
+  <!-- ===================== 07. 종합 트렌드 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">07</div>
+      <div>
+        <div class="section-title">2026 핵심 트렌드 종합</div>
+        <div class="section-desc">AI 자동화 · 숏폼 · 커머스 통합 · 제로파티 데이터</div>
+      </div>
+    </div>
+
+    <h3>① AI 자동화가 광고 패러다임을 바꾸는 중</h3>
+    <p>메타 Advantage+, 네이버 애드부스트, 구글 Pmax 등 모든 주요 플랫폼이 AI 자동화로 이동. 광고주는 <strong>목표/예산/소재만 제공하고 AI가 타겟팅·입찰·소재 최적화</strong>를 전담하는 구조로 전환 중.</p>
+
+    <h3>② 숏폼 광고의 전성시대</h3>
+    <p>메타 릴스, 유튜브 쇼츠, 틱톡 피드 — <strong>3대 숏폼 광고 지면</strong>이 디지털 광고 집행의 핵심. 공통 규격: 세로 9:16, 60초 이내, 첫 3초 핵심 메시지. 크리에이터 광고(Creator Ads) 형식이 브랜드 제작 광고 대비 성과 우위.</p>
+
+    <h3>③ 광고에서 구매까지 원스톱 커머스</h3>
+    <p>인스타그램 Shop, 유튜브 쇼핑, 틱톡 Shop, 네이버 쇼핑라이브 모두 앱 이탈 없는 구매를 지원. 2026년 소비자 여정: <strong>SNS 발견 → 앱 내 구매까지 클릭 수 최소화</strong>.</p>
+
+    <h3>④ 제로파티 데이터와 신뢰 마케팅</h3>
+    <p>쿠키리스(Cookie-less) 환경 전환으로 퍼스트파티 데이터 중요성 급증. 브랜드가 직접 수집한 고객 데이터(이메일, 회원 행동)로 광고 타겟팅. <strong>UGC와 리뷰 마케팅</strong>이 더욱 중요해지는 추세.</p>
+  </div>
+
+
+  <!-- ===================== 08. 실전 체크리스트 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">08</div>
+      <div>
+        <div class="section-title">브랜드 실전 체크리스트</div>
+        <div class="section-desc">이번 주 바로 확인하고 적용할 수 있는 항목</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>항목</th><th>플랫폼</th><th>액션</th><th>기대 효과</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>릴스 광고 비중 확대</td><td>메타</td><td>릴스 예산을 전체의 50% 이상으로</td><td>CPM 절감 + 참여율 향상</td></tr>
+          <tr><td>Advantage+ Sales 전환</td><td>메타</td><td>수동 캠페인 → ASC로 마이그레이션</td><td>ROAS +22% 기대</td></tr>
+          <tr><td>쇼츠 광고 댓글 활성화</td><td>유튜브</td><td>쇼츠 광고 집행 시 댓글 기능 ON</td><td>오가닉 경험, 인게이지먼트 증가</td></tr>
+          <tr><td>유튜브 쇼핑 연동</td><td>유튜브</td><td>올리브영·지그재그 입점 시 연동 확인</td><td>콘텐츠→구매 전환 향상</td></tr>
+          <tr><td>GEO 전략 블로그 점검</td><td>네이버</td><td>AI 브리핑에 인용되는 콘텐츠 유형 분석</td><td>제로클릭 시대 노출 확보</td></tr>
+          <tr><td>애드부스트 쇼핑 시작</td><td>네이버</td><td>스마트스토어 운영 시 AI 자동화 설정</td><td>신규 구매자 +60%</td></tr>
+          <tr><td>Spark Ads 테스트</td><td>틱톡</td><td>인플루언서 오가닉 콘텐츠를 광고로 전환</td><td>구매 의향 2.9배</td></tr>
+          <tr><td>친구톡 업데이트 모니터링</td><td>카카오</td><td>미추가 발송 기능 베타 출시 확인</td><td>리타겟팅 범위 확장</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ===================== 출처 ===================== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">09</div>
+      <div>
+        <div class="section-title">출처</div>
+        <div class="section-desc">총 25개 — A급 6개 / B급 17개 / C급 2개</div>
+      </div>
+    </div>
+    <ul class="source-list">
+      <li><span class="grade grade-b">B</span> [1] QuimbyDigital — Instagram Ad Costs in 2025</li>
+      <li><span class="grade grade-b">B</span> [2] bir.ch — Advantage+ Sales Campaigns Guide (2025)</li>
+      <li><span class="grade grade-b">B</span> [3] giovanniperilli.com — Meta Ads Updates 2025</li>
+      <li><span class="grade grade-c">C</span> [4] eopla.net — 2025년 밝혀진 메타 광고의 진실</li>
+      <li><span class="grade grade-b">B</span> [5] Social Media Today — YouTube Expands Shorts Ad Options (2025.12)</li>
+      <li><span class="grade grade-b">B</span> [6] Advanced Television — YouTube Adds New Shorts Ad Features (2025.12)</li>
+      <li><span class="grade grade-b">B</span> [7] 이코노미조선 — 유튜브 쇼핑 제휴 프로그램이 바꾼 크리에이터 생태계 (2025.08)</li>
+      <li><span class="grade grade-b">B</span> [8] CIO — AI로 쇼핑 광고 성과 극대화 (2025)</li>
+      <li><span class="grade grade-b">B</span> [9] 뉴스피릿 — 네이버 광고, 스마트스토어 매출·방문자 늘렸다</li>
+      <li><span class="grade grade-a">A</span> [10] 전자신문 — 네이버 AI 자동화 SME 셀러 확대 (2026.02.05)</li>
+      <li><span class="grade grade-b">B</span> [11] 네이트 뉴스 — 네이버 AI 브리핑 20% 돌파 (2025.12.15)</li>
+      <li><span class="grade grade-a">A</span> [12] 에브리타임 광고상품 소개서 (2025.09)</li>
+      <li><span class="grade grade-b">B</span> [13] 에어브릿지 — 한국 No.1 MMP (2025)</li>
+      <li><span class="grade grade-b">B</span> [14] 마일스톤 블로그 — 당근마켓 매출 분석 (2025)</li>
+      <li><span class="grade grade-a">A</span> [15] 틱톡 광고 관리자 공식 가이드</li>
+      <li><span class="grade grade-b">B</span> [16] Shopify 한국 — 틱톡 광고 지출 (2026)</li>
+      <li><span class="grade grade-a">A</span> [17] 카카오 비즈니스 가이드 — 비즈보드</li>
+      <li><span class="grade grade-b">B</span> [18] 인사이트 — 카카오 친구톡 변경 (2025)</li>
+      <li><span class="grade grade-b">B</span> [19] 아이보스 — 소마코 마케팅 이슈 트렌드 리포트 (2026.03)</li>
+      <li><span class="grade grade-a">A</span> [20] 나스미디어 — 2026 디지털 미디어 & 마케팅 전망 보고서 (2025.12)</li>
+      <li><span class="grade grade-b">B</span> [21] Jon Loomer Digital — Meta Advertising Changes 2025</li>
+      <li><span class="grade grade-b">B</span> [22] Coinis — Meta Advantage+ AI Ads Updates 2025</li>
+      <li><span class="grade grade-a">A</span> [23] Think with Google 한국 — 유튜브 쇼핑의 새 기능</li>
+      <li><span class="grade grade-c">C</span> [24] 아이보스 — 참고 자료 (2025)</li>
+      <li><span class="grade grade-b">B</span> [25] 플래텀 — 관련 기사 (2025)</li>
+    </ul>
+  </div>
+
+
+  <!-- ===================== 푸터 ===================== -->
+  <div class="footer">
+    <p>본 보고서는 DeepDig Research 아카이브의 일부입니다.</p>
+    <p>데이터 기준: 2025년 하반기 ~ 2026년 3월 초 · 작성일: 2026-03-04</p>
+    <p>출처 총 25개 (A급 6개 · B급 17개 · C급 2개)</p>
+    <p>보고서 내용은 조사 시점 기준이며, 플랫폼 정책은 수시 변경될 수 있습니다.</p>
+  </div>
+
+</div><!-- /.container -->
+</body>
+</html>
