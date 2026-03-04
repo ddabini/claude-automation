@@ -1,20 +1,36 @@
-# 프로젝트 메모리 (2026-03-04 세션 12 기준)
+# 프로젝트 메모리 (2026-03-04 세션 13 기준)
 
-## 최근 세션 요약 (2026-03-04 세션 12)
+## 최근 세션 요약 (2026-03-04 세션 13 저녁 ~23:30)
 
-### 핵심 작업
-- **빌트인 스킬 5개 → 디자인 에이전트 3개에 직접 통합**: canvas-design, frontend-design, brand-guidelines, theme-factory, web-artifacts-builder의 원칙을 design-reference-archiver/design-asset-generator/design-figma.md에 내장
-- **MCP 인프라 구축**: mcp-image (Gemini API) + Playwright 폴백 체인 설정
-- **PADO 퍼퓸 파이프라인 테스트**: 기획→카피→레퍼런스→에셋→HTML→Pikbox 풀 실행
-- **8건 문제 수정**: CLAUDE.md (brand-kit 추가), leader.rules.md (섹션 12 + "테스트 스킵 금지"), 에이전트 메모리, MCP 설정
+### 핵심 작업 (3가지)
+1. **Pikbox YouTube 탭 고도화**:
+   - ytAnalyzeVideo() 함수: 영상 메타데이터 기반 자동 분석 (유형/길이/조회수/참여도/해시태그/광고 분석)
+   - **Pikbox 코멘트 블록** 추가: 성과 원인 분석 (조회수·참여도·제목·길이·목차 기반)
+   - 롱폼 영상 부족 해결: video 칩에서 medium(4~20분) + long(20분+) 병렬 검색 → 최대 50개 확보
+   - searchYouTubeAPI에 videoDuration 파라미터 추가
+   - 탭 상태 유지: localStorage 활용 → 새로고침 시 마지막 탭 복원
+   - **급상승 동영상** 자동 표시: ytLoadTrending() (YouTube API mostPopular 30건)
+   - 배포 완료: https://pikbox-app.web.app
+
+2. **DeepDig AI 최신 현황 위클리 리포트 신규 생성**:
+   - `07_AI최신현황위클리/` 폴더 생성 (report/ + raw-data/)
+   - **cat_006** 카테고리 + **rpt_011** 보고서 등록
+   - 내용: Claude 4.6, ChatGPT GPT-5.3, Gemini 3 Flash, Cursor Cloud Agents, Windsurf 등 46개 출처
+   - registry.js 등록 완료
+   - 배포 완료: https://deepdig-app.web.app
+
+3. **DeepDig 리포트 수집 기간 규칙 확정**:
+   - 데일리: 직전 24시간
+   - 위클리: 7일간 (업로드일 기준)
+   - 먼슬리: 당월 전체
+   - 어뉴얼: 지난해 전체
+   - 콘텐츠 원칙: 직전 리포트 대비 변화점 + 신규 + 주목 이슈 중심
 
 ### 핵심 학습
-- **빌트인 스킬은 자동 전달 불가** → 에이전트 .md 파일에 원칙 직접 기록
-- **"테스트" 요청 시 에이전트 스킵 금지** (leader §5 추가)
-- **brand-kit 자동 로드** (leader §7 신설)
-- **세리프 폰트 일체 거부** — 사용자 선호 우선
-- **MCP 폴백**: mcp-image 실패 → Playwright (반복 시도 금지)
-- **Pikbox 업로드 폴백**: Bash → Node.js → leader 위임
+- **YouTube 영상 분석 로직**: 길이·조회수·참여도 자동 판별 → 카테고리별 성과 인사이트 제공
+- **YouTube API 할당량**: 월 1M 요청 (구글 클라우드 무료 크레딧 범위 내)
+- **masonic 레이아웃 성능**: CSS grid 기반으로 대량 이미지 로드 시 reflow 최소화
+- **리포트 수집 원칙**: 정적 일관성 > 완전성 (수집 기간 고정으로 컨텐츠 비교 가능)
 
 ---
 
