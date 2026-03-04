@@ -2132,16 +2132,10 @@
               '</div>'
             : '';
 
-          // 요약 2줄 (모든 카드 동일 규격)
-          const summaryHtml = r.summary
-            ? '<div class="shelf-card-summary">' + r.summary + '</div>'
-            : '';
-
           html += '<div class="shelf-card" data-id="' + r.id + '">' +
             '<div class="shelf-card-date">' + fmtDate(r.date) + '</div>' +
             catLabelHtml +
             '<div class="shelf-card-title">' + r.title + '</div>' +
-            summaryHtml +
             tagsHtml +
           '</div>';
         });
