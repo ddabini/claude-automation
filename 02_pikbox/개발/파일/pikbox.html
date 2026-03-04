@@ -7049,7 +7049,8 @@
       hasMore: true,         // 추가 결과 존재 여부
       activeChip: 'video',   // 활성 칩 (기본: 영상)
       sort: 'recommend',     // 정렬 기준: 'recommend' | 'newest' | 'views'
-      observer: null         // IntersectionObserver 인스턴스
+      observer: null,        // IntersectionObserver 인스턴스
+      isTrending: false      // 급상승 동영상 표시 중 여부
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
