@@ -99,6 +99,31 @@ window.ARCHIVE_REGISTRY = {
   // 보고서 목록: 실제 조사 보고서들의 메타데이터(정보 요약)
   reports: [
     {
+      id: "rpt_013",                                                      // 보고서 고유 번호
+      categoryId: "cat_007",                                              // 소속 카테고리 — AI 영상 제작 기술
+      title: "[2026]AI 영상 제작 기술 조사",                               // 보고서 제목
+      date: "2026-03-05",                                                 // 작성일
+      period: "2026년 3월",                                               // 데이터 기준 기간
+      folderPath: "08_AI영상제작기술조사/report/",                         // 보고서가 저장된 폴더 경로
+      fileName: "ai-video-tech-survey-20260305.html",                    // 보고서 파일명
+      summary: "AI 영상 생성 API(Sora·Runway·Kling·Veo·MiniMax·Pika) 가격·스펙 비교, 자막·배경제거·음악·업스케일 보조 편집 API, FFmpeg.wasm·WebCodecs·WebGPU 브라우저 기술 스택, CapCut·Vrew·Descript·InVideo 경쟁사 분석, Electron 앱 GPU 가속·ONNX 로컬 AI 고려사항 종합 조사. AI 영상 제작 앱 개발을 위한 기술 가이드.",
+      // 보고서 핵심 요약 포인트
+      summaryPoints: [
+        "AI 영상 생성 가성비 1위 Kling AI($0.029/초, fal.ai) — Sora 2 대비 17배 저렴하고 4K 지원. 품질 1위는 Runway Gen-4.5(벤치마크 Elo 1,247)",
+        "Stability AI SVD API 2025년 8월 종료, Unscreen 2025년 12월 종료 — VEED(fal.ai)가 배경 제거 직접 대체",
+        "WebCodecs가 FFmpeg.wasm 대비 8배 빠른 200fps(CPU 15% vs 100%) — WebGPU는 2025.11 4대 브라우저 공식 지원",
+        "CapCut(소셜)·Vrew(자막)·Descript(팟캐스트)·InVideo(AI생성) 포지션 분리 — AI생성+정밀편집 통합이 블루오션",
+        "Electron에서 FFmpeg 네이티브 바이너리+ONNX 로컬 AI 조합으로 하이브리드 아키텍처 구현 권장"
+      ],
+      sources: {
+        total: 46,   // 전체 출처 수
+        gradeA: 22,  // A급 (공식 API 문서·기업 공식 페이지·학술 논문)
+        gradeB: 20,  // B급 (주요 언론·전문 미디어)
+        gradeC: 4    // C급 (참고용 블로그·비교 사이트)
+      },
+      tags: ["AI영상생성API", "Runway", "KlingAI", "Sora2", "GoogleVeo", "FFmpegWasm", "WebCodecs", "WebGPU", "ONNX", "CapCut", "Vrew", "Descript", "Electron"]
+    },
+    {
       id: "rpt_012",                                                      // 보고서 고유 번호
       categoryId: "cat_003",                                              // 소속 카테고리 — 투자 데일리 브리핑
       title: "[3월5일]투자 데일리 브리핑",                                  // 보고서 제목
