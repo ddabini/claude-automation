@@ -2817,6 +2817,17 @@
           <option value="done">완료</option>
         </select>
         <button class="dr-btn" onclick="drOpenInNewTab()">↗ 새 탭</button>
+        <!-- Figma 바로가기 버튼 — 등록된 Figma URL이 있으면 검정, 없으면 URL 등록 팝업 -->
+        <button class="dr-btn dr-btn-figma no-url" id="drFigmaBtn"
+                onclick="drOpenFigma()" title="Figma에서 열기">
+          <svg width="12" height="12" viewBox="0 0 38 57" fill="currentColor" style="vertical-align:-1px;margin-right:3px;">
+            <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z"/>
+            <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0z"/>
+            <path d="M19 0v19h9.5a9.5 9.5 0 0 0 0-19H19z"/>
+            <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z"/>
+            <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z"/>
+          </svg>Figma
+        </button>
         <button class="dr-btn" onclick="drToggleChat()" id="drChatToggleBtn">💬 채팅</button>
       </div>
 
