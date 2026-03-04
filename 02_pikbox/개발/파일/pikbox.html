@@ -8125,6 +8125,241 @@
       }
     }
 
+    // ─── YouTube 영상 구성 분석 ───
+    // 영상 메타데이터(제목, 설명, 채널, 길이, 조회수 등)를 기반으로
+    // 영상의 구성과 핵심 포인트를 자동 분석하여 보여줌
+    async function ytAnalyzeVideo(videoId) {
+      const analysisEl = document.getElementById('ytInsightAnalysis');
+      if (!analysisEl) return;
+
+      // 로딩 상태 표시
+      analysisEl.innerHTML = `
+        <div style="text-align:center;padding:16px;">
+          <div style="font-size:24px;animation:spin 1s linear infinite;">⏳</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">영상 분석 중...</div>
+        </div>
+      `;
+
+      // ytState.results에서 해당 영상 데이터 찾기
+      const videoData = ytState.results.find(r =>
+        r.sourceUrl && r.sourceUrl.includes(videoId)
+      );
+
+      if (!videoData) {
+        analysisEl.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;">영상 데이터를 찾을 수 없습니다</p>`;
+        return;
+      }
+
+      try {
+        // YouTube Data API로 최신 상세 정보 가져오기
+        const apiKey = config.youtubeApiKey;
+        let fullDesc = videoData.description || '';
+        let tags = [];
+        let categoryId = '';
+        let topicCategories = [];
+
+        if (apiKey) {
+          const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,topicDetails&id=${videoId}&key=${apiKey}`
+          );
+          const data = await res.json();
+          if (res.ok && data.items && data.items.length > 0) {
+            const item = data.items[0];
+            fullDesc = item.snippet.description || fullDesc;
+            tags = item.snippet.tags || [];
+            categoryId = item.snippet.categoryId || '';
+            topicCategories = item.topicDetails?.topicCategories || [];
+          }
+        }
+
+        // ── 분석 로직 ──
+
+        // 1) 영상 유형 판별
+        const title = videoData.title || '';
+        const channel = videoData.channel || '';
+        const durationStr = videoData.duration || '';
+        const durationSec = ytParseDurationFromDisplay(durationStr);
+
+        // 영상 유형 키워드 매칭
+        const typeKeywords = {
+          '광고/CF': ['광고', 'CF', 'TVC', 'TVCF', '캠페인', 'commercial', 'ad'],
+          '브이로그': ['브이로그', 'vlog', 'VLOG', '일상'],
+          '튜토리얼': ['방법', '하는법', 'how to', 'tutorial', '강의', '강좌', '배우기'],
+          '리뷰': ['리뷰', 'review', '후기', '언박싱', 'unboxing', '비교'],
+          '뉴스/보도': ['뉴스', '속보', '보도', 'news', '기자'],
+          '인터뷰': ['인터뷰', 'interview', '대담', '토크'],
+          '뮤직비디오': ['MV', 'M/V', '뮤직비디오', 'music video', 'Official MV'],
+          'Shorts': ['shorts', '#shorts', 'Shorts'],
+        };
+
+        let videoType = '일반 영상';
+        for (const [type, keywords] of Object.entries(typeKeywords)) {
+          if (keywords.some(kw => title.toLowerCase().includes(kw.toLowerCase()) ||
+              fullDesc.toLowerCase().substring(0, 500).includes(kw.toLowerCase()))) {
+            videoType = type;
+            break;
+          }
+        }
+
+        // 쇼츠 판별 (60초 이하)
+        if (durationSec > 0 && durationSec <= 60) videoType = 'Shorts';
+
+        // 2) 영상 길이 분류
+        let lengthCategory = '';
+        if (durationSec <= 0) lengthCategory = '길이 정보 없음';
+        else if (durationSec <= 60) lengthCategory = '초단편 (1분 이하)';
+        else if (durationSec <= 300) lengthCategory = '단편 (1~5분)';
+        else if (durationSec <= 900) lengthCategory = '중편 (5~15분)';
+        else if (durationSec <= 1800) lengthCategory = '장편 (15~30분)';
+        else lengthCategory = '롱폼 (30분 이상)';
+
+        // 3) 참여도 분석 (좋아요/조회수 비율)
+        const views = videoData.viewsNum || 0;
+        const likes = videoData.likeCount || 0;
+        const comments = videoData.commentCount || 0;
+        let engagementRate = 0;
+        let engagementLabel = '';
+        if (views > 0) {
+          engagementRate = ((likes + comments) / views * 100);
+          if (engagementRate >= 5) engagementLabel = '🔥 매우 높음';
+          else if (engagementRate >= 2) engagementLabel = '👍 높음';
+          else if (engagementRate >= 0.5) engagementLabel = '📊 보통';
+          else engagementLabel = '📉 낮음';
+        }
+
+        // 4) 설명란에서 타임스탬프/목차 추출
+        const timestampRegex = /(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–—]?\s*(.+)/g;
+        const timestamps = [];
+        let match;
+        while ((match = timestampRegex.exec(fullDesc)) !== null) {
+          timestamps.push({ time: match[1], label: match[2].trim().substring(0, 60) });
+        }
+
+        // 5) 설명란에서 링크 추출 (외부 참조, 관련 사이트)
+        const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g;
+        const links = (fullDesc.match(urlRegex) || []).slice(0, 5);
+
+        // 6) 해시태그 추출
+        const hashtagRegex = /#([^\s#]+)/g;
+        const hashtags = [];
+        while ((match = hashtagRegex.exec(fullDesc)) !== null) {
+          hashtags.push('#' + match[1]);
+        }
+        // tags 배열에서도 추가
+        tags.forEach(t => {
+          const tag = '#' + t.replace(/\s+/g, '');
+          if (!hashtags.includes(tag)) hashtags.push(tag);
+        });
+
+        // 7) 조회수 수준 판단
+        let viewsLevel = '';
+        if (views >= 10000000) viewsLevel = '🏆 메가 히트 (1,000만+)';
+        else if (views >= 1000000) viewsLevel = '🌟 밀리언 뷰 (100만+)';
+        else if (views >= 100000) viewsLevel = '📈 인기 (10만+)';
+        else if (views >= 10000) viewsLevel = '👀 관심 (1만+)';
+        else if (views >= 1000) viewsLevel = '📌 일반 (1천+)';
+        else viewsLevel = '🆕 초기';
+
+        // ── 분석 결과 렌더링 ──
+        let html = `<div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;">🔍 영상 구성 분석</div>`;
+
+        // 기본 정보 카드
+        html += `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);">`;
+        html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">`;
+        html += `<span style="background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;">${escHtml(videoType)}</span>`;
+        html += `<span style="background:var(--surface);color:var(--text-secondary);padding:2px 8px;border-radius:12px;font-size:11px;border:1px solid var(--border);">${escHtml(lengthCategory)}</span>`;
+        if (viewsLevel) html += `<span style="background:var(--surface);color:var(--text-secondary);padding:2px 8px;border-radius:12px;font-size:11px;border:1px solid var(--border);">${viewsLevel}</span>`;
+        html += `</div>`;
+
+        // 참여도
+        if (views > 0) {
+          html += `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">`;
+          html += `참여도: ${engagementLabel} (${engagementRate.toFixed(2)}%)`;
+          html += `</div>`;
+        }
+        html += `</div>`;
+
+        // 타임스탬프 (영상 목차)
+        if (timestamps.length > 0) {
+          html += `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);">`;
+          html += `<div style="font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">📋 영상 목차 (${timestamps.length}개 챕터)</div>`;
+          html += `<div style="max-height:150px;overflow-y:auto;">`;
+          timestamps.slice(0, 15).forEach(ts => {
+            html += `<div style="font-size:11px;color:var(--text-muted);padding:2px 0;display:flex;gap:8px;">`;
+            html += `<span style="color:var(--primary);font-weight:600;white-space:nowrap;">${escHtml(ts.time)}</span>`;
+            html += `<span>${escHtml(ts.label)}</span>`;
+            html += `</div>`;
+          });
+          if (timestamps.length > 15) {
+            html += `<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">...외 ${timestamps.length - 15}개</div>`;
+          }
+          html += `</div></div>`;
+        }
+
+        // 해시태그
+        if (hashtags.length > 0) {
+          html += `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);">`;
+          html += `<div style="font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">🏷️ 태그 (${hashtags.length}개)</div>`;
+          html += `<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+          hashtags.slice(0, 20).forEach(tag => {
+            html += `<span style="background:var(--surface);color:var(--primary);padding:2px 6px;border-radius:4px;font-size:10px;">${escHtml(tag)}</span>`;
+          });
+          html += `</div></div>`;
+        }
+
+        // 외부 링크
+        if (links.length > 0) {
+          html += `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);">`;
+          html += `<div style="font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">🔗 관련 링크 (${links.length}개)</div>`;
+          links.forEach(link => {
+            // 도메인만 표시
+            let domain = '';
+            try { domain = new URL(link).hostname; } catch (e) { domain = link.substring(0, 40); }
+            html += `<div style="font-size:11px;margin:2px 0;">`;
+            html += `<a href="${escHtml(link)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;">${escHtml(domain)}</a>`;
+            html += `</div>`;
+          });
+          html += `</div>`;
+        }
+
+        // 광고 소재 특성 (isAd인 경우)
+        if (videoData.isAd) {
+          html += `<div style="background:linear-gradient(135deg,#fff8e1,#fff3e0);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #ffe0b2;">`;
+          html += `<div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:6px;">📢 광고 소재 분석</div>`;
+          // 광고 길이 분류
+          let adFormat = '';
+          if (durationSec <= 6) adFormat = '범퍼 광고 (6초)';
+          else if (durationSec <= 15) adFormat = '숏폼 광고 (15초)';
+          else if (durationSec <= 30) adFormat = 'TV CF (30초)';
+          else if (durationSec <= 60) adFormat = '롱폼 광고 (60초)';
+          else adFormat = '브랜디드 콘텐츠';
+          html += `<div style="font-size:11px;color:#bf360c;">포맷: <strong>${escHtml(adFormat)}</strong></div>`;
+          html += `<div style="font-size:11px;color:#bf360c;margin-top:2px;">채널: <strong>${escHtml(channel)}</strong></div>`;
+          html += `</div>`;
+        }
+
+        analysisEl.innerHTML = html;
+
+      } catch (e) {
+        analysisEl.innerHTML = `
+          <p style="font-size:12px;color:var(--text-muted);text-align:center;">분석 실패: ${escHtml(e.message)}</p>
+          <button onclick="ytAnalyzeVideo('${videoId}')" style="
+            width:100%;padding:8px;margin-top:6px;border:1px dashed var(--border);border-radius:8px;
+            background:var(--bg);cursor:pointer;font-size:12px;color:var(--primary);
+          ">다시 시도</button>
+        `;
+      }
+    }
+
+    // 표시용 시간 문자열("1:23:45" 또는 "12:34")을 초 단위로 변환
+    function ytParseDurationFromDisplay(str) {
+      if (!str) return 0;
+      const parts = str.split(':').map(Number);
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      return 0;
+    }
+
     // ESC 키로 플레이어 닫기
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
