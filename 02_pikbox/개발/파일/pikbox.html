@@ -9549,6 +9549,76 @@
       drState.zoom = Math.floor((frameW / 1080) * 100);
       drApplyZoom();
     }
+
+    /* ─── 카드뉴스 페이지 네비게이션 ─── */
+
+    /**
+     * drGoToPage(pageNum) — 뷰어를 특정 장으로 이동
+     * pageNum: 1-based (1 = 첫 장, 2 = 둘째 장 ...)
+     * 이동 후 채팅 탭도 해당 페이지로 자동 동기화
+     */
+    function drGoToPage(pageNum) {
+      const total = drState.viewerTotalPages || 1;
+      // 범위 이탈 방지 (1~전체 장 사이로 클램핑)
+      pageNum = Math.max(1, Math.min(total, pageNum));
+
+      drState.viewerPage = pageNum;
+
+      // 줌/클리핑 다시 적용 (페이지 이동 = 오프셋 변경)
+      drApplyZoom();
+
+      // 화살표·인디케이터 상태 갱신
+      drUpdatePageNav();
+
+      // 채팅 탭을 뷰어 페이지와 동기화 (다중 페이지일 때만)
+      if (total > 1) {
+        drSelectPageTab(pageNum); // 채팅도 동일 장 탭으로 전환
+      }
+    }
+
+    /** 이전 장으로 이동 */
+    function drPrevPage() {
+      drGoToPage(drState.viewerPage - 1);
+    }
+
+    /** 다음 장으로 이동 */
+    function drNextPage() {
+      drGoToPage(drState.viewerPage + 1);
+    }
+
+    /**
+     * drUpdatePageNav() — 화살표·인디케이터 UI 갱신
+     * - 1장짜리: 화살표+인디케이터 숨김
+     * - 다중 장: 첫 장이면 이전 비활성, 마지막 장이면 다음 비활성
+     */
+    function drUpdatePageNav() {
+      const total    = drState.viewerTotalPages || 1;
+      const current  = drState.viewerPage       || 1;
+      const prevBtn  = document.getElementById('drPagePrev');
+      const nextBtn  = document.getElementById('drPageNext');
+      const indicator = document.getElementById('drPageIndicator');
+
+      if (total <= 1) {
+        // 1장짜리: 화살표와 인디케이터 모두 숨김
+        if (prevBtn)   prevBtn.classList.add('hidden');
+        if (nextBtn)   nextBtn.classList.add('hidden');
+        if (indicator) indicator.classList.add('hidden');
+        return;
+      }
+
+      // 다중 페이지: 화살표와 인디케이터 보이기
+      if (prevBtn)   prevBtn.classList.remove('hidden');
+      if (nextBtn)   nextBtn.classList.remove('hidden');
+      if (indicator) indicator.classList.remove('hidden');
+
+      // 인디케이터 텍스트 업데이트 "현재 / 전체"
+      if (indicator) indicator.textContent = `${current} / ${total}`;
+
+      // 첫 장이면 이전 버튼 반투명(비활성 느낌), 마지막 장이면 다음 버튼 반투명
+      if (prevBtn) prevBtn.style.opacity = current <= 1 ? '0.3' : '1';
+      if (nextBtn) nextBtn.style.opacity = current >= total ? '0.3' : '1';
+    }
+
     function drApplyZoom() {
       // CSS transform으로 실제 줌 적용
       const wrap = document.getElementById('drIframeWrap');
