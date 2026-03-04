@@ -6023,7 +6023,8 @@
     // ─── Serper.dev — 이미지 검색 (핵심 엔진: Instagram/Meta/Pinterest) ───
     // Google 이미지 검색 API로 SNS 플랫폼별 광고 소재를 수집
     // tbs 파라미터: 최신 게시물 우선 (1년 이내)
-    async function searchSerperImages(query, siteFilter, page) {
+    // opts.gl: 'us' 전달 시 글로벌(미국) 구글에서 검색 (해외 고퀄 결과 수집용)
+    async function searchSerperImages(query, siteFilter, page, opts = {}) {
       // 사이트 필터가 있으면 검색어에 site: 연산자 추가
       const fullQuery = siteFilter ? `${query} ${siteFilter}` : query;
 
@@ -6037,8 +6038,8 @@
           q: fullQuery,
           num: 20,
           page: Math.max(1, page),
-          gl: 'kr',     // 한국 로컬 결과 우선
-          hl: 'ko',     // 한국어 인터페이스
+          gl: opts.gl || 'kr',     // 기본 한국, opts.gl로 글로벌 전환 가능
+          hl: opts.gl === 'us' ? 'en' : 'ko',  // 글로벌 검색 시 영어 인터페이스
           tbs: 'qdr:y'  // 최근 1년 이내 게시물 (6개월→1년 완화: 고퀄 레퍼런스 과도 제외 방지)
         })
       });
