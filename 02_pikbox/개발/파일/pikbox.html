@@ -8795,12 +8795,13 @@
         ytState.observer.observe(sentinel);
       }
 
-      // 카테고리 사전 로드 — 저장 메뉴에서 사용하기 위해 미리 로드
-      // 카테고리 사전 로드 — 저장 메뉴에서 사용하기 위해 미리 로드
-      fbGetList(FB_YT_CATS).then(cats => {
-        ytState.ytCategories = cats.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-      }).catch(() => {});
-      ytLoadCategoryCounts().catch(() => {});
+      // 카테고리 사전 로드 — 사이드바에 카테고리 목록 표시 + 저장 메뉴용
+      // autoSelect=false → 검색 모드 유지, 카테고리 자동 선택 안 함
+      ytLoadCategories(false);
+
+      // 검색 모드 초기 상태 — 🔍 영상 검색 항목을 활성화
+      const navSearch = document.getElementById('ytNavSearch');
+      if (navSearch) navSearch.classList.add('active');
 
       // 첫 진입 시 급상승 동영상 자동 로드 (빈 화면 방지)
       ytLoadTrending();
