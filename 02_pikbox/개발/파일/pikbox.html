@@ -3385,6 +3385,32 @@
     .yt-cat-item-left .cat-name { font-size: 13px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .yt-cat-count { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
+    /* 플레이어 내 액션 바 — 즐겨찾기 + 저장 */
+    .yt-player-actions { margin: 10px 0 4px; }
+    .yt-player-action-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .yt-player-action-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text-primary);
+    }
+    .yt-player-action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .yt-player-action-btn.active { border-color: #f59e0b; color: #f59e0b; background: #fef3c7; }
+    .yt-player-action-btn.active:hover { background: #fde68a; }
+    .yt-player-action-btn:disabled { opacity: 0.5; cursor: default; }
+    .yt-player-saved-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #ecfdf5;
+      color: #059669;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
     /* 메인 콘텐츠 영역 */
     /* 메인 콘텐츠 — 스크롤 가능 영역 */
     .yt-main {
@@ -3450,7 +3476,7 @@
     /* 저장 메뉴 드롭다운 — 카테고리 선택 팝업 */
     .yt-save-menu {
       position: fixed;
-      z-index: 1000;
+      z-index: 1100;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -8572,10 +8598,26 @@
         ytState.savedVideoIds.add(videoId);
         toast('영상이 저장되었습니다', 'success');
         ytLoadCategoryCounts();
+        // 그리드 카드 저장 버튼 업데이트
         document.querySelectorAll(`.yt-save-btn[data-vid="${videoId}"]`).forEach(btn => {
           btn.classList.add('saved');
           btn.textContent = '✓';
         });
+        // 플레이어가 열려있으면 액션 바 갱신 — 📥 버튼 → ✓ 저장됨 + ☆ 즐겨찾기
+        const playerBar = document.querySelector('#ytPlayerActions .yt-player-action-bar');
+        if (playerBar) {
+          const saveBtn = playerBar.querySelector('.yt-player-save-btn');
+          if (saveBtn) saveBtn.outerHTML = '<span class="yt-player-saved-badge">✓ 저장됨</span>';
+          if (!document.getElementById('ytPlayerFavBtn')) {
+            const favBtn = document.createElement('button');
+            favBtn.className = 'yt-player-action-btn';
+            favBtn.id = 'ytPlayerFavBtn';
+            favBtn.dataset.dbid = dbId;
+            favBtn.textContent = '☆ 즐겨찾기';
+            favBtn.onclick = () => ytToggleFavorite(dbId);
+            playerBar.insertBefore(favBtn, playerBar.firstChild);
+          }
+        }
       } catch (e) {
         toast('저장 실패: ' + e.message, 'error');
       }
@@ -8653,15 +8695,103 @@
       try {
         await fbUpdate(FB_YT_VIDS, dbId, { favorite: newVal });
         vid.favorite = newVal;
-        if (ytState.savedFilter === 'favorites') { ytLoadSavedVideos(); }
-        else {
-          const card = document.querySelector(`.yt-card[data-vid="${dbId}"]`);
-          if (card) {
-            const btn = card.querySelector('.yt-star-btn');
-            if (btn) { btn.textContent = newVal ? '★' : '☆'; btn.classList.toggle('active', newVal); }
-          }
+        // 그리드 카드 업데이트
+        const card = document.querySelector(`.yt-card[data-vid="${dbId}"]`);
+        if (card) {
+          const btn = card.querySelector('.yt-star-btn');
+          if (btn) { btn.textContent = newVal ? '★' : '☆'; btn.classList.toggle('active', newVal); }
         }
+        // 플레이어 내 즐겨찾기 버튼도 업데이트
+        const playerFavBtn = document.getElementById('ytPlayerFavBtn');
+        if (playerFavBtn && playerFavBtn.dataset.dbid === dbId) {
+          playerFavBtn.textContent = newVal ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기';
+          playerFavBtn.classList.toggle('active', newVal);
+        }
+        if (ytState.savedFilter === 'favorites') { ytLoadSavedVideos(); }
       } catch (e) { toast('즐겨찾기 변경 실패', 'error'); }
+    }
+
+    // 플레이어 내 액션 바 렌더링 — 즐겨찾기 + 저장 버튼
+    function ytRenderPlayerActions(videoData, videoId) {
+      const container = document.getElementById('ytPlayerActions');
+      if (!container) return;
+
+      // 이 영상이 DB에 저장되어 있는지 찾기 (videoId로 검색)
+      const savedEntry = ytState.savedVideos.find(v => (v.video_id || ytExtractVideoId(v.sourceUrl)) === videoId);
+      // savedVideoIds 캐시로 저장 여부 확인
+      const isSaved = ytState.savedVideoIds.has(videoId);
+
+      let html = '<div class="yt-player-action-bar">';
+
+      if (savedEntry) {
+        // 저장된 영상 — 즐겨찾기 토글 가능
+        const isFav = savedEntry.favorite;
+        html += `<button class="yt-player-action-btn ${isFav ? 'active' : ''}" id="ytPlayerFavBtn" data-dbid="${savedEntry.id}" onclick="ytToggleFavorite('${savedEntry.id}')">
+          ${isFav ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기'}
+        </button>`;
+      } else if (isSaved) {
+        // 다른 카테고리에 저장됨 — 비동기로 DB ID 찾기
+        html += `<button class="yt-player-action-btn" id="ytPlayerFavBtn" disabled>⏳ 로딩...</button>`;
+        // 비동기로 전체 DB에서 찾아 버튼 업데이트
+        ytFindSavedVideoByVideoId(videoId).then(entry => {
+          const btn = document.getElementById('ytPlayerFavBtn');
+          if (btn && entry) {
+            btn.disabled = false;
+            btn.dataset.dbid = entry.id;
+            btn.className = 'yt-player-action-btn' + (entry.favorite ? ' active' : '');
+            btn.textContent = entry.favorite ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기';
+            btn.onclick = () => ytToggleFavoriteByEntry(entry);
+          }
+        });
+      }
+
+      // 저장 버튼 — 아직 저장 안 된 영상이면 표시
+      if (!isSaved) {
+        html += `<button class="yt-player-action-btn yt-player-save-btn" onclick="ytShowSaveMenuInPlayer(event)">📥 카테고리에 저장</button>`;
+      } else {
+        html += `<span class="yt-player-saved-badge">✓ 저장됨</span>`;
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+
+      // 플레이어용 저장 메뉴에 사용할 데이터 임시 저장
+      window._ytPlayerVideoData = videoData;
+    }
+
+    // videoId로 DB에서 저장된 영상 찾기
+    async function ytFindSavedVideoByVideoId(videoId) {
+      try {
+        const allVids = await fbGetList(FB_YT_VIDS);
+        return allVids.find(v => v.video_id === videoId) || null;
+      } catch (e) { return null; }
+    }
+
+    // entry 객체로 즐겨찾기 토글 (다른 카테고리 영상용)
+    async function ytToggleFavoriteByEntry(entry) {
+      const newVal = !entry.favorite;
+      try {
+        await fbUpdate(FB_YT_VIDS, entry.id, { favorite: newVal });
+        entry.favorite = newVal;
+        const btn = document.getElementById('ytPlayerFavBtn');
+        if (btn) {
+          btn.textContent = newVal ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기';
+          btn.classList.toggle('active', newVal);
+        }
+        // 그리드 카드도 업데이트
+        const card = document.querySelector(`.yt-card[data-vid="${entry.id}"]`);
+        if (card) {
+          const starBtn = card.querySelector('.yt-star-btn');
+          if (starBtn) { starBtn.textContent = newVal ? '★' : '☆'; starBtn.classList.toggle('active', newVal); }
+        }
+        toast(newVal ? '즐겨찾기에 추가했습니다' : '즐겨찾기를 해제했습니다');
+      } catch (e) { toast('즐겨찾기 변경 실패', 'error'); }
+    }
+
+    // 플레이어 내 저장 메뉴 표시
+    function ytShowSaveMenuInPlayer(e) {
+      if (!window._ytPlayerVideoData) return;
+      ytShowSaveMenu(e, window._ytPlayerVideoData);
     }
 
     // ─── 7단계: 멀티선택 + 벌크 액션 ───
@@ -9828,6 +9958,7 @@
       const viewsText = videoData.viewsRaw ? `조회수 ${escHtml(videoData.viewsRaw)}` : '정보 없음';
       insight.innerHTML = `
         <div class="yt-insight-title">${escHtml(videoData.title)}</div>
+        <div class="yt-player-actions" id="ytPlayerActions"></div>
         <hr class="yt-insight-divider">
         <div class="yt-insight-meta">
           <div class="yt-insight-row">
@@ -9883,6 +10014,9 @@
       // 모달 표시
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+
+      // 플레이어 액션 바 — 즐겨찾기 + 저장 버튼
+      ytRenderPlayerActions(videoData, videoId);
 
       // YouTube Data API v3로 상세 통계 가져오기 (키가 있고 할당량 남았을 때)
       const apiKey = config.youtubeApiKey;
