@@ -22,8 +22,8 @@ const cron = require('node-cron');
 
 // ── 라우트(API 경로) 불러오기 ──
 const videoRoutes = require('./routes/video');
+const audioRoutes = require('./routes/audio');
 const subtitleRoutes = require('./routes/subtitle');
-const backgroundRoutes = require('./routes/background');
 
 // ── 소켓 매니저 (실시간 통신 관리자) ──
 const { initSocket } = require('./socket');
