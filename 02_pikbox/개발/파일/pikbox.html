@@ -2958,10 +2958,12 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      overflow: hidden;
     }
+    /* iframe이 히트맵 바(48px) 공간을 양보하도록 calc로 높이 제한 */
     .yt-player-left iframe {
       width: 100%;
-      flex: 1;
+      flex: 1 1 auto;
       border: none;
       min-height: 0;
     }
