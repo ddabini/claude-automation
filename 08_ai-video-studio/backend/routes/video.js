@@ -340,8 +340,8 @@ function pollJobStatus(io, jobId) {
         return;
       }
 
-      // RunPod에 상태 조회
-      const result = await runpod.status(jobId);
+      // Replicate에 상태 조회
+      const result = await replicate.status(jobId);
 
       // 진행률 전송
       if (result.status === 'IN_PROGRESS') {
