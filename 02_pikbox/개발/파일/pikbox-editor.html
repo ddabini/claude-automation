@@ -1291,34 +1291,30 @@
       });
     }
 
-    // ── 텍스트 요소 파싱 — HTML DOM에서 텍스트를 찾아 Fabric.Textbox로 변환 ──
+    // ── 텍스트 요소 파싱 (div 기반) — HTML DOM에서 텍스트를 찾아 Fabric.Textbox로 변환 ──
     // 디자인 HTML 안의 텍스트 요소를 캔버스 위에 편집 가능한 텍스트 객체로 올림
-    function deExtractTexts(doc, canvasW, canvasH) {
-      const body = doc.body;
-      if (!body) return;
+    // containerDiv: 숨겨진 div에 렌더링된 디자인 HTML 요소
+    function deExtractTextsFromDiv(containerDiv, canvasW, canvasH) {
+      if (!containerDiv) return;
 
-      // 텍스트를 가진 '블록 레벨' 요소만 수집 (인라인 span은 부모 기준으로 처리)
-      const blockTags = new Set([
-        'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-        'P', 'DIV', 'LI', 'TD', 'TH', 'BLOCKQUOTE',
-        'FIGCAPTION', 'LABEL', 'A', 'BUTTON', 'SPAN'
-      ]);
-
-      // body의 위치 정보 — 상대 좌표 계산을 위한 기준점
-      const bodyRect = body.getBoundingClientRect();
+      // 컨테이너의 위치 정보 — 상대 좌표 계산을 위한 기준점
+      const containerRect = containerDiv.getBoundingClientRect();
 
       // 이미 처리한 요소를 추적 (중복 방지)
       const processedRects = [];
 
       // DOM을 순회하면서 텍스트 요소 수집
-      const allElements = body.querySelectorAll('*');
+      const allElements = containerDiv.querySelectorAll('*');
       const textElements = [];
 
       allElements.forEach(el => {
         // SVG 내부 텍스트는 스킵 (장식용이므로)
         if (el.closest('svg')) return;
-        // script, style 태그 스킵
-        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') return;
+        // script, style, link 태그 스킵
+        const tagName = el.tagName.toUpperCase();
+        if (tagName === 'SCRIPT' || tagName === 'STYLE' || tagName === 'LINK') return;
+        // 숨겨진 스타일 컨테이너 스킵
+        if (el.id === 'deRenderTarget') return;
 
         // 요소가 직접 텍스트 내용을 가지고 있는지 확인
         // (자식 요소의 텍스트가 아닌, 이 요소 자체의 텍스트만)
@@ -1327,7 +1323,7 @@
         if (directText.length < 1) return;
 
         // 화면에 보이지 않는 요소 스킵
-        const style = doc.defaultView.getComputedStyle(el);
+        const style = window.getComputedStyle(el);
         if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
 
         // 요소의 위치와 크기
@@ -1335,8 +1331,8 @@
         if (rect.width < 5 || rect.height < 5) return;
 
         // 캔버스 범위 밖의 요소 스킵
-        const relLeft = rect.left - bodyRect.left;
-        const relTop = rect.top - bodyRect.top;
+        const relLeft = rect.left - containerRect.left;
+        const relTop = rect.top - containerRect.top;
         if (relLeft + rect.width < 0 || relTop + rect.height < 0) return;
         if (relLeft > canvasW + 50 || relTop > canvasH + 50) return;
 
