@@ -9096,67 +9096,43 @@
     // ─── YouTube 영상 구성 분석 (Gemini AI 연동) ───
     // Gemini 2.5 Flash가 YouTube 영상을 직접 시청하고 분석한다
     // 구조, 패턴, 강약점을 근거 기반으로 코멘트
+    // ─── Gemini 영상 분석 (스트리밍) ───
+    // streamGenerateContent + SSE로 실시간 텍스트 표시 → 완료 후 포맷팅
     async function ytAnalyzeVideo(videoId) {
       const analysisEl = document.getElementById('ytInsightAnalysis');
       if (!analysisEl) return;
 
-      // 로딩 상태 — Gemini가 영상을 시청하는 동안 표시
+      const geminiKey = config.geminiKey;
+      if (!geminiKey) {
+        // Gemini 키 없으면 메타데이터 기반 폴백
+        const videoData = ytState.results.find(r => r.sourceUrl && r.sourceUrl.includes(videoId));
+        ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
+        return;
+      }
+
+      // 스트리밍 UI 초기 구조 — 헤더 + 실시간 텍스트 영역
       analysisEl.innerHTML = `
-        <div style="text-align:center;padding:20px;">
-          <div style="font-size:28px;animation:spin 1.5s linear infinite;">🤖</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-top:10px;">AI가 영상을 분석하고 있습니다</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Gemini가 영상을 직접 시청하고 구조를 분석합니다</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">보통 10~20초 소요</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">🤖</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>
+          <span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>
+          <span id="ytStreamStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;">영상 시청 중...</span>
         </div>
+        <div id="ytStreamBody" style="
+          font-size:12px;line-height:1.7;color:var(--text-secondary);
+          background:var(--bg);border-radius:10px;padding:14px;
+          border:1px solid var(--border);min-height:60px;
+          white-space:pre-wrap;word-break:break-word;
+        "><span style="color:var(--text-muted);">Gemini가 영상을 시청하고 있습니다...</span></div>
       `;
 
-      // 영상 메타데이터 (기본 정보 표시용)
-      const videoData = ytState.results.find(r =>
-        r.sourceUrl && r.sourceUrl.includes(videoId)
-      );
-
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+      const analysisPrompt = '이 유튜브 영상을 분석해. 아래 형식을 정확히 따라. 간결하게.\n\n## 종합 평가\n- 한 줄 총평 (이 영상의 핵심 가치를 한 문장으로)\n- 점수: 구조 ?/10 | 편집 ?/10 | 메시지 ?/10\n- 강점 키워드 3개 (예: #몰입도높음 #편집센스 #정보밀도)\n- 이 영상이 잘 되는/안 되는 핵심 이유 1~2문장\n\n## 영상 구조\n- 도입부: 훅 유무, 시청자 잡는 방식\n- 전개: 정보 밀도, 편집 리듬\n- 클라이맥스: 하이라이트 구간\n- 마무리: CTA 여부\n\n## 콘텐츠 패턴\n- 편집 (컷 빈도, 자막, BGM)\n- 화면 (앵글, 조명)\n- 화법 (톤, 속도)\n\n## 강점\n- 3가지 (근거 포함, 각 1줄)\n\n## 개선점\n- 2가지 (근거 포함, 각 1줄)\n\n각 항목은 1~2줄로 핵심만. 근거는 영상 내 관찰 사실 기반.';
 
       try {
-        // ── Gemini API로 영상 분석 요청 ──
-        const geminiKey = config.geminiKey;
-        if (!geminiKey) {
-          // Gemini 키 없으면 기존 메타데이터 분석 폴백
-          ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
-          return;
-        }
-
-        // 프롬프트: 종합평가를 맨 앞에, 세부 분석은 뒤에 배치
-        // 간결하게 작성하여 응답 속도 향상
-        const analysisPrompt = `이 유튜브 영상을 분석해. 아래 형식을 정확히 따라. 간결하게.
-
-## 종합 평가
-- 한 줄 총평 (이 영상의 핵심 가치를 한 문장으로)
-- 점수: 구조 ?/10 | 편집 ?/10 | 메시지 ?/10
-- 강점 키워드 3개 (예: #몰입도높음 #편집센스 #정보밀도)
-- 이 영상이 잘 되는/안 되는 핵심 이유 1~2문장
-
-## 영상 구조
-- 도입부: 훅 유무, 시청자 잡는 방식
-- 전개: 정보 밀도, 편집 리듬
-- 클라이맥스: 하이라이트 구간
-- 마무리: CTA 여부
-
-## 콘텐츠 패턴
-- 편집 (컷 빈도, 자막, BGM)
-- 화면 (앵글, 조명)
-- 화법 (톤, 속도)
-
-## 강점
-- 3가지 (근거 포함, 각 1줄)
-
-## 개선점
-- 2가지 (근거 포함, 각 1줄)
-
-각 항목은 1~2줄로 핵심만. 근거는 영상 내 관찰 사실 기반.`;
-
+        // ── 스트리밍 API 호출 (SSE 방식) ──
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -9169,20 +9145,17 @@
               }],
               generationConfig: {
                 maxOutputTokens: 4000,
-                temperature: 0.2,
-                // thinking을 끄면 응답 속도가 2~3배 빨라지고 토큰 낭비 방지
-                thinkingConfig: { thinkingBudget: 0 }
+                temperature: 0.2
               }
             })
           }
         );
 
-        const data = await res.json();
-
-        // API 에러 처리 — 화면에 디버그 정보 표시
-        if (!res.ok || data.error) {
-          const errMsg = data.error?.message || `HTTP ${res.status}`;
-          console.warn('[Pikbox] Gemini 분석 실패:', errMsg);
+        // API 에러 처리
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error?.message || ('HTTP ' + res.status);
+          console.warn('[Pikbox] Gemini 스트리밍 실패:', errMsg);
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
               <div style="font-size:11px;font-weight:600;color:#e65100;margin-bottom:4px;">Gemini 분석 실패</div>
@@ -9192,79 +9165,108 @@
           return;
         }
 
-        // Gemini 응답 텍스트 추출 — parts가 여러 개일 수 있으므로 text만 합침
-        const resParts = data.candidates?.[0]?.content?.parts || [];
-        const aiText = resParts.filter(p => p.text).map(p => p.text).join('\n');
-        const finishReason = data.candidates?.[0]?.finishReason || '';
-        console.log('[Pikbox] Gemini 응답:', aiText.length, '자, finishReason:', finishReason);
+        // ── SSE 스트림 읽기 ──
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        const streamBody = document.getElementById('ytStreamBody');
+        const streamStatus = document.getElementById('ytStreamStatus');
+        let fullText = '';       // 누적 텍스트
+        let buffer = '';         // SSE 파싱용 버퍼
+        let firstChunk = true;   // 첫 번째 텍스트 수신 여부
 
-        if (!aiText) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          // SSE 형식 파싱 — "data: {...}" 줄 단위로 처리
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // 마지막 미완성 줄은 버퍼에 유지
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr || jsonStr === '[DONE]') continue;
+
+            try {
+              const chunk = JSON.parse(jsonStr);
+              // 각 청크에서 텍스트 파트 추출
+              const parts = chunk.candidates?.[0]?.content?.parts || [];
+              for (const p of parts) {
+                if (p.text) {
+                  fullText += p.text;
+
+                  // 첫 텍스트 수신 시 상태 변경
+                  if (firstChunk) {
+                    firstChunk = false;
+                    if (streamStatus) streamStatus.textContent = '분석 중...';
+                  }
+
+                  // 실시간으로 마크다운을 간단한 HTML로 변환하여 표시
+                  if (streamBody) {
+                    streamBody.innerHTML = ytMarkdownToHtml(fullText) +
+                      '<span class="yt-stream-cursor" style="display:inline-block;width:2px;height:14px;background:var(--primary);animation:blink 0.8s infinite;vertical-align:middle;margin-left:2px;"></span>';
+                    // 스크롤 따라가기
+                    streamBody.scrollTop = streamBody.scrollHeight;
+                  }
+                }
+              }
+            } catch (parseErr) {
+              // JSON 파싱 실패 — 무시 (불완전한 청크)
+            }
+          }
+        }
+
+        console.log('[Pikbox] Gemini 스트리밍 완료:', fullText.length, '자');
+
+        // ── 스트리밍 완료 → 최종 포맷팅 (종합평가 카드 + 아코디언) ──
+        if (!fullText.trim()) {
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
               <div style="font-size:11px;font-weight:600;color:#e65100;">응답이 비어있습니다</div>
-              <div style="font-size:10px;color:#bf360c;">finishReason: ${escHtml(finishReason)}</div>
               <button onclick="ytAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ffe0b2;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#e65100;">다시 시도</button>
             </div>`;
           return;
         }
 
-        // ── Gemini 분석 결과 렌더링 (종합평가 먼저 + 아코디언) ──
-        const { summary, detail } = ytSplitGeminiResponse(aiText);
+        // 최종 결과를 종합평가 카드 + 아코디언 형태로 변환
+        const { summary, detail } = ytSplitGeminiResponse(fullText);
         const detailId = 'ytGeminiDetail_' + videoId.replace(/[^a-zA-Z0-9]/g, '');
-
         let html = '';
 
         // 헤더
-        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">`;
-        html += `<span style="font-size:13px;">🤖</span>`;
-        html += `<span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>`;
-        html += `<span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>`;
-        html += `</div>`;
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">';
+        html += '<span style="font-size:13px;">🤖</span>';
+        html += '<span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>';
+        html += '<span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>';
+        html += '</div>';
 
-        // ── 종합 평가 카드 (항상 표시) ──
-        html += `<div style="background:linear-gradient(135deg,#f8f9ff,#eef1ff);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #c5cae9;">`;
+        // 종합 평가 카드
+        html += '<div style="background:linear-gradient(135deg,#f8f9ff,#eef1ff);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #c5cae9;">';
         html += ytRenderSummaryCard(summary);
-        html += `</div>`;
+        html += '</div>';
 
-        // ── 자세히 보기 토글 버튼 ──
+        // 자세히 보기 토글
         html += `<button onclick="(function(){
-          var el=document.getElementById('${detailId}');
-          var btn=this;
-          if(el.style.maxHeight==='0px'){
-            el.style.maxHeight=el.scrollHeight+'px';
-            el.style.opacity='1';
-            btn.querySelector('.arrow').textContent='▾';
-            btn.querySelector('.label').textContent='접기';
-          } else {
-            el.style.maxHeight='0px';
-            el.style.opacity='0';
-            btn.querySelector('.arrow').textContent='▸';
-            btn.querySelector('.label').textContent='자세히 보기';
-          }
-        }).call(this)" style="
-          width:100%;padding:8px 12px;margin-bottom:4px;
-          border:1px solid var(--border);border-radius:8px;
-          background:var(--bg);cursor:pointer;
-          display:flex;align-items:center;justify-content:center;gap:6px;
-          font-size:11px;color:var(--text-secondary);
-          transition:all 0.2s;
-        " onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
-           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          var el=document.getElementById('${detailId}');var btn=this;
+          if(el.style.maxHeight==='0px'){el.style.maxHeight=el.scrollHeight+'px';el.style.opacity='1';btn.querySelector('.arrow').textContent='▾';btn.querySelector('.label').textContent='접기';}
+          else{el.style.maxHeight='0px';el.style.opacity='0';btn.querySelector('.arrow').textContent='▸';btn.querySelector('.label').textContent='자세히 보기';}
+        }).call(this)" style="width:100%;padding:8px 12px;margin-bottom:4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-secondary);transition:all 0.2s;"
+          onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
           <span class="arrow" style="font-size:10px;">▸</span>
           <span class="label">자세히 보기</span>
           <span style="font-size:10px;color:var(--text-muted);">구조 · 패턴 · 강점 · 개선점</span>
         </button>`;
 
-        // ── 세부 분석 (접혀있음, 클릭 시 열림) ──
-        html += `<div id="${detailId}" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;">`;
+        // 세부 분석 (접혀있음)
+        html += '<div id="' + detailId + '" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;">';
         html += ytRenderDetailSections(detail);
-        html += `</div>`;
+        html += '</div>';
 
         // 재분석 버튼
-        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="
-          width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;
-          background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);
-        ">↻ 다시 분석</button>`;
+        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻ 다시 분석</button>`;
 
         analysisEl.innerHTML = html;
 
@@ -9277,6 +9279,24 @@
             <button onclick="ytAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ef9a9a;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#c62828;">다시 시도</button>
           </div>`;
       }
+    }
+
+    // ─── 마크다운 → 간단 HTML 변환 (스트리밍 실시간 표시용) ───
+    // 스트리밍 중 텍스트를 보기 좋게 렌더링
+    function ytMarkdownToHtml(md) {
+      return md
+        // ## 헤더 → 굵은 텍스트 + 구분선
+        .replace(/^## (.+)$/gm, '<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">$1</div>')
+        // **굵은 텍스트**
+        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary);">$1</strong>')
+        // 점수 (N/10) → 컬러 뱃지
+        .replace(/(\d+)\/10/g, '<span style="background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:4px;font-weight:700;font-size:11px;">$1/10</span>')
+        // #해시태그 → 태그 칩
+        .replace(/#([가-힣a-zA-Z0-9]+)/g, '<span style="background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;">#$1</span>')
+        // - 리스트 항목 → 들여쓰기
+        .replace(/^- (.+)$/gm, '<div style="padding-left:12px;margin:3px 0;"><span style="color:var(--text-muted);margin-right:4px;">•</span>$1</div>')
+        // 줄바꿈
+        .replace(/\n/g, '<br>');
     }
 
     // ─── Gemini 응답을 "종합 평가"와 "세부 분석"으로 분리 ───
