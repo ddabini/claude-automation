@@ -3684,20 +3684,43 @@
       </div>
     </main>
 
-    <!-- 우측 텍스트 편집 패널 — 디자인 텍스트를 직접 수정 -->
+    <!-- 우측 편집 패널 — 선택한 요소의 속성 편집 -->
     <aside class="dr-edit-panel hidden" id="drEditPanel">
       <div class="dr-edit-header">
         <div class="dr-edit-header-left">
-          <span class="dr-edit-title" id="drEditTitle">텍스트 편집</span>
+          <span class="dr-edit-title" id="drEditTitle">디자인 편집</span>
         </div>
         <button class="dr-edit-close" onclick="drToggleEdit()">✕</button>
       </div>
       <!-- 디자인 미선택 시 안내 -->
       <div class="dr-edit-empty" id="drEditEmpty">
-        디자인을 선택하면<br>텍스트를 편집할 수 있습니다
+        디자인을 선택하면<br>편집할 수 있습니다
       </div>
-      <!-- 텍스트 요소 목록 — 동적으로 생성됨 -->
-      <div class="dr-edit-list" id="drEditList" style="display:none;"></div>
+      <!-- 속성 인스펙터 -->
+      <div class="dr-edit-props" id="drEditProps" style="display:none;">
+        <div class="dr-edit-prop-hint" id="drEditPropHint">
+          디자인 위의 요소를 클릭하여 선택하세요.<br>
+          <small>클릭 = 선택/이동 · 더블클릭 = 텍스트 편집 · 핸들 = 크기 조절</small>
+        </div>
+        <div id="drEditPropGrid" style="display:none;">
+          <div class="dr-edit-prop-tag" id="drEditPropTag">-</div>
+          <div class="dr-edit-prop-row">
+            <label>X</label><input type="number" id="drEditPropX" oninput="drEditApplyProp('x')">
+            <label>Y</label><input type="number" id="drEditPropY" oninput="drEditApplyProp('y')">
+          </div>
+          <div class="dr-edit-prop-row">
+            <label>W</label><input type="number" id="drEditPropW" oninput="drEditApplyProp('w')">
+            <label>H</label><input type="number" id="drEditPropH" oninput="drEditApplyProp('h')">
+          </div>
+          <div class="dr-edit-prop-row">
+            <label>글꼴</label><input type="number" id="drEditPropFS" oninput="drEditApplyProp('fontSize')" style="grid-column: span 3;">
+          </div>
+          <div class="dr-edit-prop-text" id="drEditPropTextWrap" style="display:none;">
+            <label>텍스트</label>
+            <textarea id="drEditPropText" rows="3" oninput="drEditApplyProp('text')"></textarea>
+          </div>
+        </div>
+      </div>
       <!-- 하단 저장 바 -->
       <div class="dr-edit-save-bar" id="drEditSaveBar" style="display:none;">
         <button class="dr-btn" onclick="drEditReset()">되돌리기</button>
@@ -14029,19 +14052,29 @@ ${metaText}
     /* ▲▲▲ 디자인 리뷰 탭 전체 코드 끝 ▲▲▲ */
 
     /* ══════════════════════════════════════════════════
-       텍스트 편집 기능 — 디자인 리뷰 탭 내장 에디터
-       - Firebase DB에서 HTML 콘텐츠 로드
-       - DOMParser로 텍스트 요소 파싱 → DOM 직접 수정
-       - blob URL iframe으로 즉시 반영 + Firebase DB 저장
+       비주얼 에디터 — 디자인 리뷰 탭 내장
+       - 캔버스(iframe) 위에서 직접 클릭 → 선택 → 이동/리사이즈/텍스트편집
+       - DOMParser가 아닌 iframe.contentDocument 직접 조작
+       - 속성 패널: 위치(X,Y), 크기(W,H), 글꼴크기, 텍스트
     ══════════════════════════════════════════════════ */
 
+    // 비주얼 에디터 상태
     const drEditState = {
-      active: false, parsedDoc: null, textElements: [],
-      originalHtml: '', editedHtml: '', hasChanges: false,
-      blobUrl: null, updateTimer: null,
+      active: false,
+      originalHtml: '',
+      editedHtml: '',
+      hasChanges: false,
+      blobUrl: null,
+      iframeDoc: null,
+      selectedElement: null,
+      dragState: null,
+      textElements: [],
+      parsedDoc: null,
+      updateTimer: null,
     };
-    const DR_HTML_CONTENT = `${DR_ROOT}/html-content`;
+    const DR_HTML_CONTENT = DR_ROOT + '/html-content';
 
+    /* ─── 편집 패널 토글 ─── */
     function drToggleEdit() {
       const panel = document.getElementById('drEditPanel');
       if (!panel) return;
@@ -14062,128 +14095,418 @@ ${metaText}
       }
     }
 
+    /* ─── HTML 로드 ─── */
     async function drEditLoadHtml(designId) {
-      const listEl = document.getElementById('drEditList');
-      const emptyEl = document.getElementById('drEditEmpty');
-      const saveBar = document.getElementById('drEditSaveBar');
-      const titleEl = document.getElementById('drEditTitle');
-      emptyEl.style.display = 'flex';
-      emptyEl.innerHTML = '불러오는 중...';
-      listEl.style.display = 'none';
-      saveBar.style.display = 'none';
+      var emptyEl = document.getElementById('drEditEmpty');
+      var propsEl = document.getElementById('drEditProps');
+      var saveBar = document.getElementById('drEditSaveBar');
+      var titleEl = document.getElementById('drEditTitle');
+      if (emptyEl) { emptyEl.style.display = 'flex'; emptyEl.innerHTML = '불러오는 중...'; }
+      if (propsEl) propsEl.style.display = 'none';
+      if (saveBar) saveBar.style.display = 'none';
       try {
-        const snap = await firebaseDb.ref(`${DR_HTML_CONTENT}/${designId}`).once('value');
-        let html = snap.val();
+        var snap = await firebaseDb.ref(DR_HTML_CONTENT + '/' + designId).once('value');
+        var html = snap.val();
         if (!html) {
-          const design = drState.allDesigns.find(d => d.id === designId);
+          var design = drState.allDesigns.find(function(d) { return d.id === designId; });
           if (design && design.url) {
-            try { const r = await fetch(design.url); if (r.ok) html = await r.text(); } catch(e) {}
+            try { var r = await fetch(design.url); if (r.ok) html = await r.text(); } catch(e) {}
           }
         }
         if (!html) {
-          emptyEl.innerHTML = '이 디자인의 HTML을<br>불러올 수 없습니다.<br><small style="color:#9ca3af">HTML 파일만 편집 가능</small>';
+          if (emptyEl) emptyEl.innerHTML = '이 디자인의 HTML을<br>불러올 수 없습니다.<br><small style="color:#9ca3af">HTML 파일만 편집 가능</small>';
           return;
         }
         drEditState.originalHtml = html;
         drEditState.editedHtml = html;
         drEditState.hasChanges = false;
         drEditState.active = true;
-        drEditParseTexts(html);
-        if (titleEl) titleEl.textContent = '텍스트 편집 (' + drEditState.textElements.length + '개)';
-        emptyEl.style.display = 'none';
-        listEl.style.display = 'block';
-        saveBar.style.display = 'flex';
-        drEditRenderList();
+        drEditState.selectedElement = null;
+        drEditState.iframeDoc = null;
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (saveBar) saveBar.style.display = 'flex';
+        if (titleEl) titleEl.textContent = '디자인 편집';
         drEditUpdatePreview();
       } catch (e) {
         console.error('[편집] HTML 로드 실패:', e);
-        emptyEl.innerHTML = 'HTML 로드 중 오류 발생';
+        if (emptyEl) emptyEl.innerHTML = 'HTML 로드 중 오류 발생';
       }
     }
 
-    function drEditParseTexts(html) {
-      const parser = new DOMParser();
-      drEditState.parsedDoc = parser.parseFromString(html, 'text/html');
-      const results = [], seen = new Set();
-      const walker = drEditState.parsedDoc.createTreeWalker(drEditState.parsedDoc.body, NodeFilter.SHOW_ELEMENT);
-      let node;
-      while (node = walker.nextNode()) {
-        if (node.closest('svg, script, style, link')) continue;
-        const textNodes = [];
-        node.childNodes.forEach(function(child) {
-          if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) textNodes.push(child);
-        });
-        if (textNodes.length === 0 && node.children.length === 0 && node.textContent.trim()) {
-          if (node.firstChild) textNodes.push(node.firstChild);
-        }
-        if (textNodes.length === 0) continue;
-        const directText = textNodes.map(function(n) { return n.textContent; }).join('').trim();
-        if (!directText || directText.length < 1) continue;
-        const key = directText.substring(0, 50);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        const tag = node.tagName.toLowerCase();
-        const style = node.getAttribute('style') || '';
-        let fontSize = '';
-        const fMatch = style.match(/font-size:\s*(\d+)/);
-        if (fMatch) fontSize = fMatch[1] + 'px';
-        results.push({ text: directText, tag: tag, fontSize: fontSize, domTextNodes: textNodes, domElement: node });
-      }
-      drEditState.textElements = results;
-    }
-
-    function drEditRenderList() {
-      const listEl = document.getElementById('drEditList');
-      if (!listEl) return;
-      const tagLabels = { button:'버튼', a:'링크', h1:'제목1', h2:'제목2', h3:'제목3', span:'텍스트', div:'텍스트', p:'문단', li:'목록' };
-      listEl.innerHTML = drEditState.textElements.map(function(te, i) {
-        const label = tagLabels[te.tag] || '텍스트';
-        const sizeInfo = te.fontSize ? ' · ' + te.fontSize : '';
-        const lines = Math.max(1, Math.ceil(te.text.length / 25));
-        const height = Math.max(32, lines * 22);
-        return '<div class="dr-edit-item"><div class="dr-edit-item-label">' + escHtml(label) + sizeInfo + '</div><textarea rows="' + lines + '" style="height:' + height + 'px" oninput="drEditOnChange(' + i + ', this.value)">' + escHtml(te.text) + '</textarea></div>';
-      }).join('');
-    }
-
-    function drEditOnChange(index, newText) {
-      const te = drEditState.textElements[index];
-      if (!te || !drEditState.parsedDoc) return;
-      if (te.domTextNodes && te.domTextNodes.length > 0) {
-        te.domTextNodes[0].textContent = newText;
-        for (let i = 1; i < te.domTextNodes.length; i++) te.domTextNodes[i].textContent = '';
-      }
-      te.text = newText;
-      drEditState.hasChanges = true;
-      drEditState.editedHtml = '<!DOCTYPE html>\n' + drEditState.parsedDoc.documentElement.outerHTML;
-      clearTimeout(drEditState.updateTimer);
-      drEditState.updateTimer = setTimeout(function() { drEditUpdatePreview(); }, 300);
-    }
-
+    /* ─── 미리보기 업데이트 + 캔버스 에디터 주입 ─── */
     function drEditUpdatePreview() {
-      const iframe = document.getElementById('drViewerIframe');
+      var iframe = document.getElementById('drViewerIframe');
       if (!iframe) return;
       if (drEditState.blobUrl) URL.revokeObjectURL(drEditState.blobUrl);
-      const blob = new Blob([drEditState.editedHtml], { type: 'text/html; charset=utf-8' });
+      var blob = new Blob([drEditState.editedHtml], { type: 'text/html; charset=utf-8' });
       drEditState.blobUrl = URL.createObjectURL(blob);
       iframe.src = drEditState.blobUrl;
+      iframe.onload = function() {
+        drEditInjectCanvas();
+      };
     }
 
+    /* ─── 캔버스 에디터 주입 — iframe 내부에 편집 기능 삽입 ─── */
+    function drEditInjectCanvas() {
+      var iframe = document.getElementById('drViewerIframe');
+      if (!iframe) return;
+      var iDoc = iframe.contentDocument || (iframe.contentWindow ? iframe.contentWindow.document : null);
+      if (!iDoc || !iDoc.body) return;
+      drEditState.iframeDoc = iDoc;
+
+      // 에디터 스타일 주입
+      var existing = iDoc.getElementById('pkb-editor-style');
+      if (existing) existing.remove();
+      var style = iDoc.createElement('style');
+      style.id = 'pkb-editor-style';
+      style.textContent = [
+        '* { cursor: default !important; }',
+        'a, button { pointer-events: auto !important; }',
+        '.pkb-sel { outline: 2px solid #6366f1 !important; outline-offset: 2px; cursor: move !important; }',
+        '.pkb-hbox { position: fixed; pointer-events: none; z-index: 999999; border: 1px dashed rgba(99,102,241,0.3); }',
+        '.pkb-h { position: absolute; width: 10px; height: 10px; background: #fff; border: 2px solid #6366f1; border-radius: 2px; pointer-events: all; box-sizing: border-box; }',
+        '.pkb-h-tl { top:-5px; left:-5px; cursor:nw-resize; }',
+        '.pkb-h-tr { top:-5px; right:-5px; cursor:ne-resize; }',
+        '.pkb-h-bl { bottom:-5px; left:-5px; cursor:sw-resize; }',
+        '.pkb-h-br { bottom:-5px; right:-5px; cursor:se-resize; }',
+        '.pkb-h-tc { top:-5px; left:50%; margin-left:-5px; cursor:n-resize; }',
+        '.pkb-h-bc { bottom:-5px; left:50%; margin-left:-5px; cursor:s-resize; }',
+        '.pkb-h-ml { top:50%; margin-top:-5px; left:-5px; cursor:w-resize; }',
+        '.pkb-h-mr { top:50%; margin-top:-5px; right:-5px; cursor:e-resize; }',
+        '[contenteditable="true"] { outline: 2px solid #f59e0b !important; outline-offset: 1px; cursor: text !important; }',
+      ].join('\n');
+      iDoc.head.appendChild(style);
+
+      // 이벤트 등록
+      iDoc.addEventListener('mousedown', drEditCanvasMouseDown, true);
+      iDoc.addEventListener('mousemove', drEditCanvasMouseMove, true);
+      iDoc.addEventListener('mouseup', drEditCanvasMouseUp, true);
+      iDoc.addEventListener('dblclick', drEditCanvasDblClick, true);
+      iDoc.addEventListener('click', function(e) { e.preventDefault(); }, true);
+
+      // 속성 패널에 안내 표시
+      var propsEl = document.getElementById('drEditProps');
+      if (propsEl) { propsEl.style.display = 'block'; }
+      var hintEl = document.getElementById('drEditPropHint');
+      if (hintEl) hintEl.style.display = 'block';
+      var gridEl = document.getElementById('drEditPropGrid');
+      if (gridEl) gridEl.style.display = 'none';
+    }
+
+    /* ─── 선택 해제 ─── */
+    function drEditDeselectAll() {
+      var iDoc = drEditState.iframeDoc;
+      if (iDoc && drEditState.selectedElement) {
+        drEditState.selectedElement.classList.remove('pkb-sel');
+      }
+      drEditState.selectedElement = null;
+      if (iDoc) {
+        var box = iDoc.getElementById('pkb-hbox');
+        if (box) box.remove();
+      }
+      var hintEl = document.getElementById('drEditPropHint');
+      if (hintEl) hintEl.style.display = 'block';
+      var gridEl = document.getElementById('drEditPropGrid');
+      if (gridEl) gridEl.style.display = 'none';
+    }
+
+    /* ─── 요소 선택 ─── */
+    function drEditSelectElement(el) {
+      drEditDeselectAll();
+      drEditState.selectedElement = el;
+      el.classList.add('pkb-sel');
+      drEditShowHandles(el);
+      drEditUpdatePropsPanel(el);
+    }
+
+    /* ─── 리사이즈 핸들 표시 ─── */
+    function drEditShowHandles(el) {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+      var old = iDoc.getElementById('pkb-hbox');
+      if (old) old.remove();
+      var rect = el.getBoundingClientRect();
+      var box = iDoc.createElement('div');
+      box.id = 'pkb-hbox';
+      box.className = 'pkb-hbox';
+      box.style.cssText = 'left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;';
+      var positions = ['tl','tc','tr','ml','mr','bl','bc','br'];
+      for (var i = 0; i < positions.length; i++) {
+        var h = iDoc.createElement('div');
+        h.className = 'pkb-h pkb-h-' + positions[i];
+        h.setAttribute('data-handle', positions[i]);
+        box.appendChild(h);
+      }
+      iDoc.body.appendChild(box);
+    }
+
+    function drEditRefreshHandles() {
+      if (drEditState.selectedElement) drEditShowHandles(drEditState.selectedElement);
+    }
+
+    /* ─── 마우스 이벤트: mousedown ─── */
+    function drEditCanvasMouseDown(e) {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+      var target = e.target;
+
+      // 리사이즈 핸들 드래그
+      if (target.classList && target.classList.contains('pkb-h')) {
+        e.preventDefault();
+        e.stopPropagation();
+        var el = drEditState.selectedElement;
+        if (!el) return;
+        var rect = el.getBoundingClientRect();
+        drEditState.dragState = {
+          type: 'resize', handle: target.getAttribute('data-handle'),
+          startX: e.clientX, startY: e.clientY,
+          startW: rect.width, startH: rect.height
+        };
+        return;
+      }
+
+      // 핸들 박스 클릭 무시
+      if (target.id === 'pkb-hbox' || (target.closest && target.closest('#pkb-hbox'))) return;
+
+      // contenteditable 중이면 텍스트 선택 허용
+      if (target.contentEditable === 'true') return;
+
+      // body/html 클릭 → 선택 해제
+      if (target === iDoc.body || target === iDoc.documentElement) {
+        drEditDeselectAll();
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 요소 선택 + 이동 드래그 시작
+      drEditSelectElement(target);
+      var el = drEditState.selectedElement;
+      var cs = iDoc.defaultView.getComputedStyle(el);
+      var tx = 0, ty = 0;
+      var transform = cs.transform;
+      if (transform && transform !== 'none') {
+        var m = transform.match(/matrix\(([^)]+)\)/);
+        if (m) { var v = m[1].split(','); tx = parseFloat(v[4]) || 0; ty = parseFloat(v[5]) || 0; }
+      }
+      drEditState.dragState = {
+        type: 'move', startX: e.clientX, startY: e.clientY, tx: tx, ty: ty
+      };
+    }
+
+    /* ─── 마우스 이벤트: mousemove ─── */
+    function drEditCanvasMouseMove(e) {
+      var ds = drEditState.dragState;
+      if (!ds) return;
+      e.preventDefault();
+      var dx = e.clientX - ds.startX;
+      var dy = e.clientY - ds.startY;
+      var el = drEditState.selectedElement;
+      if (!el) return;
+
+      if (ds.type === 'move') {
+        el.style.transform = 'translate(' + (ds.tx + dx) + 'px, ' + (ds.ty + dy) + 'px)';
+        drEditRefreshHandles();
+        drEditUpdatePropsPanel(el);
+      }
+
+      if (ds.type === 'resize') {
+        var newW = ds.startW, newH = ds.startH;
+        var h = ds.handle;
+        if (h.indexOf('r') >= 0) newW = ds.startW + dx;
+        if (h.indexOf('l') >= 0) newW = ds.startW - dx;
+        if (h.indexOf('b') >= 0) newH = ds.startH + dy;
+        if (h.indexOf('t') >= 0) newH = ds.startH - dy;
+        newW = Math.max(20, newW);
+        newH = Math.max(20, newH);
+        el.style.width = newW + 'px';
+        el.style.height = newH + 'px';
+        el.style.minWidth = 'unset';
+        el.style.maxWidth = 'unset';
+        el.style.overflow = 'visible';
+        drEditRefreshHandles();
+        drEditUpdatePropsPanel(el);
+      }
+    }
+
+    /* ─── 마우스 이벤트: mouseup ─── */
+    function drEditCanvasMouseUp(e) {
+      if (drEditState.dragState) {
+        drEditState.hasChanges = true;
+        drEditState.dragState = null;
+      }
+    }
+
+    /* ─── 더블클릭: 텍스트 인라인 편집 ─── */
+    function drEditCanvasDblClick(e) {
+      var target = e.target;
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc || !target) return;
+      if (target.id === 'pkb-hbox' || (target.closest && target.closest('#pkb-hbox'))) return;
+      var text = target.textContent ? target.textContent.trim() : '';
+      if (!text) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // contenteditable 활성화
+      target.contentEditable = 'true';
+      target.focus();
+      // 커서를 텍스트 끝으로
+      try {
+        var range = iDoc.createRange();
+        range.selectNodeContents(target);
+        range.collapse(false);
+        var sel = iDoc.defaultView.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch(err) {}
+
+      target.addEventListener('blur', function onBlur() {
+        target.contentEditable = 'false';
+        target.removeEventListener('blur', onBlur);
+        drEditState.hasChanges = true;
+        drEditUpdatePropsPanel(target);
+      });
+      target.addEventListener('input', function() {
+        drEditState.hasChanges = true;
+        drEditUpdatePropsPanel(target);
+      });
+    }
+
+    /* ─── 속성 패널 업데이트 ─── */
+    function drEditUpdatePropsPanel(el) {
+      var propsEl = document.getElementById('drEditProps');
+      if (!propsEl) return;
+      propsEl.style.display = 'block';
+      var hintEl = document.getElementById('drEditPropHint');
+      if (hintEl) hintEl.style.display = 'none';
+      var gridEl = document.getElementById('drEditPropGrid');
+      if (gridEl) gridEl.style.display = 'block';
+
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+      var rect = el.getBoundingClientRect();
+      var tag = el.tagName.toLowerCase();
+      var cs = iDoc.defaultView.getComputedStyle(el);
+
+      var tagEl = document.getElementById('drEditPropTag');
+      if (tagEl) tagEl.textContent = '<' + tag + '>' + (el.className ? ' .' + el.className.split(' ')[0].replace('pkb-sel','').trim() : '');
+
+      var xEl = document.getElementById('drEditPropX');
+      var yEl = document.getElementById('drEditPropY');
+      var wEl = document.getElementById('drEditPropW');
+      var hEl = document.getElementById('drEditPropH');
+      var fsEl = document.getElementById('drEditPropFS');
+      if (xEl) xEl.value = Math.round(rect.left);
+      if (yEl) yEl.value = Math.round(rect.top);
+      if (wEl) wEl.value = Math.round(rect.width);
+      if (hEl) hEl.value = Math.round(rect.height);
+      if (fsEl) fsEl.value = parseInt(cs.fontSize) || '';
+
+      // 텍스트 편집 영역
+      var textWrap = document.getElementById('drEditPropTextWrap');
+      var textArea = document.getElementById('drEditPropText');
+      if (textWrap && textArea) {
+        var directText = (el.textContent || '').trim();
+        if (directText && el.children.length <= 3) {
+          textWrap.style.display = 'block';
+          textArea.value = directText;
+        } else {
+          textWrap.style.display = 'none';
+        }
+      }
+    }
+
+    /* ─── 속성값 적용 ─── */
+    function drEditApplyProp(prop) {
+      var el = drEditState.selectedElement;
+      var iDoc = drEditState.iframeDoc;
+      if (!el || !iDoc) return;
+
+      var rect = el.getBoundingClientRect();
+      var cs = iDoc.defaultView.getComputedStyle(el);
+      var tx = 0, ty = 0;
+      var transform = cs.transform;
+      if (transform && transform !== 'none') {
+        var m = transform.match(/matrix\(([^)]+)\)/);
+        if (m) { var v = m[1].split(','); tx = parseFloat(v[4]) || 0; ty = parseFloat(v[5]) || 0; }
+      }
+
+      if (prop === 'x') {
+        var newX = parseInt(document.getElementById('drEditPropX').value) || 0;
+        el.style.transform = 'translate(' + (tx + newX - rect.left) + 'px, ' + ty + 'px)';
+      }
+      if (prop === 'y') {
+        var newY = parseInt(document.getElementById('drEditPropY').value) || 0;
+        el.style.transform = 'translate(' + tx + 'px, ' + (ty + newY - rect.top) + 'px)';
+      }
+      if (prop === 'w') {
+        el.style.width = (parseInt(document.getElementById('drEditPropW').value) || 50) + 'px';
+        el.style.minWidth = 'unset'; el.style.maxWidth = 'unset';
+      }
+      if (prop === 'h') {
+        el.style.height = (parseInt(document.getElementById('drEditPropH').value) || 20) + 'px';
+        el.style.minHeight = 'unset'; el.style.maxHeight = 'unset';
+      }
+      if (prop === 'fontSize') {
+        el.style.fontSize = (parseInt(document.getElementById('drEditPropFS').value) || 16) + 'px';
+      }
+      if (prop === 'text') {
+        var newText = document.getElementById('drEditPropText').value;
+        var children = Array.from(el.childNodes);
+        var tNodes = children.filter(function(n) { return n.nodeType === Node.TEXT_NODE; });
+        if (tNodes.length > 0) {
+          tNodes[0].textContent = newText;
+          for (var i = 1; i < tNodes.length; i++) tNodes[i].textContent = '';
+        } else if (el.children.length === 0) {
+          el.textContent = newText;
+        }
+      }
+      drEditState.hasChanges = true;
+      drEditRefreshHandles();
+    }
+
+    /* ─── 되돌리기 ─── */
     function drEditReset() {
       if (!drEditState.originalHtml) return;
       drEditState.editedHtml = drEditState.originalHtml;
       drEditState.hasChanges = false;
-      drEditParseTexts(drEditState.originalHtml);
-      drEditRenderList();
+      drEditState.selectedElement = null;
+      drEditState.iframeDoc = null;
+      drEditState.dragState = null;
       drEditUpdatePreview();
       toast('원본으로 되돌렸습니다', 'success');
     }
 
+    /* ─── 저장 — 에디터 요소 제거 후 직렬화 → Firebase DB 저장 ─── */
     async function drEditSave() {
-      if (!drState.currentDesignId || !drEditState.editedHtml) return;
+      if (!drState.currentDesignId) return;
       if (!drEditState.hasChanges) { toast('변경 사항이 없습니다', 'info'); return; }
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+
+      // 에디터 요소 임시 분리
+      var styleEl = iDoc.getElementById('pkb-editor-style');
+      var hbox = iDoc.getElementById('pkb-hbox');
+      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+      if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+      var selEls = iDoc.querySelectorAll('.pkb-sel');
+      selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+
+      // HTML 직렬화
+      var html = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+
+      // 에디터 요소 복원
+      if (styleEl) iDoc.head.appendChild(styleEl);
+      if (hbox) iDoc.body.appendChild(hbox);
+      selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+
       try {
-        await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).set(drEditState.editedHtml);
-        drEditState.originalHtml = drEditState.editedHtml;
+        await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).set(html);
+        drEditState.originalHtml = html;
+        drEditState.editedHtml = html;
         drEditState.hasChanges = false;
         toast('저장 완료!', 'success');
       } catch (e) {
@@ -14192,28 +14515,33 @@ ${metaText}
       }
     }
 
+    /* ─── 디자인 선택 시 편집 상태 초기화 ─── */
     function drEditOnDesignChange(designId) {
       drEditState.active = false;
-      drEditState.parsedDoc = null;
-      drEditState.textElements = [];
       drEditState.originalHtml = '';
       drEditState.editedHtml = '';
       drEditState.hasChanges = false;
+      drEditState.selectedElement = null;
+      drEditState.iframeDoc = null;
+      drEditState.dragState = null;
+      drEditState.parsedDoc = null;
+      drEditState.textElements = [];
       if (drEditState.blobUrl) { URL.revokeObjectURL(drEditState.blobUrl); drEditState.blobUrl = null; }
-      const panel = document.getElementById('drEditPanel');
+      var panel = document.getElementById('drEditPanel');
       if (panel && !panel.classList.contains('hidden')) {
         drEditLoadHtml(designId);
       } else {
-        const listEl = document.getElementById('drEditList');
-        const emptyEl = document.getElementById('drEditEmpty');
-        const saveBar = document.getElementById('drEditSaveBar');
-        const titleEl = document.getElementById('drEditTitle');
-        if (listEl) listEl.style.display = 'none';
-        if (emptyEl) { emptyEl.style.display = 'flex'; emptyEl.innerHTML = '디자인을 선택하면<br>텍스트를 편집할 수 있습니다'; }
+        var emptyEl = document.getElementById('drEditEmpty');
+        var propsEl = document.getElementById('drEditProps');
+        var saveBar = document.getElementById('drEditSaveBar');
+        var titleEl = document.getElementById('drEditTitle');
+        if (emptyEl) { emptyEl.style.display = 'flex'; emptyEl.innerHTML = '디자인을 선택하면<br>편집할 수 있습니다'; }
+        if (propsEl) propsEl.style.display = 'none';
         if (saveBar) saveBar.style.display = 'none';
-        if (titleEl) titleEl.textContent = '텍스트 편집';
+        if (titleEl) titleEl.textContent = '디자인 편집';
       }
     }
+
 
     /* ═══════════════════════════════════════
        에이전트 내보내기 — 현재 카테고리를 MD 파일로 다운로드
