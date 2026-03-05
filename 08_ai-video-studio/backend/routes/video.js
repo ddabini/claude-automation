@@ -114,13 +114,14 @@ router.post('/generate-image', uploadImage.single('image'), async (req, res) => 
 
     console.log(`[Video] 이미지→영상 변환 요청: ${req.file.originalname}`);
 
-    // 이미지를 Base64로 인코딩 (RunPod에 전송하기 위해)
+    // 이미지를 Base64로 인코딩 (Replicate에 data URI로 전송)
     const imageBuffer = fs.readFileSync(req.file.path);
     const imageBase64 = imageBuffer.toString('base64');
     const mimeType = req.file.mimetype;
 
-    // RunPod에 작업 제출
-    const { jobId } = await runpod.run({
+    // Replicate에 작업 제출 (Wan 2.1 I2V 모델 사용)
+    // motionStyle은 replicate.js에서 영어 프롬프트로 자동 변환됩니다
+    const { jobId } = await replicate.run({
       type: 'image-to-video',
       image: `data:${mimeType};base64,${imageBase64}`,
       motionStyle: motionStyle || 'zoom-in',
