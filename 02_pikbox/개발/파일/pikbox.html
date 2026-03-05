@@ -7833,12 +7833,12 @@
     // ─── 한국 급상승 동영상 로드 ───
     // YouTube Data API의 mostPopular 차트를 사용해 현재 인기 영상을 가져옴
     // ─── 실시간 급상승 영상 로드 ───
-    // Serper 뉴스 + 바이럴 쿼리 병렬 검색으로 "지금 진짜 화제인" 영상을 찾는다
-    // YouTube API mostPopular는 공식 큐레이션 목록이라 업데이트가 느려서 보조용으로만 사용
+    // 핵심 전략: 뉴스 3개 쿼리로 "지금 유튜브에서 뭐가 핫한지" 파악
+    //          → 추출된 인물/주제 키워드로 실제 영상 검색 (2단계)
+    // YouTube API mostPopular는 공식 큐레이션 목록이라 실시간 바이럴을 못 잡아서 보조용
     async function ytLoadTrending() {
       const hasSerper = !!config.serperKey;
       const hasYtApi = !!config.youtubeApiKey && !ytState.ytApiDisabled;
-      // Serper 키가 없으면 YouTube API 폴백, 둘 다 없으면 중단
       if (!hasSerper && !hasYtApi) return;
 
       const grid = document.getElementById('ytGrid');
@@ -7851,47 +7851,54 @@
       if (loadingEl) loadingEl.style.display = 'flex';
 
       try {
-        // ── 모든 소스에서 병렬로 영상 수집 ──
         const allItems = [];
 
         if (hasSerper) {
-          // 1) Serper 뉴스에서 "유튜브 화제" 키워드 추출 → 해당 키워드로 영상 검색
-          // 2) 바이럴 감지용 고정 쿼리 5개 병렬 검색
-          const [newsKeywords, ...viralResults] = await Promise.allSettled([
-            // 뉴스에서 화제 키워드 추출
-            ytFetchTrendingKeywordsFromNews(),
-            // 바이럴 고정 쿼리 — 다양한 표현으로 "지금 뜨는" 영상 검색
-            searchSerperVideos('유튜브 실시간 급상승 인기 영상 오늘', 1),
-            searchSerperVideos('유튜브 조회수 폭발 화제 영상', 1),
-            searchSerperVideos('오늘 유튜브 난리난 영상 반응', 1),
-            searchSerperVideos('한국 유튜브 핫 트렌딩 영상 이번주', 1),
-            searchSerperVideos('유튜브 화제의 영상 실시간', 1),
-          ]);
+          // ── 1단계: 뉴스 3개 쿼리를 병렬로 실행하여 "지금 뜨는 유튜브 이슈" 키워드 수집 ──
+          const newsQueries = [
+            '유튜브 화제 구독자 급증 채널',  // 채널/인물 급부상 감지
+            '유튜브 핫 이슈 오늘',           // 오늘의 유튜브 이슈
+            '유튜브 논란 영상 화제',          // 논란/바이럴 감지
+          ];
 
-          // 바이럴 고정 쿼리 결과 수집
-          for (const r of viralResults) {
+          const newsResults = await Promise.allSettled(
+            newsQueries.map(q => ytFetchSerperNews(q))
+          );
+
+          // 모든 뉴스 기사를 합치고 키워드 추출
+          const allArticles = [];
+          for (const r of newsResults) {
             if (r.status === 'fulfilled' && r.value?.length > 0) {
-              allItems.push(...r.value);
+              allArticles.push(...r.value);
             }
           }
 
-          // 뉴스 키워드 기반 영상 검색 결과 수집
-          if (newsKeywords.status === 'fulfilled' && newsKeywords.value?.length > 0) {
-            // 뉴스에서 추출한 키워드로 영상 검색 (최대 4개 키워드, 병렬)
-            const keywordSearches = await Promise.allSettled(
-              newsKeywords.value.slice(0, 4).map(kw =>
-                searchSerperVideos(kw + ' 유튜브', 1)
+          // 뉴스 제목에서 핵심 인물/주제 키워드 추출
+          const trendingKeywords = ytExtractKeywordsFromNews(allArticles);
+          console.log('[Pikbox] 뉴스에서 추출한 트렌딩 키워드:', trendingKeywords);
+
+          // ── 2단계: 추출된 키워드로 실제 영상 검색 (최대 8개 키워드, 병렬) ──
+          if (trendingKeywords.length > 0) {
+            const videoSearches = await Promise.allSettled(
+              trendingKeywords.slice(0, 8).map(kw =>
+                searchSerperVideos(kw + ' 유튜브 영상', 1)
               )
             );
-            for (const r of keywordSearches) {
+            for (const r of videoSearches) {
               if (r.status === 'fulfilled' && r.value?.length > 0) {
                 allItems.push(...r.value);
               }
             }
           }
+
+          // ── 보완: 키워드가 부족하면 일반 트렌딩 쿼리 1개 추가 ──
+          if (trendingKeywords.length < 3) {
+            const fallback = await searchSerperVideos('한국 유튜브 인기 영상 이번주', 1);
+            if (fallback?.length > 0) allItems.push(...fallback);
+          }
         }
 
-        // 3) YouTube API mostPopular — 보조 소스 (quota 여유 시)
+        // ── YouTube API mostPopular — 보조 소스 (quota 여유 시) ──
         if (hasYtApi) {
           try {
             const ytApiItems = await ytFetchMostPopularAPI();
@@ -7901,12 +7908,12 @@
           }
         }
 
-        // ── 중복 제거 — sourceUrl에서 videoId 추출하여 비교 ──
+        // ── 중복 제거 — videoId 기준 ──
         const seen = new Set();
         const uniqueItems = [];
         for (const item of allItems) {
           const vid = ytExtractVideoId(item.sourceUrl);
-          const key = vid || item.sourceUrl; // videoId 없으면 URL 전체로 비교
+          const key = vid || item.sourceUrl;
           if (!seen.has(key)) {
             seen.add(key);
             uniqueItems.push(item);
@@ -7916,28 +7923,26 @@
         // ── 바이럴 스코어링 — 최신 + 조회수 높은 영상 우선 ──
         const now = Date.now();
         uniqueItems.forEach(item => {
-          // 최신도 점수: 24시간 이내면 만점(100), 7일 이내면 비례 감소, 그 이상이면 0
+          // 최신도 점수: 24시간 이내 = 100점, 3일 이내 = 비례감소, 7일 이내 = 낮은 점수
           let recencyScore = 0;
           if (item.dateNum > 0) {
-            const ageMs = now - item.dateNum;
-            const ageHours = ageMs / 3600000;
+            const ageHours = (now - item.dateNum) / 3600000;
             if (ageHours <= 24) recencyScore = 100;
-            else if (ageHours <= 168) recencyScore = Math.max(0, 80 - (ageHours - 24) / 168 * 80);
-            else recencyScore = 0;
+            else if (ageHours <= 72) recencyScore = 80 - (ageHours - 24) / 48 * 30;
+            else if (ageHours <= 168) recencyScore = 50 - (ageHours - 72) / 96 * 40;
+            else recencyScore = Math.max(0, 10 - (ageHours - 168) / 720 * 10);
           }
           // 조회수 점수: 로그 스케일 (100만회=100점, 10만회=83점, 1만회=67점)
           let viewScore = 0;
           if (item.viewsNum > 0) {
             viewScore = Math.min(100, Math.log10(item.viewsNum) / 6 * 100);
           }
-          // 최종 바이럴 점수 = 최신도 60% + 조회수 40%
-          item._viralScore = recencyScore * 0.6 + viewScore * 0.4;
+          // 최종 바이럴 점수 = 최신도 55% + 조회수 45%
+          item._viralScore = recencyScore * 0.55 + viewScore * 0.45;
         });
 
-        // 바이럴 점수 높은 순으로 정렬
+        // 바이럴 점수 높은 순 정렬, 상위 30개
         uniqueItems.sort((a, b) => (b._viralScore || 0) - (a._viralScore || 0));
-
-        // 상위 30개만 표시
         const finalItems = uniqueItems.slice(0, 30);
 
         if (finalItems.length === 0) {
@@ -7945,14 +7950,14 @@
           return;
         }
 
-        // 급상승 상태 표시 (검색 결과와 구분)
+        // 급상승 상태 표시
         ytState.results = finalItems;
         ytState.hasMore = false;
         ytState.isTrending = true;
 
         if (loadingEl) loadingEl.style.display = 'none';
 
-        // 급상승 헤더 삽입
+        // 급상승 헤더
         if (grid) {
           grid.innerHTML = '';
           const header = document.createElement('div');
@@ -7968,7 +7973,6 @@
           grid.appendChild(header);
         }
 
-        // 정렬 바 표시
         if (sortBar) {
           sortBar.style.display = 'flex';
           const countEl = document.getElementById('ytResultCount');
@@ -7983,10 +7987,8 @@
       }
     }
 
-    // ─── Serper 뉴스에서 유튜브 관련 화제 키워드 추출 ───
-    // "유튜브 화제", "유튜브 논란", "유튜브 급상승" 등의 뉴스에서
-    // 핵심 인물/채널/주제 키워드를 뽑아 영상 검색에 활용
-    async function ytFetchTrendingKeywordsFromNews() {
+    // ─── Serper 뉴스 검색 — 최근 1주일 뉴스 기사 제목 반환 ───
+    async function ytFetchSerperNews(query) {
       if (!config.serperKey) return [];
       try {
         const res = await fetch('https://google.serper.dev/news', {
@@ -7996,59 +7998,85 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            q: '유튜브 화제 영상 오늘',
+            q: query,
             num: 10,
             gl: 'kr',
             hl: 'ko',
-            tbs: 'qdr:d'  // 최근 24시간 뉴스만
+            tbs: 'qdr:w'  // 최근 1주일 뉴스
           })
         });
         const data = await res.json();
         if (!res.ok || !data.news) return [];
-
-        // 뉴스 제목에서 핵심 키워드 추출 — 유튜브/영상/채널 관련 인물·주제명
-        const keywords = [];
-        const stopWords = new Set([
-          '유튜브', '영상', '채널', '화제', '급상승', '논란', '실시간',
-          '조회수', '구독자', '댓글', '반응', '폭발', '난리', '공개',
-          '영상에', '대한', '관련', '이후', '통해', '으로', '에서',
-          '했다', '됐다', '이다', '라고', '면서', '한편', '또한',
-          '오늘', '어제', '최근', '현재', '지금', '이번', '올해',
-        ]);
-
-        for (const article of data.news) {
-          const title = article.title || '';
-          // 따옴표 안의 키워드 추출 (예: '김선태' 유튜브 개설)
-          const quoted = title.match(/['"'""](.*?)['"'""]/g);
-          if (quoted) {
-            for (const q of quoted) {
-              const clean = q.replace(/['"'""]/g, '').trim();
-              if (clean.length >= 2 && clean.length <= 15) keywords.push(clean);
-            }
-          }
-          // 제목에서 한글 고유명사 추출 (2~6글자, 불용어 제외)
-          const words = title.match(/[가-힣]{2,6}/g) || [];
-          for (const w of words) {
-            if (!stopWords.has(w) && w.length >= 2) keywords.push(w);
-          }
-        }
-
-        // 빈도수 기준 상위 키워드 — 2회 이상 등장한 것 우선
-        const freq = {};
-        for (const kw of keywords) {
-          freq[kw] = (freq[kw] || 0) + 1;
-        }
-        const sorted = Object.entries(freq)
-          .sort((a, b) => b[1] - a[1])
-          .filter(([kw, count]) => count >= 1) // 1회라도 등장하면 포함
-          .map(([kw]) => kw);
-
-        // 최대 6개 키워드 반환
-        return sorted.slice(0, 6);
+        return data.news; // { title, link, snippet, date, source } 배열
       } catch (e) {
-        console.warn('[Pikbox] 뉴스 키워드 추출 실패:', e.message);
         return [];
       }
+    }
+
+    // ─── 뉴스 기사 제목들에서 핵심 인물/주제 키워드 추출 ───
+    // "김선태 유튜브 구독자 100만", "'충주맨' 채널 개설" 같은 기사에서
+    // → "김선태", "충주맨" 을 뽑아내는 역할
+    function ytExtractKeywordsFromNews(articles) {
+      if (!articles || articles.length === 0) return [];
+
+      // 뉴스에서 의미없는 일반 단어들 — 이것들은 키워드에서 제외
+      const stopWords = new Set([
+        '유튜브', '영상', '채널', '화제', '급상승', '논란', '실시간',
+        '조회수', '구독자', '댓글', '반응', '폭발', '난리', '공개',
+        '영상에', '대한', '관련', '이후', '통해', '으로', '에서',
+        '했다', '됐다', '이다', '라고', '면서', '한편', '또한', '는데',
+        '오늘', '어제', '최근', '현재', '지금', '이번', '올해', '돌파',
+        '시작', '이날', '결국', '무슨', '한다', '는게', '해서', '위해',
+        '카드', '뉴스', '기사', '보도', '언론', '미디어', '네티즌',
+        '시청', '시간', '만에', '이상', '이하', '정도', '가량',
+        '사진', '출처', '제공', '공식', '인스타', '페이스북',
+        '연예', '스포츠', '경제', '사회', '정치', '국제', '문화',
+      ]);
+
+      const keywords = [];
+
+      for (const article of articles) {
+        const title = article.title || '';
+
+        // 1) 따옴표/꺽쇠 안의 키워드 우선 추출 (예: '충주맨', "김선태")
+        const quoted = title.match(/[''""][^''""\s]{2,15}[''""]|'[^']{2,15}'|"[^"]{2,15}"/g);
+        if (quoted) {
+          for (const q of quoted) {
+            const clean = q.replace(/[''""'"]/g, '').trim();
+            if (clean.length >= 2 && clean.length <= 15) {
+              // 따옴표 안 키워드는 가중치 3배 (인물명/채널명일 확률 높음)
+              keywords.push(clean, clean, clean);
+            }
+          }
+        }
+
+        // 2) 제목에서 한글 2~8자 단어 추출 (불용어 제외)
+        const words = title.match(/[가-힣]{2,8}/g) || [];
+        for (const w of words) {
+          if (!stopWords.has(w)) keywords.push(w);
+        }
+
+        // 3) 영문 이름/채널명 추출 (2글자 이상, 대문자 시작)
+        const engNames = title.match(/[A-Z][a-zA-Z]{1,20}/g) || [];
+        for (const name of engNames) {
+          if (name.length >= 2) keywords.push(name);
+        }
+      }
+
+      // 빈도수 기준 정렬 — 여러 뉴스에 반복 등장하는 키워드가 핵심 이슈
+      const freq = {};
+      for (const kw of keywords) {
+        freq[kw] = (freq[kw] || 0) + 1;
+      }
+
+      // 2회 이상 등장한 키워드만 선별, 빈도 높은 순
+      const sorted = Object.entries(freq)
+        .filter(([kw, count]) => count >= 2)
+        .sort((a, b) => b[1] - a[1])
+        .map(([kw]) => kw);
+
+      // 너무 짧은(1글자) 키워드 제거 + 최대 10개 반환
+      return sorted.filter(kw => kw.length >= 2).slice(0, 10);
     }
 
     // ─── YouTube API mostPopular — 보조 소스 ───
