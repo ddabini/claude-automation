@@ -8817,8 +8817,9 @@
       if (!statsEl || ytState.ytApiDisabled) return;
 
       try {
+        // statistics + snippet(전체 설명)을 함께 가져옴 (Serper snippet은 잘려있음)
         const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${apiKey}`
+          `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoId}&key=${apiKey}`
         );
         const data = await res.json();
 
@@ -8838,6 +8839,13 @@
             <p style="font-size:12px;color:var(--text-muted);text-align:center;">통계를 가져올 수 없습니다</p>
           `;
           return;
+        }
+
+        // 전체 영상 설명으로 교체 (Serper snippet은 ...으로 잘려있으므로)
+        const fullDesc = data.items[0].snippet?.description;
+        const descEl = document.getElementById('ytInsightDesc');
+        if (descEl && fullDesc) {
+          descEl.textContent = fullDesc.substring(0, 2000) + (fullDesc.length > 2000 ? '...' : '');
         }
 
         const stats = data.items[0].statistics;
