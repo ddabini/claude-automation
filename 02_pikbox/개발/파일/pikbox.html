@@ -8137,6 +8137,15 @@
             return true;
           });
 
+          // 채널명 매칭 우선 정렬 — 검색어가 채널명에 포함된 영상을 상단으로
+          // 예: "잇섭" 검색 → channel:"ITSub잇섭" 영상이 먼저 노출
+          const queryLower = query.toLowerCase();
+          newItems.sort((a, b) => {
+            const aMatch = (a.channel || '').toLowerCase().includes(queryLower) ? 1 : 0;
+            const bMatch = (b.channel || '').toLowerCase().includes(queryLower) ? 1 : 0;
+            return bMatch - aMatch; // 매칭되는 쪽이 먼저
+          });
+
           if (newItems.length < 5) ytState.hasMore = false;
           ytState.results.push(...newItems);
 
