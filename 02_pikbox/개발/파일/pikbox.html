@@ -14563,6 +14563,8 @@ ${metaText}
       drEditState.dragState = null;
       drEditState.parsedDoc = null;
       drEditState.textElements = [];
+      drEditState.undoStack = [];
+      drEditState.redoStack = [];
       if (drEditState.blobUrl) { URL.revokeObjectURL(drEditState.blobUrl); drEditState.blobUrl = null; }
       var panel = document.getElementById('drEditPanel');
       if (panel && !panel.classList.contains('hidden')) {
@@ -14579,6 +14581,202 @@ ${metaText}
       }
     }
 
+    /* ─── 다른이름으로 저장 — 현재 디자인을 새 항목으로 복제 저장 ─── */
+    async function drEditSaveAs() {
+      if (!drState.currentDesignId) return;
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) { toast('편집 모드가 아닙니다', 'error'); return; }
+
+      var currentName = drState.currentDesignData ? drState.currentDesignData.name : '디자인';
+      var newName = prompt('새 디자인 이름을 입력하세요:', currentName + ' (사본)');
+      if (!newName || !newName.trim()) return;
+      newName = newName.trim();
+
+      try {
+        // 에디터 요소 제거 후 HTML 직렬화
+        var styleEl = iDoc.getElementById('pkb-editor-style');
+        var hbox = iDoc.getElementById('pkb-hbox');
+        if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+        if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+        var selEls = iDoc.querySelectorAll('.pkb-sel');
+        selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+        var html = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+        if (styleEl) iDoc.head.appendChild(styleEl);
+        if (hbox) iDoc.body.appendChild(hbox);
+        selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+
+        // 새 디자인 항목 생성
+        var newRef = firebaseDb.ref(DR_DESIGNS).push();
+        var original = drState.currentDesignData || {};
+        var designData = {
+          name: newName,
+          status: 'review',
+          url: original.url || '',
+          type: original.type || 'file',
+          created_at: new Date().toISOString(),
+          width: original.width || 1080,
+          height: original.height || 1080,
+          pages: original.pages || 1,
+        };
+        await newRef.set(designData);
+
+        // HTML 콘텐츠도 새 ID로 저장
+        await firebaseDb.ref(DR_HTML_CONTENT + '/' + newRef.key).set(html);
+
+        toast('"' + newName + '" 저장 완료!', 'success');
+
+        // 새로 생성된 디자인으로 이동
+        drSelectDesign(newRef.key);
+      } catch (e) {
+        console.error('[편집] 다른이름 저장 실패:', e);
+        toast('저장 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── Undo/Redo 히스토리 ─── */
+    // drEditState에 undoStack, redoStack 추가
+    drEditState.undoStack = [];
+    drEditState.redoStack = [];
+
+    // 현재 상태를 스냅샷으로 저장 (변경 전에 호출)
+    function drEditPushUndo() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+      // 에디터 요소 제거 후 직렬화
+      var styleEl = iDoc.getElementById('pkb-editor-style');
+      var hbox = iDoc.getElementById('pkb-hbox');
+      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+      if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+      var selEls = iDoc.querySelectorAll('.pkb-sel');
+      selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+      var snap = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+      if (styleEl) iDoc.head.appendChild(styleEl);
+      if (hbox) iDoc.body.appendChild(hbox);
+      selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+
+      drEditState.undoStack.push(snap);
+      if (drEditState.undoStack.length > 50) drEditState.undoStack.shift();
+      drEditState.redoStack = [];
+    }
+
+    function drEditUndo() {
+      if (drEditState.undoStack.length === 0) { toast('되돌릴 내용이 없습니다', 'info'); return; }
+      // 현재 상태를 redo에 저장
+      var iDoc = drEditState.iframeDoc;
+      if (iDoc) {
+        var styleEl = iDoc.getElementById('pkb-editor-style');
+        var hbox = iDoc.getElementById('pkb-hbox');
+        if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+        if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+        var selEls = iDoc.querySelectorAll('.pkb-sel');
+        selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+        var current = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+        if (styleEl) iDoc.head.appendChild(styleEl);
+        if (hbox) iDoc.body.appendChild(hbox);
+        selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+        drEditState.redoStack.push(current);
+      }
+      var snap = drEditState.undoStack.pop();
+      drEditState.editedHtml = snap;
+      drEditState.selectedElement = null;
+      drEditState.iframeDoc = null;
+      drEditUpdatePreview();
+    }
+
+    function drEditRedo() {
+      if (drEditState.redoStack.length === 0) { toast('다시 실행할 내용이 없습니다', 'info'); return; }
+      // 현재 상태를 undo에 저장
+      var iDoc = drEditState.iframeDoc;
+      if (iDoc) {
+        var styleEl = iDoc.getElementById('pkb-editor-style');
+        var hbox = iDoc.getElementById('pkb-hbox');
+        if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+        if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+        var selEls = iDoc.querySelectorAll('.pkb-sel');
+        selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+        var current = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+        if (styleEl) iDoc.head.appendChild(styleEl);
+        if (hbox) iDoc.body.appendChild(hbox);
+        selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+        drEditState.undoStack.push(current);
+      }
+      var snap = drEditState.redoStack.pop();
+      drEditState.editedHtml = snap;
+      drEditState.selectedElement = null;
+      drEditState.iframeDoc = null;
+      drEditUpdatePreview();
+    }
+
+    /* ─── 키보드 단축키 — Ctrl+Z/Y, Ctrl+C/V, Delete ─── */
+    document.addEventListener('keydown', function(e) {
+      // 디자인 리뷰 탭 + 편집 모드가 활성일 때만
+      var drView = document.getElementById('designReviewView');
+      if (!drView || drView.style.display === 'none') return;
+      if (!drEditState.active || !drEditState.iframeDoc) return;
+
+      // 입력 필드에 포커스 중이면 무시 (속성 패널 input/textarea)
+      var tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      var ctrl = e.ctrlKey || e.metaKey;
+
+      // Ctrl+Z — Undo
+      if (ctrl && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        drEditUndo();
+        return;
+      }
+      // Ctrl+Shift+Z 또는 Ctrl+Y — Redo
+      if ((ctrl && e.key === 'z' && e.shiftKey) || (ctrl && e.key === 'y')) {
+        e.preventDefault();
+        drEditRedo();
+        return;
+      }
+      // Ctrl+S — 저장
+      if (ctrl && e.key === 's') {
+        e.preventDefault();
+        drEditSave();
+        return;
+      }
+      // Delete/Backspace — 선택한 요소 삭제
+      if ((e.key === 'Delete' || e.key === 'Backspace') && drEditState.selectedElement) {
+        e.preventDefault();
+        drEditPushUndo();
+        drEditState.selectedElement.remove();
+        drEditDeselectAll();
+        drEditState.hasChanges = true;
+        return;
+      }
+      // Ctrl+D — 선택한 요소 복제
+      if (ctrl && e.key === 'd' && drEditState.selectedElement) {
+        e.preventDefault();
+        drEditPushUndo();
+        var clone = drEditState.selectedElement.cloneNode(true);
+        clone.classList.remove('pkb-sel');
+        clone.style.transform = 'translate(20px, 20px)';
+        drEditState.selectedElement.parentNode.insertBefore(clone, drEditState.selectedElement.nextSibling);
+        drEditSelectElement(clone);
+        drEditState.hasChanges = true;
+        return;
+      }
+    });
+
+    // 마우스 이벤트에 undo 스냅샷 추가 — 드래그 시작 시 저장
+    (function() {
+      var origMouseDown = drEditCanvasMouseDown;
+      drEditCanvasMouseDown = function(e) {
+        var target = e.target;
+        var isHandle = target.classList && target.classList.contains('pkb-h');
+        var isBody = drEditState.iframeDoc && (target === drEditState.iframeDoc.body || target === drEditState.iframeDoc.documentElement);
+        var isHbox = target.id === 'pkb-hbox' || (target.closest && target.closest('#pkb-hbox'));
+        var isEditable = target.contentEditable === 'true';
+        // 실제 요소 조작이 시작될 때만 undo 스냅샷 저장
+        if (!isBody && !isHbox && !isEditable) {
+          drEditPushUndo();
+        }
+        origMouseDown(e);
+      };
+    })();
 
     /* ═══════════════════════════════════════
        에이전트 내보내기 — 현재 카테고리를 MD 파일로 다운로드
