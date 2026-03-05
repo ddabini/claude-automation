@@ -7832,9 +7832,14 @@
 
     // ─── 한국 급상승 동영상 로드 ───
     // YouTube Data API의 mostPopular 차트를 사용해 현재 인기 영상을 가져옴
+    // ─── 실시간 급상승 영상 로드 ───
+    // Serper 뉴스 + 바이럴 쿼리 병렬 검색으로 "지금 진짜 화제인" 영상을 찾는다
+    // YouTube API mostPopular는 공식 큐레이션 목록이라 업데이트가 느려서 보조용으로만 사용
     async function ytLoadTrending() {
-      const apiKey = config.youtubeApiKey;
-      if (!apiKey) return; // API 키 없으면 기존 빈 화면 유지
+      const hasSerper = !!config.serperKey;
+      const hasYtApi = !!config.youtubeApiKey && !ytState.ytApiDisabled;
+      // Serper 키가 없으면 YouTube API 폴백, 둘 다 없으면 중단
+      if (!hasSerper && !hasYtApi) return;
 
       const grid = document.getElementById('ytGrid');
       const emptyEl = document.getElementById('ytEmpty');
@@ -7846,59 +7851,102 @@
       if (loadingEl) loadingEl.style.display = 'flex';
 
       try {
-        // mostPopular: 키워드 없이 현재 한국에서 인기 있는 영상 가져오기
-        const params = new URLSearchParams({
-          part: 'snippet,statistics,contentDetails',
-          chart: 'mostPopular',
-          regionCode: 'KR',
-          maxResults: '30',
-          key: apiKey
+        // ── 모든 소스에서 병렬로 영상 수집 ──
+        const allItems = [];
+
+        if (hasSerper) {
+          // 1) Serper 뉴스에서 "유튜브 화제" 키워드 추출 → 해당 키워드로 영상 검색
+          // 2) 바이럴 감지용 고정 쿼리 5개 병렬 검색
+          const [newsKeywords, ...viralResults] = await Promise.allSettled([
+            // 뉴스에서 화제 키워드 추출
+            ytFetchTrendingKeywordsFromNews(),
+            // 바이럴 고정 쿼리 — 다양한 표현으로 "지금 뜨는" 영상 검색
+            searchSerperVideos('유튜브 실시간 급상승 인기 영상 오늘', 1),
+            searchSerperVideos('유튜브 조회수 폭발 화제 영상', 1),
+            searchSerperVideos('오늘 유튜브 난리난 영상 반응', 1),
+            searchSerperVideos('한국 유튜브 핫 트렌딩 영상 이번주', 1),
+            searchSerperVideos('유튜브 화제의 영상 실시간', 1),
+          ]);
+
+          // 바이럴 고정 쿼리 결과 수집
+          for (const r of viralResults) {
+            if (r.status === 'fulfilled' && r.value?.length > 0) {
+              allItems.push(...r.value);
+            }
+          }
+
+          // 뉴스 키워드 기반 영상 검색 결과 수집
+          if (newsKeywords.status === 'fulfilled' && newsKeywords.value?.length > 0) {
+            // 뉴스에서 추출한 키워드로 영상 검색 (최대 4개 키워드, 병렬)
+            const keywordSearches = await Promise.allSettled(
+              newsKeywords.value.slice(0, 4).map(kw =>
+                searchSerperVideos(kw + ' 유튜브', 1)
+              )
+            );
+            for (const r of keywordSearches) {
+              if (r.status === 'fulfilled' && r.value?.length > 0) {
+                allItems.push(...r.value);
+              }
+            }
+          }
+        }
+
+        // 3) YouTube API mostPopular — 보조 소스 (quota 여유 시)
+        if (hasYtApi) {
+          try {
+            const ytApiItems = await ytFetchMostPopularAPI();
+            allItems.push(...ytApiItems);
+          } catch (e) {
+            console.warn('[Pikbox] YouTube API 급상승 실패 (무시):', e.message);
+          }
+        }
+
+        // ── 중복 제거 — sourceUrl에서 videoId 추출하여 비교 ──
+        const seen = new Set();
+        const uniqueItems = [];
+        for (const item of allItems) {
+          const vid = ytExtractVideoId(item.sourceUrl);
+          const key = vid || item.sourceUrl; // videoId 없으면 URL 전체로 비교
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueItems.push(item);
+          }
+        }
+
+        // ── 바이럴 스코어링 — 최신 + 조회수 높은 영상 우선 ──
+        const now = Date.now();
+        uniqueItems.forEach(item => {
+          // 최신도 점수: 24시간 이내면 만점(100), 7일 이내면 비례 감소, 그 이상이면 0
+          let recencyScore = 0;
+          if (item.dateNum > 0) {
+            const ageMs = now - item.dateNum;
+            const ageHours = ageMs / 3600000;
+            if (ageHours <= 24) recencyScore = 100;
+            else if (ageHours <= 168) recencyScore = Math.max(0, 80 - (ageHours - 24) / 168 * 80);
+            else recencyScore = 0;
+          }
+          // 조회수 점수: 로그 스케일 (100만회=100점, 10만회=83점, 1만회=67점)
+          let viewScore = 0;
+          if (item.viewsNum > 0) {
+            viewScore = Math.min(100, Math.log10(item.viewsNum) / 6 * 100);
+          }
+          // 최종 바이럴 점수 = 최신도 60% + 조회수 40%
+          item._viralScore = recencyScore * 0.6 + viewScore * 0.4;
         });
 
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
-        const data = await res.json();
+        // 바이럴 점수 높은 순으로 정렬
+        uniqueItems.sort((a, b) => (b._viralScore || 0) - (a._viralScore || 0));
 
-        if (!res.ok || !data.items || data.items.length === 0) {
+        // 상위 30개만 표시
+        const finalItems = uniqueItems.slice(0, 30);
+
+        if (finalItems.length === 0) {
           if (loadingEl) loadingEl.style.display = 'none';
           return;
         }
 
-        // 카드 데이터로 변환
-        const items = data.items.map(v => {
-          const snippet = v.snippet;
-          const stats = v.statistics || {};
-          const duration = v.contentDetails?.duration || '';
-          const totalSec = ytParseDurationISO(duration);
-          const isShorts = totalSec > 0 && totalSec <= 60;
-          const publishedAt = new Date(snippet.publishedAt).getTime();
-          const viewCount = parseInt(stats.viewCount || '0', 10);
-
-          return {
-            title: snippet.title || '',
-            imageUrl: snippet.thumbnails?.high?.url || '',
-            thumbUrl: snippet.thumbnails?.high?.url || '',
-            maxThumbUrl: `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
-            sourceUrl: isShorts
-              ? `https://www.youtube.com/shorts/${v.id}`
-              : `https://www.youtube.com/watch?v=${v.id}`,
-            platform: 'youtube',
-            width: 1280, height: 720,
-            isVideo: true,
-            isShorts: isShorts,
-            duration: ytFormatDurationISO(duration),
-            channel: snippet.channelTitle || '',
-            date: ytFormatRelativeDate(publishedAt),
-            dateNum: publishedAt,
-            viewsRaw: ytFormatViewCount(viewCount),
-            viewsNum: viewCount,
-            likeCount: parseInt(stats.likeCount || '0', 10),
-            commentCount: parseInt(stats.commentCount || '0', 10),
-            description: snippet.description || '',
-          };
-        });
-
         // 급상승 상태 표시 (검색 결과와 구분)
-        ytState.results = items;
+        ytState.results = finalItems;
         ytState.hasMore = false;
         ytState.isTrending = true;
 
@@ -7914,7 +7962,7 @@
             <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
               <span style="font-size:20px;">🔥</span>
               <span style="font-size:15px;font-weight:700;color:var(--text-primary);">지금 급상승 중</span>
-              <span style="font-size:12px;color:var(--text-muted);">한국에서 인기 있는 영상</span>
+              <span style="font-size:12px;color:var(--text-muted);">실시간 화제 영상 ${finalItems.length}개</span>
             </div>
           `;
           grid.appendChild(header);
@@ -7924,15 +7972,157 @@
         if (sortBar) {
           sortBar.style.display = 'flex';
           const countEl = document.getElementById('ytResultCount');
-          if (countEl) countEl.textContent = `급상승 ${items.length}개`;
+          if (countEl) countEl.textContent = `급상승 ${finalItems.length}개`;
         }
 
-        ytRenderCards(items);
+        ytRenderCards(finalItems);
 
       } catch (e) {
         console.warn('[Pikbox] 급상승 로드 실패:', e.message);
         if (loadingEl) loadingEl.style.display = 'none';
       }
+    }
+
+    // ─── Serper 뉴스에서 유튜브 관련 화제 키워드 추출 ───
+    // "유튜브 화제", "유튜브 논란", "유튜브 급상승" 등의 뉴스에서
+    // 핵심 인물/채널/주제 키워드를 뽑아 영상 검색에 활용
+    async function ytFetchTrendingKeywordsFromNews() {
+      if (!config.serperKey) return [];
+      try {
+        const res = await fetch('https://google.serper.dev/news', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': config.serperKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            q: '유튜브 화제 영상 오늘',
+            num: 10,
+            gl: 'kr',
+            hl: 'ko',
+            tbs: 'qdr:d'  // 최근 24시간 뉴스만
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.news) return [];
+
+        // 뉴스 제목에서 핵심 키워드 추출 — 유튜브/영상/채널 관련 인물·주제명
+        const keywords = [];
+        const stopWords = new Set([
+          '유튜브', '영상', '채널', '화제', '급상승', '논란', '실시간',
+          '조회수', '구독자', '댓글', '반응', '폭발', '난리', '공개',
+          '영상에', '대한', '관련', '이후', '통해', '으로', '에서',
+          '했다', '됐다', '이다', '라고', '면서', '한편', '또한',
+          '오늘', '어제', '최근', '현재', '지금', '이번', '올해',
+        ]);
+
+        for (const article of data.news) {
+          const title = article.title || '';
+          // 따옴표 안의 키워드 추출 (예: '김선태' 유튜브 개설)
+          const quoted = title.match(/['"'""](.*?)['"'""]/g);
+          if (quoted) {
+            for (const q of quoted) {
+              const clean = q.replace(/['"'""]/g, '').trim();
+              if (clean.length >= 2 && clean.length <= 15) keywords.push(clean);
+            }
+          }
+          // 제목에서 한글 고유명사 추출 (2~6글자, 불용어 제외)
+          const words = title.match(/[가-힣]{2,6}/g) || [];
+          for (const w of words) {
+            if (!stopWords.has(w) && w.length >= 2) keywords.push(w);
+          }
+        }
+
+        // 빈도수 기준 상위 키워드 — 2회 이상 등장한 것 우선
+        const freq = {};
+        for (const kw of keywords) {
+          freq[kw] = (freq[kw] || 0) + 1;
+        }
+        const sorted = Object.entries(freq)
+          .sort((a, b) => b[1] - a[1])
+          .filter(([kw, count]) => count >= 1) // 1회라도 등장하면 포함
+          .map(([kw]) => kw);
+
+        // 최대 6개 키워드 반환
+        return sorted.slice(0, 6);
+      } catch (e) {
+        console.warn('[Pikbox] 뉴스 키워드 추출 실패:', e.message);
+        return [];
+      }
+    }
+
+    // ─── YouTube API mostPopular — 보조 소스 ───
+    // 공식 인기 급상승 목록 (업데이트 느림, API quota 소모)
+    async function ytFetchMostPopularAPI() {
+      const apiKey = config.youtubeApiKey;
+      if (!apiKey) return [];
+
+      const params = new URLSearchParams({
+        part: 'snippet,statistics,contentDetails',
+        chart: 'mostPopular',
+        regionCode: 'KR',
+        maxResults: '15', // 보조 소스이므로 15개로 줄임
+        key: apiKey
+      });
+
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.items || data.items.length === 0) return [];
+
+      return data.items.map(v => {
+        const snippet = v.snippet;
+        const stats = v.statistics || {};
+        const duration = v.contentDetails?.duration || '';
+        const totalSec = ytParseDurationISO(duration);
+        const isShorts = totalSec > 0 && totalSec <= 60;
+        const publishedAt = new Date(snippet.publishedAt).getTime();
+        const viewCount = parseInt(stats.viewCount || '0', 10);
+
+        return {
+          title: snippet.title || '',
+          imageUrl: snippet.thumbnails?.high?.url || '',
+          thumbUrl: snippet.thumbnails?.high?.url || '',
+          maxThumbUrl: `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
+          sourceUrl: isShorts
+            ? `https://www.youtube.com/shorts/${v.id}`
+            : `https://www.youtube.com/watch?v=${v.id}`,
+          platform: 'youtube',
+          width: 1280, height: 720,
+          isVideo: true,
+          isShorts: isShorts,
+          duration: ytFormatDurationISO(duration),
+          channel: snippet.channelTitle || '',
+          date: ytFormatRelativeDate(publishedAt),
+          dateNum: publishedAt,
+          viewsRaw: ytFormatViewCount(viewCount),
+          viewsNum: viewCount,
+          likeCount: parseInt(stats.likeCount || '0', 10),
+          commentCount: parseInt(stats.commentCount || '0', 10),
+          description: snippet.description || '',
+        };
+      });
+    }
+
+    // ─── YouTube URL에서 videoId 추출 ───
+    // /watch?v=XXXX, /shorts/XXXX, youtu.be/XXXX 등 다양한 형식 지원
+    function ytExtractVideoId(url) {
+      if (!url) return '';
+      try {
+        const u = new URL(url);
+        // /watch?v= 형식
+        const v = u.searchParams.get('v');
+        if (v) return v;
+        // /shorts/ 형식
+        if (u.pathname.includes('/shorts/')) {
+          return u.pathname.split('/shorts/')[1]?.split(/[/?#]/)[0] || '';
+        }
+        // youtu.be 단축 URL
+        if (u.hostname === 'youtu.be') {
+          return u.pathname.slice(1).split(/[/?#]/)[0] || '';
+        }
+      } catch (e) { /* URL 파싱 실패 */ }
+      return '';
     }
 
     // YouTube 검색 실행 — 검색어로 영상 검색 (appendMode: 더 보기 여부)
