@@ -10272,6 +10272,11 @@
       viewerPage: 1,            // 현재 보고 있는 장 번호 (1-based, 1 = 첫 장)
       viewerTotalPages: 1,      // 해당 디자인의 전체 장 수
       viewerPageHeight: 1200,   // 1장 높이(px) — iframe 클리핑 기준
+      // ── 완성된 디자인 아카이브 ──
+      archiveFolders: [],       // 폴더 목록 (Firebase 동기화) [{id, name, order, created_at}]
+      archiveExpanded: true,    // "완성된 디자인" 섹션 열림/닫힘
+      expandedFolders: {},      // { folderId: true/false } 폴더별 열림 상태
+      folderAdminMode: false,   // 폴더 관리 모드 (삭제/이름변경 버튼 표시)
     };
 
     /* ─── 쿠키 / 영속 저장 — 브라우저를 닫아도 닉네임이 유지되도록 ─── */
