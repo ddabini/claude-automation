@@ -8775,6 +8775,10 @@
       }
 
       // 카테고리 사전 로드 — 저장 메뉴에서 사용하기 위해 미리 로드
+      // 카테고리 사전 로드 — 저장 메뉴에서 사용하기 위해 미리 로드
+      fbGetList(FB_YT_CATS).then(cats => {
+        ytState.ytCategories = cats.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+      }).catch(() => {});
       ytLoadCategoryCounts().catch(() => {});
 
       // 첫 진입 시 급상승 동영상 자동 로드 (빈 화면 방지)
