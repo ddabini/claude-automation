@@ -343,9 +343,9 @@ function pollJobStatus(io, jobId) {
       // Replicate에 상태 조회
       const result = await replicate.status(jobId);
 
-      // 진행률 전송
+      // 진행률 전송 (estimatedTime을 함께 전달)
       if (result.status === 'IN_PROGRESS') {
-        emitProgress(io, jobId, result.progress || 0, '영상 생성 중...');
+        emitProgress(io, jobId, result.progress || 0, result.estimatedTime || 0);
       }
 
       // 완료 시
