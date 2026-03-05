@@ -1,0 +1,65 @@
+<!-- 1:1 상담 아이콘 — 두 사람이 대화하는 모습 (120×120px, 골드 면채움) -->
+<!-- 적용 위치: 상단 이벤트 태그 영역 또는 CTA 섹션 옆 장식 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 120 120"
+  width="120"
+  height="120"
+  role="img"
+  aria-label="1:1 무료상담 아이콘"
+>
+  <defs>
+    <!-- 아이콘 전체에 적용할 골드 메인 그라디언트 -->
+    <linearGradient id="goldIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#E8D5A3"/>
+      <stop offset="50%"  style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 은은한 발광 효과 -->
+    <filter id="softGlow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#C9A96E" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 원형 (반투명 네이비) — 아이콘을 감싸는 원 -->
+  <circle cx="60" cy="60" r="56" fill="#0D1B2A" opacity="0.6"/>
+  <!-- 원형 테두리 (골드) -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="#C9A96E" stroke-width="1" opacity="0.5"/>
+
+  <g filter="url(#softGlow)">
+    <!-- 왼쪽 사람 머리 -->
+    <circle cx="38" cy="36" r="10" fill="url(#goldIcon)"/>
+
+    <!-- 왼쪽 사람 몸통 (어깨~허리) -->
+    <path
+      d="M22 68 C22 54 30 48 38 48 C46 48 54 54 54 68"
+      fill="url(#goldIcon)"
+    />
+
+    <!-- 오른쪽 사람 머리 -->
+    <circle cx="82" cy="36" r="10" fill="url(#goldIcon)"/>
+
+    <!-- 오른쪽 사람 몸통 (어깨~허리) -->
+    <path
+      d="M66 68 C66 54 74 48 82 48 C90 48 98 54 98 68"
+      fill="url(#goldIcon)"
+    />
+
+    <!-- 중간 대화 연결 아이콘 — 작은 다이아몬드 모양 -->
+    <rect x="56" y="54" width="8" height="8" rx="1" fill="#C9A96E" transform="rotate(45 60 58)"/>
+
+    <!-- 하단 구분선 — 두 사람 사이 -->
+    <line x1="60" y1="70" x2="60" y2="85" stroke="#C9A96E" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- 1:1 텍스트 표기 — 아이콘 하단 -->
+    <text
+      x="60" y="100"
+      text-anchor="middle"
+      font-size="11"
+      font-weight="700"
+      font-family="'Pretendard Variable', sans-serif"
+      letter-spacing="2"
+      fill="#C9A96E"
+    >1:1 상담</text>
+  </g>
+</svg>
