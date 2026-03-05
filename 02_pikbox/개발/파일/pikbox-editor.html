@@ -1154,19 +1154,45 @@
     }
 
     // ── 디자인 HTML → 캔버스 변환 (핵심 로직) ──
-    // 1단계: HTML을 숨겨진 컨테이너에 렌더링
-    // 2단계: html2canvas로 전체를 이미지로 캡처 → 배경으로 설정
-    // 3단계: HTML DOM에서 텍스트 요소를 파싱 → Fabric.Textbox로 변환
+    // 1단계: Firebase DB에서 HTML 콘텐츠 읽기 (CORS 우회)
+    // 2단계: HTML을 숨겨진 컨테이너에 렌더링
+    // 3단계: html2canvas로 전체를 이미지로 캡처 → 배경으로 설정
+    // 4단계: HTML DOM에서 텍스트 요소를 파싱 → Fabric.Textbox로 변환
     async function deLoadDesignToCanvas(url, width, height) {
       // 캔버스 크기 업데이트
       deState.canvas.setWidth(width);
       deState.canvas.setHeight(height);
       deState.canvas.clear();
 
-      // 1단계: HTML 내용 가져오기
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const html = await resp.text();
+      // 1단계: Firebase DB에서 HTML 콘텐츠 읽기 (CORS 문제 없음)
+      // design-review/html-content/{designId} 경로에 저장된 HTML 텍스트를 직접 읽음
+      let html;
+      const designId = deState.currentDesignId;
+
+      try {
+        const snap = await new Promise((resolve, reject) => {
+          db.ref(`design-review/html-content/${designId}`).once('value', resolve, reject);
+        });
+        html = snap.val();
+      } catch (dbErr) {
+        console.warn('DB에서 HTML 읽기 실패:', dbErr);
+      }
+
+      // DB에 없으면 직접 fetch 시도 (같은 도메인이면 성공할 수 있음)
+      if (!html) {
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          html = await resp.text();
+          // 성공하면 DB에 캐싱 (다음번엔 CORS 없이 바로 읽기)
+          db.ref(`design-review/html-content/${designId}`).set(html).catch(() => {});
+        } catch (fetchErr) {
+          console.error('HTML fetch 실패 (CORS 가능성):', fetchErr);
+          throw new Error('디자인 HTML을 불러올 수 없습니다. 다시 업로드해주세요.');
+        }
+      }
+
+      if (!html) throw new Error('HTML 콘텐츠가 비어있습니다');
 
       // 2단계: 숨겨진 컨테이너에 HTML 직접 렌더링
       // (iframe 방식 대신 div에 직접 삽입 — html2canvas와 호환성이 더 좋음)
