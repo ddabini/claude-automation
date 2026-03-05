@@ -11,8 +11,8 @@ import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Type,
-  Image,
+  Scissors,
+  Volume2,
   Captions,
   Download,
   PanelLeftClose,
