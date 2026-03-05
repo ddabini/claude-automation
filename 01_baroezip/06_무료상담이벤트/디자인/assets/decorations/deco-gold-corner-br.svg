@@ -1,0 +1,31 @@
+<!-- 우하단 코너 프레임 장식 — 포스터 하단 우측 모서리 골드 라인 (80×80px) -->
+<!-- 적용 위치: 포스터 우하단 (right=40, bottom=40) — 180도 회전 버전 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 80 80"
+  width="80"
+  height="80"
+  role="img"
+  aria-label="우하단 골드 코너 장식"
+>
+  <defs>
+    <!-- 코너(우하단)에서 안쪽 방향으로 페이드되는 골드 그라디언트 -->
+    <linearGradient id="cornerBrGoldH" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="cornerBrGoldV" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 가로 라인 (하단) — 오른쪽에서 왼쪽으로 페이드 아웃 -->
+  <rect x="20" y="78.5" width="60" height="1.5" fill="url(#cornerBrGoldH)"/>
+
+  <!-- 세로 라인 (우측) — 아래서 위로 페이드 아웃 -->
+  <rect x="78.5" y="20" width="1.5" height="60" fill="url(#cornerBrGoldV)"/>
+
+  <!-- 코너 교차점 강조 포인트 (3×3 사각형) -->
+  <rect x="77" y="77" width="3" height="3" fill="#E8D5A3"/>
+</svg>
