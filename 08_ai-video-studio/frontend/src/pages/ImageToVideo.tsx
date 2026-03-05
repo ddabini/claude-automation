@@ -126,37 +126,7 @@ const ImageToVideo: React.FC = () => {
     }
   }, [imageFile, motionStyle, duration, resetGenerationJob, updateGenerationJob]);
 
-  // ── 데모 시뮬레이션 ──
-  const simulateGeneration = () => {
-    updateGenerationJob({
-      jobId: 'demo-img-' + Date.now(),
-      status: 'preparing',
-      progress: 0,
-      estimatedSeconds: 8,
-    });
-
-    setTimeout(() => {
-      updateGenerationJob({ status: 'generating', progress: 30, estimatedSeconds: 6 });
-    }, 1500);
-
-    setTimeout(() => {
-      updateGenerationJob({ progress: 60, estimatedSeconds: 3 });
-    }, 3500);
-
-    setTimeout(() => {
-      updateGenerationJob({ status: 'processing', progress: 90, estimatedSeconds: 1 });
-    }, 5500);
-
-    setTimeout(() => {
-      updateGenerationJob({
-        status: 'completed',
-        progress: 100,
-        estimatedSeconds: 0,
-        resultUrl:
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      });
-    }, 7000);
-  };
+  // (데모 시뮬레이션 제거됨 — 실제 백엔드 연동 사용)
 
   // ── 다운로드 ──
   const handleDownload = () => {
