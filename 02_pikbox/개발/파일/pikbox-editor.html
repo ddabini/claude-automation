@@ -1035,7 +1035,7 @@
         // 객체를 배열로 변환하고 최신순 정렬 (날짜 내림차순)
         deState.designs = Object.entries(data)
           .map(([id, d]) => ({ id, ...d }))
-          .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
         // 사이드바에 디자인 목록 그리기
         deRenderDesignList();
