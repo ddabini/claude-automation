@@ -35,13 +35,24 @@ function initSocket(io) {
     socket.emit('connected', { clientId });
 
     // ── 클라이언트가 특정 job을 구독 (진행률 받기) ──
-    socket.on('subscribe:job', (data) => {
+    // 프론트엔드에서 'subscribe-job' 이벤트로 보냄
+    socket.on('subscribe-job', (data) => {
       const { jobId } = data;
       if (jobId) {
         jobClientMap.set(jobId, clientId);
         // 해당 job 전용 방에 입장
         socket.join(`job:${jobId}`);
         console.log(`[Socket] ${clientId}가 job ${jobId} 구독`);
+      }
+    });
+
+    // ── 구독 해제 ──
+    socket.on('unsubscribe-job', (data) => {
+      const { jobId } = data;
+      if (jobId) {
+        socket.leave(`job:${jobId}`);
+        jobClientMap.delete(jobId);
+        console.log(`[Socket] ${clientId}가 job ${jobId} 구독 해제`);
       }
     });
 
@@ -55,56 +66,70 @@ function initSocket(io) {
 
 /**
  * 특정 job의 진행률을 구독 중인 클라이언트에게 전송
+ *
+ * 프론트엔드에서 'progress-update' 이벤트를 수신하며,
+ * { jobId, status, progress, estimatedSeconds, resultUrl?, errorMessage? } 형태를 기대합니다.
+ *
  * @param {import('socket.io').Server} io - Socket.io 서버
  * @param {string} jobId - 작업 ID
- * @param {number} progress - 진행률 (0~100)
- * @param {string} message - 상태 메시지
+ * @param {object} data - 진행률 데이터
+ * @param {string} data.status - 상태 ('generating', 'processing', 'completed', 'failed')
+ * @param {number} data.progress - 진행률 (0~100)
+ * @param {number} [data.estimatedSeconds] - 예상 남은 시간(초)
+ * @param {string} [data.resultUrl] - 완료 시 결과 영상 URL
+ * @param {string} [data.errorMessage] - 실패 시 에러 메시지
  */
-function emitProgress(io, jobId, progress, message) {
-  io.to(`job:${jobId}`).emit('generation:progress', {
+function emitJobUpdate(io, jobId, data) {
+  io.to(`job:${jobId}`).emit('progress-update', {
     jobId,
+    status: data.status || 'generating',
+    progress: data.progress || 0,
+    estimatedSeconds: data.estimatedSeconds || 0,
+    resultUrl: data.resultUrl || undefined,
+    errorMessage: data.errorMessage || undefined,
+  });
+}
+
+/**
+ * 작업 진행률 전송 (emitProgress 호환 래퍼)
+ */
+function emitProgress(io, jobId, progress, estimatedSeconds) {
+  emitJobUpdate(io, jobId, {
+    status: 'generating',
     progress,
-    message,
-    timestamp: Date.now(),
+    estimatedSeconds: estimatedSeconds || 0,
   });
 }
 
 /**
  * 작업 완료 알림
- * @param {import('socket.io').Server} io - Socket.io 서버
- * @param {string} jobId - 작업 ID
- * @param {string} resultUrl - 결과 영상 URL
  */
 function emitComplete(io, jobId, resultUrl) {
-  io.to(`job:${jobId}`).emit('generation:complete', {
-    jobId,
+  emitJobUpdate(io, jobId, {
+    status: 'completed',
+    progress: 100,
     resultUrl,
-    timestamp: Date.now(),
   });
-
   // job-client 매핑 정리
   jobClientMap.delete(jobId);
 }
 
 /**
  * 작업 에러 알림
- * @param {import('socket.io').Server} io - Socket.io 서버
- * @param {string} jobId - 작업 ID
- * @param {string} error - 에러 메시지
  */
 function emitError(io, jobId, error) {
-  io.to(`job:${jobId}`).emit('generation:error', {
-    jobId,
-    error,
-    timestamp: Date.now(),
+  emitJobUpdate(io, jobId, {
+    status: 'failed',
+    progress: 0,
+    errorMessage: error,
   });
-
   // job-client 매핑 정리
   jobClientMap.delete(jobId);
 }
 
 module.exports = {
   initSocket,
+  emitJobUpdate,
   emitProgress,
   emitComplete,
   emitError,
