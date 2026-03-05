@@ -7864,11 +7864,11 @@
         toast('검색어를 입력하세요');
         return;
       }
-      // YouTube API 키 또는 Serper 키 둘 중 하나는 필요
-      const hasYtApi = !!config.youtubeApiKey;
+      // Serper 키가 필수 (검색 메인 엔진). YouTube API는 통계 보강용 (선택)
       const hasSerper = !!config.serperKey;
-      if (!hasYtApi && !hasSerper) {
-        toast('YouTube API 키 또는 Serper.dev API 키가 필요합니다.\n설정에서 입력하세요.', 'error');
+      const hasYtApi = !!config.youtubeApiKey && !ytState.ytApiDisabled;
+      if (!hasSerper) {
+        toast('Serper.dev API 키가 필요합니다.\n설정에서 입력하세요.', 'error');
         return;
       }
 
