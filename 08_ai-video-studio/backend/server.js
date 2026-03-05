@@ -178,9 +178,9 @@ app.use((err, req, res, next) => {
 server.listen(PORT, () => {
   console.log('');
   console.log('============================================');
-  console.log(`  VELA 백엔드 서버 실행 중`);
+  console.log(`  VELA 영상 편집기 서버 실행 중`);
   console.log(`  포트: ${PORT}`);
-  console.log(`  Mock 모드: ${process.env.MOCK_MODE === 'true' ? 'ON (RunPod 없이 테스트)' : 'OFF (실제 RunPod 사용)'}`);
+  console.log(`  기능: 컷편집 / 오디오편집 / 자막 / 내보내기`);
   console.log(`  파일 자동 정리: ${cleanupHours}시간 이상 된 파일`);
   console.log('============================================');
   console.log('');
