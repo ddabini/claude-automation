@@ -84,18 +84,16 @@ async function extractAudio(videoPath) {
 }
 
 /**
- * 자막을 영상에 직접 입히는 함수 (하드코딩/번인)
+ * 자막을 영상에 내장하는 함수 (소프트 자막)
  *
- * 비유: 영상 위에 자막을 "인쇄"해서 지울 수 없게 만드는 것
- *       (유튜브 자막처럼 켜고 끌 수 없고, 항상 보임)
+ * 비유: 영상에 자막 트랙을 넣어두는 것
+ *       (유튜브 CC 자막처럼 플레이어에서 켜고 끌 수 있음)
+ *       재인코딩이 필요 없어서 매우 빠름
  *
  * @param {string} videoPath - 원본 영상 파일 경로
  * @param {string} srtPath - SRT 자막 파일 경로
- * @param {object} [options] - 자막 스타일 옵션
- * @param {string} [options.fontFamily] - 글꼴 이름 (기본: 'NanumGothic')
- * @param {number} [options.fontSize] - 글자 크기 (기본: 24)
- * @param {string} [options.fontColor] - 글자 색상 (기본: '&HFFFFFF' 흰색)
- * @returns {Promise<string>} 자막이 입혀진 영상 파일 경로
+ * @param {object} [options] - 자막 옵션 (현재 미사용, 향후 확장용)
+ * @returns {Promise<string>} 자막이 내장된 영상 파일 경로
  */
 async function burnSubtitles(videoPath, srtPath, options = {}) {
   const isInstalled = await checkFFmpegInstalled();
@@ -103,28 +101,21 @@ async function burnSubtitles(videoPath, srtPath, options = {}) {
     throw new Error('FFmpeg가 설치되지 않았습니다. brew install ffmpeg 으로 설치해주세요.');
   }
 
-  const {
-    fontFamily = 'NanumGothic',
-    fontSize = 24,
-    fontColor = '&HFFFFFF',
-  } = options;
-
   const outputFileName = `subtitled-${uuidv4()}.mp4`;
   const outputPath = path.join(OUTPUTS_DIR, outputFileName);
 
-  // SRT 파일 경로에서 특수문자 이스케이프 (FFmpeg subtitles 필터에 필요)
-  const escapedSrtPath = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'");
-
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
-      // subtitles 필터로 자막을 영상에 직접 렌더링
-      .videoFilters(
-        `subtitles='${escapedSrtPath}':force_style='FontName=${fontFamily},FontSize=${fontSize},PrimaryColour=${fontColor}'`
-      )
-      // 영상 코덱: H.264 (가장 호환성 좋음)
-      .videoCodec('libx264')
-      // 오디오는 그대로 복사 (재인코딩 안 함 → 빠름)
+      // SRT 파일을 두 번째 입력으로 추가
+      .input(srtPath)
+      // 영상과 오디오는 그대로 복사 (재인코딩 없음 → 빠름)
+      .videoCodec('copy')
       .audioCodec('copy')
+      // 자막 코덱: mov_text (MP4 컨테이너에서 사용하는 자막 형식)
+      .outputOptions([
+        '-c:s mov_text',
+        '-metadata:s:s:0 language=kor',
+      ])
       .output(outputPath)
       .on('start', (cmd) => {
         console.log(`[FFmpeg] 자막 입히기 시작: ${cmd}`);
