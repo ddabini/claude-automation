@@ -1,0 +1,78 @@
+<!-- 달력 아이콘 — 3월 28일(토) 이벤트 날짜 표시 (80×80px, 골드 면채움) -->
+<!-- 적용 위치: 바디 텍스트 영역 — "3월 28일(토)" 날짜 정보 옆 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 80 80"
+  width="80"
+  height="80"
+  role="img"
+  aria-label="3월 28일 달력 아이콘"
+>
+  <defs>
+    <!-- 골드 메인 그라디언트 -->
+    <linearGradient id="goldCal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#E8D5A3"/>
+      <stop offset="50%"  style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 달력 헤더 어두운 골드 -->
+    <linearGradient id="goldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#8A6A35"/>
+    </linearGradient>
+    <!-- 발광 효과 -->
+    <filter id="calGlow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#C9A96E" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#calGlow)">
+    <!-- 달력 몸체 — 라운드 사각형 -->
+    <rect x="8" y="14" width="64" height="58" rx="4" fill="url(#goldCal)" opacity="0.15"/>
+    <!-- 달력 테두리 -->
+    <rect x="8" y="14" width="64" height="58" rx="4" fill="none" stroke="url(#goldCal)" stroke-width="2"/>
+
+    <!-- 달력 헤더 영역 (상단 색상 바) -->
+    <rect x="8" y="14" width="64" height="20" rx="4" fill="url(#goldDark)"/>
+    <!-- 헤더 하단 직각 처리 (둥근 모서리 덮기) -->
+    <rect x="8" y="27" width="64" height="7" fill="url(#goldDark)"/>
+
+    <!-- 헤더 링 핀 왼쪽 -->
+    <rect x="22" y="8" width="5" height="12" rx="2.5" fill="#C9A96E"/>
+    <!-- 헤더 링 핀 오른쪽 -->
+    <rect x="53" y="8" width="5" height="12" rx="2.5" fill="#C9A96E"/>
+
+    <!-- 헤더 텍스트 "MAR" -->
+    <text
+      x="40" y="29"
+      text-anchor="middle"
+      font-size="9"
+      font-weight="700"
+      font-family="'Pretendard Variable', sans-serif"
+      letter-spacing="2"
+      fill="#0D1B2A"
+    >MAR</text>
+
+    <!-- 날짜 숫자 "28" — 임팩트 강조 -->
+    <text
+      x="40" y="61"
+      text-anchor="middle"
+      font-size="28"
+      font-weight="900"
+      font-family="'Pretendard Variable', sans-serif"
+      fill="url(#goldCal)"
+    >28</text>
+
+    <!-- 요일 "토" 텍스트 -->
+    <text
+      x="40" y="73"
+      text-anchor="middle"
+      font-size="8"
+      font-weight="500"
+      font-family="'Pretendard Variable', sans-serif"
+      letter-spacing="1"
+      fill="#C9A96E"
+      opacity="0.8"
+    >토요일</text>
+  </g>
+</svg>
