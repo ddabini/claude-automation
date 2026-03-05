@@ -12436,6 +12436,15 @@ ${metaText}
     function drToggleChat() {
       const panel = document.getElementById('drChatPanel');
       if (!panel) return;
+      // 채팅 열 때 편집 패널 닫기 (동시 표시 방지)
+      if (panel.classList.contains('hidden')) {
+        const editPanel = document.getElementById('drEditPanel');
+        if (editPanel && !editPanel.classList.contains('hidden')) {
+          editPanel.classList.add('hidden');
+          const editBtn = document.getElementById('drEditToggleBtn');
+          if (editBtn) editBtn.classList.remove('dr-edit-active');
+        }
+      }
       panel.classList.toggle('hidden');
       const btn = document.getElementById('drChatToggleBtn');
       if (btn) btn.textContent = panel.classList.contains('hidden') ? '💬 채팅 열기' : '💬 채팅';
