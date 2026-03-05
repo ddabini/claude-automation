@@ -20,8 +20,10 @@ from reportlab.pdfgen import canvas
 from reportlab.graphics.shapes import Drawing, Rect, String, Line, Circle, Polygon
 from reportlab.graphics import renderPDF
 
-# ─── 폰트 등록 (Regular + Bold 별도 파일로 weight 차이 구현) ───
-FONT_REGULAR = "/tmp/noto-fonts/NotoSansKR-Regular-fs.ttf"
+# ─── 폰트 등록 ───
+# Regular: Variable 폰트 (전체 글리프 포함 — 화살표 등 특수문자 지원)
+# Bold: Static 별도 파일 (weight 차이 구현)
+FONT_REGULAR = "/tmp/noto-fonts/NotoSansKR-Variable.ttf"
 FONT_BOLD = "/tmp/noto-fonts/NotoSansKR-Bold-fs.ttf"
 pdfmetrics.registerFont(TTFont("NotoSansKR", FONT_REGULAR))
 pdfmetrics.registerFont(TTFont("NotoSansKR-Bold", FONT_BOLD))
