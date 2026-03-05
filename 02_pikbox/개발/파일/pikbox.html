@@ -3491,6 +3491,27 @@
       </div>
     </main>
 
+    <!-- 우측 텍스트 편집 패널 — 디자인 텍스트를 직접 수정 -->
+    <aside class="dr-edit-panel hidden" id="drEditPanel">
+      <div class="dr-edit-header">
+        <div class="dr-edit-header-left">
+          <span class="dr-edit-title" id="drEditTitle">텍스트 편집</span>
+        </div>
+        <button class="dr-edit-close" onclick="drToggleEdit()">✕</button>
+      </div>
+      <!-- 디자인 미선택 시 안내 -->
+      <div class="dr-edit-empty" id="drEditEmpty">
+        디자인을 선택하면<br>텍스트를 편집할 수 있습니다
+      </div>
+      <!-- 텍스트 요소 목록 — 동적으로 생성됨 -->
+      <div class="dr-edit-list" id="drEditList" style="display:none;"></div>
+      <!-- 하단 저장 바 -->
+      <div class="dr-edit-save-bar" id="drEditSaveBar" style="display:none;">
+        <button class="dr-btn" onclick="drEditReset()">되돌리기</button>
+        <button class="dr-btn dr-btn-primary" onclick="drEditSave()">💾 저장</button>
+      </div>
+    </aside>
+
     <!-- 우측 채팅 패널 — 피드백 메시지 주고받기 -->
     <aside class="dr-chat-panel" id="drChatPanel">
       <!-- 채팅 헤더 -->
