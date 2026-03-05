@@ -93,14 +93,14 @@ app.use((req, res, next) => {
 });
 
 // ── API 라우트 등록 ──
-// /api/video/... → 영상 생성, 변환, 상태 조회
+// /api/video/... → 영상 업로드, 트림, 내보내기
 app.use('/api/video', videoRoutes);
 
-// /api/subtitle/... → 자막 생성, 자막 입히기
-app.use('/api/subtitle', subtitleRoutes);
+// /api/audio/... → 오디오 편집 (볼륨, BGM, 페이드)
+app.use('/api/audio', audioRoutes);
 
-// /api/background/... → 배경 제거
-app.use('/api/background', backgroundRoutes);
+// /api/subtitle/... → 자막 입히기
+app.use('/api/subtitle', subtitleRoutes);
 
 // ── 헬스체크 엔드포인트 (서버 상태 확인용) ──
 app.get('/api/health', (req, res) => {
