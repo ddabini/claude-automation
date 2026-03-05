@@ -1,0 +1,59 @@
+<!-- 바로이집 로고 텍스트 — Paperlogy ExtraBold 기반 화이트 워드마크 (200×40px) -->
+<!-- 적용 위치: 포스터 상단 로고 영역 (20% 존 — y=40~216 구간) -->
+<!-- 주의: 실제 Paperlogy 폰트 CDN이 로드된 환경에서 렌더링해야 정확한 서체 표현됩니다 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 200 40"
+  width="200"
+  height="40"
+  role="img"
+  aria-label="바로이집 로고"
+>
+  <defs>
+    <!-- 로고 텍스트 스타일 정의 -->
+    <style>
+      /* Paperlogy ExtraBold 폰트 로드 — CDN 참조 */
+      @font-face {
+        font-family: 'Paperlogy';
+        src: url('https://cdn.jsdelivr.net/gh/e-hwan/paperlogy@latest/fonts/Paperlogy-8ExtraBold.woff2') format('woff2');
+        font-weight: 800;
+        font-style: normal;
+      }
+      /* 로고 텍스트 공통 스타일 */
+      .logo-text {
+        font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+        font-weight: 800;
+      }
+    </style>
+
+    <!-- 로고 텍스트에 사용할 화이트 그라디언트 (은은한 광택) -->
+    <linearGradient id="logoWhite" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#E8E4DE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 한글 '바로이집' 메인 워드마크 -->
+  <text
+    x="100" y="30"
+    text-anchor="middle"
+    class="logo-text"
+    font-size="26"
+    fill="url(#logoWhite)"
+    letter-spacing="-0.5"
+  >바로이집</text>
+
+  <!-- 하단 브랜드 영문 서브텍스트 (선택적 사용) -->
+  <!-- HTML 레이아웃에서 필요 없으면 display:none 처리 가능 -->
+  <!--
+  <text
+    x="100" y="42"
+    text-anchor="middle"
+    font-family="'Pretendard Variable', sans-serif"
+    font-size="7"
+    font-weight="400"
+    fill="#C9A96E"
+    letter-spacing="3"
+  >BAROEZIP</text>
+  -->
+</svg>
