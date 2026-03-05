@@ -3763,9 +3763,11 @@
   <div class="yt-player-modal" id="ytPlayerModal" style="display:none;" onclick="if(event.target===this)ytClosePlayer()">
     <div class="yt-player-content">
       <button class="yt-player-close" onclick="ytClosePlayer()">✕</button>
-      <!-- 좌측: YouTube iframe 플레이어 -->
+      <!-- 좌측: YouTube iframe 플레이어 + 히트맵 타임라인 -->
       <div class="yt-player-left">
         <iframe id="ytPlayerIframe" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <!-- 히트맵 타임라인 바 — 영상 바로 아래 (유튜브 Most Replayed 스타일) -->
+        <div id="ytHeatmapBar" class="yt-heatmap-loading">히트맵 로딩 중...</div>
       </div>
       <!-- 우측: 영상 인사이트 패널 -->
       <div class="yt-player-right" id="ytPlayerInsight">
