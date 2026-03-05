@@ -142,9 +142,11 @@ router.post('/generate-image', uploadImage.single('image'), async (req, res) => 
     // 백그라운드 상태 폴링 시작
     pollJobStatus(req.io, jobId);
 
+    const estimatedSeconds = replicate.MOCK_MODE ? 5 : 60;
     res.json({
       success: true,
       jobId,
+      estimatedSeconds,
       message: '이미지→영상 변환이 시작되었습니다.',
     });
   } catch (err) {
