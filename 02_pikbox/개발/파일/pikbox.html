@@ -8687,33 +8687,44 @@
 
     // ─── 9단계: 뷰 모드 전환 ───
 
+    // 사이드바 기반 뷰 전환 — 'search' 또는 카테고리 선택
+    // 사이드바는 항상 표시, 우측 메인만 전환
     function ytSwitchViewMode(mode) {
       ytState.viewMode = mode;
-      const sidebar = document.getElementById('ytSidebar');
       const headerSearch = document.getElementById('ytHeaderSearch');
       const headerSaved = document.getElementById('ytHeaderSaved');
       const sortBar = document.getElementById('ytSortBar');
       const emptyEl = document.getElementById('ytEmpty');
       const savedEmpty = document.getElementById('ytSavedEmpty');
       const grid = document.getElementById('ytGrid');
+      const navSearch = document.getElementById('ytNavSearch');
 
-      if (mode === 'saved') {
-        if (sidebar) sidebar.style.display = 'flex';
-        if (headerSearch) headerSearch.style.display = 'none';
-        if (headerSaved) headerSaved.style.display = 'flex';
-        if (sortBar) sortBar.style.display = 'none';
-        if (emptyEl) emptyEl.style.display = 'none';
-        if (grid) grid.innerHTML = '';
-        ytLoadCategories();
-      } else {
-        if (sidebar) sidebar.style.display = 'none';
+      if (mode === 'search') {
+        // 검색 모드 — 검색 헤더 표시, 기존 결과 복원
         if (headerSearch) headerSearch.style.display = '';
         if (headerSaved) headerSaved.style.display = 'none';
         if (savedEmpty) savedEmpty.style.display = 'none';
         ytCancelMultiSelect();
+        // 사이드바 검색 탭 활성화, 카테고리 비활성화
+        if (navSearch) navSearch.classList.add('active');
+        ytState.ytActiveCatId = null;
+        ytRenderCategories();
+        // 검색 결과 복원
         if (grid) grid.innerHTML = '';
-        if (ytState.results.length > 0) ytRenderCards(ytState.results);
-        else if (emptyEl) emptyEl.style.display = '';
+        if (ytState.results.length > 0) {
+          ytRenderCards(ytState.results);
+        } else {
+          if (emptyEl) emptyEl.style.display = '';
+        }
+      } else {
+        // 카테고리 모드 — 카테고리 헤더 표시, 저장 영상 로드
+        if (headerSearch) headerSearch.style.display = 'none';
+        if (headerSaved) headerSaved.style.display = 'flex';
+        if (sortBar) sortBar.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (navSearch) navSearch.classList.remove('active');
+        if (grid) grid.innerHTML = '';
+        // 카테고리 선택은 ytSelectCategory에서 처리
       }
     }
 
