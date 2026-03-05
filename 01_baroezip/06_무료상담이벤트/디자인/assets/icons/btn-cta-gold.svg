@@ -1,0 +1,64 @@
+<!-- CTA 버튼 — "지금 신청하기" 골드 그라디언트 배경 + 네이비 텍스트 (480×56px) -->
+<!-- 적용 위치: 포스터 하단 CTA 영역 — 중앙 정렬 -->
+<!-- 주의: HTML에서 사용 시 <a> 태그로 감싸거나 onclick 이벤트를 부착하세요 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 480 56"
+  width="480"
+  height="56"
+  role="img"
+  aria-label="지금 신청하기 버튼"
+>
+  <defs>
+    <!-- 버튼 배경 골드 그라디언트 — 좌상단 밝음 → 우하단 어두움 -->
+    <linearGradient id="btnGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#E8D5A3"/>
+      <stop offset="45%"  style="stop-color:#C9A96E"/>
+      <stop offset="100%" style="stop-color:#A8854A"/>
+    </linearGradient>
+    <!-- 버튼 호버 상태 (HTML에서 CSS로 제어 권장) -->
+    <linearGradient id="btnGoldHover" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#F0E0B5"/>
+      <stop offset="45%"  style="stop-color:#D4B478"/>
+      <stop offset="100%" style="stop-color:#B89050"/>
+    </linearGradient>
+    <!-- 버튼 상단 하이라이트 — 유리 반짝임 효과 -->
+    <linearGradient id="btnShine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   style="stop-color:#FFFFFF; stop-opacity:0.25"/>
+      <stop offset="100%" style="stop-color:#FFFFFF; stop-opacity:0"/>
+    </linearGradient>
+    <!-- 버튼 그림자 효과 -->
+    <filter id="btnShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#C9A96E" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- 버튼 배경 (골드 그라디언트, 4px 라운드) -->
+  <rect x="0" y="0" width="480" height="56" rx="4" fill="url(#btnGold)" filter="url(#btnShadow)"/>
+
+  <!-- 상단 하이라이트 레이어 (유리 반짝임) -->
+  <rect x="0" y="0" width="480" height="28" rx="4" fill="url(#btnShine)"/>
+  <!-- 하이라이트 하단 직각 처리 -->
+  <rect x="0" y="16" width="480" height="12" fill="url(#btnShine)"/>
+
+  <!-- 버튼 텍스트 "지금 신청하기" — 네이비 컬러로 가독성 확보 -->
+  <text
+    x="240" y="36"
+    text-anchor="middle"
+    font-size="20"
+    font-weight="700"
+    font-family="'Pretendard Variable', sans-serif"
+    letter-spacing="1"
+    fill="#0D1B2A"
+  >지금 신청하기</text>
+
+  <!-- 텍스트 오른쪽 화살표 아이콘 — 클릭 유도 -->
+  <path
+    d="M340 28 L348 28 M344 23 L350 28 L344 33"
+    stroke="#0D1B2A"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>
