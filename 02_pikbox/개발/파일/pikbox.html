@@ -2951,19 +2951,19 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       position: relative;
     }
-    /* 좌측 — iframe 영역 */
+    /* 좌측 — 영상 + 히트맵 영역 (세로 배치) */
     .yt-player-left {
       flex: 2;
       background: #000;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
       min-width: 0;
     }
     .yt-player-left iframe {
       width: 100%;
-      height: 100%;
+      flex: 1;
       border: none;
+      min-height: 0;
     }
     /* 우측 — 인사이트 패널 */
     .yt-player-right {
