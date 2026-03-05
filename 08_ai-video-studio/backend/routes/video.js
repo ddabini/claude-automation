@@ -18,7 +18,8 @@ const path = require('path');
 const fs = require('fs');
 
 // 서비스 모듈 불러오기
-const runpod = require('../services/runpod');
+// Replicate API를 통해 Wan 2.1 모델로 영상을 생성합니다
+const replicate = require('../services/replicate');
 const ffmpegService = require('../services/ffmpeg');
 const { uploadImage } = require('../middleware/upload');
 const { emitProgress, emitComplete, emitError } = require('../socket');
