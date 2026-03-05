@@ -10349,6 +10349,15 @@
         drRenderDesignList();
       });
 
+      // Firebase에서 아카이브 폴더 목록을 실시간으로 가져오기
+      firebaseDb.ref(DR_ARCHIVE_FOLDERS).on('value', snap => {
+        const data = snap.val() || {};
+        drState.archiveFolders = Object.entries(data)
+          .map(([id, f]) => ({ id, ...f }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        drRenderDesignList(); // 폴더 변경 시 아카이브 섹션도 다시 그리기
+      });
+
       drState.initialized = true;
 
       // 키보드 좌우 화살표로 카드뉴스 페이지 이동
