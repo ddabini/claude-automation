@@ -1056,7 +1056,7 @@
       listEl.innerHTML = designs.map(d => {
         const isActive = d.id === deState.currentDesignId;
         const statusLabel = deStatusLabel(d.status);
-        const dateStr = deFormatDate(d.created_at);
+        const dateStr = deFormatDate(d.createdAt);
 
         return `
           <div class="de-design-card ${isActive ? 'active' : ''}"
