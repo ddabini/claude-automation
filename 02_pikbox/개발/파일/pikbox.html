@@ -6049,96 +6049,52 @@
       if (statusEl) statusEl.textContent = 'Instagram · Meta 광고 · Pinterest 검색 중...';
 
       if (isFirstSearch) {
-        // ── 검색어 자동 확장 — 스니핏의 검색 품질 참고 ──
-        // 입력한 키워드를 다양한 관점에서 변형하여 풍부한 결과 수집
-        const expandedQueries = generateExpandedQueries(baseQuery, searchQuery);
+        // ── 3대 플랫폼 Cloud Function 크롤링 (로그인 기반) ──
+        // 각 플랫폼의 Cloud Function이 Puppeteer로 로그인 후 검색 결과를 크롤링
 
-        // ── 대량 수집: 핵심 3대 플랫폼 × 확장된 검색어 조합 ──
-        // Serper 이미지 검색: num=20 최대 → 다양한 검색어 + 페이지로 대량 수집
-        // 총 ~18호출 × 20개 = 최대 360개 (중복 제거 후 150~250개 예상)
+        // ── 1) Instagram — Cloud Function 크롤링 ──
+        promises.push(searchInstagramNative(baseQuery, 30));
+        sources.push('instagram');
 
-        // ── 1) Instagram 집중 (5호출 = 100개) ──
-        promises.push(searchSerperImages(searchQuery, 'site:instagram.com', 1));
-        sources.push('google_instagram');
-        promises.push(searchSerperImages(searchQuery, 'site:instagram.com', 2));
-        sources.push('google_instagram');
-        promises.push(searchSerperImages(searchQuery, 'site:instagram.com', 3));
-        sources.push('google_instagram');
-        // 확장된 쿼리로 해외 인스타 광고도 수집
-        promises.push(searchSerperImages(expandedQueries[0], 'site:instagram.com', 1));
-        sources.push('google_instagram');
-        promises.push(searchSerperImages(expandedQueries[1], 'site:instagram.com', 1));
-        sources.push('google_instagram');
+        // ── 2) Meta 광고 라이브러리 — Cloud Function 크롤링 ──
+        promises.push(searchMetaAdsNative(baseQuery, 30));
+        sources.push('meta_ads');
 
-        // ── 2) Meta/Facebook 광고 소재 (4호출 = 80개) ──
-        // Meta 광고 라이브러리(실제 집행 광고) + 글로벌 광고 크리에이티브 병행
-        promises.push(searchSerperImages(baseQuery + ' 광고', 'site:facebook.com/ads/library', 1));
-        sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1, { gl: 'us' }));
-        sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' facebook instagram ad creative design best', '', 1, { gl: 'us' }));
-        sources.push('google_meta_ads');
-        promises.push(searchSerperImages(baseQuery + ' meta ad creative 광고 소재 레퍼런스', '', 1));
-        sources.push('google_meta_ads');
+        // ── 3) Pinterest — 기존 Cloud Function 크롤링 ──
+        promises.push(searchPinterestNative(baseQuery, 30));
+        sources.push('pinterest');
 
-        // ── 3) Pinterest — 네이티브 검색 우선, Serper 폴백 ──
-        // Cloud Function이 설정되어 있으면 Pinterest 자체 검색 알고리즘 결과를 가져옴
-        // 실패 시 기존 Serper(Google site:pinterest.com) 방식으로 자동 폴백
-        const pinterestNativePromise = searchPinterestNative(baseQuery, 30);
-        promises.push(pinterestNativePromise.then(nativeResults => {
-          if (nativeResults && nativeResults.length > 0) {
-            // 네이티브 결과 성공 — Serper 폴백 건너뜀
-            console.log(`Pinterest 네이티브: ${nativeResults.length}개 핀`);
-            return nativeResults;
-          }
-          // 네이티브 실패 — Serper 폴백 (한국 2호출 + 글로벌 3호출)
-          console.log('Pinterest 네이티브 실패, Serper 폴백');
-          return Promise.all([
-            searchSerperImages(searchQuery, 'site:pinterest.com', 1),
-            searchSerperImages(searchQuery, 'site:pinterest.com', 2),
-            searchSerperImages(searchQuery, 'site:pinterest.com', 1, { gl: 'us' }),
-            searchSerperImages(expandedQueries[3], 'site:pinterest.com', 1, { gl: 'us' }),
-            searchSerperImages(expandedQueries[4], 'site:pinterest.com', 1, { gl: 'us' }),
-          ]).then(arrays => arrays.flat());
-        }));
-        sources.push('google_pinterest');
+        // ── Serper 폴백: Cloud Function 실패 시 Serper.dev로 보완 ──
+        // Serper 키가 있으면 각 플랫폼별 보조 검색 추가
+        if (hasSerper) {
+          const expandedQueries = generateExpandedQueries(baseQuery, searchQuery);
 
-        // ── 3-1) 화보사진 선택 시 Pinterest 사진 부문 추가 크롤링 ──
-        // 제품사진, 화보촬영, 광고촬영 등 사진 관련 키워드로 Pinterest 집중 검색
-        if (runState.contentTypes.includes('photo')) {
-          const photoQueries = [
-            baseQuery + ' 제품사진 product photography site:pinterest.com',
-            baseQuery + ' 화보촬영 lookbook editorial site:pinterest.com',
-            baseQuery + ' 광고촬영 commercial photography site:pinterest.com',
-            baseQuery + ' studio photography styling site:pinterest.com',
-          ];
-          for (const pq of photoQueries) {
-            promises.push(searchSerperImages(pq, '', 1));
-            sources.push('google_pinterest');
-          }
+          // Instagram Serper 보조 (2호출)
+          promises.push(searchSerperImages(searchQuery, 'site:instagram.com', 1));
+          sources.push('instagram');
+          promises.push(searchSerperImages(expandedQueries[0] || searchQuery, 'site:instagram.com', 1));
+          sources.push('instagram');
+
+          // Meta 광고 Serper 보조 (2호출)
+          promises.push(searchSerperImages(baseQuery + ' 광고', 'site:facebook.com/ads/library', 1));
+          sources.push('meta_ads');
+          promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1, { gl: 'us' }));
+          sources.push('meta_ads');
+
+          // Pinterest Serper 보조 (2호출)
+          promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1));
+          sources.push('pinterest');
+          promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1, { gl: 'us' }));
+          sources.push('pinterest');
         }
-
-        // ── 4) 보조: Behance, Dribbble, 네이버 (각 1호출) ──
-        const subPlatforms = PLATFORMS.filter(p => p.site && ['behance', 'dribbble', 'naver'].includes(p.id));
-        for (const p of subPlatforms) {
-          promises.push(searchSerperImages(searchQuery, p.site, 1));
-          sources.push('google_' + p.id);
-        }
-
-        // ── 5) 구글 이미지 일반 검색 (site 필터 없이, 3호출 = 60개) ──
-        // 특정 플랫폼에 한정되지 않은 다양한 레퍼런스 수집
-        promises.push(searchSerperImages(searchQuery, '', 1));
-        sources.push('google_google');
-        promises.push(searchSerperImages(searchQuery, '', 2));
-        sources.push('google_google');
-        promises.push(searchSerperImages(expandedQueries[0], '', 1));
-        sources.push('google_google');
       } else {
-        // "더 보기" 호출: 현재 오프셋부터 1페이지만
+        // "더 보기" 호출: Serper로 추가 페이지 가져오기
         const activePlatform = PLATFORMS.find(p => p.id === runState.activePlatform);
         const siteFilter = activePlatform?.site || '';
-        promises.push(searchSerperImages(searchQuery, siteFilter, runState.googleStart));
-        sources.push('google_' + (runState.activePlatform || 'all'));
+        if (hasSerper) {
+          promises.push(searchSerperImages(searchQuery, siteFilter, runState.googleStart));
+          sources.push(runState.activePlatform || 'all');
+        }
       }
 
       if (promises.length === 0) {
