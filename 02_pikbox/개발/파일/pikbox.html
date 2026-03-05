@@ -9252,58 +9252,124 @@
       }
     }
 
-    // ─── Gemini 분석 결과(마크다운)를 보기 좋은 HTML로 변환 ───
-    function ytRenderGeminiAnalysis(mdText) {
-      // 간단한 마크다운 → HTML 변환
-      let html = '<div class="yt-gemini-analysis">';
+    // ─── Gemini 응답을 "종합 평가"와 "세부 분석"으로 분리 ───
+    function ytSplitGeminiResponse(mdText) {
+      const sections = mdText.split(/^## /m);
+      let summaryText = '';
+      const detailSections = [];
 
-      const lines = mdText.split('\n');
-      let inList = false;
+      for (const sec of sections) {
+        if (!sec.trim()) continue;
+        const firstLine = sec.split('\n')[0].trim();
+        // "종합 평가" 또는 "종합평가" 섹션을 종합 카드로 분리
+        if (firstLine.includes('종합') && (firstLine.includes('평가') || firstLine.includes('점수'))) {
+          summaryText = sec.replace(firstLine, '').trim();
+        } else {
+          detailSections.push({ title: firstLine, body: sec.replace(firstLine, '').trim() });
+        }
+      }
+      return { summary: summaryText, detail: detailSections };
+    }
+
+    // ─── 종합 평가 카드 렌더링 (항상 보이는 영역) ───
+    function ytRenderSummaryCard(summaryText) {
+      if (!summaryText) return '<div style="font-size:11px;color:var(--text-muted);">종합 평가를 생성하지 못했습니다.</div>';
+
+      const lines = summaryText.split('\n').filter(l => l.trim());
+      let html = '';
 
       for (let line of lines) {
         line = line.trim();
-        if (!line) {
-          if (inList) { html += '</div>'; inList = false; }
-          continue;
-        }
-
-        // ## 헤더 → 섹션 제목
-        if (line.startsWith('## ')) {
-          if (inList) { html += '</div>'; inList = false; }
-          const title = line.replace(/^##\s*/, '');
-          // 섹션별 아이콘 매핑
-          let icon = '📋';
-          if (title.includes('구조')) icon = '🏗️';
-          else if (title.includes('패턴')) icon = '🎬';
-          else if (title.includes('강점') || title.includes('잘한')) icon = '✅';
-          else if (title.includes('개선') || title.includes('아쉬')) icon = '⚠️';
-          else if (title.includes('종합') || title.includes('평가')) icon = '⭐';
-
-          html += `<div style="font-size:11px;font-weight:700;color:var(--text-primary);margin:12px 0 6px;display:flex;align-items:center;gap:4px;">`;
-          html += `<span>${icon}</span> ${escHtml(title)}</div>`;
-          continue;
-        }
-
+        if (!line || line.startsWith('#')) continue;
+        // 불릿 제거
+        line = line.replace(/^[-*]\s*/, '');
         // **볼드** 처리
-        line = line.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--text-primary)">$1</strong>');
+        line = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
-        // - 리스트 아이템
-        if (line.startsWith('- ')) {
-          if (!inList) {
-            html += `<div style="padding-left:4px;">`;
-            inList = true;
+        // 점수 라인 감지 (구조 ?/10, 편집 ?/10 등)
+        if (line.includes('/10') && (line.includes('구조') || line.includes('편집') || line.includes('점수'))) {
+          // 점수를 시각적 뱃지로 렌더링
+          const scores = line.match(/(\S+)\s*[:\s]*(\d+)\s*\/\s*10/g) || [];
+          if (scores.length > 0) {
+            html += `<div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">`;
+            for (const s of scores) {
+              const m = s.match(/(\S+)\s*[:\s]*(\d+)\s*\/\s*10/);
+              if (m) {
+                const label = m[1].replace(/[*:|]/g, '');
+                const score = parseInt(m[2]);
+                const color = score >= 8 ? '#4caf50' : score >= 6 ? '#ff9800' : '#f44336';
+                html += `<div style="background:#fff;border-radius:8px;padding:6px 10px;border:1px solid ${color}33;text-align:center;min-width:60px;">`;
+                html += `<div style="font-size:16px;font-weight:800;color:${color};">${score}</div>`;
+                html += `<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">${escHtml(label)}</div>`;
+                html += `</div>`;
+              }
+            }
+            html += `</div>`;
+            continue;
           }
-          const content = line.substring(2);
-          html += `<div style="font-size:11px;line-height:1.7;color:var(--text-secondary);margin-bottom:4px;padding-left:10px;border-left:2px solid var(--border);">${content}</div>`;
-          continue;
         }
 
-        // 일반 텍스트
-        if (inList) { html += '</div>'; inList = false; }
-        html += `<div style="font-size:11px;line-height:1.7;color:var(--text-secondary);margin-bottom:4px;">${line}</div>`;
+        // #키워드 태그 라인 감지
+        if ((line.match(/#/g) || []).length >= 2) {
+          const tags = line.match(/#[^\s#]+/g) || [];
+          if (tags.length >= 2) {
+            html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">`;
+            for (const tag of tags) {
+              html += `<span style="background:#e8eaf6;color:#3949ab;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">${escHtml(tag)}</span>`;
+            }
+            html += `</div>`;
+            continue;
+          }
+        }
+
+        // 첫 번째 라인(한 줄 총평)은 강조
+        if (html === '') {
+          html += `<div style="font-size:12px;font-weight:600;line-height:1.6;color:#1a237e;margin-bottom:4px;">${line}</div>`;
+        } else {
+          html += `<div style="font-size:11px;line-height:1.6;color:#37474f;margin-bottom:3px;">${line}</div>`;
+        }
       }
 
-      if (inList) html += '</div>';
+      return html;
+    }
+
+    // ─── 세부 분석 섹션 렌더링 (아코디언 내부) ───
+    function ytRenderDetailSections(sections) {
+      if (!sections || sections.length === 0) return '';
+
+      // 섹션별 아이콘
+      const iconMap = {
+        '구조': '🏗️', '패턴': '🎬', '강점': '✅', '개선': '⚠️',
+        '잘한': '✅', '아쉬': '⚠️',
+      };
+
+      let html = '<div style="padding-top:8px;">';
+
+      for (const sec of sections) {
+        // 아이콘 결정
+        let icon = '📋';
+        for (const [key, ic] of Object.entries(iconMap)) {
+          if (sec.title.includes(key)) { icon = ic; break; }
+        }
+
+        // 섹션 카드
+        html += `<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);">`;
+        html += `<div style="font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:4px;">`;
+        html += `<span>${icon}</span> ${escHtml(sec.title)}</div>`;
+
+        // 내용 렌더링
+        const bodyLines = sec.body.split('\n').filter(l => l.trim());
+        for (let line of bodyLines) {
+          line = line.trim();
+          if (!line) continue;
+          line = line.replace(/^[-*]\s*/, '');
+          line = line.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--text-primary)">$1</strong>');
+          html += `<div style="font-size:10px;line-height:1.65;color:var(--text-secondary);margin-bottom:3px;padding-left:8px;border-left:2px solid var(--border);">${line}</div>`;
+        }
+
+        html += `</div>`;
+      }
+
       html += '</div>';
       return html;
     }
