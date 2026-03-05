@@ -9172,19 +9172,32 @@
 
         const data = await res.json();
 
-        // API 에러 처리
-        if (data.error) {
-          console.warn('[Pikbox] Gemini 분석 실패:', data.error.message);
-          // quota 초과 등의 경우 기존 폴백 사용
-          ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
+        // API 에러 처리 — 화면에 디버그 정보 표시
+        if (!res.ok || data.error) {
+          const errMsg = data.error?.message || `HTTP ${res.status}`;
+          console.warn('[Pikbox] Gemini 분석 실패:', errMsg);
+          analysisEl.innerHTML = `
+            <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
+              <div style="font-size:11px;font-weight:600;color:#e65100;margin-bottom:4px;">Gemini 분석 실패</div>
+              <div style="font-size:10px;color:#bf360c;margin-bottom:8px;">${escHtml(errMsg)}</div>
+              <button onclick="ytAnalyzeVideo('${videoId}')" style="padding:6px 12px;border:1px solid #ffe0b2;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#e65100;">다시 시도</button>
+            </div>`;
           return;
         }
 
         // Gemini 응답 텍스트 추출 — parts가 여러 개일 수 있으므로 text만 합침
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        const aiText = parts.filter(p => p.text).map(p => p.text).join('\n');
+        const resParts = data.candidates?.[0]?.content?.parts || [];
+        const aiText = resParts.filter(p => p.text).map(p => p.text).join('\n');
+        const finishReason = data.candidates?.[0]?.finishReason || '';
+        console.log('[Pikbox] Gemini 응답:', aiText.length, '자, finishReason:', finishReason);
+
         if (!aiText) {
-          ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
+          analysisEl.innerHTML = `
+            <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
+              <div style="font-size:11px;font-weight:600;color:#e65100;">응답이 비어있습니다</div>
+              <div style="font-size:10px;color:#bf360c;">finishReason: ${escHtml(finishReason)}</div>
+              <button onclick="ytAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ffe0b2;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#e65100;">다시 시도</button>
+            </div>`;
           return;
         }
 
