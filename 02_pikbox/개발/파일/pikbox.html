@@ -7886,8 +7886,6 @@
         // 급상승 헤더 제거
         const trendHeader = document.getElementById('ytTrendingHeader');
         if (trendHeader) trendHeader.remove();
-        // YouTube API 키가 있으면 YouTube API 우선 사용 (정확한 날짜 + 통계)
-        ytState.useYouTubeAPI = hasYtApi;
         ytState.hasMore = true;
         if (grid) grid.innerHTML = '';
         const sortBar = document.getElementById('ytSortBar');
