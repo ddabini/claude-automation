@@ -19,8 +19,8 @@ window.ARCHIVE_REGISTRY = {
       description: "AI 영상 생성 API(Sora·Runway·Kling·Veo 등), 편집 보조 도구, 웹 기반 영상 편집 기술 스택, 경쟁 제품 분석 등 AI 영상 제작 프로그램 개발을 위한 기술 조사",
       // 카테고리 생성일
       createdAt: "2026-03-05",
-      // 보고서 발행 주기 — 기술 조사 (비정기)
-      frequency: "annual"
+      // 보고서 발행 주기 — weekly(주간) 브리핑
+      frequency: "weekly"
     },
     {
       // 카테고리 고유 식별자 — AI 최신 현황 위클리 (신규)
