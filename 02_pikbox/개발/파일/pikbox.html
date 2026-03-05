@@ -10498,12 +10498,9 @@ ${metaText}
         html += ytRenderDetailSections(detail);
         html += '</div>';
 
-        // 심층 분석 + 재분석 버튼
-        html += `<div style="display:flex;gap:8px;margin-top:8px;">`;
-        html += `<button onclick="ytDeepAnalyzeVideo('${videoId}')" style="flex:1;padding:8px;border:1px dashed var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:4px;">
-          <span>🎬</span> 영상 직접 시청 분석 <span style="font-size:9px;color:var(--text-muted);">(1~2분)</span>
-        </button>`;
-        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻</button>`;
+        // 재분석 버튼
+        html += `<div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">`;
+        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-muted);">↻ 재분석</button>`;
         html += `</div>`;
 
         // 숨긴 상태로 렌더링 후 페이드인 (코드 깜빡임 방지)
