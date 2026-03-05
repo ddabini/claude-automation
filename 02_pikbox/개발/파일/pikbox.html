@@ -4022,33 +4022,39 @@
   </div><!-- /#adInsightView -->
 
   <!-- ══════════════════════════════════════════
-       YouTube 탭 — 검색 모드 + 저장 모드 전환 구조
+       YouTube 탭 — 좌측 사이드바(검색+카테고리) + 우측 메인 콘텐츠
+       레퍼런스 탭과 동일한 항상-표시 사이드바 구조
   ══════════════════════════════════════════ -->
   <div id="youtubeView" style="display:none;">
-    <!-- 좌측 사이드바 — 저장 모드에서만 표시 (카테고리 목록) -->
-    <aside class="yt-sidebar" id="ytSidebar" style="display:none;">
+    <!-- 좌측 사이드바 — 항상 표시: 검색 탭 + 카테고리 목록 -->
+    <aside class="yt-sidebar" id="ytSidebar">
+      <!-- 검색 탭 — 항상 최상단 -->
+      <div class="yt-sidebar-section">
+        <div class="yt-cat-item" id="ytNavSearch" onclick="ytSwitchViewMode('search')">
+          <div class="yt-cat-item-left">
+            <span style="font-size:15px;">🔍</span>
+            <span class="cat-name" style="font-weight:500;">영상 검색</span>
+          </div>
+        </div>
+      </div>
+      <!-- 카테고리 섹션 -->
       <div class="yt-sidebar-header">
-        <h3>저장된 영상</h3>
-        <button class="add-category-btn" onclick="ytOpenCategoryModal()">+ 새 카테고리</button>
+        <h3>카테고리</h3>
+        <button class="add-category-btn" onclick="ytOpenCategoryModal()">+</button>
       </div>
       <!-- 카테고리 목록 — ytRenderCategories()가 동적으로 채움 -->
       <div class="yt-category-list" id="ytCategoryList"></div>
-      <div class="yt-sidebar-footer">
-        <button class="btn btn-sm" onclick="ytSwitchViewMode('search')" style="width:100%;">🔍 검색으로 돌아가기</button>
-      </div>
     </aside>
 
     <!-- 메인 콘텐츠 래퍼 -->
     <div class="yt-main">
-      <!-- 검색 모드 헤더 -->
+      <!-- 검색 헤더 — 검색 모드일 때 표시 -->
       <div class="yt-header" id="ytHeaderSearch">
         <div class="yt-search-bar">
           <input type="text" id="ytSearchInput" class="yt-search-input"
                  placeholder="YouTube 영상 검색 (예: 브랜드 광고, 바이럴 영상...)"
                  onkeydown="if(event.key==='Enter') ytSearch()">
           <button class="btn btn-primary yt-search-btn" onclick="ytSearch()">검색</button>
-          <!-- 저장된 영상 전환 버튼 -->
-          <button class="btn yt-saved-toggle-btn" onclick="ytSwitchViewMode('saved')" title="저장된 영상 보기">📁 저장됨</button>
         </div>
         <!-- 카테고리 퀵 칩 — ytInit()에서 동적 렌더링 -->
         <div class="yt-chips" id="ytChips"></div>
@@ -4063,7 +4069,7 @@
         </div>
       </div>
 
-      <!-- 저장 모드 헤더 — 필터 + 정렬 + 멀티선택 -->
+      <!-- 카테고리 헤더 — 카테고리 선택 시 표시 (필터+정렬+멀티선택) -->
       <div class="yt-saved-header" id="ytHeaderSaved" style="display:none;">
         <div class="filter-tabs">
           <button class="filter-tab active" data-filter="all" onclick="ytSetSavedFilter('all')">전체</button>
@@ -4097,17 +4103,17 @@
         <div class="yt-spinner"></div>
         <span>영상 검색 중...</span>
       </div>
-      <!-- 빈 상태 안내 -->
+      <!-- 빈 상태: 검색 -->
       <div class="yt-empty" id="ytEmpty">
         <div style="font-size:48px;margin-bottom:16px;">▶</div>
         <h3 style="margin:0 0 8px;color:var(--text-primary);">YouTube 영상 레퍼런스</h3>
         <p style="color:var(--text-muted);font-size:14px;">영상·쇼츠·광고·커뮤니티 콘텐츠를 검색하세요</p>
       </div>
-      <!-- 저장 모드 빈 상태 -->
+      <!-- 빈 상태: 카테고리 비어있음 -->
       <div class="yt-empty" id="ytSavedEmpty" style="display:none;">
         <div style="font-size:48px;margin-bottom:16px;">📁</div>
         <h3 style="margin:0 0 8px;color:var(--text-primary);">저장된 영상이 없습니다</h3>
-        <p style="color:var(--text-muted);font-size:14px;">검색 결과에서 📥 버튼을 눌러 영상을 저장하세요</p>
+        <p style="color:var(--text-muted);font-size:14px;">검색에서 📥 버튼으로 이 카테고리에 영상을 저장하세요</p>
       </div>
       <!-- 무한 스크롤 감시 지점 -->
       <div id="ytSentinel" style="height:1px;"></div>
