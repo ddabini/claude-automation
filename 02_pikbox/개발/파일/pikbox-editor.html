@@ -755,60 +755,28 @@
 
     function deOnTextEdit(index, newText) {
       const te = S.textElements[index];
-      if (!te) return;
+      if (!te || !deParsedDoc) return;
 
-      // HTML에서 원본 텍스트를 새 텍스트로 교체
-      const oldText = te.originalText;
-      if (oldText === newText) return;
+      // DOM 노드를 직접 수정 — 주석이나 title이 아닌 실제 body 요소만 변경됨
+      if (te.domTextNodes && te.domTextNodes.length > 0) {
+        // 텍스트 노드가 여러 개면 첫 번째에 전체 텍스트 넣고 나머지는 비움
+        te.domTextNodes[0].textContent = newText;
+        for (let i = 1; i < te.domTextNodes.length; i++) {
+          te.domTextNodes[i].textContent = '';
+        }
+      }
 
-      // HTML 문자열에서 텍스트 교체 (HTML 태그 내부의 텍스트만 정확히 교체)
-      S.editedHtml = deReplaceTextInHtml(S.editedHtml, oldText, newText);
-
-      // 참조 업데이트 (다음 편집에서 사용)
-      te.originalText = newText;
       te.text = newText;
-
       S.hasChanges = true;
+
+      // DOM을 다시 HTML 문자열로 직렬화
+      S.editedHtml = '<!DOCTYPE html>\n' + deParsedDoc.documentElement.outerHTML;
 
       // 디바운스: 300ms 후에 미리보기 갱신
       clearTimeout(deUpdateTimer);
       deUpdateTimer = setTimeout(() => {
         deUpdatePreview();
       }, 300);
-    }
-
-    // HTML 내에서 텍스트를 안전하게 교체
-    // HTML 태그가 아닌 텍스트 콘텐츠 부분만 교체
-    function deReplaceTextInHtml(html, oldText, newText) {
-      // HTML 엔티티로 인코딩된 버전도 시도
-      const escaped = oldText
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-
-      // 원본 텍스트로 먼저 시도
-      if (html.includes(oldText)) {
-        return html.replace(oldText, newText);
-      }
-      // HTML 엔티티 버전으로 시도
-      if (html.includes(escaped)) {
-        const newEscaped = newText
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
-        return html.replace(escaped, newEscaped);
-      }
-
-      // 공백 차이 등으로 못 찾으면 정규식으로 유연하게 매칭
-      const pattern = oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
-      try {
-        const re = new RegExp(pattern);
-        return html.replace(re, newText);
-      } catch (e) {
-        return html;
-      }
     }
 
     // ═══════════════════════════════════════════════
