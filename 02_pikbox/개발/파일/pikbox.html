@@ -3431,8 +3431,12 @@
 
     /* 반응형 — 모바일 최적화 */
     @media (max-width: 640px) {
-      #youtubeView { padding: 12px; }
-      .yt-sidebar { width: 200px; min-width: 200px; }
+      .yt-main { padding: 12px; }
+      .yt-sidebar { width: 56px; min-width: 56px; }
+      .yt-sidebar .cat-name,
+      .yt-sidebar .yt-cat-count,
+      .yt-sidebar-header h3 { display: none; }
+      .yt-sidebar .add-category-btn { width: 100%; }
       .yt-grid { grid-template-columns: 1fr; gap: 12px; }
       .yt-search-bar { flex-direction: column; }
       .yt-search-btn { width: 100%; }
