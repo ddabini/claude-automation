@@ -6113,12 +6113,12 @@
 
       results.forEach((r, i) => {
         const source = sources[i];
-        if (r.status === 'fulfilled' && r.value.length > 0) {
+        if (r.status === 'fulfilled' && r.value && r.value.length > 0) {
           const items = r.value;
           allNew.push(...items);
           // 플랫폼별 캐시 저장 (탭 전환용)
-          if (source.startsWith('google_')) {
-            const platformId = source.replace('google_', '');
+          const platformId = source.replace('google_', '');
+          if (['instagram', 'meta_ads', 'pinterest'].includes(platformId)) {
             if (!runState.platformResults[platformId]) runState.platformResults[platformId] = [];
             runState.platformResults[platformId].push(...items);
           } else {
