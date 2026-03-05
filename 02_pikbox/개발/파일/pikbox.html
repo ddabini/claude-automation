@@ -9185,28 +9185,63 @@
           return;
         }
 
-        // ── Gemini 분석 결과 렌더링 ──
+        // ── Gemini 분석 결과 렌더링 (종합평가 먼저 + 아코디언) ──
+        const { summary, detail } = ytSplitGeminiResponse(aiText);
+        const detailId = 'ytGeminiDetail_' + videoId.replace(/[^a-zA-Z0-9]/g, '');
+
         let html = '';
 
-        // 헤더: AI 분석 뱃지
-        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">`;
-        html += `<span style="font-size:14px;">🤖</span>`;
-        html += `<span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 구성 분석</span>`;
+        // 헤더
+        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">`;
+        html += `<span style="font-size:13px;">🤖</span>`;
+        html += `<span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>`;
         html += `<span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>`;
         html += `</div>`;
 
-        // 마크다운 → HTML 변환하여 렌더링
-        html += ytRenderGeminiAnalysis(aiText);
+        // ── 종합 평가 카드 (항상 표시) ──
+        html += `<div style="background:linear-gradient(135deg,#f8f9ff,#eef1ff);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #c5cae9;">`;
+        html += ytRenderSummaryCard(summary);
+        html += `</div>`;
+
+        // ── 자세히 보기 토글 버튼 ──
+        html += `<button onclick="(function(){
+          var el=document.getElementById('${detailId}');
+          var btn=this;
+          if(el.style.maxHeight==='0px'){
+            el.style.maxHeight=el.scrollHeight+'px';
+            el.style.opacity='1';
+            btn.querySelector('.arrow').textContent='▾';
+            btn.querySelector('.label').textContent='접기';
+          } else {
+            el.style.maxHeight='0px';
+            el.style.opacity='0';
+            btn.querySelector('.arrow').textContent='▸';
+            btn.querySelector('.label').textContent='자세히 보기';
+          }
+        }).call(this)" style="
+          width:100%;padding:8px 12px;margin-bottom:4px;
+          border:1px solid var(--border);border-radius:8px;
+          background:var(--bg);cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:6px;
+          font-size:11px;color:var(--text-secondary);
+          transition:all 0.2s;
+        " onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          <span class="arrow" style="font-size:10px;">▸</span>
+          <span class="label">자세히 보기</span>
+          <span style="font-size:10px;color:var(--text-muted);">구조 · 패턴 · 강점 · 개선점</span>
+        </button>`;
+
+        // ── 세부 분석 (접혀있음, 클릭 시 열림) ──
+        html += `<div id="${detailId}" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;">`;
+        html += ytRenderDetailSections(detail);
+        html += `</div>`;
 
         // 재분석 버튼
         html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="
-          width:100%;padding:8px;margin-top:8px;border:1px dashed var(--border);border-radius:8px;
-          background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-muted);
-          transition:all 0.2s;
-        " onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
-           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
-          다시 분석하기
-        </button>`;
+          width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;
+          background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);
+        ">↻ 다시 분석</button>`;
 
         analysisEl.innerHTML = html;
 
