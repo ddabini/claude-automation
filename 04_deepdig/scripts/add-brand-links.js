@@ -171,6 +171,11 @@ const BRAND_LINK_CSS = `
  *       텍스트 노드에서만 브랜드명을 <a> 태그로 감쌈
  */
 function addBrandLinksToHTML(html) {
+  // 0단계: 기존 brand-link 제거 (재실행 시 중복 방지)
+  html = html.replace(/<a\s+href="[^"]*"\s+target="_blank"\s+rel="noopener noreferrer"\s+class="brand-link">([^<]*)<\/a>/g, '$1');
+  // 기존 CSS도 제거
+  html = html.replace(/\s*<style>\s*\/\* 브랜드 공식 홈페이지 바로가기 링크 스타일 \*\/[\s\S]*?<\/style>\s*(?=<\/head>)/g, '');
+
   // 1단계: CSS 주입 (</head> 바로 앞에 브랜드 링크 스타일 추가)
   if (!html.includes('a.brand-link')) {
     html = html.replace('</head>', `  <style>${BRAND_LINK_CSS}  </style>\n</head>`);
