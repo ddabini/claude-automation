@@ -393,8 +393,9 @@ def header_footer(canvas_obj, doc):
 
 def build_cover(story):
     """표지 페이지 생성"""
-    # 표지는 별도 캔버스로 그릴 예정 — Spacer로 공간 확보
-    story.append(Spacer(1, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM))
+    # 표지는 별도 캔버스로 그릴 예정 — Spacer로 공간 확보 (프레임 높이보다 약간 작게)
+    frame_h = PAGE_H - MARGIN_TOP - MARGIN_BOTTOM - 20
+    story.append(Spacer(1, frame_h))
     story.append(PageBreak())
 
 
