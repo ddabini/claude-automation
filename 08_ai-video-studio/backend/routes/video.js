@@ -75,9 +75,12 @@ router.post('/generate-text', async (req, res) => {
     pollJobStatus(req.io, jobId);
 
     // 클라이언트에게 jobId 즉시 반환 (영상 생성은 비동기로 진행)
+    // Mock 모드에서는 5초, 실제 Replicate에서는 약 60초 예상
+    const estimatedSeconds = replicate.MOCK_MODE ? 5 : 60;
     res.json({
       success: true,
       jobId,
+      estimatedSeconds,
       message: '영상 생성이 시작되었습니다. WebSocket으로 진행률을 받을 수 있습니다.',
     });
   } catch (err) {
