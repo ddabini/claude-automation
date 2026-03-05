@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<!--
+  바로이집 "고수 1:1 무료상담 이벤트" 인스타그램 피드 포스터
+  사이즈: 1080×1080px (정방형)
+  디자인: 순수 타이포그래피 포스터 — 딥 네이비(#0D1B2A) + 따뜻한 골드(#C9A96E)
+  작성일: 2026-03-05
+  에셋: 모든 SVG 인라인 포함 (외부 파일 참조 없음)
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080">
+  <title>바로이집 고수 1:1 무료상담 이벤트 포스터</title>
+
+  <!-- ========================================
+       폰트 1: Paperlogy ExtraBold (헤드라인용)
+       CDN에서 woff2 포맷으로 불러옵니다
+  ======================================== -->
+  <style>
+    @font-face {
+      font-family: 'Paperlogy';
+      src: url('https://cdn.jsdelivr.net/gh/e-hwan/paperlogy@latest/fonts/Paperlogy-8ExtraBold.woff2') format('woff2');
+      font-weight: 800;
+      font-style: normal;
+      /* 폰트 로드 중 텍스트가 먼저 보이도록 (FOUT 방지) */
+      font-display: swap;
+    }
+  </style>
+
+  <!-- ========================================
+       폰트 2: Pretendard Variable (본문·서브용)
+       CSS 파일로 불러옵니다
+  ======================================== -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+  >
+
+  <style>
+    /* ========================================
+       CSS 변수 — 디자인 토큰 시스템
+       에셋 가이드에서 정의된 컬러 팔레트를
+       CSS 변수로 선언하여 일관되게 사용합니다
+    ======================================== */
+    :root {
+      /* 네이비 스케일 */
+      --navy-50:  #E8EDF2;
+      --navy-100: #C5D0DD;
+      --navy-200: #9FB2C4;
+      --navy-300: #7894AB;
+      --navy-400: #587A96;
+      --navy-500: #3A6281;
+      --navy-600: #2C4D6A;
+      --navy-700: #1A2E4A;   /* 보조 배경 */
+      --navy-800: #122035;
+      --navy-900: #0D1B2A;   /* 메인 배경 */
+
+      /* 골드 스케일 */
+      --gold-50:  #FAF5EB;
+      --gold-100: #F5EAD5;
+      --gold-200: #E8D5A3;   /* 서브 텍스트 */
+      --gold-300: #DBBF78;
+      --gold-400: #D4B068;
+      --gold-500: #C9A96E;   /* 핵심 강조 포인트 */
+      --gold-600: #B8924A;
+      --gold-700: #A8854A;
+      --gold-800: #8A6A35;
+      --gold-900: #6B5020;
+
+      /* 화이트 스케일 */
+      --white-50:  #FFFFFF;
+      --white-100: #F7F5F2;  /* 헤드라인 텍스트 */
+      --white-200: #EDE9E3;
+      --white-300: #DDD8CF;  /* 바디 텍스트 */
+      --white-400: #C8C2B7;
+      --white-500: #A8A097;
+      --white-600: #857C72;
+      --white-700: #635C54;
+      --white-800: #453F39;
+      --white-900: #2A2520;
+
+      /* 역할별 컬러 매핑 */
+      --bg-primary:    var(--navy-900);   /* 전체 배경 */
+      --bg-secondary:  var(--navy-700);   /* 보조 배경 */
+      --text-headline: var(--white-100);  /* 헤드라인 */
+      --text-sub:      var(--gold-200);   /* 서브헤드, 날짜 */
+      --text-body:     var(--white-300);  /* 바디 텍스트 */
+      --text-muted:    var(--white-500);  /* 보조 정보 */
+      --accent-gold:   var(--gold-500);   /* 강조 단어 ("혼자") */
+      --btn-bg:        var(--gold-500);   /* CTA 버튼 배경 */
+      --btn-text:      var(--navy-900);   /* CTA 버튼 텍스트 */
+
+      /* 간격 시스템 (8px 그리드 기반) */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+      --space-16: 64px;
+    }
+
+    /* ========================================
+       전역 리셋
+       브라우저마다 다른 기본 여백을 제거합니다
+    ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ========================================
+       body — 페이지 배경 및 중앙 정렬
+       브라우저에서 열었을 때 포스터가
+       화면 가운데에 오도록 합니다
+    ======================================== */
+    body {
+      background-color: #1a1a2e;  /* 포스터 외부 배경 (짙은 남색) */
+      display: flex;
+      justify-content: center;   /* 가로 중앙 정렬 */
+      align-items: flex-start;   /* 세로 상단 정렬 */
+      min-height: 100vh;
+      padding: 40px;
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* ========================================
+       .poster — 메인 포스터 컨테이너
+       1080×1080px 고정 사이즈 (인스타그램 피드 정방형)
+    ======================================== */
+    .poster {
+      width: 1080px;
+      height: 1080px;
+      background-color: var(--bg-primary);  /* #0D1B2A 딥 네이비 */
+      position: relative;                    /* 자식 요소의 절대 위치 기준점 */
+      overflow: hidden;                      /* 포스터 밖으로 삐져나오는 요소 숨김 */
+      /* 반응형 축소 — 브라우저 창이 작을 때 비율 유지 */
+      transform-origin: top center;
+    }
+
+    /* ========================================
+       미묘한 배경 텍스처 — 단색 배경에 깊이감 추가
+       네이비에서 약간 더 어두운 방향으로 그라디언트
+       (AI 블랙리스트: 보라→파랑 무의미 그라디언트 금지)
+       → 같은 네이비 계열 내에서 최소한의 변화만 허용
+    ======================================== */
+    .poster::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      /* 좌하단에서 우상단으로 미묘한 명도 변화 */
+      background: radial-gradient(ellipse at 20% 80%, rgba(26,46,74,0.5) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ========================================
+       Zone 1 — 로고 + 이벤트 태그 영역
+       y: 0 ~ 216px (전체의 20%)
+    ======================================== */
+
+    /* 바로이집 로고 텍스트 */
+    .logo {
+      position: absolute;
+      left: 60px;
+      top: 56px;
+      font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      color: #FFFFFF;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      z-index: 10;
+      /* 폰트 렌더링 선명도 향상 */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 이벤트 태그 캡슐 — "무료 이벤트 · 3월 28일(토)" */
+    .event-tag {
+      position: absolute;
+      left: 60px;
+      top: 100px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--gold-500);  /* 골드 테두리 */
+      border-radius: 20px;               /* 캡슐 모양 */
+      padding: 6px 16px;
+      z-index: 10;
+    }
+
+    /* 이벤트 태그 내 골드 점 */
+    .event-tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold-500);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* 이벤트 태그 텍스트 */
+    .event-tag-text {
+      font-family: 'Pretendard Variable', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--gold-500);    /* 골드 텍스트 */
+      letter-spacing: 1px;
+    }
+
+    /* ========================================
+       Zone 2 — 헤드라인 임팩트 영역
+       y: 216 ~ 648px (전체의 40%)
+    ======================================== */
+
+    /* 헤드라인 — 두 행으로 분리 */
+    .headline {
+      position: absolute;
+      left: 60px;
+      top: 232px;
+      font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+      font-weight: 800;
+      font-size: 96px;
+      color: var(--text-headline);  /* #F7F5F2 크리스탈 화이트 */
+      letter-spacing: -2px;
+      line-height: 1.15;
+      z-index: 10;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* "혼자" 단어만 골드 컬러 강조 */
+    .headline .accent-gold {
+      color: var(--accent-gold);  /* #C9A96E 따뜻한 골드 */
+    }
+
+    /* 서브헤드라인 */
+    .subheadline {
+      position: absolute;
+      left: 60px;
+      top: 488px;
+      font-family: 'Pretendard Variable', sans-serif;
+      font-weight: 700;
+      font-size: 32px;
+      color: var(--text-sub);  /* #E8D5A3 밝은 골드 */
+      letter-spacing: 0;
+      line-height: 1.4;
+      z-index: 10;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========================================
+       Zone 3 — 바디 텍스트 + CTA 영역
+       y: 648 ~ 1080px (전체의 40%)
+    ======================================== */
+
+    /* 바디 텍스트 블록 */
+    .body-block {
+      position: absolute;
+      left: 60px;
+      top: 598px;
+      z-index: 10;
+    }
+
+    /* 바디 텍스트 개별 행 */
+    .body-line {
+      font-family: 'Pretendard Variable', sans-serif;
+      font-weight: 400;
+      font-size: 22px;
+      color: var(--text-body);   /* #DDD8CF 따뜻한 밝은 회색 */
+      letter-spacing: 0;
+      line-height: 1.9;          /* 넓은 줄간격으로 가독성 향상 */
+      display: block;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* "수천만 원이 걸린 결정" 골드 밑줄 강조 */
+    .underline-gold {
+      text-decoration: underline;
+      text-decoration-color: var(--gold-500);  /* 밑줄 색상: 골드 */
+      text-underline-offset: 4px;              /* 텍스트와 밑줄 사이 간격 */
+      text-decoration-thickness: 2px;          /* 밑줄 굵기 */
+    }
+
+    /* 날짜 행 — 아이콘 + 텍스트 가로 배치 */
+    .date-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    /* 달력 아이콘 (SVG) 크기 조정 — 텍스트에 맞게 작게 */
+    .calendar-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+
+    /* CTA 버튼 영역 */
+    .cta-wrapper {
+      position: absolute;
+      /* 가로 중앙 정렬: left 50% - 버튼 너비(480px)의 절반(240px) = 좌측에서 300px */
+      left: 300px;
+      top: 840px;
+      z-index: 10;
+    }
+
+    /* CTA 버튼 — "지금 신청하기" */
+    .cta-button {
+      width: 480px;
+      height: 64px;
+      /* 골드 그라디언트 배경 — 밝은골드→메인골드→어두운골드 (자연스러운 금속 질감) */
+      background: linear-gradient(135deg, #E8D5A3 0%, #C9A96E 50%, #A8854A 100%);
+      border: none;
+      border-radius: 4px;         /* 살짝만 둥글게 — 과도한 라운드 금지 */
+      color: var(--btn-text);    /* #0D1B2A 네이비 텍스트 */
+      font-family: 'Pretendard Variable', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: block;
+      /* 골드 그림자 — 버튼에 발광 효과 (한 겹만, 중첩 금지) */
+      box-shadow: 0 4px 20px rgba(201, 169, 110, 0.35);
+      /* 폰트 렌더링 */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========================================
+       골드 구분선 — SVG 인라인 방식
+       Zone 경계를 시각적으로 구분합니다
+    ======================================== */
+
+    /* 구분선 공통 스타일 */
+    .divider {
+      position: absolute;
+      left: 140px;   /* (1080 - 800) / 2 = 140px 에서 시작 → 중앙 정렬 */
+      z-index: 10;
+    }
+
+    /* Zone 1/2 경계 구분선 */
+    .divider-1 {
+      top: 196px;
+    }
+
+    /* Zone 2/3 경계 구분선 */
+    .divider-2 {
+      top: 554px;
+    }
+
+    /* ========================================
+       코너 장식 — 포스터 모서리 골드 L자형 라인
+    ======================================== */
+
+    /* 좌상단 코너 */
+    .corner-tl {
+      position: absolute;
+      left: 40px;
+      top: 40px;
+      z-index: 10;
+    }
+
+    /* 우하단 코너 */
+    .corner-br {
+      position: absolute;
+      right: 40px;
+      bottom: 40px;
+      z-index: 10;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ========================================
+       1080×1080 포스터 컨테이너
+       모든 요소는 이 안에 절대 위치로 배치됩니다
+  ======================================== -->
+  <div class="poster">
+
+    <!-- ======================================
+         코너 장식 — 포스터 프레임 분위기 연출
+         좌상단 + 우하단 대각선 배치 (비대칭 장식)
+    ====================================== -->
+
+    <!-- 좌상단 코너 장식 (x=40, y=40) — 골드 L자형 라인 -->
+    <div class="corner-tl">
+      <!-- 인라인 SVG: 좌상단 코너 프레임 (80×80px) -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" aria-label="좌상단 골드 코너 장식">
+        <defs>
+          <!-- 가로 라인: 왼쪽(불투명) → 오른쪽(투명)으로 페이드 -->
+          <linearGradient id="tlH" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+          <!-- 세로 라인: 위(불투명) → 아래(투명)로 페이드 -->
+          <linearGradient id="tlV" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+        </defs>
+        <!-- 가로 라인 (상단, 2px 높이) -->
+        <rect x="0" y="0" width="60" height="1.5" fill="url(#tlH)"/>
+        <!-- 세로 라인 (좌측, 2px 너비) -->
+        <rect x="0" y="0" width="1.5" height="60" fill="url(#tlV)"/>
+        <!-- 코너 교차점 강조 (밝은 골드 3×3) -->
+        <rect x="0" y="0" width="3" height="3" fill="#E8D5A3"/>
+      </svg>
+    </div>
+
+    <!-- 우하단 코너 장식 (right=40, bottom=40) — 골드 L자형 라인 -->
+    <div class="corner-br">
+      <!-- 인라인 SVG: 우하단 코너 프레임 (80×80px, 180도 방향) -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" aria-label="우하단 골드 코너 장식">
+        <defs>
+          <!-- 가로 라인: 오른쪽(불투명) → 왼쪽(투명)으로 페이드 -->
+          <linearGradient id="brH" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+          <!-- 세로 라인: 아래(불투명) → 위(투명)로 페이드 -->
+          <linearGradient id="brV" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+        </defs>
+        <!-- 가로 라인 (하단) -->
+        <rect x="20" y="78.5" width="60" height="1.5" fill="url(#brH)"/>
+        <!-- 세로 라인 (우측) -->
+        <rect x="78.5" y="20" width="1.5" height="60" fill="url(#brV)"/>
+        <!-- 코너 교차점 강조 (밝은 골드 3×3) -->
+        <rect x="77" y="77" width="3" height="3" fill="#E8D5A3"/>
+      </svg>
+    </div>
+
+
+    <!-- ======================================
+         Zone 1 — 로고 + 이벤트 태그
+         y: 0 ~ 216px (전체 높이의 20%)
+    ====================================== -->
+
+    <!-- 바로이집 로고 워드마크 (x=60, y=56) -->
+    <!-- Paperlogy ExtraBold 폰트로 브랜드명 렌더링 -->
+    <div class="logo">바로이집</div>
+
+    <!-- 이벤트 태그 캡슐 (x=60, y=100) -->
+    <!-- 골드 테두리 캡슐 모양 — 이벤트 정보 표시 -->
+    <div class="event-tag">
+      <span class="event-tag-dot"></span>
+      <span class="event-tag-text">무료 이벤트 · 3월 28일(토)</span>
+    </div>
+
+    <!-- Zone 1/2 경계 골드 구분선 (y=196) -->
+    <!-- 800px 너비의 황금색 수평 라인 — 섹션 분리 역할 -->
+    <div class="divider divider-1">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 2" width="800" height="2" aria-label="골드 구분선 1">
+        <defs>
+          <!-- 양쪽 끝이 자연스럽게 사라지는 골드 라인 -->
+          <linearGradient id="gf1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:0"/>
+            <stop offset="15%"  style="stop-color:#E8D5A3; stop-opacity:1"/>
+            <stop offset="50%"  style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="85%"  style="stop-color:#E8D5A3; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="800" height="2" fill="url(#gf1)"/>
+      </svg>
+    </div>
+
+
+    <!-- ======================================
+         Zone 2 — 헤드라인 임팩트
+         y: 216 ~ 648px (전체 높이의 40%)
+    ====================================== -->
+
+    <!--
+      헤드라인 — 두 행으로 분리
+      행 1: "집 결정," (일반 화이트)
+      행 2: "혼자" (골드) + " 하지 마세요" (화이트)
+
+      Paperlogy ExtraBold 96px — 포스터의 핵심 임팩트
+    -->
+    <div class="headline">
+      <!-- 헤드라인 1행: 일반 화이트 -->
+      집 결정,
+      <br>
+      <!-- 헤드라인 2행: "혼자"만 골드(#C9A96E) 강조 -->
+      <span class="accent-gold">혼자</span> 하지 마세요
+    </div>
+
+    <!-- 서브헤드라인 (y=488) -->
+    <!-- Pretendard Bold 32px — 이벤트 핵심 정보 -->
+    <div class="subheadline">
+      고수 1:1 무료상담 · 딱 10분이면 됩니다
+    </div>
+
+    <!-- Zone 2/3 경계 골드 구분선 (y=554) -->
+    <div class="divider divider-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 2" width="800" height="2" aria-label="골드 구분선 2">
+        <defs>
+          <linearGradient id="gf2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   style="stop-color:#C9A96E; stop-opacity:0"/>
+            <stop offset="15%"  style="stop-color:#E8D5A3; stop-opacity:1"/>
+            <stop offset="50%"  style="stop-color:#C9A96E; stop-opacity:1"/>
+            <stop offset="85%"  style="stop-color:#E8D5A3; stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#C9A96E; stop-opacity:0"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="800" height="2" fill="url(#gf2)"/>
+      </svg>
+    </div>
+
+
+    <!-- ======================================
+         Zone 3 — 바디 텍스트 + CTA 버튼
+         y: 648 ~ 1080px (전체 높이의 40%)
+    ====================================== -->
+
+    <!-- 바디 텍스트 블록 (y=598) -->
+    <!-- Pretendard Regular 22px — 서비스 설명 + 이벤트 안내 -->
+    <div class="body-block">
+
+      <!-- 바디 행 1: 타깃 고객 상황 나열 -->
+      <span class="body-line">전세 만기 · 첫 집 마련 · 투자 입문</span>
+
+      <!-- 바디 행 2: "수천만 원이 걸린 결정"에 골드 밑줄 강조 -->
+      <span class="body-line">
+        어떤 고민이든
+        <!-- 골드 밑줄: text-decoration-color를 골드로 지정 -->
+        <span class="underline-gold">수천만 원이 걸린 결정</span>입니다.
+      </span>
+
+      <!-- 바디 행 3: 이벤트 날짜 + 혜택 (달력 아이콘 포함) -->
+      <div class="date-line">
+        <!-- 달력 아이콘 SVG — 3월 28일 표시 (28×28px로 텍스트에 맞게 축소) -->
+        <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" aria-label="3월 28일 달력 아이콘">
+          <defs>
+            <linearGradient id="goldCal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   style="stop-color:#E8D5A3"/>
+              <stop offset="50%"  style="stop-color:#C9A96E"/>
+              <stop offset="100%" style="stop-color:#A8854A"/>
+            </linearGradient>
+            <linearGradient id="goldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   style="stop-color:#C9A96E"/>
+              <stop offset="100%" style="stop-color:#8A6A35"/>
+            </linearGradient>
+            <filter id="calGlow">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#C9A96E" flood-opacity="0.3"/>
+            </filter>
+          </defs>
+          <g filter="url(#calGlow)">
+            <rect x="8" y="14" width="64" height="58" rx="4" fill="url(#goldCal)" opacity="0.15"/>
+            <rect x="8" y="14" width="64" height="58" rx="4" fill="none" stroke="url(#goldCal)" stroke-width="2"/>
+            <rect x="8" y="14" width="64" height="20" rx="4" fill="url(#goldDark)"/>
+            <rect x="8" y="27" width="64" height="7" fill="url(#goldDark)"/>
+            <rect x="22" y="8" width="5" height="12" rx="2.5" fill="#C9A96E"/>
+            <rect x="53" y="8" width="5" height="12" rx="2.5" fill="#C9A96E"/>
+            <text x="40" y="29" text-anchor="middle" font-size="9" font-weight="700" font-family="'Pretendard Variable', sans-serif" letter-spacing="2" fill="#0D1B2A">MAR</text>
+            <text x="40" y="61" text-anchor="middle" font-size="28" font-weight="900" font-family="'Pretendard Variable', sans-serif" fill="url(#goldCal)">28</text>
+            <text x="40" y="73" text-anchor="middle" font-size="8" font-weight="500" font-family="'Pretendard Variable', sans-serif" letter-spacing="1" fill="#C9A96E" opacity="0.8">토요일</text>
+          </g>
+        </svg>
+        <!-- 날짜 + 혜택 텍스트 -->
+        <span class="body-line" style="line-height: 1; margin-top: 0;">3월 28일(토), 방문자 전원 풀케어 할인권 증정</span>
+      </div>
+
+    </div>
+
+    <!-- CTA 버튼 (중앙 정렬, y=840) -->
+    <!-- 골드 그라디언트 배경 + 네이비 텍스트 — 강한 행동 유도 -->
+    <div class="cta-wrapper">
+      <button class="cta-button">지금 신청하기</button>
+    </div>
+
+  </div>
+  <!-- /poster -->
+
+  <!-- ========================================
+       브라우저 창 크기에 따른 포스터 축소 스크립트
+       1080px 포스터를 현재 뷰포트에 맞게 축소합니다
+       (실제 사이즈는 항상 1080×1080 유지)
+  ======================================== -->
+  <script>
+    // 포스터 요소를 가져옵니다
+    const poster = document.querySelector('.poster');
+
+    // 창 크기에 맞게 포스터 크기를 자동 조정하는 함수
+    function scalePoster() {
+      const vw = window.innerWidth - 80;   // 양쪽 여백(40px×2) 제외한 가용 너비
+      const vh = window.innerHeight - 80;  // 상하 여백(40px×2) 제외한 가용 높이
+      // 너비와 높이 중 더 제한적인 쪽을 기준으로 축소 비율 계산
+      const scale = Math.min(vw / 1080, vh / 1080, 1);  // 최대 100% (확대 금지)
+      poster.style.transform = `scale(${scale})`;
+      // 포스터 실제 표시 크기만큼 body 높이 조정 (스크롤 방지)
+      document.body.style.minHeight = `${1080 * scale + 80}px`;
+    }
+
+    // 페이지 로드 시 + 창 크기 변경 시 자동 실행
+    scalePoster();
+    window.addEventListener('resize', scalePoster);
+  </script>
+
+</body>
+</html>
