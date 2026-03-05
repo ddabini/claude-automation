@@ -9096,57 +9096,129 @@
 
     // ─── YouTube 영상 구성 분석 (Gemini AI 연동) ───
     // Gemini 2.5 Flash가 YouTube 영상을 직접 시청하고 분석한다
-    // 구조, 패턴, 강약점을 근거 기반으로 코멘트
-    // ─── Gemini 영상 분석 (스트리밍) ───
-    // streamGenerateContent + SSE로 실시간 텍스트 표시 → 완료 후 포맷팅
+    // ─── Gemini 영상 분석 (빠른 분석: 메타데이터 기반 3~5초) ───
+    // YouTube API 메타데이터(제목, 설명, 통계)를 텍스트로 Gemini에 전달
+    // 영상 파일을 보내지 않아 10초 이내 응답 가능
     async function ytAnalyzeVideo(videoId) {
       const analysisEl = document.getElementById('ytInsightAnalysis');
       if (!analysisEl) return;
 
       const geminiKey = config.geminiKey;
       if (!geminiKey) {
-        // Gemini 키 없으면 메타데이터 기반 폴백
         const videoData = ytState.results.find(r => r.sourceUrl && r.sourceUrl.includes(videoId));
         ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
         return;
       }
 
-      // 스트리밍 UI 초기 구조 — 헤더 + 실시간 텍스트 영역
+      // 스트리밍 UI 초기 구조
       analysisEl.innerHTML = `
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
           <span style="font-size:13px;">🤖</span>
           <span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>
           <span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>
-          <span id="ytStreamStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;">영상 시청 중...</span>
+          <span id="ytStreamStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;">분석 준비 중...</span>
         </div>
         <div id="ytStreamBody" style="
           font-size:12px;line-height:1.7;color:var(--text-secondary);
           background:var(--bg);border-radius:10px;padding:14px;
           border:1px solid var(--border);min-height:60px;
           white-space:pre-wrap;word-break:break-word;
-        "><span style="color:var(--text-muted);">Gemini가 영상을 시청하고 있습니다...</span></div>
+        "><span style="color:var(--text-muted);">영상 정보를 수집하고 있습니다...</span></div>
       `;
 
-      const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
-      const analysisPrompt = '이 유튜브 영상을 분석해. 아래 형식을 정확히 따라. 간결하게.\n\n## 종합 평가\n- 한 줄 총평 (이 영상의 핵심 가치를 한 문장으로)\n- 점수: 구조 ?/10 | 편집 ?/10 | 메시지 ?/10\n- 강점 키워드 3개 (예: #몰입도높음 #편집센스 #정보밀도)\n- 이 영상이 잘 되는/안 되는 핵심 이유 1~2문장\n\n## 영상 구조\n- 도입부: 훅 유무, 시청자 잡는 방식\n- 전개: 정보 밀도, 편집 리듬\n- 클라이맥스: 하이라이트 구간\n- 마무리: CTA 여부\n\n## 콘텐츠 패턴\n- 편집 (컷 빈도, 자막, BGM)\n- 화면 (앵글, 조명)\n- 화법 (톤, 속도)\n\n## 강점\n- 3가지 (근거 포함, 각 1줄)\n\n## 개선점\n- 2가지 (근거 포함, 각 1줄)\n\n각 항목은 1~2줄로 핵심만. 근거는 영상 내 관찰 사실 기반.';
-
       try {
-        // ── 스트리밍 API 호출 (SSE 방식) ──
+        // ── 1단계: 영상 메타데이터 수집 (Serper 데이터 + YouTube API) ──
+        const videoData = ytState.results.find(r => r.sourceUrl && r.sourceUrl.includes(videoId)) || {};
+        let metaTitle = videoData.title || '';
+        let metaChannel = videoData.channel || '';
+        let metaViews = videoData.viewsRaw || '';
+        let metaDuration = videoData.duration || '';
+        let metaDesc = videoData.description || '';
+        let metaLikes = '';
+        let metaComments = '';
+        let metaTags = '';
+
+        // YouTube API로 전체 설명 + 통계 + 태그 가져오기
+        const apiKey = config.youtubeApiKey;
+        if (apiKey && !ytState.ytApiDisabled) {
+          try {
+            const ytRes = await fetch(
+              `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,topicDetails&id=${videoId}&key=${apiKey}`
+            );
+            const ytData = await ytRes.json();
+            if (ytRes.ok && ytData.items && ytData.items.length > 0) {
+              const item = ytData.items[0];
+              const snippet = item.snippet || {};
+              const stats = item.statistics || {};
+              metaTitle = snippet.title || metaTitle;
+              metaChannel = snippet.channelTitle || metaChannel;
+              metaDesc = snippet.description || metaDesc;
+              metaTags = (snippet.tags || []).slice(0, 15).join(', ');
+              metaViews = parseInt(stats.viewCount || '0').toLocaleString() + '회';
+              metaLikes = parseInt(stats.likeCount || '0').toLocaleString() + '개';
+              metaComments = parseInt(stats.commentCount || '0').toLocaleString() + '개';
+            }
+          } catch (e) {
+            console.warn('[Pikbox] YouTube API 메타 수집 실패 (무시):', e.message);
+          }
+        }
+
+        // ── 2단계: 메타데이터를 텍스트 프롬프트로 구성 ──
+        const metaText = [
+          `제목: ${metaTitle}`,
+          `채널: ${metaChannel}`,
+          `조회수: ${metaViews}`,
+          metaLikes ? `좋아요: ${metaLikes}` : '',
+          metaComments ? `댓글: ${metaComments}` : '',
+          metaDuration ? `길이: ${metaDuration}` : '',
+          metaTags ? `태그: ${metaTags}` : '',
+          `\n영상 설명:\n${metaDesc.substring(0, 3000)}`,
+        ].filter(Boolean).join('\n');
+
+        const analysisPrompt = `아래 유튜브 영상의 메타데이터를 분석해. 아래 형식을 정확히 따라. 간결하게.
+
+${metaText}
+
+---
+## 종합 평가
+- 한 줄 총평 (이 영상의 핵심 가치를 한 문장으로)
+- 점수: 콘텐츠 ?/10 | 전략 ?/10 | 성장가능성 ?/10
+- 강점 키워드 3개 (예: #몰입도높음 #편집센스 #정보밀도)
+- 이 영상이 잘 되는/안 되는 핵심 이유 1~2문장
+
+## 콘텐츠 전략
+- 제목 분석: 클릭 유도력, 키워드 활용
+- 설명 분석: SEO, 링크 활용, 시청자 유도
+- 태그 전략: 검색 노출 가능성
+
+## 채널 & 성과
+- 조회수/좋아요/댓글 비율 해석
+- 채널 포지셔닝 평가
+- 바이럴 가능성
+
+## 강점
+- 3가지 (근거 포함, 각 1줄)
+
+## 개선점
+- 2가지 (구체적 액션 포함, 각 1줄)
+
+각 항목은 1~2줄로 핵심만. 데이터 근거 기반으로 작성.`;
+
+        // 스트리밍 상태 업데이트
+        const streamStatus = document.getElementById('ytStreamStatus');
+        if (streamStatus) streamStatus.textContent = '분석 중...';
+
+        // ── 3단계: Gemini 스트리밍 호출 (텍스트만 → 3~5초) ──
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { fileData: { mimeType: 'video/*', fileUri: videoUrl } },
-                  { text: analysisPrompt }
-                ]
-              }],
+              contents: [{ parts: [{ text: analysisPrompt }] }],
               generationConfig: {
-                maxOutputTokens: 4000,
-                temperature: 0.2,
+                maxOutputTokens: 2000,
+                temperature: 0.3,
                 thinkingConfig: { thinkingBudget: 0 }
               }
             })
@@ -9157,7 +9229,6 @@
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           const errMsg = errData.error?.message || ('HTTP ' + res.status);
-          console.warn('[Pikbox] Gemini 스트리밍 실패:', errMsg);
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
               <div style="font-size:11px;font-weight:600;color:#e65100;margin-bottom:4px;">Gemini 분석 실패</div>
@@ -9167,62 +9238,48 @@
           return;
         }
 
-        // ── SSE 스트림 읽기 ──
+        // ── SSE 스트림 읽기 + 실시간 렌더링 ──
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         const streamBody = document.getElementById('ytStreamBody');
-        const streamStatus = document.getElementById('ytStreamStatus');
-        let fullText = '';       // 누적 텍스트
-        let buffer = '';         // SSE 파싱용 버퍼
-        let firstChunk = true;   // 첫 번째 텍스트 수신 여부
+        let fullText = '';
+        let buffer = '';
+        let firstChunk = true;
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-
-          // SSE 형식 파싱 — "data: {...}" 줄 단위로 처리
           const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // 마지막 미완성 줄은 버퍼에 유지
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             const jsonStr = line.slice(6).trim();
             if (!jsonStr || jsonStr === '[DONE]') continue;
-
             try {
               const chunk = JSON.parse(jsonStr);
-              // 각 청크에서 텍스트 파트 추출
               const parts = chunk.candidates?.[0]?.content?.parts || [];
               for (const p of parts) {
                 if (p.text) {
                   fullText += p.text;
-
-                  // 첫 텍스트 수신 시 상태 변경
                   if (firstChunk) {
                     firstChunk = false;
-                    if (streamStatus) streamStatus.textContent = '분석 중...';
+                    if (streamStatus) streamStatus.textContent = '작성 중...';
                   }
-
-                  // 실시간으로 마크다운을 간단한 HTML로 변환하여 표시
                   if (streamBody) {
                     streamBody.innerHTML = ytMarkdownToHtml(fullText) +
-                      '<span class="yt-stream-cursor" style="display:inline-block;width:2px;height:14px;background:var(--primary);animation:blink 0.8s infinite;vertical-align:middle;margin-left:2px;"></span>';
-                    // 스크롤 따라가기
+                      '<span style="display:inline-block;width:2px;height:14px;background:var(--primary);animation:blink 0.8s infinite;vertical-align:middle;margin-left:2px;"></span>';
                     streamBody.scrollTop = streamBody.scrollHeight;
                   }
                 }
               }
-            } catch (parseErr) {
-              // JSON 파싱 실패 — 무시 (불완전한 청크)
-            }
+            } catch (e) { /* 불완전한 청크 무시 */ }
           }
         }
 
-        console.log('[Pikbox] Gemini 스트리밍 완료:', fullText.length, '자');
-
-        // ── 스트리밍 완료 → 최종 포맷팅 (종합평가 카드 + 아코디언) ──
+        // ── 스트리밍 완료 → 최종 포맷팅 ──
         if (!fullText.trim()) {
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
@@ -9232,7 +9289,6 @@
           return;
         }
 
-        // 최종 결과를 종합평가 카드 + 아코디언 형태로 변환
         const { summary, detail } = ytSplitGeminiResponse(fullText);
         const detailId = 'ytGeminiDetail_' + videoId.replace(/[^a-zA-Z0-9]/g, '');
         let html = '';
@@ -9259,7 +9315,7 @@
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
           <span class="arrow" style="font-size:10px;">▸</span>
           <span class="label">자세히 보기</span>
-          <span style="font-size:10px;color:var(--text-muted);">구조 · 패턴 · 강점 · 개선점</span>
+          <span style="font-size:10px;color:var(--text-muted);">전략 · 성과 · 강점 · 개선점</span>
         </button>`;
 
         // 세부 분석 (접혀있음)
@@ -9267,8 +9323,13 @@
         html += ytRenderDetailSections(detail);
         html += '</div>';
 
-        // 재분석 버튼
-        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="width:100%;padding:6px;margin-top:6px;border:none;border-radius:6px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻ 다시 분석</button>`;
+        // 심층 분석 + 재분석 버튼
+        html += `<div style="display:flex;gap:8px;margin-top:8px;">`;
+        html += `<button onclick="ytDeepAnalyzeVideo('${videoId}')" style="flex:1;padding:8px;border:1px dashed var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:4px;">
+          <span>🎬</span> 영상 직접 시청 분석 <span style="font-size:9px;color:var(--text-muted);">(1~2분)</span>
+        </button>`;
+        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻</button>`;
+        html += `</div>`;
 
         analysisEl.innerHTML = html;
 
@@ -9283,21 +9344,149 @@
       }
     }
 
+    // ─── 심층 분석 — Gemini가 영상을 직접 시청 (1~2분 소요) ───
+    // "영상 직접 시청 분석" 버튼 클릭 시 호출
+    async function ytDeepAnalyzeVideo(videoId) {
+      const analysisEl = document.getElementById('ytInsightAnalysis');
+      if (!analysisEl) return;
+
+      const geminiKey = config.geminiKey;
+      if (!geminiKey) return;
+
+      // 스트리밍 UI
+      analysisEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">🎬</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text-primary);">심층 영상 분석</span>
+          <span style="background:linear-gradient(135deg,#e91e63,#ff5722);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini Deep</span>
+          <span id="ytDeepStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;">영상 시청 중... (1~2분 소요)</span>
+        </div>
+        <div id="ytDeepBody" style="
+          font-size:12px;line-height:1.7;color:var(--text-secondary);
+          background:var(--bg);border-radius:10px;padding:14px;
+          border:1px solid var(--border);min-height:60px;
+          white-space:pre-wrap;word-break:break-word;
+        "><span style="color:var(--text-muted);">Gemini가 영상을 직접 시청하고 있습니다. 영상 길이에 따라 1~2분이 소요됩니다...</span></div>
+      `;
+
+      const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+      const deepPrompt = '이 유튜브 영상을 직접 시청하고 분석해. 아래 형식 따라. 간결하게.\n\n## 종합 평가\n- 한 줄 총평\n- 점수: 구조 ?/10 | 편집 ?/10 | 메시지 ?/10\n- 강점 키워드 3개\n- 핵심 이유 1~2문장\n\n## 영상 구조\n- 도입부: 훅 유무, 시청자 잡는 방식\n- 전개: 정보 밀도, 편집 리듬\n- 클라이맥스: 하이라이트 구간\n- 마무리: CTA 여부\n\n## 콘텐츠 패턴\n- 편집 (컷 빈도, 자막, BGM)\n- 화면 (앵글, 조명)\n- 화법 (톤, 속도)\n\n## 강점\n- 3가지 (영상 내 관찰 근거 포함)\n\n## 개선점\n- 2가지 (구체적 액션 포함)\n\n각 항목 1~2줄. 영상 내 관찰 사실 기반.';
+
+      try {
+        // 영상 파일 전송 (fileData) + 스트리밍
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { fileData: { mimeType: 'video/*', fileUri: videoUrl } },
+                  { text: deepPrompt }
+                ]
+              }],
+              generationConfig: {
+                maxOutputTokens: 4000,
+                temperature: 0.2,
+                thinkingConfig: { thinkingBudget: 0 }
+              }
+            })
+          }
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error?.message || ('HTTP ' + res.status);
+          analysisEl.innerHTML = `
+            <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
+              <div style="font-size:11px;font-weight:600;color:#e65100;">심층 분석 실패: ${escHtml(errMsg)}</div>
+              <button onclick="ytDeepAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ffe0b2;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#e65100;">다시 시도</button>
+            </div>`;
+          return;
+        }
+
+        // SSE 스트림 읽기
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        const deepBody = document.getElementById('ytDeepBody');
+        const deepStatus = document.getElementById('ytDeepStatus');
+        let fullText = '';
+        let buffer = '';
+        let firstChunk = true;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr || jsonStr === '[DONE]') continue;
+            try {
+              const chunk = JSON.parse(jsonStr);
+              const parts = chunk.candidates?.[0]?.content?.parts || [];
+              for (const p of parts) {
+                if (p.text) {
+                  fullText += p.text;
+                  if (firstChunk) { firstChunk = false; if (deepStatus) deepStatus.textContent = '분석 작성 중...'; }
+                  if (deepBody) {
+                    deepBody.innerHTML = ytMarkdownToHtml(fullText) +
+                      '<span style="display:inline-block;width:2px;height:14px;background:#e91e63;animation:blink 0.8s infinite;vertical-align:middle;margin-left:2px;"></span>';
+                    deepBody.scrollTop = deepBody.scrollHeight;
+                  }
+                }
+              }
+            } catch (e) { /* 무시 */ }
+          }
+        }
+
+        // 완료 → 최종 포맷팅
+        if (!fullText.trim()) {
+          analysisEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:11px;">심층 분석 결과가 비어있습니다</div>';
+          return;
+        }
+
+        const { summary, detail } = ytSplitGeminiResponse(fullText);
+        const detailId = 'ytDeepDetail_' + videoId.replace(/[^a-zA-Z0-9]/g, '');
+        let html = '';
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">';
+        html += '<span style="font-size:13px;">🎬</span>';
+        html += '<span style="font-size:12px;font-weight:700;color:var(--text-primary);">심층 영상 분석</span>';
+        html += '<span style="background:linear-gradient(135deg,#e91e63,#ff5722);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini Deep</span>';
+        html += '</div>';
+        html += '<div style="background:linear-gradient(135deg,#fff3e0,#fce4ec);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid #ffccbc;">';
+        html += ytRenderSummaryCard(summary);
+        html += '</div>';
+        html += `<button onclick="(function(){var el=document.getElementById('${detailId}');var btn=this;if(el.style.maxHeight==='0px'){el.style.maxHeight=el.scrollHeight+'px';el.style.opacity='1';btn.querySelector('.arrow').textContent='▾';btn.querySelector('.label').textContent='접기';}else{el.style.maxHeight='0px';el.style.opacity='0';btn.querySelector('.arrow').textContent='▸';btn.querySelector('.label').textContent='자세히 보기';}}).call(this)" style="width:100%;padding:8px 12px;margin-bottom:4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-secondary);"><span class="arrow" style="font-size:10px;">▸</span><span class="label">자세히 보기</span></button>`;
+        html += '<div id="' + detailId + '" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;">';
+        html += ytRenderDetailSections(detail);
+        html += '</div>';
+        html += `<div style="display:flex;gap:8px;margin-top:8px;">`;
+        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-secondary);">⚡ 빠른 분석</button>`;
+        html += `<button onclick="ytDeepAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻</button>`;
+        html += `</div>`;
+        analysisEl.innerHTML = html;
+
+      } catch (e) {
+        analysisEl.innerHTML = `
+          <div style="background:#ffebee;border-radius:8px;padding:12px;border:1px solid #ef9a9a;">
+            <div style="font-size:11px;font-weight:600;color:#c62828;">심층 분석 에러: ${escHtml(e.message)}</div>
+            <button onclick="ytDeepAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ef9a9a;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#c62828;">다시 시도</button>
+          </div>`;
+      }
+    }
+
     // ─── 마크다운 → 간단 HTML 변환 (스트리밍 실시간 표시용) ───
-    // 스트리밍 중 텍스트를 보기 좋게 렌더링
     function ytMarkdownToHtml(md) {
       return md
-        // ## 헤더 → 굵은 텍스트 + 구분선
         .replace(/^## (.+)$/gm, '<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">$1</div>')
-        // **굵은 텍스트**
         .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary);">$1</strong>')
-        // 점수 (N/10) → 컬러 뱃지
         .replace(/(\d+)\/10/g, '<span style="background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:4px;font-weight:700;font-size:11px;">$1/10</span>')
-        // #해시태그 → 태그 칩
         .replace(/#([가-힣a-zA-Z0-9]+)/g, '<span style="background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;">#$1</span>')
-        // - 리스트 항목 → 들여쓰기
         .replace(/^- (.+)$/gm, '<div style="padding-left:12px;margin:3px 0;"><span style="color:var(--text-muted);margin-right:4px;">•</span>$1</div>')
-        // 줄바꿈
         .replace(/\n/g, '<br>');
     }
 
