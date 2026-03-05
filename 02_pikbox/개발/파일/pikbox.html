@@ -8513,6 +8513,17 @@
       // iframe src 제거로 영상 재생 중지
       if (iframe) iframe.src = '';
       document.body.style.overflow = '';
+
+      // 히트맵 커서 추적 정리
+      if (ytHeatmapState.cursorInterval) {
+        clearInterval(ytHeatmapState.cursorInterval);
+        ytHeatmapState.cursorInterval = null;
+      }
+      // postMessage 리스너 정리
+      if (window._ytHeatmapMsgHandler) {
+        window.removeEventListener('message', window._ytHeatmapMsgHandler);
+        window._ytHeatmapMsgHandler = null;
+      }
     }
 
     // ─── YouTube Data API v3 — 영상 통계 가져오기 ───
