@@ -8089,7 +8089,7 @@
 
           const promises = [];
           if (!appendMode) {
-            // 첫 검색: 한국어 쿼리 변형 병렬 호출
+            // 첫 검색: 쿼리 변형 병렬 호출 (채널명/키워드 모두 대응)
             promises.push(searchSerperVideos(fullQuery, 1));
             promises.push(searchSerperVideos(fullQuery, 2));
             if (chip === 'ad') {
@@ -8097,7 +8097,10 @@
               promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
               promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
             } else {
-              promises.push(searchSerperVideos(query + ' 유튜브', 1));
+              // 채널명 검색 대응: "유튜브 영상" 접미사로 실제 영상 결과 확보
+              promises.push(searchSerperVideos(query + ' 유튜브 영상', 1));
+              // 채널명 검색 대응: "채널" 접미사로 해당 채널의 영상 발굴
+              promises.push(searchSerperVideos(query + ' 채널 최신 영상', 1));
               if (chipExtra) {
                 promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
               }
