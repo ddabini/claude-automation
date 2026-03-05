@@ -323,8 +323,8 @@ router.post('/export', async (req, res) => {
  * @param {string} jobId - 폴링할 작업 ID
  */
 function pollJobStatus(io, jobId) {
-  // 1초마다 상태 확인 (Mock 모드에서는 빠른 업데이트)
-  const pollInterval = runpod.MOCK_MODE ? 500 : 2000;
+  // 상태 확인 주기 (Mock 모드에서는 빠른 업데이트)
+  const pollInterval = replicate.MOCK_MODE ? 500 : 3000;
   let pollCount = 0;
   const maxPolls = 600; // 최대 폴링 횟수 (약 10~20분)
 
