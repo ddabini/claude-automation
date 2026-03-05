@@ -9426,7 +9426,12 @@ ${metaText}
         html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-secondary);">⚡ 빠른 분석</button>`;
         html += `<button onclick="ytDeepAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻</button>`;
         html += `</div>`;
+        analysisEl.style.opacity = '0';
         analysisEl.innerHTML = html;
+        requestAnimationFrame(() => {
+          analysisEl.style.transition = 'opacity 0.3s ease';
+          analysisEl.style.opacity = '1';
+        });
 
       } catch (e) {
         analysisEl.innerHTML = `
