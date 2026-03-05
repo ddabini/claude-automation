@@ -8091,6 +8091,70 @@
       }
     }
 
+    // ─── YouTube API 통계 보강 — Serper 결과에 조회수/좋아요/댓글 추가 ───
+    // videos endpoint만 사용 (1 unit/video) → search endpoint(100 units) 대비 대폭 절약
+    // 비동기 실행: 검색 결과 먼저 표시 후 백그라운드에서 통계 업데이트
+    async function ytEnrichWithStats(items) {
+      const apiKey = config.youtubeApiKey;
+      if (!apiKey || ytState.ytApiDisabled) return;
+
+      // 아이템에서 videoId 추출
+      const videoIds = items.map(item => ytExtractVideoId(item.sourceUrl)).filter(Boolean);
+      if (videoIds.length === 0) return;
+
+      try {
+        // 50개씩 배치 처리 (YouTube API 최대 50개/요청)
+        for (let i = 0; i < videoIds.length; i += 50) {
+          const batch = videoIds.slice(i, i + 50);
+          const params = new URLSearchParams({
+            part: 'statistics,contentDetails',
+            id: batch.join(','),
+            key: apiKey
+          });
+          const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+          const data = await res.json();
+
+          // 할당량 초과 감지 → 세션 내 API 비활성화
+          if (!res.ok) {
+            if (data.error?.errors?.[0]?.reason === 'quotaExceeded') {
+              console.warn('[Pikbox] YouTube API 할당량 초과 — 세션 내 비활성화');
+              ytState.ytApiDisabled = true;
+              return;
+            }
+            continue;
+          }
+
+          if (!data.items) continue;
+
+          // 통계 데이터를 검색 결과에 병합
+          data.items.forEach(v => {
+            const stats = v.statistics || {};
+            const matchItem = items.find(item =>
+              item.sourceUrl && item.sourceUrl.includes(v.id)
+            );
+            if (matchItem) {
+              const viewCount = parseInt(stats.viewCount || '0', 10);
+              matchItem.viewsNum = viewCount;
+              matchItem.viewsRaw = ytFormatViewCount(viewCount);
+              matchItem.likeCount = parseInt(stats.likeCount || '0', 10);
+              matchItem.commentCount = parseInt(stats.commentCount || '0', 10);
+              // 재생시간으로 쇼츠 판별 보강
+              const duration = v.contentDetails?.duration || '';
+              const totalSec = ytParseDurationISO(duration);
+              if (totalSec > 0) {
+                matchItem.isShorts = totalSec <= 60;
+                matchItem.duration = ytFormatDurationISO(duration);
+              }
+            }
+          });
+        }
+        // 통계 업데이트 후 카드 리렌더링 (조회수 표시 갱신)
+        ytSortAndRerender();
+      } catch (e) {
+        console.warn('[Pikbox] YouTube 통계 보강 실패:', e.message);
+      }
+    }
+
     // ─── 썸네일 단계적 로드 — 고화질부터 순서대로 시도, 실패 시 다음 후보 ───
     // 인라인 onerror 대신 JS로 제어하여 무한루프·이스케이프 문제 방지
     function ytLoadThumb(img, candidates) {
