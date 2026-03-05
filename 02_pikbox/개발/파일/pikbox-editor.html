@@ -1082,11 +1082,12 @@
       return labels[status] || '검토 중';
     }
 
-    // ── 날짜 포맷 — ISO 날짜 문자열을 읽기 쉬운 형태로 변환 ──
-    function deFormatDate(dateStr) {
-      if (!dateStr) return '';
+    // ── 날짜 포맷 — 타임스탬프(숫자) 또는 ISO 문자열을 읽기 쉬운 형태로 변환 ──
+    function deFormatDate(dateVal) {
+      if (!dateVal) return '';
       try {
-        const d = new Date(dateStr);
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return '';
         const month = d.getMonth() + 1;
         const day = d.getDate();
         return `${month}/${day}`;
