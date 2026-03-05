@@ -282,9 +282,9 @@ exports.getYoutubeHeatmap = functions
 
     try {
       // ── YouTube 내부 API로 히트맵 데이터 요청 ──
-      // youtubei/v1/player 엔드포인트: 공식 API가 아닌 내부 API
-      // heatMarkers가 포함된 플레이어 응답을 반환
-      const response = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+      // youtubei/v1/next 엔드포인트: 추천/관련 정보 + 히트맵 데이터 포함
+      // (player 엔드포인트에는 히트맵이 없고, next에 macroMarkersListEntity로 존재)
+      const response = await fetch("https://www.youtube.com/youtubei/v1/next?prettyPrint=false", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
