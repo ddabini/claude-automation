@@ -6221,6 +6221,77 @@
     // Firebase Cloud Function(Puppeteer)으로 Pinterest를 직접 검색하여 네이티브 품질의 결과를 가져옴
     // Serper(Google 이미지 검색) 대비 Pinterest 자체 알고리즘의 고퀄 결과 제공
     // 실패 시 자동으로 Serper 폴백
+    // ─── Instagram 크롤링 — Cloud Function으로 로그인 기반 검색 ───
+    // 로그인된 Instagram 계정으로 해시태그/키워드 검색 결과를 크롤링
+    async function searchInstagramNative(query, limit = 30) {
+      if (!config.instagramFnUrl) return [];
+
+      try {
+        const url = `${config.instagramFnUrl}?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(60000) }); // 60초 타임아웃 (로그인 포함)
+
+        if (!res.ok) {
+          console.warn('Instagram Cloud Function 에러:', res.status);
+          return [];
+        }
+
+        const data = await res.json();
+        if (!data.posts || data.posts.length === 0) return [];
+
+        // Cloud Function 결과를 Pikbox 내부 형식으로 변환
+        return data.posts.map(post => ({
+          title: post.caption || '',
+          imageUrl: post.imageUrl || '',
+          normalizedUrl: normalizeImageUrl(post.imageUrl || ''),
+          thumbUrl: post.thumbUrl || post.imageUrl || '',
+          sourceUrl: post.postUrl || '',
+          platform: 'instagram',
+          width: post.width || 1080,
+          height: post.height || 1080,
+          color: '#E1306C', // Instagram 브랜드 컬러
+          source: data.cached ? 'instagram_native_cached' : 'instagram_native'
+        }));
+      } catch (err) {
+        console.warn('Instagram 크롤링 실패:', err.message);
+        return [];
+      }
+    }
+
+    // ─── Meta 광고 라이브러리 크롤링 — Cloud Function으로 광고 소재 수집 ───
+    // Meta Ad Library에서 실제 집행 중인 광고 크리에이티브를 크롤링
+    async function searchMetaAdsNative(query, limit = 30) {
+      if (!config.metaAdsFnUrl) return [];
+
+      try {
+        const url = `${config.metaAdsFnUrl}?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(60000) });
+
+        if (!res.ok) {
+          console.warn('Meta Ads Cloud Function 에러:', res.status);
+          return [];
+        }
+
+        const data = await res.json();
+        if (!data.ads || data.ads.length === 0) return [];
+
+        return data.ads.map(ad => ({
+          title: ad.pageName || ad.title || '',
+          imageUrl: ad.imageUrl || '',
+          normalizedUrl: normalizeImageUrl(ad.imageUrl || ''),
+          thumbUrl: ad.thumbUrl || ad.imageUrl || '',
+          sourceUrl: ad.adUrl || '',
+          platform: 'meta_ads',
+          width: ad.width || 1080,
+          height: ad.height || 1080,
+          color: '#1877F2', // Facebook 브랜드 컬러
+          source: data.cached ? 'meta_ads_cached' : 'meta_ads_native'
+        }));
+      } catch (err) {
+        console.warn('Meta 광고 크롤링 실패:', err.message);
+        return [];
+      }
+    }
+
     async function searchPinterestNative(query, limit = 25) {
       if (!config.pinterestFnUrl) return null; // Cloud Function 미설정 시 스킵
 
