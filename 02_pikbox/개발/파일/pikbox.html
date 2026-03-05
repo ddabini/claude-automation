@@ -8580,22 +8580,34 @@
       }
     }
 
-    // ─── Most Replayed 히트맵 — 시청자가 많이 본 구간 시각화 ───
-    // Cloud Function에서 히트맵 데이터를 가져와 SVG area chart로 표시
+    // ─── Most Replayed 히트맵 — 영상 타임라인 바에 직접 오버레이 ───
+    // Cloud Function에서 히트맵 데이터를 가져와 영상 아래 타임라인 바로 표시
+    // 호버 시 시간 표시 + 클릭 시 해당 시점으로 점프 (유튜브 Most Replayed 스타일)
+
+    // 히트맵 상태 저장 (재생 위치 추적용)
+    let ytHeatmapState = {
+      markers: null,      // 히트맵 마커 데이터
+      totalDurationMs: 0, // 영상 전체 길이 (밀리초)
+      cursorInterval: null // 재생 위치 추적 타이머
+    };
+
     async function ytFetchHeatmap(videoId) {
-      const section = document.getElementById('ytHeatmapSection');
-      if (!section || !config.ytHeatmapUrl) return;
+      const bar = document.getElementById('ytHeatmapBar');
+      if (!bar || !config.ytHeatmapUrl) {
+        if (bar) bar.style.display = 'none';
+        return;
+      }
+
+      // 이전 재생 위치 추적 정리
+      if (ytHeatmapState.cursorInterval) {
+        clearInterval(ytHeatmapState.cursorInterval);
+        ytHeatmapState.cursorInterval = null;
+      }
 
       // 로딩 표시
-      section.innerHTML = `
-        <hr class="yt-insight-divider">
-        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
-          🔥 시청자 몰입도 (Most Replayed)
-        </div>
-        <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
-          히트맵 로딩 중...
-        </div>
-      `;
+      bar.className = 'yt-heatmap-loading';
+      bar.innerHTML = '🔥 시청자 몰입도 로딩 중...';
+      bar.style.display = '';
 
       try {
         const res = await fetch(`${config.ytHeatmapUrl}?videoId=${videoId}`, {
@@ -8605,109 +8617,172 @@
         const data = await res.json();
 
         if (!data.markers || data.markers.length === 0) {
-          section.innerHTML = `
-            <hr class="yt-insight-divider">
-            <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
-              🔥 시청자 몰입도 (Most Replayed)
-            </div>
-            <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
-              이 영상은 히트맵 데이터가 없습니다
-            </div>
-          `;
+          bar.className = 'yt-heatmap-loading';
+          bar.innerHTML = '이 영상은 히트맵 데이터가 없습니다';
           return;
         }
 
-        // SVG area chart 생성
-        const svgHtml = ytRenderHeatmapSVG(data.markers);
-        section.innerHTML = `
-          <hr class="yt-insight-divider">
-          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
-            🔥 시청자 몰입도 (Most Replayed)
-          </div>
-          ${svgHtml}
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:2px;">
-            <span>0:00</span>
-            <span>${ytFormatMs(data.markers[data.markers.length - 1].startMs + data.markers[data.markers.length - 1].durationMs)}</span>
-          </div>
-        `;
+        // 히트맵 상태 저장
+        const markers = data.markers;
+        const lastM = markers[markers.length - 1];
+        ytHeatmapState.markers = markers;
+        ytHeatmapState.totalDurationMs = lastM.startMs + lastM.durationMs;
+
+        // 타임라인 바 렌더링
+        ytRenderTimelineBar(bar, markers, videoId);
+
       } catch (e) {
-        section.innerHTML = `
-          <hr class="yt-insight-divider">
-          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
-            🔥 시청자 몰입도 (Most Replayed)
-          </div>
-          <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
-            히트맵을 불러올 수 없습니다
-          </div>
-        `;
+        bar.className = 'yt-heatmap-loading';
+        bar.innerHTML = '히트맵을 불러올 수 없습니다';
       }
     }
 
-    // ─── 히트맵 SVG area chart 렌더링 ───
-    // markers: [{startMs, durationMs, intensity(0~1)}]
-    // intensity를 높이로 변환하여 그래디언트 area chart 생성
-    function ytRenderHeatmapSVG(markers) {
-      const width = 280;   // SVG 너비 (인사이트 패널에 맞춤)
-      const height = 50;   // SVG 높이
-      const padding = 0;
-      const count = markers.length;
-      if (count === 0) return '';
+    // ─── 타임라인 히트맵 바 렌더링 — 영상 바로 아래에 유튜브 스타일 ───
+    function ytRenderTimelineBar(container, markers, videoId) {
+      const totalMs = ytHeatmapState.totalDurationMs;
+      if (!totalMs || markers.length === 0) return;
 
-      // 각 마커의 x 좌표와 y 좌표(intensity 기반) 계산
-      const stepX = width / count;
+      // SVG viewBox 크기 (가로를 마커 수에 맞춤, 세로 32px)
+      const svgW = 1000;
+      const svgH = 32;
+      const count = markers.length;
+      const stepX = svgW / count;
+
+      // 각 마커의 좌표 계산
       const points = markers.map((m, i) => {
         const x = i * stepX;
-        // intensity를 높이로 변환 (0 → 바닥, 1 → 꼭대기)
-        const y = height - (m.intensity * height * 0.9) - 2; // 최소 2px 여백
+        const y = svgH - (m.intensity * svgH * 0.85) - 1;
         return { x, y, intensity: m.intensity };
       });
 
-      // SVG path 생성 — 부드러운 곡선 (area chart)
-      // 상단 라인: 데이터 포인트 연결
+      // SVG path — 부드러운 곡선 (area chart)
       let pathD = `M ${points[0].x} ${points[0].y}`;
       for (let i = 1; i < points.length; i++) {
-        // 베지어 커브로 부드럽게 연결
         const prev = points[i - 1];
         const curr = points[i];
         const cpx = (prev.x + curr.x) / 2;
         pathD += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
       }
-      // 하단 닫기: 오른쪽 끝 → 바닥 → 왼쪽 시작
-      pathD += ` L ${width} ${height} L 0 ${height} Z`;
+      pathD += ` L ${svgW} ${svgH} L 0 ${svgH} Z`;
 
-      // 가장 높은 구간 하이라이트 (상위 10%)
+      // 상위 10% 핫스팟 하이라이트
       const threshold = 0.9;
-      const hotSpots = markers
-        .map((m, i) => ({ ...m, index: i }))
-        .filter(m => m.intensity >= threshold);
-
-      let hotSpotRects = '';
-      hotSpots.forEach(h => {
-        const x = h.index * stepX;
-        hotSpotRects += `<rect x="${x}" y="0" width="${stepX}" height="${height}" fill="rgba(255,0,0,0.1)" rx="1"/>`;
+      let hotRects = '';
+      markers.forEach((m, i) => {
+        if (m.intensity >= threshold) {
+          hotRects += `<rect x="${i * stepX}" y="0" width="${stepX}" height="${svgH}" fill="rgba(255,80,80,0.15)"/>`;
+        }
       });
 
-      return `
-        <svg width="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"
-             style="display:block;border-radius:6px;background:#f8f9fa;overflow:hidden;">
+      container.className = 'yt-heatmap-timeline';
+      container.innerHTML = `
+        <div class="yt-heatmap-tooltip" id="ytHeatmapTooltip">0:00</div>
+        <div class="yt-heatmap-cursor" id="ytHeatmapCursor"></div>
+        <svg viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none">
           <defs>
-            <linearGradient id="heatGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ef4444" stop-opacity="0.8"/>
-              <stop offset="50%" stop-color="#f97316" stop-opacity="0.5"/>
-              <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.2"/>
+            <linearGradient id="htGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff4444" stop-opacity="0.9"/>
+              <stop offset="40%" stop-color="#ff6b35" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#ffaa00" stop-opacity="0.15"/>
             </linearGradient>
           </defs>
-          ${hotSpotRects}
-          <path d="${pathD}" fill="url(#heatGrad)" stroke="#ef4444" stroke-width="1.5" stroke-opacity="0.6"/>
+          ${hotRects}
+          <path d="${pathD}" fill="url(#htGrad)" stroke="rgba(255,100,100,0.7)" stroke-width="1"/>
         </svg>
+        <div class="yt-heatmap-time-bar">
+          <span>0:00</span>
+          <span>🔥 시청자 몰입도</span>
+          <span>${ytFormatMs(totalMs)}</span>
+        </div>
       `;
+
+      // ─── 인터랙션: 호버 시 시간 표시 + 클릭 시 해당 시점으로 이동 ───
+      const tooltip = document.getElementById('ytHeatmapTooltip');
+
+      // 마우스 호버 — 시간 툴팁 표시
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const pct = Math.max(0, Math.min(1, x / rect.width));
+        const timeMs = pct * totalMs;
+        if (tooltip) {
+          tooltip.textContent = ytFormatMs(timeMs);
+          tooltip.style.left = x + 'px';
+        }
+      });
+
+      // 클릭 — iframe postMessage로 해당 시점 이동
+      container.addEventListener('click', (e) => {
+        const rect = container.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const timeSec = (pct * totalMs) / 1000;
+
+        // YouTube IFrame API — postMessage로 seekTo 명령 전송
+        const iframe = document.getElementById('ytPlayerIframe');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'seekTo',
+            args: [timeSec, true]
+          }), '*');
+        }
+
+        // 커서 위치 즉시 업데이트
+        const cursor = document.getElementById('ytHeatmapCursor');
+        if (cursor) cursor.style.left = (pct * 100) + '%';
+      });
+
+      // ─── 재생 위치 추적 — 주기적으로 iframe에 현재 시간 요청 ───
+      ytStartCursorTracking(videoId);
     }
 
-    // ─── 밀리초 → "M:SS" 포맷 변환 ───
+    // ─── 재생 위치 커서 추적 — iframe postMessage로 현재 시간 확인 ───
+    function ytStartCursorTracking(videoId) {
+      if (ytHeatmapState.cursorInterval) clearInterval(ytHeatmapState.cursorInterval);
+
+      const iframe = document.getElementById('ytPlayerIframe');
+      if (!iframe) return;
+
+      // postMessage 기반 현재 시간 수신 리스너
+      const messageHandler = (e) => {
+        try {
+          const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+          // YouTube iframe API 응답에서 현재 시간 추출
+          if (data.info && typeof data.info.currentTime === 'number') {
+            const currentMs = data.info.currentTime * 1000;
+            const pct = ytHeatmapState.totalDurationMs > 0
+              ? (currentMs / ytHeatmapState.totalDurationMs) * 100 : 0;
+            const cursor = document.getElementById('ytHeatmapCursor');
+            if (cursor) cursor.style.left = Math.min(pct, 100) + '%';
+          }
+        } catch (err) { /* YouTube 외 메시지 무시 */ }
+      };
+
+      // 기존 리스너 정리 후 등록
+      window._ytHeatmapMsgHandler && window.removeEventListener('message', window._ytHeatmapMsgHandler);
+      window._ytHeatmapMsgHandler = messageHandler;
+      window.addEventListener('message', messageHandler);
+
+      // iframe에 현재 시간 이벤트 리스닝 요청
+      ytHeatmapState.cursorInterval = setInterval(() => {
+        try {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage(JSON.stringify({
+              event: 'listening',
+              id: 1
+            }), '*');
+          }
+        } catch (err) { /* cross-origin 무시 */ }
+      }, 500);
+    }
+
+    // ─── 밀리초 → "M:SS" 또는 "H:MM:SS" 포맷 변환 ───
     function ytFormatMs(ms) {
       const totalSec = Math.floor(ms / 1000);
-      const min = Math.floor(totalSec / 60);
+      const hrs = Math.floor(totalSec / 3600);
+      const min = Math.floor((totalSec % 3600) / 60);
       const sec = totalSec % 60;
+      if (hrs > 0) return `${hrs}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
       return `${min}:${sec.toString().padStart(2, '0')}`;
     }
 
