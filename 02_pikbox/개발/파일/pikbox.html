@@ -8745,7 +8745,7 @@
             font-size:12px;line-height:1.6;color:var(--text-muted);
             max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;
             background:var(--bg);border-radius:8px;padding:10px;
-          ">${videoData.description ? escHtml(videoData.description.substring(0, 500)) + '  불러오는 중...' : '설명을 불러오는 중...'}</div>
+          ">${videoData.description ? escHtml(videoData.description) : ''}</div>
         </div>
 
         <hr class="yt-insight-divider" style="margin-top:10px;">
