@@ -112,9 +112,15 @@ const ImageToVideo: React.FC = () => {
           errorMessage: data.errorMessage,
         });
       });
-    } catch {
-      // 백엔드 미연동 — 데모 시뮬레이션
-      simulateGeneration();
+    } catch (err) {
+      // 백엔드 연결 실패 시 에러 표시
+      console.error('[ImageToVideo] 백엔드 연결 실패:', err);
+      updateGenerationJob({
+        jobId: 'error-' + Date.now(),
+        status: 'failed',
+        progress: 0,
+        errorMessage: '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요. (npm start)',
+      });
     } finally {
       setIsSubmitting(false);
     }
