@@ -8414,8 +8414,15 @@
         return;
       }
 
-      // iframe에 embed URL 설정 (자동 재생)
-      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+      // iframe에 embed URL 설정 (자동 재생 + JS API 활성화)
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&origin=${location.origin}`;
+
+      // 히트맵 바 초기화 (영상 아래 타임라인)
+      const heatBar = document.getElementById('ytHeatmapBar');
+      if (heatBar) {
+        heatBar.className = 'yt-heatmap-loading';
+        heatBar.innerHTML = '히트맵 로딩 중...';
+      }
 
       // 인사이트 패널 기본 정보 렌더링 (Serper 데이터)
       const viewsText = videoData.viewsRaw ? `조회수 ${escHtml(videoData.viewsRaw)}` : '정보 없음';
