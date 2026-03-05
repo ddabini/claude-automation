@@ -10379,12 +10379,13 @@
     }
 
     /* ─── 디자인 목록 렌더링 — 필터 + 검색 적용 ─── */
+    // done(완료) 상태의 디자인은 일반 목록에서 제외하고 아카이브 섹션에 표시
     function drRenderDesignList() {
       const list   = document.getElementById('drDesignList');
       const search = (document.getElementById('drSearchInput')?.value || '').toLowerCase();
 
-      // 필터와 검색어를 동시에 적용
-      let filtered = drState.allDesigns;
+      // 필터와 검색어를 동시에 적용 — done 상태는 아카이브 섹션에서 표시하므로 제외
+      let filtered = drState.allDesigns.filter(d => d.status !== 'done');
       if (drState.filter !== 'all') {
         filtered = filtered.filter(d => d.status === drState.filter);
       }
@@ -10396,22 +10397,24 @@
 
       if (filtered.length === 0) {
         list.innerHTML = '<div class="dr-empty-state">등록된 디자인이 없습니다</div>';
-        return;
-      }
-
-      // 각 디자인을 카드 형태로 렌더링
-      list.innerHTML = filtered.map(d => `
-        <div class="dr-design-card ${d.id === drState.currentDesignId ? 'active' : ''}"
-             onclick="drSelectDesign('${d.id}')">
-          <div class="dr-card-body">
-            <div class="dr-card-name">${escHtml(d.name || '이름 없음')}</div>
-            <div class="dr-card-meta">
-              <span class="dr-badge dr-badge-${d.status || 'review'}">${drStatusLabel(d.status)}</span>
-              <span class="dr-card-date">${drFormatDate(d.created_at)}</span>
+      } else {
+        // 각 디자인을 카드 형태로 렌더링
+        list.innerHTML = filtered.map(d => `
+          <div class="dr-design-card ${d.id === drState.currentDesignId ? 'active' : ''}"
+               onclick="drSelectDesign('${d.id}')">
+            <div class="dr-card-body">
+              <div class="dr-card-name">${escHtml(d.name || '이름 없음')}</div>
+              <div class="dr-card-meta">
+                <span class="dr-badge dr-badge-${d.status || 'review'}">${drStatusLabel(d.status)}</span>
+                <span class="dr-card-date">${drFormatDate(d.created_at)}</span>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
+
+      // "완성된 디자인" 아카이브 섹션 렌더링 (목록 아래)
+      drRenderArchiveSection();
     }
 
     /* ─── 필터 변경 — 탭 버튼 클릭 시 호출 ─── */
