@@ -27,8 +27,8 @@ let socket: Socket | null = null;
 export function connectSocket(): Socket {
   if (socket?.connected) return socket;
 
-  // 소켓 서버 URL (개발 환경에서는 로컬호스트)
-  socket = io('http://localhost:4000', {
+  // 소켓 서버 URL (백엔드 서버 포트와 일치시켜야 합니다)
+  socket = io('http://localhost:3001', {
     // 자동 재연결 설정
     reconnection: true,
     reconnectionAttempts: 5,    // 최대 5회 재시도
