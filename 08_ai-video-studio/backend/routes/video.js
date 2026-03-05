@@ -54,8 +54,8 @@ router.post('/generate-text', async (req, res) => {
 
     console.log(`[Video] 텍스트→영상 생성 요청: "${prompt.substring(0, 50)}..."`);
 
-    // RunPod에 작업 제출
-    const { jobId } = await runpod.run({
+    // Replicate에 작업 제출 (Wan 2.1 T2V 모델 사용)
+    const { jobId } = await replicate.run({
       type: 'text-to-video',
       prompt: prompt.trim(),
       style: style || 'cinematic',
