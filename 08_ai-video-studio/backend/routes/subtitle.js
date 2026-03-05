@@ -3,121 +3,75 @@
  * 자막 API 라우트
  * ============================================
  *
- * 자막 관련 모든 API 요청을 처리합니다.
+ * 자막을 영상에 직접 입히는(하드코딩) API를 처리합니다.
  *
  * 엔드포인트:
- * POST /api/subtitle/generate — 영상에서 자막 자동 생성 (음성 인식)
- * POST /api/subtitle/burn     — 자막을 영상에 하드코딩
+ * POST /api/subtitle/burn — 자막 데이터를 영상에 하드코딩
  */
 
 const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 // 서비스 모듈 불러오기
-const whisperService = require('../services/whisper');
 const ffmpegService = require('../services/ffmpeg');
-const { uploadVideo } = require('../middleware/upload');
+
+// 출력 파일 저장 경로
+const OUTPUTS_DIR = path.join(__dirname, '..', 'outputs');
 
 /**
- * POST /api/subtitle/generate
- * 영상 파일에서 음성을 인식하여 자막을 자동 생성합니다.
- *
- * 비유: AI가 영상을 "듣고" 받아쓰기를 해주는 것
- *
- * 요청: multipart/form-data
- * - video: 영상 파일 (필수)
- * - language: 언어 코드 (선택, 기본: 'ko')
- * - model: Whisper 모델 크기 (선택, 기본: 'base')
- *
- * 응답:
- * - subtitles: [{ start, end, text }] — 자막 데이터 배열
- * - srtUrl: SRT 파일 다운로드 URL
+ * 초 단위 시간을 SRT 타임스탬프 형식으로 변환
+ * 예: 90.5 → '00:01:30,500'
  */
-router.post('/generate', uploadVideo.single('video'), async (req, res) => {
-  let audioPath = null;
+function secondsToSRT(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const milliseconds = Math.round((totalSeconds % 1) * 1000);
 
-  try {
-    // 업로드된 파일 확인
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: '영상 파일을 업로드해주세요.',
-      });
-    }
+  return (
+    String(hours).padStart(2, '0') + ':' +
+    String(minutes).padStart(2, '0') + ':' +
+    String(seconds).padStart(2, '0') + ',' +
+    String(milliseconds).padStart(3, '0')
+  );
+}
 
-    const { language, model } = req.body;
-    const videoPath = req.file.path;
+/**
+ * 자막 배열을 SRT 파일로 저장
+ * @param {Array<{ start: number, end: number, text: string }>} subtitles
+ * @returns {string} 생성된 SRT 파일 경로
+ */
+function saveSRT(subtitles) {
+  const outputFileName = `subtitle-${uuidv4()}.srt`;
+  const outputPath = path.join(OUTPUTS_DIR, outputFileName);
 
-    console.log(`[Subtitle] 자막 생성 요청: ${req.file.originalname} (언어: ${language || 'ko'})`);
+  // SRT 형식으로 변환
+  const srtContent = subtitles
+    .map((seg, i) => {
+      const startTime = secondsToSRT(seg.start);
+      const endTime = secondsToSRT(seg.end);
+      return `${i + 1}\n${startTime} --> ${endTime}\n${seg.text}\n`;
+    })
+    .join('\n');
 
-    // 1단계: 영상에서 오디오 추출
-    //   영상 파일에서 소리 부분만 따로 떼어냅니다.
-    //   Whisper는 오디오 파일만 처리할 수 있기 때문입니다.
-    console.log('[Subtitle] 1단계: 오디오 추출 중...');
-    audioPath = await ffmpegService.extractAudio(videoPath);
+  fs.writeFileSync(outputPath, srtContent, 'utf-8');
+  console.log(`[Subtitle] SRT 파일 저장: ${outputPath}`);
 
-    // 2단계: Whisper로 음성 인식
-    //   추출된 오디오를 AI가 듣고 텍스트로 변환합니다.
-    console.log('[Subtitle] 2단계: 음성 인식 중...');
-    const subtitles = await whisperService.transcribe(audioPath, {
-      language: language || undefined,
-      model: model || undefined,
-    });
-
-    // 빈 결과 확인
-    if (!subtitles || subtitles.length === 0) {
-      return res.json({
-        success: true,
-        subtitles: [],
-        srtUrl: null,
-        message: '인식된 음성이 없습니다. 영상에 음성이 포함되어 있는지 확인해주세요.',
-      });
-    }
-
-    // 3단계: SRT 파일 저장
-    //   인식된 자막을 표준 SRT 형식의 파일로 저장합니다.
-    console.log('[Subtitle] 3단계: SRT 파일 생성 중...');
-    const srtPath = whisperService.saveSRT(subtitles);
-    const srtFileName = path.basename(srtPath);
-
-    console.log(`[Subtitle] 자막 생성 완료: ${subtitles.length}개 구간`);
-
-    res.json({
-      success: true,
-      subtitles,
-      srtUrl: `/outputs/${srtFileName}`,
-      srtPath,  // 서버 내부 경로 (자막 입히기에 사용)
-      totalSegments: subtitles.length,
-    });
-  } catch (err) {
-    console.error('[Subtitle] 자막 생성 오류:', err.message);
-    res.status(500).json({
-      success: false,
-      error: err.message,
-    });
-  } finally {
-    // 임시 오디오 파일 정리
-    if (audioPath && fs.existsSync(audioPath)) {
-      try {
-        fs.unlinkSync(audioPath);
-      } catch {}
-    }
-  }
-});
+  return outputPath;
+}
 
 /**
  * POST /api/subtitle/burn
  * 자막을 영상에 직접 입히기 (하드코딩)
  *
  * 비유: 영상 위에 자막을 "인쇄"해서 항상 보이게 만드는 것
- *       (유튜브 CC 자막과 달리, 켜고 끌 수 없음)
  *
  * 요청 본문:
  * - videoPath: 영상 파일 경로 (필수)
- * - subtitles: [{ start, end, text }] — 자막 데이터 배열 (srtPath가 없을 때)
- * - srtPath: SRT 파일 경로 (subtitles 대신 사용 가능)
+ * - subtitles: [{ start, end, text }] — 자막 데이터 배열
  * - fontFamily: 글꼴 이름 (선택)
  * - fontSize: 글자 크기 (선택)
  *
@@ -126,7 +80,7 @@ router.post('/generate', uploadVideo.single('video'), async (req, res) => {
  */
 router.post('/burn', async (req, res) => {
   try {
-    const { videoPath, subtitles, srtPath, fontFamily, fontSize } = req.body;
+    const { videoPath, subtitles, fontFamily, fontSize } = req.body;
 
     // 필수 입력값 검증
     if (!videoPath) {
@@ -136,17 +90,15 @@ router.post('/burn', async (req, res) => {
       });
     }
 
-    if (!subtitles && !srtPath) {
+    if (!subtitles || subtitles.length === 0) {
       return res.status(400).json({
         success: false,
-        error: '자막 데이터(subtitles) 또는 SRT 파일 경로(srtPath)를 입력해주세요.',
+        error: '자막 데이터(subtitles)를 입력해주세요.',
       });
     }
 
-    // 영상 파일 존재 확인
-    const resolvedVideoPath = videoPath.startsWith('/outputs/')
-      ? path.join(__dirname, '..', videoPath)
-      : videoPath;
+    // 영상 파일 존재 확인 (서버 내부 상대 경로를 절대 경로로 변환)
+    const resolvedVideoPath = path.join(__dirname, '..', videoPath);
 
     if (!fs.existsSync(resolvedVideoPath)) {
       return res.status(404).json({
@@ -155,27 +107,15 @@ router.post('/burn', async (req, res) => {
       });
     }
 
-    console.log('[Subtitle] 자막 입히기 요청');
+    console.log(`[Subtitle] 자막 입히기 요청: ${subtitles.length}개 구간`);
 
-    // SRT 파일 경로 결정
-    let finalSrtPath = srtPath;
-
-    // SRT 파일이 없고 자막 데이터가 있으면 SRT 파일 생성
-    if (!finalSrtPath && subtitles && subtitles.length > 0) {
-      finalSrtPath = whisperService.saveSRT(subtitles);
-    }
-
-    if (!finalSrtPath || !fs.existsSync(finalSrtPath)) {
-      return res.status(400).json({
-        success: false,
-        error: 'SRT 자막 파일을 생성하거나 찾을 수 없습니다.',
-      });
-    }
+    // 자막 데이터를 SRT 파일로 변환
+    const srtPath = saveSRT(subtitles);
 
     // FFmpeg로 자막 입히기 실행
     const outputPath = await ffmpegService.burnSubtitles(
       resolvedVideoPath,
-      finalSrtPath,
+      srtPath,
       {
         fontFamily: fontFamily || 'NanumGothic',
         fontSize: fontSize || 24,
