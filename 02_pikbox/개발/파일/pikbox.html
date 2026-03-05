@@ -10942,6 +10942,224 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════════
+       완성된 디자인 아카이브 — 폴더 관리 + 렌더링
+       done 상태 디자인을 폴더별로 분류하여 접기/펼치기 가능한 섹션으로 표시
+    ═══════════════════════════════════════════════════ */
+
+    /* ─── 아카이브 섹션 전체 렌더링 ─── */
+    // 사이드바 하단에 "완성된 디자인" 접이식 섹션을 그림
+    function drRenderArchiveSection() {
+      const container = document.getElementById('drArchiveSection');
+      if (!container) return;
+
+      // done 상태인 디자인만 추출
+      const doneDesigns = drState.allDesigns.filter(d => d.status === 'done');
+      const count = doneDesigns.length;
+
+      // 검색어가 있으면 아카이브 내에서도 필터링
+      const search = (document.getElementById('drSearchInput')?.value || '').toLowerCase();
+      const filteredDone = search
+        ? doneDesigns.filter(d => (d.name || '').toLowerCase().includes(search))
+        : doneDesigns;
+
+      // 펼침/접힘 상태에 따라 화살표 방향 변경
+      const arrow = drState.archiveExpanded ? '▾' : '▸';
+      const bodyStyle = drState.archiveExpanded ? '' : 'style="display:none"';
+
+      // 폴더별로 디자인 분류 — { folderId: [디자인들], '_none': [미분류] }
+      const byFolder = { '_none': [] };
+      drState.archiveFolders.forEach(f => { byFolder[f.id] = []; });
+      filteredDone.forEach(d => {
+        const fid = d.folder_id || '_none';
+        if (!byFolder[fid]) byFolder[fid] = []; // 삭제된 폴더 → 미분류
+        byFolder[fid].push(d);
+      });
+
+      // 폴더 HTML 생성
+      let foldersHtml = '';
+      drState.archiveFolders.forEach(folder => {
+        const items = byFolder[folder.id] || [];
+        const fExpanded = drState.expandedFolders[folder.id] !== false; // 기본 펼침
+        const fArrow = fExpanded ? '▾' : '▸';
+        const fBodyStyle = fExpanded ? '' : 'style="display:none"';
+        // 관리 모드에서만 삭제/이름변경 버튼 표시
+        const adminBtns = drState.folderAdminMode
+          ? `<span class="dr-folder-admin-btns">
+               <button class="dr-folder-admin-btn" onclick="event.stopPropagation();drRenameFolder('${folder.id}')" title="이름 변경">✎</button>
+               <button class="dr-folder-admin-btn dr-folder-del-btn" onclick="event.stopPropagation();drDeleteFolder('${folder.id}')" title="삭제">✕</button>
+             </span>`
+          : '';
+
+        foldersHtml += `
+          <div class="dr-folder">
+            <div class="dr-folder-header" onclick="drToggleFolderExpand('${folder.id}')">
+              <span class="dr-folder-arrow">${fArrow}</span>
+              <span class="dr-folder-icon">📁</span>
+              <span class="dr-folder-name">${escHtml(folder.name)}</span>
+              <span class="dr-folder-count">${items.length}</span>
+              ${adminBtns}
+            </div>
+            <div class="dr-folder-body" ${fBodyStyle}>
+              ${items.length === 0
+                ? '<div class="dr-archive-empty">폴더가 비어 있습니다</div>'
+                : items.map(d => drArchiveCardHtml(d)).join('')}
+            </div>
+          </div>`;
+      });
+
+      // 미분류 디자인 (폴더 미지정)
+      const uncategorized = byFolder['_none'] || [];
+      let uncatHtml = '';
+      if (uncategorized.length > 0) {
+        uncatHtml = `
+          <div class="dr-folder dr-folder-uncategorized">
+            <div class="dr-folder-header dr-folder-header-uncat">
+              <span class="dr-folder-icon">📋</span>
+              <span class="dr-folder-name">미분류</span>
+              <span class="dr-folder-count">${uncategorized.length}</span>
+            </div>
+            <div class="dr-folder-body">
+              ${uncategorized.map(d => drArchiveCardHtml(d)).join('')}
+            </div>
+          </div>`;
+      }
+
+      // 관리 모드 버튼 텍스트
+      const adminBtnText = drState.folderAdminMode ? '완료' : '관리';
+
+      container.innerHTML = `
+        <div class="dr-archive-section">
+          <div class="dr-archive-header" onclick="drToggleArchive()">
+            <span class="dr-archive-arrow">${arrow}</span>
+            <span class="dr-archive-title">완성된 디자인</span>
+            <span class="dr-archive-count">${count}</span>
+            <span class="dr-archive-actions" onclick="event.stopPropagation()">
+              <button class="dr-archive-btn" onclick="drCreateFolder()" title="폴더 추가">+ 폴더</button>
+              <button class="dr-archive-btn" onclick="drToggleFolderAdmin()" title="폴더 관리">${adminBtnText}</button>
+            </span>
+          </div>
+          <div class="dr-archive-body" ${bodyStyle}>
+            ${foldersHtml}
+            ${uncatHtml}
+            ${filteredDone.length === 0 ? '<div class="dr-archive-empty">완성된 디자인이 없습니다</div>' : ''}
+          </div>
+        </div>`;
+    }
+
+    /* ─── 아카이브 디자인 카드 HTML — 폴더 이동 드롭다운 포함 ─── */
+    function drArchiveCardHtml(d) {
+      const isActive = d.id === drState.currentDesignId ? 'active' : '';
+      // 폴더 이동 옵션 생성
+      const folderOpts = drState.archiveFolders.map(f =>
+        `<option value="${f.id}" ${d.folder_id === f.id ? 'selected' : ''}>${escHtml(f.name)}</option>`
+      ).join('');
+
+      return `
+        <div class="dr-design-card dr-archive-card ${isActive}"
+             onclick="drSelectDesign('${d.id}')">
+          <div class="dr-card-body">
+            <div class="dr-card-name">${escHtml(d.name || '이름 없음')}</div>
+            <div class="dr-card-meta">
+              <span class="dr-badge dr-badge-done">${drStatusLabel(d.status)}</span>
+              <span class="dr-card-date">${drFormatDate(d.created_at)}</span>
+            </div>
+            <select class="dr-folder-select" onclick="event.stopPropagation()"
+                    onchange="drMoveToFolder('${d.id}', this.value)">
+              <option value="" ${!d.folder_id ? 'selected' : ''}>미분류</option>
+              ${folderOpts}
+            </select>
+          </div>
+        </div>`;
+    }
+
+    /* ─── 아카이브 섹션 열기/닫기 토글 ─── */
+    function drToggleArchive() {
+      drState.archiveExpanded = !drState.archiveExpanded;
+      drRenderArchiveSection();
+    }
+
+    /* ─── 폴더 열기/닫기 토글 ─── */
+    function drToggleFolderExpand(folderId) {
+      // 현재 상태 반전 (기본값 true = 펼침)
+      const current = drState.expandedFolders[folderId] !== false;
+      drState.expandedFolders[folderId] = !current;
+      drRenderArchiveSection();
+    }
+
+    /* ─── 폴더 관리 모드 토글 ─── */
+    function drToggleFolderAdmin() {
+      drState.folderAdminMode = !drState.folderAdminMode;
+      drRenderArchiveSection();
+    }
+
+    /* ─── 폴더 생성 — 이름 입력 후 Firebase에 저장 ─── */
+    async function drCreateFolder() {
+      const name = prompt('새 폴더 이름을 입력하세요:');
+      if (!name || !name.trim()) return;
+      try {
+        // 현재 폴더 수를 order로 사용 (마지막에 추가)
+        const order = drState.archiveFolders.length;
+        await firebaseDb.ref(DR_ARCHIVE_FOLDERS).push({
+          name: name.trim(),
+          order: order,
+          created_at: new Date().toISOString()
+        });
+        toast(`폴더 '${name.trim()}' 생성 완료`, 'success');
+      } catch (e) {
+        toast('폴더 생성 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 폴더 삭제 — 소속 디자인은 미분류로 이동 ─── */
+    async function drDeleteFolder(folderId) {
+      const folder = drState.archiveFolders.find(f => f.id === folderId);
+      if (!folder) return;
+      if (!confirm(`'${folder.name}' 폴더를 삭제하시겠습니까?\n(소속 디자인은 미분류로 이동됩니다)`)) return;
+      try {
+        // 해당 폴더에 속한 디자인의 folder_id를 null로 변경
+        const affectedDesigns = drState.allDesigns.filter(d => d.folder_id === folderId);
+        const updates = {};
+        affectedDesigns.forEach(d => {
+          updates[`${DR_DESIGNS}/${d.id}/folder_id`] = null;
+        });
+        // 폴더 자체 삭제
+        updates[`${DR_ARCHIVE_FOLDERS}/${folderId}`] = null;
+        await firebaseDb.ref().update(updates);
+        toast(`폴더 '${folder.name}' 삭제 완료`, 'success');
+      } catch (e) {
+        toast('폴더 삭제 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 폴더 이름 변경 ─── */
+    async function drRenameFolder(folderId) {
+      const folder = drState.archiveFolders.find(f => f.id === folderId);
+      if (!folder) return;
+      const newName = prompt('새 폴더 이름:', folder.name);
+      if (!newName || !newName.trim() || newName.trim() === folder.name) return;
+      try {
+        await firebaseDb.ref(`${DR_ARCHIVE_FOLDERS}/${folderId}`).update({
+          name: newName.trim()
+        });
+        toast(`폴더 이름이 '${newName.trim()}'(으)로 변경되었습니다`, 'success');
+      } catch (e) {
+        toast('폴더 이름 변경 실패: ' + e.message, 'error');
+      }
+    }
+
+    /* ─── 디자인을 폴더로 이동 — 드롭다운 선택 시 호출 ─── */
+    async function drMoveToFolder(designId, folderId) {
+      try {
+        // 빈 문자열이면 미분류 (folder_id를 null로)
+        await firebaseDb.ref(`${DR_DESIGNS}/${designId}`).update({
+          folder_id: folderId || null
+        });
+      } catch (e) {
+        toast('폴더 이동 실패: ' + e.message, 'error');
+      }
+    }
+
     /* ─── 인라인 제목 편집 ─── */
     function drStartEditTitle() {
       // 제목 span을 input으로 교체
