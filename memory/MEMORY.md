@@ -1,16 +1,16 @@
 # 프로젝트 메모리 (2026-03-04 세션 13 기준)
 
-## 최근 세션 요약 (2026-03-05 세션 16 - DeepDig 브랜드 링크 자동 추가)
+## 최근 세션 요약 (2026-03-05 세션 11 - Pikbox YouTube 탭 완성)
 
-### 핵심 작업 (2가지)
-1. **DeepDig 리포트 브랜드 링크 자동 추가**:
-   - 스크립트: `04_deepdig/scripts/add-brand-links.js` (307줄)
-   - 방식: HTML 토크나이저 기반 텍스트 노드 치환
-   - 결과: 12개 리포트 파일에 948개 브랜드 링크 추가
-   - 브랜드 매핑: 100+ 브랜드 → 공식 URL (AI/부동산/소셜/기업)
-   - 스타일: dotted 파란색 밑줄 + 호버 시 실선 전환
-2. **AI 영상 제작 기술 카테고리 frequency 변경**:
-   - registry.js: cat_007 frequency annual → weekly 변경
+### 핵심 작업 (1가지)
+1. **Pikbox YouTube 탭 대규모 개선 완료**:
+   - **사이드바 상시 표시 구조**: 레퍼런스 탭과 동일한 CSS 패턴 (260px 너비, 핸들바, 횡스크롤)
+   - **선택/삭제/드래그 선택**: ytToggleSelect() 자동 활성화, 멀티선택 모드 체크박스
+   - **플레이어 모달 액션 바**: (#ytPlayerActions) 즐겨찾기(☆/★) + 저장 버튼(📥/✓) 추가
+   - **탭 상태 유지**: localStorage activeView로 새로고침 후 마지막 탭 복원
+   - **기능 제거**: ytDeepAnalyzeVideo() 함수 (~170줄) 삭제 — 영상 직접 시청 분석 제거
+   - **DB 경로**: `pikbox/yt-categories/{id}` + `pikbox/yt-videos/{id}`
+   - **배포**: Firebase https://pikbox-app.web.app 완료 (HTTP 200 확인)
 
 ### 기술 학습
 - **HTML 토크나이저**: 태그/텍스트 분리 → 특수문자 혼란 방지
