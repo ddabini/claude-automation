@@ -6020,20 +6020,21 @@
       }
     }
 
-    // 실제 검색 수행 — Serper.dev 핵심 (Instagram / Meta 광고 / Pinterest 집중)
+    // 실제 검색 수행 — Cloud Function 크롤링 + Serper 보조
     async function doSearch(body, isFirstSearch) {
       const statusEl = document.getElementById('runStatus');
       const hasSerper = !!config.serperKey;
+      const hasCloudFunctions = !!(config.instagramFnUrl || config.metaAdsFnUrl || config.pinterestFnUrl);
 
-      // Serper 키가 없으면 검색 불가 안내
-      if (!hasSerper) {
+      // Cloud Function도 Serper 키도 없으면 검색 불가
+      if (!hasSerper && !hasCloudFunctions) {
         body.innerHTML = `
           <div style="text-align:center;padding:30px;">
-            <p style="color:var(--danger);font-weight:600;margin-bottom:8px;">Serper API Key가 필요합니다</p>
+            <p style="color:var(--danger);font-weight:600;margin-bottom:8px;">검색 설정이 필요합니다</p>
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
-              Instagram·Meta 광고·Pinterest 검색을 위해 Serper.dev API 키가 필요합니다.
+              Cloud Function 또는 Serper API Key를 설정하면 검색이 활성화됩니다.
             </p>
-            <button class="btn btn-sm btn-primary" onclick="openSettings()" style="margin-top:8px;">⚙️ 설정에서 키 입력</button>
+            <button class="btn btn-sm btn-primary" onclick="openSettings()" style="margin-top:8px;">⚙️ 설정</button>
           </div>`;
         return;
       }
