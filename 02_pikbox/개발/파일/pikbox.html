@@ -9110,20 +9110,13 @@
         return;
       }
 
-      // 스트리밍 UI 초기 구조
+      // 로딩 UI — 스피너만 표시 (3~5초 후 완성된 결과로 교체)
       analysisEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:13px;">🤖</span>
-          <span style="font-size:12px;font-weight:700;color:var(--text-primary);">AI 영상 분석</span>
-          <span style="background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;">Gemini</span>
-          <span id="ytStreamStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;">분석 준비 중...</span>
+        <div style="text-align:center;padding:20px;">
+          <div style="display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-top:10px;">AI 분석 중</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">잠시만 기다려주세요</div>
         </div>
-        <div id="ytStreamBody" style="
-          font-size:12px;line-height:1.7;color:var(--text-secondary);
-          background:var(--bg);border-radius:10px;padding:14px;
-          border:1px solid var(--border);min-height:60px;
-          white-space:pre-wrap;word-break:break-word;
-        "><span style="color:var(--text-muted);">영상 정보를 수집하고 있습니다...</span></div>
       `;
 
       try {
