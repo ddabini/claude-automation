@@ -8436,13 +8436,23 @@
     // viewCount, likeCount, commentCount를 인사이트 패널에 표시
     async function ytFetchVideoStats(videoId, apiKey) {
       const statsEl = document.getElementById('ytInsightStats');
-      if (!statsEl) return;
+      if (!statsEl || ytState.ytApiDisabled) return;
 
       try {
         const res = await fetch(
           `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${apiKey}`
         );
         const data = await res.json();
+
+        // 할당량 초과 감지 → 세션 내 API 비활성화
+        if (!res.ok && data.error?.errors?.[0]?.reason === 'quotaExceeded') {
+          ytState.ytApiDisabled = true;
+          statsEl.innerHTML = `
+            <hr class="yt-insight-divider">
+            <p style="font-size:12px;color:var(--text-muted);text-align:center;">YouTube API 일일 할당량 초과</p>
+          `;
+          return;
+        }
 
         if (!res.ok || !data.items || data.items.length === 0) {
           statsEl.innerHTML = `
