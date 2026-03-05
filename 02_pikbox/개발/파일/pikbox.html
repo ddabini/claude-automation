@@ -9465,12 +9465,17 @@
         // 클릭 시 인라인 플레이어 열기
         card.onclick = () => ytOpenPlayer(r);
 
+        // 이미 저장된 영상인지 확인
+        const _vid = ytExtractVideoId(r.sourceUrl);
+        const _saved = ytState.savedVideoIds.has(_vid);
+
         card.innerHTML = `
           <div class="yt-thumb">
             <img alt="${escHtml(r.title)}" loading="lazy">
             <div class="yt-play-btn"></div>
             ${r.isShorts ? '<span class="yt-shorts-badge">SHORTS</span>' : ''}
             ${r.duration ? `<span class="yt-duration">${escHtml(r.duration)}</span>` : ''}
+            <button class="yt-save-btn ${_saved ? 'saved' : ''}" data-vid="${_vid}" title="카테고리에 저장">${_saved ? '✓' : '📥'}</button>
           </div>
           <div class="yt-info">
             <div class="yt-title">${escHtml(r.title)}</div>
@@ -9478,6 +9483,9 @@
             ${r.viewsRaw ? `<div class="yt-views">조회수 ${escHtml(r.viewsRaw)}</div>` : ''}
           </div>
         `;
+        // 저장 버튼 이벤트 연결
+        const saveBtn = card.querySelector('.yt-save-btn');
+        if (saveBtn) saveBtn.addEventListener('click', (ev) => ytShowSaveMenu(ev, r));
         grid.appendChild(card);
 
         // 썸네일 후보 목록 — 고화질부터 순서대로 시도
