@@ -1097,7 +1097,7 @@ def build_tech_stack(story):
         col_widths=[CONTENT_W * 0.3, CONTENT_W * 0.7]
     ))
 
-    story.append(PageBreak())
+    # PageBreak 제거 — 인프라 테이블 뒤 빈 공간에 로드맵 시작
 
 
 def build_roadmap(story):
