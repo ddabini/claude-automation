@@ -8501,6 +8501,137 @@
       }
     }
 
+    // ─── Most Replayed 히트맵 — 시청자가 많이 본 구간 시각화 ───
+    // Cloud Function에서 히트맵 데이터를 가져와 SVG area chart로 표시
+    async function ytFetchHeatmap(videoId) {
+      const section = document.getElementById('ytHeatmapSection');
+      if (!section || !config.ytHeatmapUrl) return;
+
+      // 로딩 표시
+      section.innerHTML = `
+        <hr class="yt-insight-divider">
+        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
+          🔥 시청자 몰입도 (Most Replayed)
+        </div>
+        <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
+          히트맵 로딩 중...
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`${config.ytHeatmapUrl}?videoId=${videoId}`, {
+          signal: AbortSignal.timeout(15000)
+        });
+        if (!res.ok) throw new Error('히트맵 API 오류');
+        const data = await res.json();
+
+        if (!data.markers || data.markers.length === 0) {
+          section.innerHTML = `
+            <hr class="yt-insight-divider">
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
+              🔥 시청자 몰입도 (Most Replayed)
+            </div>
+            <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
+              이 영상은 히트맵 데이터가 없습니다
+            </div>
+          `;
+          return;
+        }
+
+        // SVG area chart 생성
+        const svgHtml = ytRenderHeatmapSVG(data.markers);
+        section.innerHTML = `
+          <hr class="yt-insight-divider">
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
+            🔥 시청자 몰입도 (Most Replayed)
+          </div>
+          ${svgHtml}
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:2px;">
+            <span>0:00</span>
+            <span>${ytFormatMs(data.markers[data.markers.length - 1].startMs + data.markers[data.markers.length - 1].durationMs)}</span>
+          </div>
+        `;
+      } catch (e) {
+        section.innerHTML = `
+          <hr class="yt-insight-divider">
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
+            🔥 시청자 몰입도 (Most Replayed)
+          </div>
+          <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--text-muted);">
+            히트맵을 불러올 수 없습니다
+          </div>
+        `;
+      }
+    }
+
+    // ─── 히트맵 SVG area chart 렌더링 ───
+    // markers: [{startMs, durationMs, intensity(0~1)}]
+    // intensity를 높이로 변환하여 그래디언트 area chart 생성
+    function ytRenderHeatmapSVG(markers) {
+      const width = 280;   // SVG 너비 (인사이트 패널에 맞춤)
+      const height = 50;   // SVG 높이
+      const padding = 0;
+      const count = markers.length;
+      if (count === 0) return '';
+
+      // 각 마커의 x 좌표와 y 좌표(intensity 기반) 계산
+      const stepX = width / count;
+      const points = markers.map((m, i) => {
+        const x = i * stepX;
+        // intensity를 높이로 변환 (0 → 바닥, 1 → 꼭대기)
+        const y = height - (m.intensity * height * 0.9) - 2; // 최소 2px 여백
+        return { x, y, intensity: m.intensity };
+      });
+
+      // SVG path 생성 — 부드러운 곡선 (area chart)
+      // 상단 라인: 데이터 포인트 연결
+      let pathD = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        // 베지어 커브로 부드럽게 연결
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cpx = (prev.x + curr.x) / 2;
+        pathD += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+      }
+      // 하단 닫기: 오른쪽 끝 → 바닥 → 왼쪽 시작
+      pathD += ` L ${width} ${height} L 0 ${height} Z`;
+
+      // 가장 높은 구간 하이라이트 (상위 10%)
+      const threshold = 0.9;
+      const hotSpots = markers
+        .map((m, i) => ({ ...m, index: i }))
+        .filter(m => m.intensity >= threshold);
+
+      let hotSpotRects = '';
+      hotSpots.forEach(h => {
+        const x = h.index * stepX;
+        hotSpotRects += `<rect x="${x}" y="0" width="${stepX}" height="${height}" fill="rgba(255,0,0,0.1)" rx="1"/>`;
+      });
+
+      return `
+        <svg width="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"
+             style="display:block;border-radius:6px;background:#f8f9fa;overflow:hidden;">
+          <defs>
+            <linearGradient id="heatGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ef4444" stop-opacity="0.8"/>
+              <stop offset="50%" stop-color="#f97316" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          ${hotSpotRects}
+          <path d="${pathD}" fill="url(#heatGrad)" stroke="#ef4444" stroke-width="1.5" stroke-opacity="0.6"/>
+        </svg>
+      `;
+    }
+
+    // ─── 밀리초 → "M:SS" 포맷 변환 ───
+    function ytFormatMs(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      return `${min}:${sec.toString().padStart(2, '0')}`;
+    }
+
     // ─── YouTube 영상 구성 분석 ───
     // 영상 메타데이터(제목, 설명, 채널, 길이, 조회수 등)를 기반으로
     // 영상의 구성과 핵심 포인트를 자동 분석하여 보여줌
