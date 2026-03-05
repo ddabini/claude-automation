@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pikbox Editor</title>
+
+  <!-- ═══════════════════════════════════════════════
+       파일 역할:
+       Pikbox 디자인 에디터 — 미리캔버스/Canva 같은 디자인 편집 도구의 MVP 프로토타입.
+       Firebase에서 디자인 HTML을 불러와 Fabric.js 캔버스 위에 렌더링하고,
+       텍스트 요소를 선택·편집·이동·크기조절할 수 있다.
+       완성되면 PNG로 내보내기 가능.
+  ═══════════════════════════════════════════════ -->
+
+  <!-- Pretendard 폰트 — 한국어 UI와 캔버스 텍스트 렌더링에 사용 -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+
+  <!-- Paperlogy 폰트 — 디자인 작업에서 자주 사용되는 추가 한국어 폰트 -->
+  <link href="https://cdn.jsdelivr.net/gh/nicepayments/nicepay-Paperlogy@main/paperlogy.css" rel="stylesheet">
+
+  <!-- Noto Sans KR 폰트 — Google 한국어 폰트 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK (compat v10.8.0) — 디자인 데이터를 클라우드에서 불러오기 위한 라이브러리 -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <!-- Fabric.js 5.3.1 — 캔버스 기반 디자인 편집 엔진 (드래그, 크기조절, 텍스트편집 등) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+  <!-- html2canvas 1.4.1 — HTML을 이미지로 변환하는 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       스타일 시트 — Pikbox 디자인 시스템을 따르되,
+       에디터 전용 CSS는 'de-' 접두사로 구분
+    ═══════════════════════════════════════════════ */
+
+    /* ── 리셋 및 기본 설정 ── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Pikbox 인디고 계열 주색 */
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: #eef2ff;
+      --primary-bg: #f0f0ff;
+
+      /* 중립 색상 */
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --border-hover: #d1d5db;
+      --text: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+
+      /* 상태 색상 */
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+
+      /* 레이아웃 크기 */
+      --de-toolbar-h: 48px;
+      --de-sidebar-w: 240px;
+      --de-props-w: 260px;
+      --de-footer-h: 40px;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    button { cursor: pointer; font-family: inherit; border: none; background: none; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ── 최상단 툴바 — 선택/텍스트추가/되돌리기 등 주요 도구 모음 ── */
+    .de-toolbar {
+      height: var(--de-toolbar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 4px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+    }
+
+    /* 툴바 로고 — 왼쪽에 에디터 이름 표시 */
+    .de-toolbar-logo {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-right: 16px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .de-toolbar-logo svg { flex-shrink: 0; }
+
+    /* 툴바 버튼 — 아이콘 + 텍스트 형태의 도구 버튼 */
+    .de-tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .de-tool-btn:hover { background: var(--primary-light); color: var(--primary); }
+    .de-tool-btn.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .de-tool-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* 툴바 구분선 — 도구 그룹 사이의 시각적 분리 */
+    .de-tool-sep {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 6px;
+    }
+
+    /* 툴바 오른쪽 영역 — 내보내기/저장 버튼이 우측 정렬 */
+    .de-toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 강조 버튼 — 내보내기 등 주요 액션 */
+    .de-btn-primary {
+      background: var(--primary);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .de-btn-primary:hover { background: var(--primary-hover); }
+
+    /* ── 메인 레이아웃 — 좌측 사이드바 + 중앙 캔버스 + 우측 속성패널 3단 ── */
+    .de-layout {
+      display: flex;
+      height: calc(100vh - var(--de-toolbar-h) - var(--de-footer-h));
+      margin-top: var(--de-toolbar-h);
+    }
+
+    /* ── 좌측 사이드바 — Firebase에서 로드한 디자인 목록 ── */
+    .de-sidebar {
+      width: var(--de-sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    /* 사이드바 헤더 — "디자인 목록" 제목 */
+    .de-sidebar-header {
+      padding: 14px 14px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 디자인 목록 스크롤 영역 */
+    .de-design-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    /* 디자인 카드 — 클릭하면 해당 디자인을 캔버스에 로드 */
+    .de-design-card {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 4px;
+    }
+    .de-design-card:hover { background: #f3f4f6; }
+    .de-design-card.active { background: var(--primary-light); border-left: 3px solid var(--primary); }
+
+    .de-design-card-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .de-design-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    /* 상태 뱃지 — review/approved 등 상태 구분 색상 */
+    .de-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .de-badge-review { background: #fef3c7; color: #92400e; }
+    .de-badge-request { background: #fee2e2; color: #991b1b; }
+    .de-badge-approved { background: #d1fae5; color: #065f46; }
+    .de-badge-done { background: #e0e7ff; color: #3730a3; }
+
+    /* 로딩/빈 상태 표시 */
+    .de-sidebar-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ── 중앙 캔버스 영역 — Fabric.js 캔버스가 들어가는 메인 작업 공간 ── */
+    .de-canvas-area {
+      flex: 1;
+      background: #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      position: relative;
+    }
+
+    /* 캔버스를 감싸는 프레임 — 그림자로 '종이' 느낌 연출 */
+    .de-canvas-frame {
+      background: #fff;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.12);
+      position: relative;
+      /* 줌 레벨에 따라 transform: scale() 적용 */
+      transform-origin: center center;
+    }
+
+    /* 디자인 미선택 시 안내 메시지 */
+    .de-empty-canvas {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+    .de-empty-canvas svg { opacity: 0.3; }
+    .de-empty-canvas p { font-size: 14px; }
+
+    /* ── 우측 속성 패널 — 선택된 요소의 폰트/색상/정렬 등 편집 ── */
+    .de-props {
+      width: var(--de-props-w);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 속성 패널 헤더 — "속성" 제목 */
+    .de-props-header {
+      padding: 14px 14px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 속성 그룹 — 텍스트/폰트/색상 등 카테고리별 묶음 */
+    .de-prop-group {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .de-prop-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    /* 속성 행 — 라벨 + 입력 필드 한 쌍 */
+    .de-prop-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .de-prop-row:last-child { margin-bottom: 0; }
+
+    .de-prop-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      width: 52px;
+      flex-shrink: 0;
+    }
+
+    /* 공통 입력 필드 스타일 */
+    .de-prop-input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 8px;
+      font-size: 12px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .de-prop-input:focus { border-color: var(--primary); }
+
+    /* 드롭다운(select) 스타일 */
+    .de-prop-select {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 8px;
+      font-size: 12px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+    }
+    .de-prop-select:focus { border-color: var(--primary); }
+
+    /* 텍스트 정렬 버튼 그룹 */
+    .de-align-group {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+    .de-align-btn {
+      flex: 1;
+      padding: 5px 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--text-secondary);
+      font-size: 13px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .de-align-btn:hover { background: #f9fafb; }
+    .de-align-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .de-align-btn svg { width: 14px; height: 14px; }
+
+    /* 색상 선택기 */
+    .de-color-input {
+      width: 32px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      padding: 2px;
+      background: #fff;
+    }
+    .de-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .de-color-input::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+    /* 색상값 텍스트 표시 */
+    .de-color-text {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+
+    /* 텍스트 내용 편집 영역 */
+    .de-prop-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      font-size: 12px;
+      color: var(--text);
+      resize: vertical;
+      min-height: 60px;
+      outline: none;
+      font-family: 'Pretendard', sans-serif;
+      line-height: 1.5;
+    }
+    .de-prop-textarea:focus { border-color: var(--primary); }
+
+    /* 슬라이더 — 폰트 크기/간격 조절 */
+    .de-slider {
+      flex: 1;
+      accent-color: var(--primary);
+      height: 4px;
+    }
+    .de-slider-val {
+      width: 36px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px 4px;
+    }
+
+    /* 선택된 요소가 없을 때 속성 패널 안내 */
+    .de-props-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 20px;
+      text-align: center;
+      gap: 8px;
+    }
+    .de-props-empty svg { opacity: 0.3; }
+
+    /* ── 하단 줌 컨트롤 바 ── */
+    .de-footer {
+      height: var(--de-footer-h);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+    }
+
+    .de-zoom-btn {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .de-zoom-btn:hover { background: #f3f4f6; color: var(--text); }
+    .de-zoom-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 40px;
+      text-align: center;
+    }
+
+    /* ── 로딩 오버레이 — 디자인 로드 중 표시 ── */
+    .de-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      gap: 12px;
+    }
+    .de-loading-hidden { display: none; }
+    .de-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: de-spin 0.8s linear infinite;
+    }
+    @keyframes de-spin { to { transform: rotate(360deg); } }
+    .de-loading-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── 토스트 알림 — 하단 중앙에 잠깐 표시되는 메시지 ── */
+    .de-toast-container {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+    .de-toast {
+      background: var(--text);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      animation: de-toast-in 0.2s ease-out;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .de-toast.success { background: var(--success); }
+    .de-toast.error { background: var(--danger); }
+    @keyframes de-toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Fabric.js 캔버스 위 레이어 — 텍스트 하이라이트 표시용 ── */
+    /* Fabric.js는 자체 캔버스 컨테이너를 생성하므로 별도 스타일 불필요 */
+    .canvas-container {
+      /* Fabric.js가 자동 생성하는 wrapper */
+    }
+
+    /* ── 키보드 단축키 안내 팝업 ── */
+    .de-shortcuts-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .de-shortcuts-panel {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 24px;
+      min-width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .de-shortcuts-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .de-shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+    .de-shortcut-key {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+    .de-shortcuts-close {
+      margin-top: 16px;
+      width: 100%;
+      padding: 8px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── 숨겨진 HTML 렌더링 컨테이너 — 디자인 HTML을 임시 렌더링하여 텍스트 파싱에 사용 ── */
+    .de-hidden-render {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      width: 1080px;
+      visibility: hidden;
+      z-index: -1;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ═══════════════════════════════════════════════
+       HTML 구조:
+       1. 상단 툴바 — 도구 선택, 되돌리기, 내보내기 버튼
+       2. 3단 레이아웃:
+          - 좌측: Firebase 디자인 목록
+          - 중앙: Fabric.js 캔버스 (메인 편집 영역)
+          - 우측: 선택된 요소의 속성 편집 패널
+       3. 하단 줌 컨트롤 바
+  ═══════════════════════════════════════════════ -->
+
+  <!-- ── 1. 상단 툴바 ── -->
+  <div class="de-toolbar">
+    <!-- 로고 -->
+    <div class="de-toolbar-logo">
+      <!-- Pikbox 아이콘 (인디고 상자) -->
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M9 3v18M3 9h6M3 15h6"/>
+      </svg>
+      Pikbox Editor
+    </div>
+
+    <!-- 선택 도구 — 요소를 클릭/드래그/크기조절하는 기본 도구 -->
+    <button class="de-tool-btn active" id="deToolSelect" onclick="deSetTool('select')" title="선택 도구 (V)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+        <path d="M13 13l6 6"/>
+      </svg>
+      선택
+    </button>
+
+    <!-- 텍스트 추가 도구 — 캔버스에 새 텍스트박스를 추가 -->
+    <button class="de-tool-btn" id="deToolText" onclick="deSetTool('text')" title="텍스트 추가 (T)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7"/>
+        <line x1="9.5" y1="20" x2="14.5" y2="20"/>
+        <line x1="12" y1="4" x2="12" y2="20"/>
+      </svg>
+      텍스트
+    </button>
+
+    <div class="de-tool-sep"></div>
+
+    <!-- 되돌리기 — 마지막 작업을 취소 (Ctrl+Z) -->
+    <button class="de-tool-btn" onclick="deUndo()" title="되돌리기 (Ctrl+Z)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+      </svg>
+    </button>
+
+    <!-- 다시하기 — 되돌린 작업을 다시 실행 (Ctrl+Shift+Z) -->
+    <button class="de-tool-btn" onclick="deRedo()" title="다시하기 (Ctrl+Shift+Z)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/>
+      </svg>
+    </button>
+
+    <div class="de-tool-sep"></div>
+
+    <!-- 단축키 안내 -->
+    <button class="de-tool-btn" onclick="deShowShortcuts()" title="키보드 단축키">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/>
+      </svg>
+    </button>
+
+    <!-- 오른쪽: 내보내기 버튼 -->
+    <div class="de-toolbar-right">
+      <!-- PNG 내보내기 — 캔버스를 PNG 이미지 파일로 다운로드 -->
+      <button class="de-btn-primary" onclick="deExportPNG()" title="PNG로 내보내기">
+        <span style="display:flex;align-items:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          PNG 내보내기
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 2. 메인 레이아웃 (3단) ── -->
+  <div class="de-layout">
+
+    <!-- 좌측: 디자인 목록 사이드바 -->
+    <div class="de-sidebar">
+      <div class="de-sidebar-header">디자인 목록</div>
+      <div class="de-design-list" id="deDesignList">
+        <div class="de-sidebar-empty">불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- 중앙: 캔버스 영역 -->
+    <div class="de-canvas-area" id="deCanvasArea">
+      <!-- 디자인 미선택 시 표시되는 안내 -->
+      <div class="de-empty-canvas" id="deEmptyCanvas">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <p>왼쪽 목록에서 디자인을 선택하세요</p>
+      </div>
+
+      <!-- Fabric.js 캔버스가 들어갈 프레임 (디자인 선택 후 표시) -->
+      <div class="de-canvas-frame" id="deCanvasFrame" style="display:none;">
+        <canvas id="deCanvas"></canvas>
+      </div>
+
+      <!-- 로딩 오버레이 — 디자인을 불러오는 동안 표시 -->
+      <div class="de-loading de-loading-hidden" id="deLoading">
+        <div class="de-spinner"></div>
+        <div class="de-loading-text">디자인을 불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- 우측: 속성 패널 -->
+    <div class="de-props" id="dePropsPanel">
+      <!-- 선택된 요소가 없을 때 안내 -->
+      <div class="de-props-empty" id="dePropsEmpty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        <p>요소를 선택하면<br>여기서 속성을 편집할 수 있습니다</p>
+      </div>
+
+      <!-- 선택된 요소의 속성 편집 영역 (요소 선택 시 표시) -->
+      <div id="dePropsContent" style="display:none;">
+        <div class="de-props-header">텍스트 속성</div>
+
+        <!-- 텍스트 내용 편집 -->
+        <div class="de-prop-group">
+          <div class="de-prop-group-title">내용</div>
+          <textarea class="de-prop-textarea" id="dePropText" rows="3"
+                    oninput="dePropTextChange(this.value)"
+                    placeholder="텍스트를 입력하세요"></textarea>
+        </div>
+
+        <!-- 폰트 설정 — 폰트 종류, 크기, 굵기 -->
+        <div class="de-prop-group">
+          <div class="de-prop-group-title">폰트</div>
+
+          <!-- 폰트 패밀리 선택 — 디자인에 사용할 글꼴 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">글꼴</span>
+            <select class="de-prop-select" id="dePropFont" onchange="dePropFontChange(this.value)">
+              <option value="Pretendard">Pretendard</option>
+              <option value="Paperlogy">Paperlogy</option>
+              <option value="Noto Sans KR">Noto Sans KR</option>
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+            </select>
+          </div>
+
+          <!-- 폰트 크기 — 슬라이더와 숫자 입력으로 동시 조절 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">크기</span>
+            <input type="range" class="de-slider" id="dePropSizeSlider"
+                   min="8" max="200" value="24"
+                   oninput="dePropSizeChange(this.value)">
+            <input type="number" class="de-slider-val" id="dePropSizeVal"
+                   min="8" max="200" value="24"
+                   onchange="dePropSizeChange(this.value)">
+          </div>
+
+          <!-- 폰트 웨이트(굵기) 선택 — 숫자가 클수록 굵은 글씨 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">굵기</span>
+            <select class="de-prop-select" id="dePropWeight" onchange="dePropWeightChange(this.value)">
+              <option value="300">Light (300)</option>
+              <option value="400">Regular (400)</option>
+              <option value="500">Medium (500)</option>
+              <option value="600">SemiBold (600)</option>
+              <option value="700" selected>Bold (700)</option>
+              <option value="800">ExtraBold (800)</option>
+              <option value="900">Black (900)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 색상 설정 -->
+        <div class="de-prop-group">
+          <div class="de-prop-group-title">색상</div>
+
+          <!-- 텍스트 색상 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">글자색</span>
+            <input type="color" class="de-color-input" id="dePropColor"
+                   value="#000000" onchange="dePropColorChange(this.value)">
+            <span class="de-color-text" id="dePropColorText">#000000</span>
+          </div>
+
+          <!-- 배경 색상 (텍스트 하이라이트) -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">배경색</span>
+            <input type="color" class="de-color-input" id="dePropBgColor"
+                   value="#ffffff" onchange="dePropBgColorChange(this.value)">
+            <span class="de-color-text" id="dePropBgColorText">#ffffff</span>
+            <button class="de-zoom-btn" onclick="dePropBgColorClear()" title="배경색 제거" style="font-size:11px;padding:3px 6px;">지우기</button>
+          </div>
+        </div>
+
+        <!-- 정렬 및 간격 -->
+        <div class="de-prop-group">
+          <div class="de-prop-group-title">정렬</div>
+
+          <!-- 텍스트 정렬 — 좌/중/우 선택 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">정렬</span>
+            <div class="de-align-group">
+              <!-- 왼쪽 정렬 -->
+              <button class="de-align-btn active" data-align="left" onclick="dePropAlignChange('left')" title="왼쪽 정렬">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>
+                </svg>
+              </button>
+              <!-- 가운데 정렬 -->
+              <button class="de-align-btn" data-align="center" onclick="dePropAlignChange('center')" title="가운데 정렬">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="18" y1="14" x2="6" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>
+                </svg>
+              </button>
+              <!-- 오른쪽 정렬 -->
+              <button class="de-align-btn" data-align="right" onclick="dePropAlignChange('right')" title="오른쪽 정렬">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="7" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 줄 간격 — 텍스트 줄 사이의 간격 조절 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">줄 간격</span>
+            <input type="range" class="de-slider" id="dePropLineSlider"
+                   min="0.8" max="3" step="0.1" value="1.2"
+                   oninput="dePropLineHeightChange(this.value)">
+            <input type="number" class="de-slider-val" id="dePropLineVal"
+                   min="0.8" max="3" step="0.1" value="1.2"
+                   onchange="dePropLineHeightChange(this.value)">
+          </div>
+
+          <!-- 자간 — 글자 사이의 간격 조절 -->
+          <div class="de-prop-row">
+            <span class="de-prop-label">자간</span>
+            <input type="range" class="de-slider" id="dePropCharSlider"
+                   min="-100" max="500" step="10" value="0"
+                   oninput="dePropCharSpacingChange(this.value)">
+            <input type="number" class="de-slider-val" id="dePropCharVal"
+                   min="-100" max="500" step="10" value="0"
+                   onchange="dePropCharSpacingChange(this.value)">
+          </div>
+        </div>
+
+        <!-- 위치 및 크기 정보 (읽기 전용 참고용) -->
+        <div class="de-prop-group">
+          <div class="de-prop-group-title">위치 / 크기</div>
+          <div class="de-prop-row">
+            <span class="de-prop-label">X</span>
+            <input type="number" class="de-prop-input" id="dePropX" onchange="dePropPosChange()">
+            <span class="de-prop-label" style="width:20px;text-align:center;">Y</span>
+            <input type="number" class="de-prop-input" id="dePropY" onchange="dePropPosChange()">
+          </div>
+          <div class="de-prop-row">
+            <span class="de-prop-label">너비</span>
+            <input type="number" class="de-prop-input" id="dePropW" onchange="dePropSizeBoxChange()">
+          </div>
+        </div>
+
+        <!-- 요소 삭제 버튼 -->
+        <div class="de-prop-group" style="border-bottom:none;">
+          <button onclick="deDeleteSelected()" style="width:100%;padding:8px;background:#fef2f2;color:var(--danger);border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:1px solid #fecaca;transition:all 0.15s;">
+            선택된 요소 삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. 하단 줌 컨트롤 ── -->
+  <div class="de-footer">
+    <!-- 축소 버튼 -->
+    <button class="de-zoom-btn" onclick="deZoom(-10)" title="축소">−</button>
+    <!-- 현재 줌 레벨 표시 -->
+    <span class="de-zoom-label" id="deZoomLabel">70%</span>
+    <!-- 확대 버튼 -->
+    <button class="de-zoom-btn" onclick="deZoom(10)" title="확대">+</button>
+    <div class="de-tool-sep" style="margin:0 4px;"></div>
+    <!-- 화면에 맞추기 — 캔버스가 영역에 딱 맞도록 자동 계산 -->
+    <button class="de-zoom-btn" onclick="deZoomFit()" title="화면에 맞추기">맞춤</button>
+    <!-- 100% — 실제 크기로 표시 -->
+    <button class="de-zoom-btn" onclick="deZoomSet(100)" title="원본 크기">100%</button>
+  </div>
+
+  <!-- ── 숨겨진 HTML 렌더링 컨테이너 — 디자인 HTML을 임시로 그려서 텍스트 요소를 파싱하는 데 사용 ── -->
+  <div class="de-hidden-render" id="deHiddenRender"></div>
+
+  <!-- 토스트 알림 컨테이너 -->
+  <div class="de-toast-container" id="deToastContainer"></div>
+
+  <!-- ═══════════════════════════════════════════════
+       자바스크립트 — 에디터의 모든 로직
+  ═══════════════════════════════════════════════ -->
+  <script>
+    /* ═══════════════════════════════════════════════
+       전체 파일 역할:
+       Pikbox 디자인 에디터의 핵심 로직.
+       1. Firebase에서 디자인 목록을 불러와 좌측 사이드바에 표시
+       2. 디자인 선택 시 HTML을 fetch → html2canvas로 배경 이미지 생성 → 텍스트 파싱
+       3. Fabric.js 캔버스에서 텍스트 요소를 선택/편집/이동/크기조절
+       4. 우측 속성 패널에서 폰트/색상/정렬 등 세부 속성 조절
+       5. PNG로 내보내기
+    ═══════════════════════════════════════════════ */
+
+    // ── Firebase 초기화 ──
+    // Pikbox와 동일한 Firebase 프로젝트에 연결
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4u-cTREFEIxFHMPLjLXcLGHGkaaFzCUg",
+      authDomain: "did-ads.firebaseapp.com",
+      databaseURL: "https://did-ads-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "did-ads",
+      storageBucket: "did-ads.firebasestorage.app",
+      messagingSenderId: "211524252003",
+      appId: "1:211524252003:web:5cbc84581def74d2896356"
+    };
+
+    // Firebase 앱 초기화 (이미 초기화된 경우 기존 인스턴스 재사용)
+    let fbApp;
+    try {
+      fbApp = firebase.app();
+    } catch (e) {
+      fbApp = firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    const storage = firebase.storage();
+
+    // Firebase 경로 상수 — 디자인 리뷰 데이터 경로
+    const DR_DESIGNS = 'design-review/designs';
+
+    // ── 에디터 전역 상태 — 모든 상태를 이 객체에 모아서 관리 ──
+    const deState = {
+      // Fabric.js 캔버스 인스턴스 — 모든 디자인 편집이 이 캔버스 위에서 이루어짐
+      canvas: null,
+
+      // 디자인 목록 — Firebase에서 로드한 전체 디자인 배열
+      designs: [],
+
+      // 현재 선택된 디자인 정보
+      currentDesignId: null,
+      currentDesign: null,
+
+      // 현재 선택된 도구 ('select' 또는 'text')
+      currentTool: 'select',
+
+      // 줌 레벨 (퍼센트) — 70%가 기본값
+      zoom: 70,
+
+      // 캔버스 크기 — 디자인의 실제 픽셀 크기
+      canvasWidth: 1080,
+      canvasHeight: 1080,
+
+      // 되돌리기/다시하기 히스토리 — 캔버스 상태의 JSON 스냅샷 배열
+      undoStack: [],
+      redoStack: [],
+      // 히스토리 저장 중인지 여부 (무한 루프 방지)
+      isRestoring: false,
+      // 히스토리 최대 저장 개수
+      maxHistory: 30,
+    };
+
+    // ── Fabric.js 캔버스 초기화 ──
+    // Fabric.js: 오픈소스 캔버스 라이브러리. 드래그, 크기조절, 텍스트편집 등을 쉽게 구현
+    function deInitCanvas() {
+      deState.canvas = new fabric.Canvas('deCanvas', {
+        width: deState.canvasWidth,
+        height: deState.canvasHeight,
+        backgroundColor: '#ffffff',
+        // 선택 영역의 스타일 설정
+        selectionColor: 'rgba(99, 102, 241, 0.1)',
+        selectionBorderColor: '#6366f1',
+        selectionLineWidth: 1,
+      });
+
+      // 객체 선택 스타일 커스텀 — 인디고 계열로 통일
+      fabric.Object.prototype.set({
+        transparentCorners: false,       // 모서리 핸들을 채워진 사각형으로
+        cornerColor: '#6366f1',          // 핸들 색상 (인디고)
+        cornerStrokeColor: '#fff',       // 핸들 테두리 (흰색)
+        cornerSize: 8,                   // 핸들 크기
+        borderColor: '#6366f1',          // 선택 테두리 색상
+        borderScaleFactor: 1.5,          // 선택 테두리 두께
+        padding: 4,                      // 선택 영역 여백
+      });
+
+      // 캔버스에서 요소를 선택했을 때 → 우측 속성 패널 업데이트
+      deState.canvas.on('selection:created', deOnSelection);
+      deState.canvas.on('selection:updated', deOnSelection);
+
+      // 선택이 해제되었을 때 → 속성 패널 숨기기
+      deState.canvas.on('selection:cleared', deOnDeselect);
+
+      // 요소가 수정되었을 때 → 속성 패널 값 동기화 + 히스토리 저장
+      deState.canvas.on('object:modified', () => {
+        deOnSelection();   // 이동/크기조절 후 속성 패널 값 갱신
+        deSaveHistory();   // 되돌리기 히스토리에 현재 상태 저장
+      });
+
+      // 텍스트 편집이 끝났을 때 → 속성 패널의 텍스트 내용도 동기화
+      deState.canvas.on('text:changed', () => {
+        const obj = deState.canvas.getActiveObject();
+        if (obj) {
+          const textarea = document.getElementById('dePropText');
+          if (textarea) textarea.value = obj.text || '';
+        }
+      });
+
+      // 텍스트 편집 완료 시 히스토리 저장
+      deState.canvas.on('text:editing:exited', () => {
+        deSaveHistory();
+      });
+    }
+
+    // ── Firebase에서 디자인 목록 로드 ──
+    // design-review/designs 경로의 모든 디자인을 실시간으로 가져옴
+    function deLoadDesigns() {
+      db.ref(DR_DESIGNS).on('value', snap => {
+        const data = snap.val() || {};
+        // 객체를 배열로 변환하고 최신순 정렬 (날짜 내림차순)
+        deState.designs = Object.entries(data)
+          .map(([id, d]) => ({ id, ...d }))
+          .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+
+        // 사이드바에 디자인 목록 그리기
+        deRenderDesignList();
+      });
+    }
+
+    // ── 디자인 목록 렌더링 — 좌측 사이드바 ──
+    function deRenderDesignList() {
+      const listEl = document.getElementById('deDesignList');
+      const designs = deState.designs;
+
+      if (designs.length === 0) {
+        listEl.innerHTML = '<div class="de-sidebar-empty">등록된 디자인이 없습니다</div>';
+        return;
+      }
+
+      // 각 디자인을 카드 형태로 렌더링
+      listEl.innerHTML = designs.map(d => {
+        const isActive = d.id === deState.currentDesignId;
+        const statusLabel = deStatusLabel(d.status);
+        const dateStr = deFormatDate(d.created_at);
+
+        return `
+          <div class="de-design-card ${isActive ? 'active' : ''}"
+               onclick="deSelectDesign('${d.id}')">
+            <div class="de-design-card-name">${deEscHtml(d.name || '이름 없음')}</div>
+            <div class="de-design-card-meta">
+              <span class="de-badge de-badge-${d.status || 'review'}">${statusLabel}</span>
+              <span>${dateStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── 상태 라벨 변환 — status 코드를 한국어 텍스트로 변환 ──
+    function deStatusLabel(status) {
+      const labels = {
+        review: '검토 중',
+        request: '수정 요청',
+        approved: '승인됨',
+        done: '완료'
+      };
+      return labels[status] || '검토 중';
+    }
+
+    // ── 날짜 포맷 — ISO 날짜 문자열을 읽기 쉬운 형태로 변환 ──
+    function deFormatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        return `${month}/${day}`;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    // ── HTML 특수문자 이스케이프 — XSS 방지 ──
+    function deEscHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── 디자인 선택 — 목록에서 디자인 카드를 클릭했을 때 ──
+    async function deSelectDesign(id) {
+      const design = deState.designs.find(d => d.id === id);
+      if (!design || !design.url) {
+        deToast('디자인 URL이 없습니다', 'error');
+        return;
+      }
+
+      deState.currentDesignId = id;
+      deState.currentDesign = design;
+
+      // 목록에서 선택 표시 업데이트
+      deRenderDesignList();
+
+      // 로딩 표시
+      deShowLoading(true);
+
+      try {
+        // 디자인 크기 정보 읽기 (DB에 저장된 메타데이터)
+        const dWidth = design.width || design.meta_width || 1080;
+        const dHeight = design.height || design.meta_height || 1080;
+        const dPages = design.pages || design.meta_pages || 1;
+
+        // 캔버스 크기를 디자인 실제 크기로 설정
+        deState.canvasWidth = dWidth;
+        deState.canvasHeight = dHeight * dPages;
+
+        // HTML을 가져와서 캔버스에 렌더링
+        await deLoadDesignToCanvas(design.url, dWidth, dHeight * dPages);
+
+        // 캔버스 프레임 표시, 안내 메시지 숨기기
+        document.getElementById('deCanvasFrame').style.display = 'block';
+        document.getElementById('deEmptyCanvas').style.display = 'none';
+
+        // 화면에 맞추기 (줌 자동 계산)
+        deZoomFit();
+
+        // 히스토리 초기화 (새 디자인 시작)
+        deState.undoStack = [];
+        deState.redoStack = [];
+        deSaveHistory();
+
+        deToast(`"${design.name || '이름 없음'}" 로드 완료`);
+      } catch (err) {
+        console.error('디자인 로드 실패:', err);
+        deToast('디자인을 불러오는 데 실패했습니다', 'error');
+      } finally {
+        deShowLoading(false);
+      }
+    }
+
+    // ── 디자인 HTML → 캔버스 변환 (핵심 로직) ──
+    // 1단계: HTML을 숨겨진 컨테이너에 렌더링
+    // 2단계: html2canvas로 전체를 이미지로 캡처 → 배경으로 설정
+    // 3단계: HTML DOM에서 텍스트 요소를 파싱 → Fabric.Textbox로 변환
+    async function deLoadDesignToCanvas(url, width, height) {
+      // 캔버스 크기 업데이트
+      deState.canvas.setWidth(width);
+      deState.canvas.setHeight(height);
+      deState.canvas.clear();
+
+      // 1단계: HTML 내용 가져오기
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const html = await resp.text();
+
+      // 2단계: 숨겨진 컨테이너에 HTML 렌더링
+      const container = document.getElementById('deHiddenRender');
+      container.style.width = width + 'px';
+      container.style.height = height + 'px';
+
+      // iframe을 사용해 격리된 환경에서 HTML 렌더링 (스타일 충돌 방지)
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = `width:${width}px;height:${height}px;border:none;overflow:hidden;`;
+      container.innerHTML = '';
+      container.appendChild(iframe);
+
+      // iframe에 HTML 쓰기
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(html);
+      iframeDoc.close();
+
+      // 3단계: 폰트 로딩을 기다림 (폰트가 로드되어야 정확한 렌더링 가능)
+      await new Promise(resolve => {
+        // iframe 내부의 폰트 로딩 완료 대기
+        if (iframe.contentDocument.fonts && iframe.contentDocument.fonts.ready) {
+          iframe.contentDocument.fonts.ready.then(() => {
+            // 추가로 잠시 대기 (렌더링 완료 보장)
+            setTimeout(resolve, 500);
+          });
+        } else {
+          // fonts API가 없는 브라우저면 1초 대기
+          setTimeout(resolve, 1000);
+        }
+      });
+
+      // 4단계: html2canvas로 전체 HTML을 이미지로 캡처
+      let bgImageUrl;
+      try {
+        const captureCanvas = await html2canvas(iframeDoc.body, {
+          width: width,
+          height: height,
+          scale: 1,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          // iframe 내부의 window를 사용
+          windowWidth: width,
+          windowHeight: height,
+        });
+        bgImageUrl = captureCanvas.toDataURL('image/png');
+      } catch (captureErr) {
+        console.warn('html2canvas 캡처 실패, 직접 렌더링 시도:', captureErr);
+        // html2canvas 실패 시 → 직접 이미지로 변환 시도
+        bgImageUrl = await deAlternativeCapture(html, width, height);
+      }
+
+      // 5단계: 캡처된 이미지를 Fabric 캔버스의 배경으로 설정
+      if (bgImageUrl) {
+        await new Promise((resolve, reject) => {
+          fabric.Image.fromURL(bgImageUrl, (img) => {
+            if (!img) { reject(new Error('배경 이미지 생성 실패')); return; }
+            // 이미지가 캔버스 크기에 맞도록 조절
+            img.scaleToWidth(width);
+            deState.canvas.setBackgroundImage(img, () => {
+              deState.canvas.renderAll();
+              resolve();
+            });
+          }, { crossOrigin: 'anonymous' });
+        });
+      }
+
+      // 6단계: HTML에서 텍스트 요소를 파싱하여 Fabric.Textbox로 변환
+      deExtractTexts(iframeDoc, width, height);
+
+      // 렌더링 완료 후 숨겨진 컨테이너 정리
+      container.innerHTML = '';
+    }
+
+    // ── 대안 캡처 방법 — html2canvas 실패 시 SVG foreignObject 활용 ──
+    async function deAlternativeCapture(html, width, height) {
+      // SVG의 foreignObject를 사용해 HTML을 이미지로 변환하는 대안 방법
+      const svgStr = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;">
+              ${html}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = width;
+          c.height = height;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL('image/png'));
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    }
+
+    // ── 텍스트 요소 파싱 — HTML DOM에서 텍스트를 찾아 Fabric.Textbox로 변환 ──
+    // 디자인 HTML 안의 텍스트 요소를 캔버스 위에 편집 가능한 텍스트 객체로 올림
+    function deExtractTexts(doc, canvasW, canvasH) {
+      const body = doc.body;
+      if (!body) return;
+
+      // 텍스트를 가진 '블록 레벨' 요소만 수집 (인라인 span은 부모 기준으로 처리)
+      const blockTags = new Set([
+        'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'P', 'DIV', 'LI', 'TD', 'TH', 'BLOCKQUOTE',
+        'FIGCAPTION', 'LABEL', 'A', 'BUTTON', 'SPAN'
+      ]);
+
+      // body의 위치 정보 — 상대 좌표 계산을 위한 기준점
+      const bodyRect = body.getBoundingClientRect();
+
+      // 이미 처리한 요소를 추적 (중복 방지)
+      const processedRects = [];
+
+      // DOM을 순회하면서 텍스트 요소 수집
+      const allElements = body.querySelectorAll('*');
+      const textElements = [];
+
+      allElements.forEach(el => {
+        // SVG 내부 텍스트는 스킵 (장식용이므로)
+        if (el.closest('svg')) return;
+        // script, style 태그 스킵
+        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') return;
+
+        // 요소가 직접 텍스트 내용을 가지고 있는지 확인
+        // (자식 요소의 텍스트가 아닌, 이 요소 자체의 텍스트만)
+        const directText = deGetDirectText(el).trim();
+        if (!directText) return;
+        if (directText.length < 1) return;
+
+        // 화면에 보이지 않는 요소 스킵
+        const style = doc.defaultView.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
+
+        // 요소의 위치와 크기
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 5 || rect.height < 5) return;
+
+        // 캔버스 범위 밖의 요소 스킵
+        const relLeft = rect.left - bodyRect.left;
+        const relTop = rect.top - bodyRect.top;
+        if (relLeft + rect.width < 0 || relTop + rect.height < 0) return;
+        if (relLeft > canvasW + 50 || relTop > canvasH + 50) return;
+
+        // 너무 비슷한 위치에 이미 텍스트가 있는지 확인 (중복 방지)
+        const isDuplicate = processedRects.some(pr => {
+          return Math.abs(pr.left - relLeft) < 5 &&
+                 Math.abs(pr.top - relTop) < 5 &&
+                 Math.abs(pr.width - rect.width) < 5;
+        });
+        if (isDuplicate) return;
+
+        processedRects.push({ left: relLeft, top: relTop, width: rect.width });
+
+        textElements.push({
+          text: directText,
+          left: relLeft,
+          top: relTop,
+          width: rect.width,
+          height: rect.height,
+          // 계산된 스타일 추출
+          fontSize: parseInt(style.fontSize) || 16,
+          fontFamily: deCleanFontFamily(style.fontFamily),
+          fontWeight: style.fontWeight || '400',
+          color: deRgbToHex(style.color) || '#000000',
+          textAlign: style.textAlign || 'left',
+          lineHeight: parseFloat(style.lineHeight) / parseInt(style.fontSize) || 1.2,
+          letterSpacing: parseInt(style.letterSpacing) || 0,
+        });
+      });
+
+      // 수집된 텍스트 요소를 Fabric.Textbox로 변환하여 캔버스에 추가
+      textElements.forEach(te => {
+        // lineHeight 보정 — NaN이나 비정상값 처리
+        let lineH = te.lineHeight;
+        if (isNaN(lineH) || lineH < 0.5 || lineH > 5) lineH = 1.2;
+
+        const textbox = new fabric.Textbox(te.text, {
+          left: te.left,
+          top: te.top,
+          width: Math.max(te.width, 30),
+          fontSize: te.fontSize,
+          fontFamily: te.fontFamily,
+          fontWeight: te.fontWeight,
+          fill: te.color,
+          textAlign: te.textAlign === 'start' ? 'left' : (te.textAlign === 'end' ? 'right' : te.textAlign),
+          lineHeight: lineH,
+          charSpacing: te.letterSpacing,
+          // 반투명 하이라이트 배경 — 텍스트 영역을 시각적으로 식별 가능하게
+          backgroundColor: 'rgba(99, 102, 241, 0.06)',
+          // 편집 관련 설정
+          editable: true,
+          // 텍스트 오버플로우 방지
+          splitByGrapheme: true,
+        });
+
+        deState.canvas.add(textbox);
+      });
+
+      deState.canvas.renderAll();
+    }
+
+    // ── 요소의 직접 텍스트만 추출 (자식 요소의 텍스트 제외) ──
+    // 예: <div>Hello <span>World</span></div> 에서 div의 직접 텍스트는 "Hello "
+    function deGetDirectText(el) {
+      let text = '';
+      // childNodes에서 텍스트 노드만 선별
+      el.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.textContent;
+        }
+      });
+      // 자식 요소가 없고 textContent가 있는 경우 (leaf node)
+      if (!text.trim() && el.children.length === 0) {
+        text = el.textContent || '';
+      }
+      return text;
+    }
+
+    // ── 폰트 패밀리 정리 — CSS에서 읽은 복잡한 폰트 이름을 깔끔하게 ──
+    function deCleanFontFamily(cssFont) {
+      if (!cssFont) return 'Pretendard';
+      // 첫 번째 폰트 이름만 추출하고 따옴표 제거
+      const first = cssFont.split(',')[0].trim().replace(/['"]/g, '');
+      // 알려진 폰트 매핑
+      const known = {
+        'pretendard': 'Pretendard',
+        'paperlogy': 'Paperlogy',
+        'noto sans kr': 'Noto Sans KR',
+        'arial': 'Arial',
+        'georgia': 'Georgia',
+      };
+      return known[first.toLowerCase()] || first || 'Pretendard';
+    }
+
+    // ── RGB 색상을 HEX로 변환 — "rgb(255, 0, 0)" → "#ff0000" ──
+    function deRgbToHex(rgb) {
+      if (!rgb) return '#000000';
+      // 이미 hex 형태면 그대로 반환
+      if (rgb.startsWith('#')) return rgb;
+
+      const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!match) return '#000000';
+
+      const r = parseInt(match[1]);
+      const g = parseInt(match[2]);
+      const b = parseInt(match[3]);
+      return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 도구 선택 — 선택/텍스트추가 모드 전환
+    // ═══════════════════════════════════════════════
+
+    function deSetTool(tool) {
+      deState.currentTool = tool;
+
+      // 툴바 버튼 활성화 상태 업데이트
+      document.getElementById('deToolSelect').classList.toggle('active', tool === 'select');
+      document.getElementById('deToolText').classList.toggle('active', tool === 'text');
+
+      if (!deState.canvas) return;
+
+      if (tool === 'select') {
+        // 선택 모드 — 기본 Fabric.js 동작 (클릭/드래그/더블클릭 편집)
+        deState.canvas.isDrawingMode = false;
+        deState.canvas.defaultCursor = 'default';
+        deState.canvas.hoverCursor = 'move';
+        // 클릭 이벤트 해제 (텍스트 추가 모드에서 등록한 것)
+        deState.canvas.off('mouse:down', deOnCanvasClickForText);
+      } else if (tool === 'text') {
+        // 텍스트 추가 모드 — 캔버스 클릭 시 새 텍스트박스 생성
+        deState.canvas.isDrawingMode = false;
+        deState.canvas.defaultCursor = 'text';
+        deState.canvas.hoverCursor = 'text';
+        deState.canvas.discardActiveObject();
+        deState.canvas.renderAll();
+        // 캔버스 클릭 이벤트 등록
+        deState.canvas.on('mouse:down', deOnCanvasClickForText);
+      }
+    }
+
+    // ── 텍스트 추가 모드에서 캔버스 클릭 시 새 텍스트박스 생성 ──
+    function deOnCanvasClickForText(opt) {
+      // 이미 존재하는 객체를 클릭한 경우는 무시 (기존 텍스트 선택 동작 유지)
+      if (opt.target) return;
+
+      const pointer = deState.canvas.getPointer(opt.e);
+
+      // 새 텍스트박스 생성 — 클릭 위치에 기본 텍스트로 생성
+      const textbox = new fabric.Textbox('텍스트를 입력하세요', {
+        left: pointer.x,
+        top: pointer.y,
+        width: 200,
+        fontSize: 24,
+        fontFamily: 'Pretendard',
+        fontWeight: '400',
+        fill: '#000000',
+        textAlign: 'left',
+        lineHeight: 1.2,
+        charSpacing: 0,
+        editable: true,
+        splitByGrapheme: true,
+      });
+
+      deState.canvas.add(textbox);
+      deState.canvas.setActiveObject(textbox);
+      deState.canvas.renderAll();
+
+      // 텍스트 추가 후 선택 모드로 자동 전환
+      deSetTool('select');
+
+      // 바로 텍스트 편집 모드 진입
+      textbox.enterEditing();
+      textbox.selectAll();
+
+      deSaveHistory();
+    }
+
+    // ═══════════════════════════════════════════════
+    // 요소 선택/해제 이벤트 — 우측 속성 패널과 연동
+    // ═══════════════════════════════════════════════
+
+    // 요소가 선택되었을 때 → 속성 패널에 값 표시
+    function deOnSelection() {
+      const obj = deState.canvas ? deState.canvas.getActiveObject() : null;
+      if (!obj) { deOnDeselect(); return; }
+
+      // Textbox 타입만 속성 패널 표시 (배경 이미지 등은 제외)
+      if (obj.type !== 'textbox' && obj.type !== 'i-text' && obj.type !== 'text') {
+        deOnDeselect();
+        return;
+      }
+
+      // 속성 패널 보이기
+      document.getElementById('dePropsEmpty').style.display = 'none';
+      document.getElementById('dePropsContent').style.display = 'block';
+
+      // 각 속성 필드에 현재 객체의 값 반영
+      document.getElementById('dePropText').value = obj.text || '';
+      document.getElementById('dePropFont').value = deMatchFont(obj.fontFamily);
+      document.getElementById('dePropSizeSlider').value = obj.fontSize || 24;
+      document.getElementById('dePropSizeVal').value = obj.fontSize || 24;
+      document.getElementById('dePropWeight').value = String(obj.fontWeight || '400');
+      document.getElementById('dePropColor').value = obj.fill || '#000000';
+      document.getElementById('dePropColorText').textContent = obj.fill || '#000000';
+
+      // 배경색
+      const bgColor = obj.backgroundColor || '';
+      if (bgColor && bgColor !== 'transparent' && !bgColor.includes('0.06')) {
+        document.getElementById('dePropBgColor').value = deRgbaToHex(bgColor);
+        document.getElementById('dePropBgColorText').textContent = deRgbaToHex(bgColor);
+      } else {
+        document.getElementById('dePropBgColor').value = '#ffffff';
+        document.getElementById('dePropBgColorText').textContent = '없음';
+      }
+
+      // 정렬 버튼 활성화 상태
+      const align = obj.textAlign || 'left';
+      document.querySelectorAll('.de-align-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.align === align);
+      });
+
+      // 줄 간격
+      const lh = obj.lineHeight || 1.2;
+      document.getElementById('dePropLineSlider').value = lh;
+      document.getElementById('dePropLineVal').value = lh;
+
+      // 자간
+      const cs = obj.charSpacing || 0;
+      document.getElementById('dePropCharSlider').value = cs;
+      document.getElementById('dePropCharVal').value = cs;
+
+      // 위치/크기
+      document.getElementById('dePropX').value = Math.round(obj.left || 0);
+      document.getElementById('dePropY').value = Math.round(obj.top || 0);
+      document.getElementById('dePropW').value = Math.round(obj.width * (obj.scaleX || 1));
+    }
+
+    // 선택이 해제되었을 때 → 속성 패널 숨기기
+    function deOnDeselect() {
+      document.getElementById('dePropsEmpty').style.display = 'flex';
+      document.getElementById('dePropsContent').style.display = 'none';
+    }
+
+    // ── 폰트 매칭 — Fabric 객체의 fontFamily를 select 옵션과 매칭 ──
+    function deMatchFont(fontFamily) {
+      if (!fontFamily) return 'Pretendard';
+      const lower = fontFamily.toLowerCase();
+      if (lower.includes('pretendard')) return 'Pretendard';
+      if (lower.includes('paperlogy')) return 'Paperlogy';
+      if (lower.includes('noto sans')) return 'Noto Sans KR';
+      if (lower.includes('arial')) return 'Arial';
+      if (lower.includes('georgia')) return 'Georgia';
+      return 'Pretendard';
+    }
+
+    // ── RGBA 문자열을 HEX로 변환 ──
+    function deRgbaToHex(rgba) {
+      if (!rgba) return '#ffffff';
+      if (rgba.startsWith('#')) return rgba;
+      const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!match) return '#ffffff';
+      return '#' + [match[1], match[2], match[3]].map(v =>
+        parseInt(v).toString(16).padStart(2, '0')
+      ).join('');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 속성 패널 변경 핸들러 — 사용자가 값을 바꾸면 캔버스 객체에 반영
+    // ═══════════════════════════════════════════════
+
+    // 텍스트 내용 변경
+    function dePropTextChange(value) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('text', value);
+      deState.canvas.renderAll();
+    }
+
+    // 폰트 패밀리 변경
+    function dePropFontChange(value) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('fontFamily', value);
+      deState.canvas.renderAll();
+      deSaveHistory();
+    }
+
+    // 폰트 크기 변경 (슬라이더 또는 숫자 입력)
+    function dePropSizeChange(value) {
+      const num = parseInt(value) || 24;
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('fontSize', num);
+      deState.canvas.renderAll();
+      // 슬라이더와 숫자 입력 동기화
+      document.getElementById('dePropSizeSlider').value = num;
+      document.getElementById('dePropSizeVal').value = num;
+    }
+
+    // 폰트 웨이트(굵기) 변경
+    function dePropWeightChange(value) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('fontWeight', value);
+      deState.canvas.renderAll();
+      deSaveHistory();
+    }
+
+    // 텍스트 색상 변경
+    function dePropColorChange(value) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('fill', value);
+      deState.canvas.renderAll();
+      document.getElementById('dePropColorText').textContent = value;
+      deSaveHistory();
+    }
+
+    // 배경색 변경
+    function dePropBgColorChange(value) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('backgroundColor', value);
+      deState.canvas.renderAll();
+      document.getElementById('dePropBgColorText').textContent = value;
+      deSaveHistory();
+    }
+
+    // 배경색 제거
+    function dePropBgColorClear() {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('backgroundColor', '');
+      deState.canvas.renderAll();
+      document.getElementById('dePropBgColorText').textContent = '없음';
+      deSaveHistory();
+    }
+
+    // 텍스트 정렬 변경 (좌/중/우)
+    function dePropAlignChange(align) {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('textAlign', align);
+      deState.canvas.renderAll();
+      // 버튼 활성화 상태 업데이트
+      document.querySelectorAll('.de-align-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.align === align);
+      });
+      deSaveHistory();
+    }
+
+    // 줄 간격 변경
+    function dePropLineHeightChange(value) {
+      const num = parseFloat(value) || 1.2;
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('lineHeight', num);
+      deState.canvas.renderAll();
+      document.getElementById('dePropLineSlider').value = num;
+      document.getElementById('dePropLineVal').value = num;
+    }
+
+    // 자간 변경
+    function dePropCharSpacingChange(value) {
+      const num = parseInt(value) || 0;
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('charSpacing', num);
+      deState.canvas.renderAll();
+      document.getElementById('dePropCharSlider').value = num;
+      document.getElementById('dePropCharVal').value = num;
+    }
+
+    // 위치 변경 (X, Y 좌표)
+    function dePropPosChange() {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      const x = parseInt(document.getElementById('dePropX').value) || 0;
+      const y = parseInt(document.getElementById('dePropY').value) || 0;
+      obj.set({ left: x, top: y });
+      obj.setCoords();
+      deState.canvas.renderAll();
+      deSaveHistory();
+    }
+
+    // 너비 변경
+    function dePropSizeBoxChange() {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      const w = parseInt(document.getElementById('dePropW').value) || 100;
+      // scaleX를 사용하여 너비 조절 (텍스트 왜곡 방지를 위해 width 직접 변경)
+      obj.set({ width: w, scaleX: 1 });
+      obj.setCoords();
+      deState.canvas.renderAll();
+      deSaveHistory();
+    }
+
+    // ── 선택된 요소 삭제 ──
+    function deDeleteSelected() {
+      const obj = deState.canvas.getActiveObject();
+      if (!obj) return;
+      deState.canvas.remove(obj);
+      deState.canvas.discardActiveObject();
+      deState.canvas.renderAll();
+      deOnDeselect();
+      deSaveHistory();
+      deToast('요소가 삭제되었습니다');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 되돌리기 / 다시하기 (Undo / Redo)
+    // ═══════════════════════════════════════════════
+
+    // 현재 캔버스 상태를 히스토리에 저장
+    function deSaveHistory() {
+      if (deState.isRestoring) return;
+      // 캔버스의 모든 객체를 JSON으로 직렬화
+      const json = JSON.stringify(deState.canvas.toJSON());
+      deState.undoStack.push(json);
+      // 최대 개수 초과 시 가장 오래된 항목 제거
+      if (deState.undoStack.length > deState.maxHistory) {
+        deState.undoStack.shift();
+      }
+      // 새 작업을 하면 다시하기 스택은 초기화
+      deState.redoStack = [];
+    }
+
+    // 되돌리기 — 이전 상태로 복원
+    function deUndo() {
+      if (deState.undoStack.length <= 1) {
+        deToast('더 이상 되돌릴 수 없습니다');
+        return;
+      }
+      // 현재 상태를 다시하기 스택으로 이동
+      const current = deState.undoStack.pop();
+      deState.redoStack.push(current);
+      // 이전 상태 복원
+      const prev = deState.undoStack[deState.undoStack.length - 1];
+      deRestoreState(prev);
+    }
+
+    // 다시하기 — 되돌린 작업을 다시 실행
+    function deRedo() {
+      if (deState.redoStack.length === 0) {
+        deToast('다시할 작업이 없습니다');
+        return;
+      }
+      // 다시하기 스택에서 상태 꺼내서 복원
+      const next = deState.redoStack.pop();
+      deState.undoStack.push(next);
+      deRestoreState(next);
+    }
+
+    // JSON 상태에서 캔버스 복원
+    function deRestoreState(json) {
+      deState.isRestoring = true;
+      deState.canvas.loadFromJSON(json, () => {
+        deState.canvas.renderAll();
+        deState.isRestoring = false;
+      });
+    }
+
+    // ═══════════════════════════════════════════════
+    // 줌 컨트롤 — 캔버스 확대/축소
+    // ═══════════════════════════════════════════════
+
+    // 줌 변경 — 현재 줌에서 delta만큼 증감
+    function deZoom(delta) {
+      deState.zoom = Math.max(10, Math.min(300, deState.zoom + delta));
+      deApplyZoom();
+    }
+
+    // 특정 줌 값으로 설정
+    function deZoomSet(value) {
+      deState.zoom = value;
+      deApplyZoom();
+    }
+
+    // 화면에 맞추기 — 캔버스 영역에 디자인이 딱 맞도록 줌 자동 계산
+    function deZoomFit() {
+      const area = document.getElementById('deCanvasArea');
+      if (!area) return;
+      const areaW = area.clientWidth - 60;  // 여백 고려
+      const areaH = area.clientHeight - 60;
+
+      const scaleW = areaW / deState.canvasWidth;
+      const scaleH = areaH / deState.canvasHeight;
+      const scale = Math.min(scaleW, scaleH, 1); // 1 이상으로는 확대하지 않음
+
+      deState.zoom = Math.round(scale * 100);
+      deApplyZoom();
+    }
+
+    // 줌 적용 — CSS transform으로 캔버스 프레임 크기 조절
+    function deApplyZoom() {
+      const frame = document.getElementById('deCanvasFrame');
+      if (!frame) return;
+      const scale = deState.zoom / 100;
+      frame.style.transform = `scale(${scale})`;
+      document.getElementById('deZoomLabel').textContent = `${deState.zoom}%`;
+    }
+
+    // ═══════════════════════════════════════════════
+    // PNG 내보내기 — 캔버스를 이미지 파일로 다운로드
+    // ═══════════════════════════════════════════════
+
+    function deExportPNG() {
+      if (!deState.canvas) {
+        deToast('캔버스가 초기화되지 않았습니다', 'error');
+        return;
+      }
+
+      // 선택 해제 (선택 핸들이 이미지에 찍히지 않도록)
+      deState.canvas.discardActiveObject();
+      deState.canvas.renderAll();
+
+      // 캔버스를 PNG 데이터 URL로 변환
+      const dataUrl = deState.canvas.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 1,  // 원본 크기 (1x)
+      });
+
+      // 다운로드 링크 생성 및 클릭
+      const link = document.createElement('a');
+      const name = deState.currentDesign?.name || 'design';
+      link.download = `${name}_pikbox.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      deToast('PNG 다운로드 완료');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 키보드 단축키 — Ctrl+Z(되돌리기), Ctrl+Shift+Z(다시하기), Delete 등
+    // ═══════════════════════════════════════════════
+
+    document.addEventListener('keydown', (e) => {
+      // 텍스트 편집 중이면 캔버스 단축키 비활성화
+      const active = deState.canvas?.getActiveObject();
+      if (active && active.isEditing) return;
+
+      // Ctrl+Z — 되돌리기
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        deUndo();
+        return;
+      }
+
+      // Ctrl+Shift+Z — 다시하기
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        deRedo();
+        return;
+      }
+
+      // Delete / Backspace — 선택된 요소 삭제 (텍스트 편집 중이 아닐 때)
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (active && !active.isEditing) {
+          e.preventDefault();
+          deDeleteSelected();
+          return;
+        }
+      }
+
+      // V — 선택 도구
+      if (e.key === 'v' && !e.ctrlKey && !e.metaKey) {
+        deSetTool('select');
+      }
+
+      // T — 텍스트 추가 도구
+      if (e.key === 't' && !e.ctrlKey && !e.metaKey) {
+        deSetTool('text');
+      }
+
+      // Escape — 선택 해제
+      if (e.key === 'Escape') {
+        if (deState.canvas) {
+          deState.canvas.discardActiveObject();
+          deState.canvas.renderAll();
+          deOnDeselect();
+        }
+      }
+    });
+
+    // ═══════════════════════════════════════════════
+    // 키보드 단축키 안내 팝업
+    // ═══════════════════════════════════════════════
+
+    function deShowShortcuts() {
+      const overlay = document.createElement('div');
+      overlay.className = 'de-shortcuts-overlay';
+      overlay.innerHTML = `
+        <div class="de-shortcuts-panel">
+          <div class="de-shortcuts-title">키보드 단축키</div>
+          <div class="de-shortcut-row">
+            <span>선택 도구</span>
+            <span class="de-shortcut-key">V</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>텍스트 추가</span>
+            <span class="de-shortcut-key">T</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>되돌리기</span>
+            <span class="de-shortcut-key">Ctrl + Z</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>다시하기</span>
+            <span class="de-shortcut-key">Ctrl + Shift + Z</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>삭제</span>
+            <span class="de-shortcut-key">Delete</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>선택 해제</span>
+            <span class="de-shortcut-key">Esc</span>
+          </div>
+          <div class="de-shortcut-row">
+            <span>텍스트 편집</span>
+            <span class="de-shortcut-key">더블클릭</span>
+          </div>
+          <button class="de-shortcuts-close" onclick="this.closest('.de-shortcuts-overlay').remove()">닫기</button>
+        </div>
+      `;
+      // 오버레이 배경 클릭 시 닫기
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+      document.body.appendChild(overlay);
+    }
+
+    // ═══════════════════════════════════════════════
+    // 로딩 표시 / 토스트 알림
+    // ═══════════════════════════════════════════════
+
+    // 로딩 오버레이 표시/숨기기
+    function deShowLoading(show) {
+      const el = document.getElementById('deLoading');
+      if (show) {
+        el.classList.remove('de-loading-hidden');
+      } else {
+        el.classList.add('de-loading-hidden');
+      }
+    }
+
+    // 토스트 알림 — 하단 중앙에 잠깐 표시되는 메시지
+    function deToast(message, type = '') {
+      const container = document.getElementById('deToastContainer');
+      const toast = document.createElement('div');
+      toast.className = `de-toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      // 2초 후 자동 제거
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // ═══════════════════════════════════════════════
+    // URL 파라미터 처리 — ?designId=xxx 로 직접 접근 시 자동 로드
+    // ═══════════════════════════════════════════════
+
+    function deCheckUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const designId = params.get('designId');
+      if (designId) {
+        // Firebase 로드 완료 후 해당 디자인 자동 선택
+        const checkInterval = setInterval(() => {
+          if (deState.designs.length > 0) {
+            clearInterval(checkInterval);
+            const found = deState.designs.find(d => d.id === designId);
+            if (found) {
+              deSelectDesign(designId);
+            }
+          }
+        }, 200);
+        // 5초 후 타임아웃
+        setTimeout(() => clearInterval(checkInterval), 5000);
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    // 앱 초기화 — 페이지 로드 시 실행
+    // ═══════════════════════════════════════════════
+
+    // 모든 것이 준비되면 에디터 시작
+    window.addEventListener('DOMContentLoaded', () => {
+      // Fabric.js 캔버스 초기화
+      deInitCanvas();
+
+      // Firebase에서 디자인 목록 불러오기
+      deLoadDesigns();
+
+      // URL 파라미터 확인 (직접 링크 접근 시)
+      deCheckUrlParams();
+    });
+  </script>
+</body>
+</html>
