@@ -176,8 +176,8 @@ router.get('/status/:jobId', async (req, res) => {
       });
     }
 
-    // RunPod에 상태 조회
-    const result = await runpod.status(jobId);
+    // Replicate에 상태 조회
+    const result = await replicate.status(jobId);
 
     // 완료된 경우 결과 URL 구성
     let resultUrl = null;
