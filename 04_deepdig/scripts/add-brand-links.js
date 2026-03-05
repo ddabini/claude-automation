@@ -228,7 +228,8 @@ function addBrandLinksToHTML(html) {
       else if (lower === '</script>') inScript = false;
       else if (lower.startsWith('<a ') || lower === '<a>') inAnchor++;
       else if (lower === '</a>') inAnchor = Math.max(0, inAnchor - 1);
-      else if (lower.startsWith('<head')) inHead = true;
+      // <head>만 매칭 (<header> 혼동 방지)
+      else if (lower === '<head>' || lower.startsWith('<head ') || lower.startsWith('<head>')) inHead = true;
       else if (lower === '</head>') inHead = false;
     } else if (token.type === 'text') {
       // 안전한 위치의 텍스트 노드에서만 브랜드 치환 수행
