@@ -3823,45 +3823,141 @@
   </div><!-- /#adInsightView -->
 
   <!-- ══════════════════════════════════════════
-       YouTube 탭 — 독립 영상 검색 공간
+       YouTube 탭 — 검색 모드 + 저장 모드 전환 구조
   ══════════════════════════════════════════ -->
   <div id="youtubeView" style="display:none;">
-    <!-- 상단 검색 영역 -->
-    <div class="yt-header">
-      <div class="yt-search-bar">
-        <input type="text" id="ytSearchInput" class="yt-search-input"
-               placeholder="YouTube 영상 검색 (예: 브랜드 광고, 바이럴 영상...)"
-               onkeydown="if(event.key==='Enter') ytSearch()">
-        <button class="btn btn-primary yt-search-btn" onclick="ytSearch()">검색</button>
+    <!-- 좌측 사이드바 — 저장 모드에서만 표시 (카테고리 목록) -->
+    <aside class="yt-sidebar" id="ytSidebar" style="display:none;">
+      <div class="yt-sidebar-header">
+        <h3>저장된 영상</h3>
+        <button class="add-category-btn" onclick="ytOpenCategoryModal()">+ 새 카테고리</button>
       </div>
-      <!-- 카테고리 퀵 칩 — ytInit()에서 동적 렌더링 -->
-      <div class="yt-chips" id="ytChips"></div>
-      <!-- 정렬 바 — 검색 결과 있을 때만 표시 -->
-      <div class="yt-sort-bar" id="ytSortBar" style="display:none;">
-        <span class="yt-result-count" id="ytResultCount"></span>
-        <div class="yt-sort-btns">
-          <button class="yt-sort-btn active" data-sort="recommend" onclick="ytSetSort('recommend')">추천순</button>
-          <button class="yt-sort-btn" data-sort="newest" onclick="ytSetSort('newest')">최신순</button>
-          <button class="yt-sort-btn" data-sort="views" onclick="ytSetSort('views')">조회수순</button>
+      <!-- 카테고리 목록 — ytRenderCategories()가 동적으로 채움 -->
+      <div class="yt-category-list" id="ytCategoryList"></div>
+      <div class="yt-sidebar-footer">
+        <button class="btn btn-sm" onclick="ytSwitchViewMode('search')" style="width:100%;">🔍 검색으로 돌아가기</button>
+      </div>
+    </aside>
+
+    <!-- 메인 콘텐츠 래퍼 -->
+    <div class="yt-main">
+      <!-- 검색 모드 헤더 -->
+      <div class="yt-header" id="ytHeaderSearch">
+        <div class="yt-search-bar">
+          <input type="text" id="ytSearchInput" class="yt-search-input"
+                 placeholder="YouTube 영상 검색 (예: 브랜드 광고, 바이럴 영상...)"
+                 onkeydown="if(event.key==='Enter') ytSearch()">
+          <button class="btn btn-primary yt-search-btn" onclick="ytSearch()">검색</button>
+          <!-- 저장된 영상 전환 버튼 -->
+          <button class="btn yt-saved-toggle-btn" onclick="ytSwitchViewMode('saved')" title="저장된 영상 보기">📁 저장됨</button>
+        </div>
+        <!-- 카테고리 퀵 칩 — ytInit()에서 동적 렌더링 -->
+        <div class="yt-chips" id="ytChips"></div>
+        <!-- 정렬 바 — 검색 결과 있을 때만 표시 -->
+        <div class="yt-sort-bar" id="ytSortBar" style="display:none;">
+          <span class="yt-result-count" id="ytResultCount"></span>
+          <div class="yt-sort-btns">
+            <button class="yt-sort-btn active" data-sort="recommend" onclick="ytSetSort('recommend')">추천순</button>
+            <button class="yt-sort-btn" data-sort="newest" onclick="ytSetSort('newest')">최신순</button>
+            <button class="yt-sort-btn" data-sort="views" onclick="ytSetSort('views')">조회수순</button>
+          </div>
         </div>
       </div>
+
+      <!-- 저장 모드 헤더 — 필터 + 정렬 + 멀티선택 -->
+      <div class="yt-saved-header" id="ytHeaderSaved" style="display:none;">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all" onclick="ytSetSavedFilter('all')">전체</button>
+          <button class="filter-tab" data-filter="favorites" onclick="ytSetSavedFilter('favorites')">★ 즐겨찾기</button>
+        </div>
+        <div class="action-sep"></div>
+        <select class="sort-select" id="ytSavedSortSelect" onchange="ytSetSavedSort(this.value)">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+          <option value="name">이름순</option>
+          <option value="favorites">즐겨찾기순</option>
+        </select>
+        <div class="action-spacer"></div>
+        <button class="btn btn-sm" id="ytMultiSelectBtn" onclick="ytToggleMultiSelect()">☑ 멀티선택</button>
+      </div>
+
+      <!-- 벌크 액션 바 — 멀티선택 시 표시 -->
+      <div class="yt-bulk-bar" id="ytBulkBar">
+        <span class="bulk-count" id="ytBulkCount">0개</span> 선택됨
+        <div class="action-spacer"></div>
+        <button class="btn btn-sm" onclick="ytSelectAllVideos()">전체 선택</button>
+        <button class="btn btn-sm" onclick="ytBulkMove()">📁 이동</button>
+        <button class="btn btn-sm btn-danger" onclick="ytBulkDelete()">🗑 삭제</button>
+        <button class="btn btn-sm" onclick="ytCancelMultiSelect()">취소</button>
+      </div>
+
+      <!-- 영상 그리드 — ytRenderCards()가 동적으로 채움 -->
+      <div class="yt-grid" id="ytGrid"></div>
+      <!-- 로딩 표시 -->
+      <div class="yt-loading" id="ytLoading" style="display:none;">
+        <div class="yt-spinner"></div>
+        <span>영상 검색 중...</span>
+      </div>
+      <!-- 빈 상태 안내 -->
+      <div class="yt-empty" id="ytEmpty">
+        <div style="font-size:48px;margin-bottom:16px;">▶</div>
+        <h3 style="margin:0 0 8px;color:var(--text-primary);">YouTube 영상 레퍼런스</h3>
+        <p style="color:var(--text-muted);font-size:14px;">영상·쇼츠·광고·커뮤니티 콘텐츠를 검색하세요</p>
+      </div>
+      <!-- 저장 모드 빈 상태 -->
+      <div class="yt-empty" id="ytSavedEmpty" style="display:none;">
+        <div style="font-size:48px;margin-bottom:16px;">📁</div>
+        <h3 style="margin:0 0 8px;color:var(--text-primary);">저장된 영상이 없습니다</h3>
+        <p style="color:var(--text-muted);font-size:14px;">검색 결과에서 📥 버튼을 눌러 영상을 저장하세요</p>
+      </div>
+      <!-- 무한 스크롤 감시 지점 -->
+      <div id="ytSentinel" style="height:1px;"></div>
     </div>
-    <!-- 영상 그리드 — ytRenderCards()가 동적으로 채움 -->
-    <div class="yt-grid" id="ytGrid"></div>
-    <!-- 로딩 표시 -->
-    <div class="yt-loading" id="ytLoading" style="display:none;">
-      <div class="yt-spinner"></div>
-      <span>영상 검색 중...</span>
-    </div>
-    <!-- 빈 상태 안내 -->
-    <div class="yt-empty" id="ytEmpty">
-      <div style="font-size:48px;margin-bottom:16px;">▶</div>
-      <h3 style="margin:0 0 8px;color:var(--text-primary);">YouTube 영상 레퍼런스</h3>
-      <p style="color:var(--text-muted);font-size:14px;">영상·쇼츠·광고·커뮤니티 콘텐츠를 검색하세요</p>
-    </div>
-    <!-- 무한 스크롤 감시 지점 -->
-    <div id="ytSentinel" style="height:1px;"></div>
   </div><!-- /#youtubeView -->
+
+  <!-- YouTube 카테고리 생성/수정 모달 -->
+  <div class="modal-overlay" id="ytCategoryModal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 id="ytCatModalTitle">새 카테고리</h2>
+        <button class="modal-close" onclick="closeModal('ytCategoryModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">카테고리 이름</label>
+          <input class="form-input" id="ytCatName" placeholder="예: 광고 레퍼런스, 브이로그...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">색상</label>
+          <div class="color-options" id="ytColorOptions"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('ytCategoryModal')">취소</button>
+        <button class="btn btn-primary" id="ytCatSaveBtn" onclick="ytSaveCategory()">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- YouTube 카테고리 이동 모달 -->
+  <div class="modal-overlay" id="ytMoveModal">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header">
+        <h2>📁 카테고리로 이동</h2>
+        <button class="modal-close" onclick="closeModal('ytMoveModal')">✕</button>
+      </div>
+      <div class="modal-body" id="ytMoveBody"></div>
+    </div>
+  </div>
+
+  <!-- YouTube 저장 메뉴 드롭다운 — 검색 카드에서 저장 시 카테고리 선택 -->
+  <div class="yt-save-menu" id="ytSaveMenu" style="display:none;"></div>
+
+  <!-- YouTube 카테고리 우클릭 메뉴 -->
+  <div class="ctx-menu" id="ytCtxMenu">
+    <button class="ctx-menu-item" onclick="ytEditCategory()">✏️ 이름 변경</button>
+    <button class="ctx-menu-item danger" onclick="ytDeleteCategory()">🗑 삭제</button>
+  </div>
 
   <!-- ══════════════════════════════════════════
        YouTube 인라인 플레이어 모달 — 영상 클릭 시 표시
@@ -7459,6 +7555,19 @@
       observer: null,        // IntersectionObserver 인스턴스
       isTrending: false,     // 급상승 동영상 표시 중 여부
       ytApiDisabled: false,  // YouTube API 할당량 초과 시 세션 내 비활성화 플래그
+      // ─── 저장 모드 관련 상태 (검색/저장 전환) ───
+      viewMode: 'search',         // 'search'=검색, 'saved'=저장된 영상
+      ytCategories: [],            // YouTube 카테고리 배열
+      ytActiveCatId: null,         // 선택된 카테고리
+      ytEditingCatId: null,        // 수정 중인 카테고리
+      savedVideos: [],             // 현재 카테고리 저장 영상
+      savedVideoIds: new Set(),    // 전체 저장 videoId 캐시
+      ytMultiMode: false,          // 멀티선택 모드
+      ytSelectedIds: new Set(),    // 선택된 영상 DB ID
+      savedFilter: 'all',          // 'all' | 'favorites'
+      savedSort: 'newest',         // 'newest' | 'oldest' | 'name' | 'favorites'
+      ytDragSel: { active: false, startX: 0, startY: 0 },
+      ytSelectedColor: '#6366f1',  // 카테고리 색상
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
