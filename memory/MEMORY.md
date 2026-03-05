@@ -13,10 +13,10 @@
    - **배포**: Firebase https://pikbox-app.web.app 완료 (HTTP 200 확인)
 
 ### 기술 학습
-- **HTML 토크나이저**: 태그/텍스트 분리 → 특수문자 혼란 방지
-- **정규식 길이 정렬**: 긴 이름 우선 매칭 (ex. "네이버페이 부동산" > "네이버")
-- **상태 머신**: 플래그 조합으로 복잡 영역 필터링 (nested anchor, style/script, comments)
-- **멱등성 설계**: 기존 링크 자동 제거 → 새로 생성 (재실행 안전)
+- **사이드바 CSS 일관성**: 레퍼런스 탭의 `.sidebar-header` + `.category-item` 패턴을 YouTube 탭도 동일 적용
+- **액션 바 UI 패턴**: 모달 타이틀 바 아래 플렉스 박스로 액션 배치 (저장 상태별 UI 토글)
+- **localStorage 탭 상태**: activeView 값을 저장/복원으로 사용자 경험 향상
+- **DB 경로 설계**: yt-categories / yt-videos로 명확한 데이터 구조 분리
 
 ---
 
