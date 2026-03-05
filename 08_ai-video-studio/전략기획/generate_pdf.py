@@ -849,6 +849,25 @@ def build_feature_spec(story):
     for title, desc in phase3_items:
         story.append(Paragraph(f"  •  <b>{title}</b> — {desc}", style_body))
 
+    story.append(Spacer(1, 16))
+
+    # Phase별 비용 절감 로드맵 요약 (빈 공간 활용)
+    story.append(Paragraph("Phase별 비용 절감 로드맵", style_h3))
+    story.append(make_table(
+        ["Phase", "기간", "외부 API 의존도", "월 비용 전망"],
+        [
+            ["Phase 1 (MVP)", "4~6주", "높음 (Wan 2.1 + Kling)", "~$38~53"],
+            ["Phase 2 (편집)", "8~12주", "중간 (자막·배경 로컬 전환)", "~$25~40"],
+            ["Phase 3 (데스크톱)", "16~20주", "낮음 (핵심만 클라우드)", "~$10~20"],
+            ["Phase 4 (플랫폼)", "이후", "최소 (선택적 클라우드)", "~$5~15"],
+        ],
+        col_widths=[CONTENT_W * 0.22, CONTENT_W * 0.18, CONTENT_W * 0.35, CONTENT_W * 0.25]
+    ))
+    story.append(Spacer(1, 8))
+    story.append(purple_box(
+        "Phase 3 완료 시 월 운영 비용 60~70% 절감 목표 — 외부 API 의존에서 자체 AI 인프라로 점진 전환"
+    ))
+
     story.append(PageBreak())
 
 
