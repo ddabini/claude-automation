@@ -9197,13 +9197,9 @@ ${metaText}
 
 각 항목은 1~2줄로 핵심만. 데이터 근거 기반으로 작성.`;
 
-        // 스트리밍 상태 업데이트
-        const streamStatus = document.getElementById('ytStreamStatus');
-        if (streamStatus) streamStatus.textContent = '분석 중...';
-
-        // ── 3단계: Gemini 스트리밍 호출 (텍스트만 → 3~5초) ──
+        // ── 3단계: Gemini 일반 호출 (텍스트만 → 3~5초, 스트리밍 불필요) ──
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -9218,10 +9214,11 @@ ${metaText}
           }
         );
 
+        const data = await res.json();
+
         // API 에러 처리
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          const errMsg = errData.error?.message || ('HTTP ' + res.status);
+        if (!res.ok || data.error) {
+          const errMsg = data.error?.message || ('HTTP ' + res.status);
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
               <div style="font-size:11px;font-weight:600;color:#e65100;margin-bottom:4px;">Gemini 분석 실패</div>
@@ -9231,48 +9228,10 @@ ${metaText}
           return;
         }
 
-        // ── SSE 스트림 읽기 + 실시간 렌더링 ──
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        const streamBody = document.getElementById('ytStreamBody');
-        let fullText = '';
-        let buffer = '';
-        let firstChunk = true;
+        // 응답 텍스트 추출
+        const resParts = data.candidates?.[0]?.content?.parts || [];
+        const fullText = resParts.filter(p => p.text).map(p => p.text).join('\n');
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const jsonStr = line.slice(6).trim();
-            if (!jsonStr || jsonStr === '[DONE]') continue;
-            try {
-              const chunk = JSON.parse(jsonStr);
-              const parts = chunk.candidates?.[0]?.content?.parts || [];
-              for (const p of parts) {
-                if (p.text) {
-                  fullText += p.text;
-                  if (firstChunk) {
-                    firstChunk = false;
-                    if (streamStatus) streamStatus.textContent = '작성 중...';
-                  }
-                  if (streamBody) {
-                    streamBody.innerHTML = ytMarkdownToHtml(fullText) +
-                      '<span style="display:inline-block;width:2px;height:14px;background:var(--primary);animation:blink 0.8s infinite;vertical-align:middle;margin-left:2px;"></span>';
-                    streamBody.scrollTop = streamBody.scrollHeight;
-                  }
-                }
-              }
-            } catch (e) { /* 불완전한 청크 무시 */ }
-          }
-        }
-
-        // ── 스트리밍 완료 → 최종 포맷팅 ──
         if (!fullText.trim()) {
           analysisEl.innerHTML = `
             <div style="background:#fff3e0;border-radius:8px;padding:12px;border:1px solid #ffe0b2;">
