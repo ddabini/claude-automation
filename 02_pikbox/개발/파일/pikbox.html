@@ -8298,6 +8298,10 @@
     // 카테고리 선택
     function ytSelectCategory(id) {
       ytState.ytActiveCatId = id;
+      // 카테고리 선택 시 저장 모드로 전환
+      if (ytState.viewMode !== 'saved') {
+        ytSwitchViewMode('saved');
+      }
       ytRenderCategories();
       ytCancelMultiSelect();
       ytLoadSavedVideos();
