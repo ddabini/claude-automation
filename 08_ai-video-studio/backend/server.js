@@ -106,8 +106,7 @@ app.use('/api/subtitle', subtitleRoutes);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    version: '0.1.0',
-    mockMode: process.env.MOCK_MODE === 'true',
+    version: '0.2.0',
     uptime: Math.floor(process.uptime()),
   });
 });
