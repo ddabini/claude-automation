@@ -916,6 +916,152 @@
       font-size: 13px;
     }
 
+    /* ── 완성된 디자인 아카이브 섹션 ── */
+    #drArchiveSection {
+      flex-shrink: 0;
+    }
+    .dr-archive-section {
+      border-top: 2px solid var(--border);
+    }
+    /* 아카이브 헤더 — 클릭하면 열기/닫기 */
+    .dr-archive-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: #f5f3ff;
+      user-select: none;
+      transition: background 0.1s;
+    }
+    .dr-archive-header:hover { background: #ede9fe; }
+    .dr-archive-arrow {
+      font-size: 11px;
+      color: var(--text-secondary);
+      width: 12px;
+    }
+    .dr-archive-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .dr-archive-count {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      padding: 1px 6px;
+      min-width: 16px;
+      text-align: center;
+    }
+    .dr-archive-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+    .dr-archive-btn {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.1s;
+    }
+    .dr-archive-btn:hover { border-color: var(--primary); color: var(--primary); }
+    /* 아카이브 본문 */
+    .dr-archive-body {
+      max-height: 2000px;
+      overflow-y: auto;
+    }
+    .dr-archive-empty {
+      padding: 16px 14px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    /* 폴더 */
+    .dr-folder {
+      border-top: 1px solid #f0f0f0;
+    }
+    .dr-folder-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px 8px 22px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s;
+      font-size: 12px;
+    }
+    .dr-folder-header:hover { background: #f9fafb; }
+    .dr-folder-header-uncat { cursor: default; }
+    .dr-folder-arrow {
+      font-size: 10px;
+      color: var(--text-secondary);
+      width: 10px;
+    }
+    .dr-folder-icon { font-size: 12px; }
+    .dr-folder-name {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dr-folder-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+    .dr-folder-body {
+      padding-left: 8px;
+    }
+    /* 폴더 관리 버튼 (관리 모드에서만 표시) */
+    .dr-folder-admin-btns {
+      margin-left: auto;
+      display: flex;
+      gap: 2px;
+    }
+    .dr-folder-admin-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      transition: all 0.1s;
+    }
+    .dr-folder-admin-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .dr-folder-del-btn:hover { border-color: #ef4444; color: #ef4444; }
+    /* 아카이브 카드 — 일반 카드보다 약간 작고 폴더 이동 드롭다운 포함 */
+    .dr-archive-card .dr-card-body {
+      padding-right: 0;
+    }
+    .dr-folder-select {
+      display: block;
+      margin-top: 4px;
+      padding: 2px 4px;
+      font-size: 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #f9fafb;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      max-width: 140px;
+    }
+    .dr-folder-select:focus { border-color: var(--primary); outline: none; }
+
     /* ── 중앙 뷰어 ── */
     .dr-viewer {
       flex: 1;
