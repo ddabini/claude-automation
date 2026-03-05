@@ -10678,9 +10678,8 @@ ${metaText}
         html += '<div id="' + detailId + '" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;">';
         html += ytRenderDetailSections(detail);
         html += '</div>';
-        html += `<div style="display:flex;gap:8px;margin-top:8px;">`;
-        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-secondary);">⚡ 빠른 분석</button>`;
-        html += `<button onclick="ytDeepAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:10px;color:var(--text-muted);">↻</button>`;
+        html += `<div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">`;
+        html += `<button onclick="ytAnalyzeVideo('${videoId}')" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:11px;color:var(--text-muted);">↻ 재분석</button>`;
         html += `</div>`;
         analysisEl.style.opacity = '0';
         analysisEl.innerHTML = html;
