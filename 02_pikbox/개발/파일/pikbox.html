@@ -8265,6 +8265,11 @@
     function ytRenderCategories() {
       const list = document.getElementById('ytCategoryList');
       if (!list) return;
+      // 검색 네비 활성화 상태 업데이트
+      const navSearch = document.getElementById('ytNavSearch');
+      if (navSearch) {
+        navSearch.classList.toggle('active', ytState.viewMode === 'search');
+      }
       list.innerHTML = ytState.ytCategories.map(c => `
         <div class="yt-cat-item ${c.id === ytState.ytActiveCatId ? 'active' : ''}"
              onclick="ytSelectCategory('${c.id}')"
