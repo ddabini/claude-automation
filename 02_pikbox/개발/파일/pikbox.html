@@ -9161,8 +9161,10 @@
                 ]
               }],
               generationConfig: {
-                maxOutputTokens: 1500,
-                temperature: 0.2
+                maxOutputTokens: 4000,
+                temperature: 0.2,
+                // thinking을 끄면 응답 속도가 2~3배 빨라지고 토큰 낭비 방지
+                thinkingConfig: { thinkingBudget: 0 }
               }
             })
           }
