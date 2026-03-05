@@ -8401,38 +8401,36 @@
       };
 
       if (ytState.sort === 'views') {
-        // 조회수 내림차순 — 채널 매칭 영상 먼저, 그 안에서 조회수순
+        // 조회수순 — 관련도 높은 영상 먼저, 같은 관련도 내에서 조회수순
         sorted.sort((a, b) => {
-          const aMatch = isChannelMatch(a) ? 1 : 0;
-          const bMatch = isChannelMatch(b) ? 1 : 0;
-          if (aMatch !== bMatch) return bMatch - aMatch;
+          const relDiff = getRelevance(b) - getRelevance(a);
+          if (relDiff !== 0) return relDiff;
           return (b.viewsNum || 0) - (a.viewsNum || 0);
         });
       } else if (ytState.sort === 'newest') {
-        // 최신순 — 채널 매칭 영상 먼저, 그 안에서 최신순
+        // 최신순 — 관련도 높은 영상 먼저, 같은 관련도 내에서 최신순
         sorted.sort((a, b) => {
-          const aMatch = isChannelMatch(a) ? 1 : 0;
-          const bMatch = isChannelMatch(b) ? 1 : 0;
-          if (aMatch !== bMatch) return bMatch - aMatch;
+          const relDiff = getRelevance(b) - getRelevance(a);
+          if (relDiff !== 0) return relDiff;
           return (b.dateNum || 0) - (a.dateNum || 0);
         });
       } else {
-        // 추천순 — 채널 매칭 영상 최우선, 그 다음 조회수(60%)+최신성(40%)
+        // 추천순 — 관련도 보너스 + 조회수(60%) + 최신성(40%)
         const maxViews = Math.max(...sorted.map(r => r.viewsNum || 0), 1);
         const maxDate = Math.max(...sorted.map(r => r.dateNum || 0), 1);
         const minDate = Math.min(...sorted.filter(r => r.dateNum > 0).map(r => r.dateNum), maxDate);
         const dateRange = maxDate - minDate || 1;
 
         sorted.sort((a, b) => {
-          // 채널명 매칭 보너스: 매칭 시 +2.0 (일반 점수 최대 1.0 대비 압도적 우선)
-          const aMatch = isChannelMatch(a) ? 2.0 : 0;
-          const bMatch = isChannelMatch(b) ? 2.0 : 0;
+          // 관련도 보너스: 채널매칭 3점, 제목매칭 2점 (일반 점수 최대 1.0 대비 압도적 우선)
+          const aRel = getRelevance(a);
+          const bRel = getRelevance(b);
           const aViewScore = (a.viewsNum || 0) / maxViews;
           const bViewScore = (b.viewsNum || 0) / maxViews;
           const aDateScore = ((a.dateNum || 0) - minDate) / dateRange;
           const bDateScore = ((b.dateNum || 0) - minDate) / dateRange;
-          const aScore = aMatch + aViewScore * 0.6 + aDateScore * 0.4;
-          const bScore = bMatch + bViewScore * 0.6 + bDateScore * 0.4;
+          const aScore = aRel + aViewScore * 0.6 + aDateScore * 0.4;
+          const bScore = bRel + bViewScore * 0.6 + bDateScore * 0.4;
           return bScore - aScore;
         });
       }
