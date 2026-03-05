@@ -8406,22 +8406,24 @@
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
 
-      // YouTube Data API v3로 상세 통계 가져오기 (키가 있을 때만)
+      // YouTube Data API v3로 상세 통계 가져오기 (키가 있고 할당량 남았을 때)
       const apiKey = config.youtubeApiKey;
-      if (apiKey) {
+      if (apiKey && !ytState.ytApiDisabled) {
         ytFetchVideoStats(videoId, apiKey);
-      } else {
-        // API 키 없으면 안내 메시지
+      } else if (ytState.ytApiDisabled) {
         const statsEl = document.getElementById('ytInsightStats');
         if (statsEl) {
           statsEl.innerHTML = `
             <hr class="yt-insight-divider">
             <p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px 0;">
-              좋아요·댓글 수를 보려면 설정에서<br>YouTube Data API Key를 입력하세요
+              YouTube API 일일 할당량 초과 (자정 리셋)
             </p>
           `;
         }
       }
+
+      // Most Replayed 히트맵 가져오기 (Cloud Function 경유)
+      ytFetchHeatmap(videoId);
     }
 
     // ─── 인라인 플레이어 닫기 ───
