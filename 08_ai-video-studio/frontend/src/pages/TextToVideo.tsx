@@ -186,43 +186,7 @@ const TextToVideo: React.FC = () => {
     }
   }, [prompt, style, duration, resolution, resetGenerationJob, updateGenerationJob]);
 
-  // ── 데모용 시뮬레이션 (백엔드 연동 전 UI 테스트) ──
-  const simulateGeneration = () => {
-    updateGenerationJob({
-      jobId: 'demo-' + Date.now(),
-      status: 'preparing',
-      progress: 0,
-      estimatedSeconds: 10,
-    });
-
-    // 단계별 진행 시뮬레이션 (실제로는 Socket.io가 처리)
-    setTimeout(() => {
-      updateGenerationJob({ status: 'generating', progress: 20, estimatedSeconds: 8 });
-    }, 1500);
-
-    setTimeout(() => {
-      updateGenerationJob({ progress: 50, estimatedSeconds: 5 });
-    }, 3000);
-
-    setTimeout(() => {
-      updateGenerationJob({ progress: 80, estimatedSeconds: 2 });
-    }, 5000);
-
-    setTimeout(() => {
-      updateGenerationJob({ status: 'processing', progress: 95, estimatedSeconds: 1 });
-    }, 7000);
-
-    setTimeout(() => {
-      updateGenerationJob({
-        status: 'completed',
-        progress: 100,
-        estimatedSeconds: 0,
-        // 데모용 비디오 URL (실제로는 Firebase Storage URL)
-        resultUrl:
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      });
-    }, 8500);
-  };
+  // (데모 시뮬레이션 제거됨 — 실제 백엔드 연동 사용)
 
   // ── 다운로드 처리 ──
   const handleDownload = () => {
