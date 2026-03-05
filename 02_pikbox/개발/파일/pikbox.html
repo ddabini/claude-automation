@@ -7450,9 +7450,10 @@
       const data = await res.json();
       if (!res.ok || !data.videos) return [];
 
-      // YouTube 영상 중 한국 채널만 필터링하여 카드 데이터로 변환
+      // YouTube 영상 URL만 필터링 (채널/사용자 페이지 제외)
+      // /watch?v= 또는 /shorts/ 패턴만 허용 — /channel/, /@, /user/ 등 제외
       return data.videos
-        .filter(v => v.link && v.link.includes('youtube.com'))
+        .filter(v => v.link && (v.link.includes('/watch?v=') || v.link.includes('/shorts/')))
         .filter(v => ytIsKorean(v))
         .map(v => {
           // 고화질 썸네일 생성 (Serper 기본 썸네일은 저화질일 수 있음)
