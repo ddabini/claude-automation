@@ -22,9 +22,10 @@ export default defineConfig({
     // 개발 서버 포트 (http://localhost:5173)
     port: 5173,
     // 백엔드 API 요청을 프록시로 전달 (CORS 문제 방지)
+    // 백엔드 서버 포트(3001)와 일치시켜야 합니다
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },
