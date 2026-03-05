@@ -313,21 +313,23 @@ exports.getYoutubeHeatmap = functions
       // heatMarkers 추출 — 여러 가능한 경로에서 탐색
       let markers = [];
 
-      // 경로 1: frameworkUpdates → entityBatchUpdate
+      // 경로 1: frameworkUpdates → entityBatchUpdate → macroMarkersListEntity
+      // next 엔드포인트의 기본 히트맵 경로 (100개 구간 데이터)
       const mutations = data.frameworkUpdates?.entityBatchUpdate?.mutations || [];
       for (const m of mutations) {
         const heatmap = m.payload?.macroMarkersListEntity?.markersList?.markers;
         if (heatmap && heatmap.length > 0) {
           markers = heatmap.map((h) => ({
-            startMs: h.startMillis || 0,
-            durationMs: h.durationMillis || 0,
-            intensity: h.intensityScoreNormalized || 0,
+            startMs: parseInt(h.startMillis || "0", 10),
+            durationMs: parseInt(h.durationMillis || "0", 10),
+            intensity: parseFloat(h.intensityScoreNormalized || 0),
           }));
           break;
         }
       }
 
-      // 경로 2: playerOverlays → decoratedPlayerBarRenderer
+      // 경로 2: playerOverlays → decoratedPlayerBarRenderer → heatMarkers
+      // 일부 영상에서 이 경로로 제공되기도 함
       if (markers.length === 0) {
         const overlayMarkers =
           data.playerOverlays?.playerOverlayRenderer?.decoratedPlayerBarRenderer
@@ -339,9 +341,9 @@ exports.getYoutubeHeatmap = functions
               const heatMarkers = entry.value?.heatmap?.heatmapRenderer?.heatMarkers;
               if (heatMarkers && heatMarkers.length > 0) {
                 markers = heatMarkers.map((h) => ({
-                  startMs: h.heatMarkerRenderer?.timeRangeStartMillis || 0,
-                  durationMs: h.heatMarkerRenderer?.markerDurationMillis || 0,
-                  intensity: h.heatMarkerRenderer?.heatMarkerIntensityScoreNormalized || 0,
+                  startMs: parseInt(h.heatMarkerRenderer?.timeRangeStartMillis || "0", 10),
+                  durationMs: parseInt(h.heatMarkerRenderer?.markerDurationMillis || "0", 10),
+                  intensity: parseFloat(h.heatMarkerRenderer?.heatMarkerIntensityScoreNormalized || 0),
                 }));
                 break;
               }
