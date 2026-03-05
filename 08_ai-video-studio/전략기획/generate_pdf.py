@@ -20,10 +20,11 @@ from reportlab.pdfgen import canvas
 from reportlab.graphics.shapes import Drawing, Rect, String, Line, Circle, Polygon
 from reportlab.graphics import renderPDF
 
-# ─── 폰트 등록 ───
-FONT_PATH = "/tmp/noto-fonts/NotoSansKR-Variable.ttf"
-pdfmetrics.registerFont(TTFont("NotoSansKR", FONT_PATH))
-pdfmetrics.registerFont(TTFont("NotoSansKR-Bold", FONT_PATH))
+# ─── 폰트 등록 (Regular + Bold 별도 파일로 weight 차이 구현) ───
+FONT_REGULAR = "/tmp/noto-fonts/NotoSansKR-Regular-fs.ttf"
+FONT_BOLD = "/tmp/noto-fonts/NotoSansKR-Bold-fs.ttf"
+pdfmetrics.registerFont(TTFont("NotoSansKR", FONT_REGULAR))
+pdfmetrics.registerFont(TTFont("NotoSansKR-Bold", FONT_BOLD))
 
 # ─── 컬러 팔레트 ───
 PRIMARY = HexColor("#7C3AED")       # 메인 보라색
