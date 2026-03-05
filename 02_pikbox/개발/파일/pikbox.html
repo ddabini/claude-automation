@@ -1363,6 +1363,92 @@
       color: #fff;
       border-color: var(--primary);
     }
+    /* 속성 인스펙터 */
+    .dr-edit-props {
+      padding: 14px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .dr-edit-prop-hint {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .dr-edit-prop-hint small {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .dr-edit-prop-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dr-edit-prop-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 32px 1fr;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .dr-edit-prop-row label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .dr-edit-prop-row input {
+      width: 100%;
+      padding: 5px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+      text-align: center;
+      outline: none;
+      background: #f9fafb;
+    }
+    .dr-edit-prop-row input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .dr-edit-prop-text {
+      margin-top: 12px;
+    }
+    .dr-edit-prop-text label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .dr-edit-prop-text textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      background: #f9fafb;
+      line-height: 1.5;
+    }
+    .dr-edit-prop-text textarea:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
 
     /* ── 우측 채팅 패널 ── */
     .dr-chat-panel {
