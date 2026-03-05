@@ -8240,18 +8240,19 @@
     // ─── 4단계: 카테고리 CRUD ───
 
     // Firebase에서 YouTube 카테고리 목록 불러오기
-    async function ytLoadCategories() {
+    // 카테고리 목록 로드 — autoSelect가 true면 첫 번째 카테고리 자동 선택
+    async function ytLoadCategories(autoSelect = true) {
       try {
         ytState.ytCategories = await fbGetList(FB_YT_CATS);
         ytState.ytCategories.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
         ytRenderCategories();
-        if (ytState.ytCategories.length > 0) {
+        if (autoSelect && ytState.ytCategories.length > 0) {
           if (!ytState.ytActiveCatId || !ytState.ytCategories.find(c => c.id === ytState.ytActiveCatId)) {
             ytSelectCategory(ytState.ytCategories[0].id);
           } else {
             ytSelectCategory(ytState.ytActiveCatId);
           }
-        } else {
+        } else if (autoSelect) {
           ytState.ytActiveCatId = null;
           ytState.savedVideos = [];
           ytRenderSavedCards();
