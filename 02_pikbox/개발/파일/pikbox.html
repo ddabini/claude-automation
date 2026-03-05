@@ -8066,6 +8066,12 @@
             ytRenderCards(newItems);
           }
 
+          // YouTube API로 통계 보강 (비동기, 검색 결과 표시 후 백그라운드)
+          // videos endpoint = 1 unit/video (search endpoint 100 unit 대비 대폭 절약)
+          if (hasYtApi && newItems.length > 0) {
+            ytEnrichWithStats(newItems);
+          }
+
           // 결과 없으면 빈 상태
           if (ytState.results.length === 0) {
             document.getElementById('ytEmpty').style.display = '';
