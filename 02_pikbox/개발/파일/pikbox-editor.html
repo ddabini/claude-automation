@@ -644,44 +644,45 @@
     // DOMParser로 HTML을 파싱하고, 직접 텍스트를 가진 요소를 추출
     // ═══════════════════════════════════════════════
 
+    // 파싱된 DOM 문서를 전역에 보관 (편집 시 직접 DOM 노드를 수정하기 위함)
+    let deParsedDoc = null;
+
     function deParseTexts(html) {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
+      deParsedDoc = parser.parseFromString(html, 'text/html');
       const results = [];
       const seen = new Set();
 
       // 의미있는 텍스트를 가진 요소만 추출
-      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+      const walker = deParsedDoc.createTreeWalker(deParsedDoc.body, NodeFilter.SHOW_ELEMENT);
       let node;
       while (node = walker.nextNode()) {
         // SVG, script, style 내부는 스킵
         if (node.closest('svg, script, style, link')) continue;
 
-        // 직접 텍스트 노드만 추출 (자식 요소 텍스트 제외)
-        let directText = '';
+        // 직접 텍스트 노드 수집 (자식 요소 텍스트 제외)
+        const textNodes = [];
         node.childNodes.forEach(child => {
-          if (child.nodeType === Node.TEXT_NODE) {
-            directText += child.textContent;
+          if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
+            textNodes.push(child);
           }
         });
         // 리프 노드 (자식 요소 없음)면 textContent 사용
-        if (!directText.trim() && node.children.length === 0) {
-          directText = node.textContent || '';
+        if (textNodes.length === 0 && node.children.length === 0 && node.textContent.trim()) {
+          textNodes.push(node.firstChild || node);
         }
-        directText = directText.trim();
+        if (textNodes.length === 0) continue;
 
+        const directText = textNodes.map(n => n.textContent).join('').trim();
         if (!directText || directText.length < 1) continue;
 
-        // 중복 방지 (같은 텍스트가 여러 요소에 있을 수 있음)
+        // 중복 방지
         const key = directText.substring(0, 50);
         if (seen.has(key)) continue;
         seen.add(key);
 
-        // 태그 정보 추출
         const tag = node.tagName.toLowerCase();
         const style = node.getAttribute('style') || '';
-
-        // 폰트 크기 힌트 추출 (style 속성에서)
         let fontSize = '';
         const fMatch = style.match(/font-size:\s*(\d+)/);
         if (fMatch) fontSize = fMatch[1] + 'px';
@@ -690,8 +691,9 @@
           text: directText,
           tag: tag,
           fontSize: fontSize,
-          // HTML 내에서 이 텍스트를 찾기 위한 원본 참조
-          originalText: directText,
+          // DOM 노드 직접 참조 — 편집 시 이 노드를 직접 수정
+          domTextNodes: textNodes,
+          domElement: node,
         });
       }
 
