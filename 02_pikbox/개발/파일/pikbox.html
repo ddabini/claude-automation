@@ -8650,8 +8650,9 @@
         ytRenderTimelineBar(bar, markers, videoId);
 
       } catch (e) {
+        console.error('[Pikbox Heatmap] 오류:', e);
         bar.className = 'yt-heatmap-loading';
-        bar.innerHTML = '히트맵을 불러올 수 없습니다';
+        bar.innerHTML = `히트맵 오류: ${e.message}`;
       }
     }
 
