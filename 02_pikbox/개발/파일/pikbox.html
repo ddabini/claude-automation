@@ -8385,11 +8385,19 @@
       const sorted = [...ytState.results];
       const queryLower = (ytState.query || '').toLowerCase();
 
-      // 채널명 매칭 여부 판별 함수
-      // 검색어가 채널명에 포함되면 해당 채널 영상으로 판정
-      const isChannelMatch = (item) => {
+      // 관련도 점수 계산 — 채널명/제목에 검색어 포함 여부로 우선순위 결정
+      // 3점: 채널명 매칭 (해당 채널의 자체 콘텐츠)
+      // 2점: 제목에 검색어 포함 (해당 인물이 출연/언급된 영상)
+      // 0점: 관련 없음
+      const getRelevance = (item) => {
+        if (!queryLower) return 0;
         const ch = (item.channel || '').toLowerCase();
-        return ch && queryLower && ch.includes(queryLower);
+        const title = (item.title || '').toLowerCase();
+        // 채널명에 검색어 포함 → 해당 채널 자체 콘텐츠 (최우선)
+        if (ch && ch.includes(queryLower)) return 3;
+        // 제목에 검색어 포함 → 해당 인물 출연/언급 영상
+        if (title.includes(queryLower)) return 2;
+        return 0;
       };
 
       if (ytState.sort === 'views') {
