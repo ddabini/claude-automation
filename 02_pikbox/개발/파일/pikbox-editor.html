@@ -1168,55 +1168,69 @@
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const html = await resp.text();
 
-      // 2단계: 숨겨진 컨테이너에 HTML 렌더링
+      // 2단계: 숨겨진 컨테이너에 HTML 직접 렌더링
+      // (iframe 방식 대신 div에 직접 삽입 — html2canvas와 호환성이 더 좋음)
       const container = document.getElementById('deHiddenRender');
       container.style.width = width + 'px';
       container.style.height = height + 'px';
+      container.style.overflow = 'hidden';
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.visibility = 'hidden';
+      container.style.zIndex = '-1';
 
-      // iframe을 사용해 격리된 환경에서 HTML 렌더링 (스타일 충돌 방지)
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = `width:${width}px;height:${height}px;border:none;overflow:hidden;`;
+      // 디자인 HTML에서 <style>과 <body> 내용을 추출하여 렌더링
+      const renderDiv = document.createElement('div');
+      renderDiv.style.cssText = `width:${width}px;height:${height}px;position:relative;overflow:hidden;background:#fff;`;
+      renderDiv.id = 'deRenderTarget';
+
+      // HTML을 파싱하여 style과 body 내용 추출
+      const parser = new DOMParser();
+      const parsedDoc = parser.parseFromString(html, 'text/html');
+
+      // 원본 HTML의 스타일을 모두 가져옴
+      const styles = parsedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+      const styleContainer = document.createElement('div');
+      styles.forEach(s => {
+        const clone = s.cloneNode(true);
+        styleContainer.appendChild(clone);
+      });
+
+      // body 내용을 renderDiv에 복사
+      renderDiv.innerHTML = styleContainer.outerHTML + (parsedDoc.body ? parsedDoc.body.innerHTML : '');
+
       container.innerHTML = '';
-      container.appendChild(iframe);
-
-      // iframe에 HTML 쓰기
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(html);
-      iframeDoc.close();
+      container.appendChild(renderDiv);
 
       // 3단계: 폰트 로딩을 기다림 (폰트가 로드되어야 정확한 렌더링 가능)
       await new Promise(resolve => {
-        // iframe 내부의 폰트 로딩 완료 대기
-        if (iframe.contentDocument.fonts && iframe.contentDocument.fonts.ready) {
-          iframe.contentDocument.fonts.ready.then(() => {
-            // 추가로 잠시 대기 (렌더링 완료 보장)
-            setTimeout(resolve, 500);
-          });
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => setTimeout(resolve, 800));
         } else {
-          // fonts API가 없는 브라우저면 1초 대기
-          setTimeout(resolve, 1000);
+          setTimeout(resolve, 1500);
         }
       });
 
       // 4단계: html2canvas로 전체 HTML을 이미지로 캡처
       let bgImageUrl;
       try {
-        const captureCanvas = await html2canvas(iframeDoc.body, {
+        const captureCanvas = await html2canvas(renderDiv, {
           width: width,
           height: height,
           scale: 1,
           useCORS: true,
           allowTaint: true,
           logging: false,
-          // iframe 내부의 window를 사용
           windowWidth: width,
           windowHeight: height,
+          // 배경색을 흰색으로 설정
+          backgroundColor: '#ffffff',
         });
         bgImageUrl = captureCanvas.toDataURL('image/png');
       } catch (captureErr) {
-        console.warn('html2canvas 캡처 실패, 직접 렌더링 시도:', captureErr);
-        // html2canvas 실패 시 → 직접 이미지로 변환 시도
+        console.warn('html2canvas 캡처 실패, 대안 방식 시도:', captureErr);
+        // html2canvas 실패 시 → SVG foreignObject 방식으로 시도
         bgImageUrl = await deAlternativeCapture(html, width, height);
       }
 
@@ -1236,7 +1250,8 @@
       }
 
       // 6단계: HTML에서 텍스트 요소를 파싱하여 Fabric.Textbox로 변환
-      deExtractTexts(iframeDoc, width, height);
+      // renderDiv를 document처럼 사용 (defaultView는 현재 window)
+      deExtractTextsFromDiv(renderDiv, width, height);
 
       // 렌더링 완료 후 숨겨진 컨테이너 정리
       container.innerHTML = '';
