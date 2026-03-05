@@ -309,6 +309,165 @@ async function getVideoInfo(videoPath) {
   });
 }
 
+/**
+ * 영상의 특정 구간만 잘라내는 함수 (트림/컷 편집)
+ *
+ * 비유: 긴 영상에서 원하는 부분만 "가위로 오려내는" 것
+ *
+ * @param {string} videoPath - 원본 영상 파일 경로
+ * @param {number} startTime - 시작 시간 (초)
+ * @param {number} endTime - 끝 시간 (초)
+ * @returns {Promise<string>} 잘라낸 영상 파일 경로
+ */
+async function trimVideo(videoPath, startTime, endTime) {
+  const isInstalled = await checkFFmpegInstalled();
+  if (!isInstalled) {
+    throw new Error('FFmpeg가 설치되지 않았습니다. brew install ffmpeg 으로 설치해주세요.');
+  }
+
+  const outputFileName = `trimmed-${uuidv4()}.mp4`;
+  const outputPath = path.join(OUTPUTS_DIR, outputFileName);
+
+  // 구간 길이 계산
+  const duration = endTime - startTime;
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      // 시작 지점으로 이동 (입력 단계에서 시크 → 빠름)
+      .setStartTime(startTime)
+      // 잘라낼 구간 길이 설정
+      .setDuration(duration)
+      // 영상/오디오 코덱을 copy로 설정 (재인코딩 안 함 → 매우 빠름)
+      .videoCodec('copy')
+      .audioCodec('copy')
+      .output(outputPath)
+      .on('start', (cmd) => {
+        console.log(`[FFmpeg] 트림 시작: ${cmd}`);
+      })
+      .on('end', () => {
+        console.log(`[FFmpeg] 트림 완료: ${outputPath}`);
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error(`[FFmpeg] 트림 실패: ${err.message}`);
+        reject(new Error(`영상 트림 실패: ${err.message}`));
+      })
+      .run();
+  });
+}
+
+/**
+ * 영상의 오디오를 편집하는 함수
+ *
+ * 볼륨 조절, BGM 추가, 페이드 인/아웃 효과를 적용합니다.
+ *
+ * 비유: 영상의 소리를 크게/작게 만들거나,
+ *       배경 음악을 깔고, 시작/끝에 서서히 소리가 커지거나 작아지게 만드는 것
+ *
+ * @param {string} videoPath - 원본 영상 파일 경로
+ * @param {object} options - 오디오 편집 설정
+ * @param {number} [options.volume] - 원본 볼륨 (0~200, 100이 기본)
+ * @param {string} [options.bgmPath] - BGM 오디오 파일 경로
+ * @param {number} [options.bgmVolume] - BGM 볼륨 (0~100, 50이 기본)
+ * @param {number} [options.fadeIn] - 페이드 인 시간 (초)
+ * @param {number} [options.fadeOut] - 페이드 아웃 시간 (초)
+ * @returns {Promise<string>} 편집된 영상 파일 경로
+ */
+async function editAudio(videoPath, options = {}) {
+  const isInstalled = await checkFFmpegInstalled();
+  if (!isInstalled) {
+    throw new Error('FFmpeg가 설치되지 않았습니다. brew install ffmpeg 으로 설치해주세요.');
+  }
+
+  const {
+    volume = 100,
+    bgmPath = null,
+    bgmVolume = 50,
+    fadeIn = 0,
+    fadeOut = 0,
+  } = options;
+
+  const outputFileName = `audio-edited-${uuidv4()}.mp4`;
+  const outputPath = path.join(OUTPUTS_DIR, outputFileName);
+
+  // 영상 정보 가져오기 (페이드 아웃 시작 시점 계산용)
+  let videoDuration = 0;
+  try {
+    const info = await getVideoInfo(videoPath);
+    videoDuration = info.duration || 0;
+  } catch (e) {
+    console.warn('[FFmpeg] 영상 정보 조회 실패, 페이드 아웃 미적용:', e.message);
+  }
+
+  return new Promise((resolve, reject) => {
+    let command = ffmpeg(videoPath);
+
+    // BGM 파일이 있으면 두 번째 입력으로 추가
+    if (bgmPath && fs.existsSync(bgmPath)) {
+      command = command.input(bgmPath);
+    }
+
+    // 오디오 필터 체인 구성
+    // FFmpeg의 복합 필터(complex filter)를 사용해서 여러 효과를 한번에 적용
+    const complexFilters = [];
+
+    // 원본 오디오 볼륨 조절 (100 = 원본, 50 = 절반, 200 = 두 배)
+    const volumeRatio = volume / 100;
+    let mainAudioLabel = '[0:a]'; // 첫 번째 입력의 오디오 스트림
+
+    // 볼륨 조절 필터
+    let currentLabel = 'volout';
+    complexFilters.push(`${mainAudioLabel}volume=${volumeRatio}[${currentLabel}]`);
+
+    // 페이드 인 효과 (소리가 서서히 커짐)
+    if (fadeIn > 0) {
+      const prevLabel = currentLabel;
+      currentLabel = 'fadein';
+      complexFilters.push(`[${prevLabel}]afade=t=in:st=0:d=${fadeIn}[${currentLabel}]`);
+    }
+
+    // 페이드 아웃 효과 (소리가 서서히 작아짐)
+    if (fadeOut > 0 && videoDuration > 0) {
+      const fadeOutStart = videoDuration - fadeOut;
+      const prevLabel = currentLabel;
+      currentLabel = 'fadeout';
+      complexFilters.push(`[${prevLabel}]afade=t=out:st=${fadeOutStart}:d=${fadeOut}[${currentLabel}]`);
+    }
+
+    // BGM 믹싱 (원본 오디오 + BGM을 하나로 합침)
+    if (bgmPath && fs.existsSync(bgmPath)) {
+      const bgmVolumeRatio = bgmVolume / 100;
+      const prevLabel = currentLabel;
+      currentLabel = 'final';
+      // BGM 볼륨 조절 후 원본 오디오와 합침
+      complexFilters.push(`[1:a]volume=${bgmVolumeRatio}[bgm]`);
+      complexFilters.push(
+        `[${prevLabel}][bgm]amix=inputs=2:duration=first:dropout_transition=2[${currentLabel}]`
+      );
+    }
+
+    // 복합 필터 적용
+    command = command
+      .complexFilter(complexFilters, currentLabel)
+      .videoCodec('copy') // 영상은 그대로 복사 (빠름)
+      .audioCodec('aac')  // 오디오만 재인코딩
+      .output(outputPath)
+      .on('start', (cmd) => {
+        console.log(`[FFmpeg] 오디오 편집 시작: ${cmd}`);
+      })
+      .on('end', () => {
+        console.log(`[FFmpeg] 오디오 편집 완료: ${outputPath}`);
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error(`[FFmpeg] 오디오 편집 실패: ${err.message}`);
+        reject(new Error(`오디오 편집 실패: ${err.message}`));
+      });
+
+    command.run();
+  });
+}
+
 module.exports = {
   extractAudio,
   burnSubtitles,
@@ -316,4 +475,6 @@ module.exports = {
   generateThumbnail,
   getVideoInfo,
   checkFFmpegInstalled,
+  trimVideo,
+  editAudio,
 };
