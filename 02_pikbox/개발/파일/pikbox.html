@@ -7244,14 +7244,14 @@
       results: [],           // 영상 검색 결과 (video/shorts/ad 공유)
       communityResults: [],  // 커뮤니티 검색 결과 (이미지 기반)
       page: 1,               // 현재 Serper 페이지
-      nextPageToken: '',     // YouTube Data API 페이지 토큰
-      useYouTubeAPI: false,  // YouTube API 사용 여부 (키 존재 시 true)
+      nextPageToken: '',     // YouTube Data API 페이지 토큰 (통계 보강용)
       loading: false,        // 로딩 중 여부
       hasMore: true,         // 추가 결과 존재 여부
       activeChip: 'video',   // 활성 칩 (기본: 영상)
       sort: 'recommend',     // 정렬 기준: 'recommend' | 'newest' | 'views'
       observer: null,        // IntersectionObserver 인스턴스
-      isTrending: false      // 급상승 동영상 표시 중 여부
+      isTrending: false,     // 급상승 동영상 표시 중 여부
+      ytApiDisabled: false,  // YouTube API 할당량 초과 시 세션 내 비활성화 플래그
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
