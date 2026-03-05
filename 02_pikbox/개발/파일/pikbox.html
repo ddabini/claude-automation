@@ -10915,16 +10915,26 @@
     }
 
     /* ─── 상태 변경 ─── */
+    // done(완료)으로 변경 시 아카이브에 자동 포함, done에서 벗어나면 folder_id 제거
     async function drChangeStatus(newStatus) {
       if (!drState.currentDesignId) return;
+      const oldStatus = drState.currentDesignData?.status;
       try {
-        await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update({
+        const updates = {
           status: newStatus,
           updated_at: new Date().toISOString()
-        });
+        };
+        // done에서 다른 상태로 변경 시 → folder_id 제거 (일반 목록으로 복귀)
+        if (oldStatus === 'done' && newStatus !== 'done') {
+          updates.folder_id = null;
+        }
+        await firebaseDb.ref(`${DR_DESIGNS}/${drState.currentDesignId}`).update(updates);
         // 로컬 상태도 즉시 업데이트
         if (drState.currentDesignData) {
           drState.currentDesignData.status = newStatus;
+          if (oldStatus === 'done' && newStatus !== 'done') {
+            drState.currentDesignData.folder_id = null;
+          }
         }
         toast('상태가 변경되었습니다', 'success');
       } catch (e) {
