@@ -7692,8 +7692,8 @@
           initAdInsightView();
         }
       } else if (view === 'youtube') {
-        // YouTube 뷰 표시
-        ytView.style.display = '';
+        // YouTube 뷰 표시 — flex 레이아웃 (사이드바 + 메인 가로 배치)
+        ytView.style.display = 'flex';
         tabYt.classList.add('active');
         if (exportBtn) exportBtn.style.display = 'none';
         // 첫 진입 시 lazy 초기화 (칩 렌더링 + 무한 스크롤 설정)
