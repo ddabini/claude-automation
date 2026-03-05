@@ -236,6 +236,138 @@ exports.searchPinterest = functions
   });
 
 /**
+ * YouTube Most Replayed 히트맵 Cloud Function
+ *
+ * YouTube 영상의 "가장 많이 재생된 구간" 데이터를 가져오는 프록시.
+ * YouTube 내부 API(youtubei/v1/player)에서 heatMarkers를 추출.
+ * CORS 제약으로 클라이언트에서 직접 호출 불가 → Cloud Function으로 우회.
+ * 결과는 Firebase Realtime DB에 7일간 캐싱.
+ *
+ * 엔드포인트: GET /getYoutubeHeatmap?videoId=영상ID
+ */
+exports.getYoutubeHeatmap = functions
+  .runWith({
+    memory: "256MB",          // 경량 HTTP 요청만 → 메모리 적게 필요
+    timeoutSeconds: 30,
+    maxInstances: 5,
+  })
+  .https.onRequest(async (req, res) => {
+    // CORS 허용
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    const videoId = (req.query.videoId || "").trim();
+    if (!videoId) {
+      res.status(400).json({ error: "videoId를 입력해주세요" });
+      return;
+    }
+
+    // ── 캐시 확인 (7일 유효) ──
+    const cacheKey = `yt-heatmap/${videoId}`;
+    try {
+      const cached = await db.ref(cacheKey).once("value");
+      const cacheData = cached.val();
+      if (cacheData && cacheData.timestamp) {
+        const ageDays = (Date.now() - cacheData.timestamp) / (1000 * 60 * 60 * 24);
+        if (ageDays < 7) {
+          res.json({ videoId, markers: cacheData.markers, cached: true });
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("히트맵 캐시 조회 실패:", e.message);
+    }
+
+    try {
+      // ── YouTube 내부 API로 히트맵 데이터 요청 ──
+      // youtubei/v1/player 엔드포인트: 공식 API가 아닌 내부 API
+      // heatMarkers가 포함된 플레이어 응답을 반환
+      const response = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        body: JSON.stringify({
+          videoId: videoId,
+          context: {
+            client: {
+              clientName: "WEB",
+              clientVersion: "2.20241126.01.00",
+              hl: "ko",
+              gl: "KR",
+            },
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        res.status(502).json({ error: "YouTube 응답 실패", status: response.status });
+        return;
+      }
+
+      const data = await response.json();
+
+      // heatMarkers 추출 — 여러 가능한 경로에서 탐색
+      let markers = [];
+
+      // 경로 1: frameworkUpdates → entityBatchUpdate
+      const mutations = data.frameworkUpdates?.entityBatchUpdate?.mutations || [];
+      for (const m of mutations) {
+        const heatmap = m.payload?.macroMarkersListEntity?.markersList?.markers;
+        if (heatmap && heatmap.length > 0) {
+          markers = heatmap.map((h) => ({
+            startMs: h.startMillis || 0,
+            durationMs: h.durationMillis || 0,
+            intensity: h.intensityScoreNormalized || 0,
+          }));
+          break;
+        }
+      }
+
+      // 경로 2: playerOverlays → decoratedPlayerBarRenderer
+      if (markers.length === 0) {
+        const overlayMarkers =
+          data.playerOverlays?.playerOverlayRenderer?.decoratedPlayerBarRenderer
+            ?.decoratedPlayerBarRenderer?.playerBar?.multiMarkersPlayerBarRenderer
+            ?.markersMap;
+        if (overlayMarkers) {
+          for (const entry of overlayMarkers) {
+            if (entry.key === "HEATSEEKER" || entry.key === "AUTO_CHAPTERS") {
+              const heatMarkers = entry.value?.heatmap?.heatmapRenderer?.heatMarkers;
+              if (heatMarkers && heatMarkers.length > 0) {
+                markers = heatMarkers.map((h) => ({
+                  startMs: h.heatMarkerRenderer?.timeRangeStartMillis || 0,
+                  durationMs: h.heatMarkerRenderer?.markerDurationMillis || 0,
+                  intensity: h.heatMarkerRenderer?.heatMarkerIntensityScoreNormalized || 0,
+                }));
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 캐시 저장 (마커가 있든 없든 저장 — 재요청 방지)
+      try {
+        await db.ref(cacheKey).set({
+          timestamp: Date.now(),
+          markers: markers,
+        });
+      } catch (saveErr) {
+        console.warn("히트맵 캐시 저장 실패:", saveErr.message);
+      }
+
+      res.json({ videoId, markers, cached: false });
+    } catch (error) {
+      console.error("YouTube 히트맵 가져오기 실패:", error.message);
+      res.status(500).json({ error: "히트맵 데이터 조회 실패", detail: error.message });
+    }
+  });
+
+/**
  * 캐시 정리 — 7일 이상 된 캐시 자동 삭제
  * 매일 자정(KST)에 자동 실행
  */
