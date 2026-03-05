@@ -8734,7 +8734,9 @@
         if (grid) grid.innerHTML = '';
         if (ytState.results.length > 0) {
           ytRenderCards(ytState.results);
+          if (sortBar) sortBar.style.display = '';
         } else {
+          if (sortBar) sortBar.style.display = 'none';
           if (emptyEl) emptyEl.style.display = '';
         }
       } else {
