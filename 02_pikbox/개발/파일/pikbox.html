@@ -2701,12 +2701,12 @@
        영상 레퍼런스 전용 검색 공간
     ══════════════════════════════════════════════════════════ */
 
-    /* YouTube 탭 전체 레이아웃 — 전체 높이 스크롤 */
+    /* YouTube 탭 전체 레이아웃 — 사이드바 + 메인 가로 배치 */
     #youtubeView {
       height: calc(100vh - var(--header-h));
       margin-top: var(--header-h);
-      overflow-y: auto;
-      padding: 20px 24px;
+      overflow: hidden;
+      display: flex;
     }
 
     /* 상단 검색 헤더 — 스크롤 시 상단 고정 */
