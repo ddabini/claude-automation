@@ -236,6 +236,367 @@ exports.searchPinterest = functions
   });
 
 /**
+ * Instagram 검색 Cloud Function — 로그인 기반 크롤링
+ *
+ * Instagram에 로그인한 상태로 해시태그/키워드 검색 후 이미지 크롤링.
+ * 로그인 쿠키는 Firebase Realtime DB(crawl-cookies/instagram)에 저장.
+ * 검색 결과는 24시간 캐싱.
+ *
+ * 엔드포인트: GET /searchInstagram?q=검색어&limit=30
+ */
+exports.searchInstagram = functions
+  .runWith({
+    memory: "2GB",
+    timeoutSeconds: 120,
+    maxInstances: 3,
+  })
+  .https.onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    const query = (req.query.q || "").trim();
+    if (!query) {
+      res.status(400).json({ error: "검색어(q)를 입력해주세요" });
+      return;
+    }
+    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+
+    // ── 캐시 확인 (24시간 유효) ──
+    const cacheKey = `ig_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
+    const cacheRef = db.ref(`instagram-cache/${cacheKey}`);
+
+    try {
+      const cached = await cacheRef.once("value");
+      const cacheData = cached.val();
+      if (cacheData && cacheData.timestamp) {
+        const ageHours = (Date.now() - cacheData.timestamp) / (1000 * 60 * 60);
+        if (ageHours < 24) {
+          res.json({ query, count: cacheData.posts.length, posts: cacheData.posts.slice(0, limit), cached: true });
+          return;
+        }
+      }
+    } catch (e) { console.warn("Instagram 캐시 조회 실패:", e.message); }
+
+    // ── 저장된 쿠키 로드 ──
+    let savedCookies = null;
+    try {
+      const cookieSnap = await db.ref("crawl-cookies/instagram").once("value");
+      savedCookies = cookieSnap.val();
+    } catch (e) { console.warn("Instagram 쿠키 로드 실패:", e.message); }
+
+    let browser = null;
+    try {
+      const chromium = require("@sparticuz/chromium");
+      browser = await require("puppeteer-core").launch({
+        args: [...chromium.args, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+        defaultViewport: { width: 1280, height: 900 },
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+
+      const page = await browser.newPage();
+
+      // 불필요한 리소스 차단 (속도 향상)
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        const type = request.resourceType();
+        if (["font", "media", "stylesheet"].includes(type)) {
+          request.abort();
+        } else {
+          request.continue();
+        }
+      });
+
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      );
+
+      // 저장된 쿠키 적용 (로그인 상태 복원)
+      if (savedCookies && Array.isArray(savedCookies)) {
+        await page.setCookie(...savedCookies);
+        console.log("Instagram 쿠키 복원 완료");
+      }
+
+      // Instagram 해시태그 검색 페이지 이동
+      // 해시태그에서 공백/특수문자 제거
+      const hashtag = query.replace(/[^a-zA-Z0-9가-힣]/g, '').toLowerCase();
+      const searchUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`;
+      await page.goto(searchUrl, { waitUntil: "networkidle2", timeout: 45000 });
+
+      // 로그인 확인 (로그인 페이지로 리다이렉트됐는지 체크)
+      const currentUrl = page.url();
+      if (currentUrl.includes('/accounts/login')) {
+        console.warn("Instagram 로그인 필요 — 쿠키가 만료되었거나 미설정");
+        res.status(401).json({
+          error: "Instagram 로그인이 필요합니다",
+          detail: "쿠키가 만료되었습니다. 재로그인이 필요합니다.",
+          needLogin: true
+        });
+        return;
+      }
+
+      // 이미지 로딩 대기
+      await page.waitForSelector('article img, main img', { timeout: 15000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // 스크롤하여 더 많은 게시물 로드
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+
+      // ── 게시물 이미지 추출 ──
+      const posts = await page.evaluate(() => {
+        const results = [];
+        const seen = new Set();
+
+        // article 내부의 이미지 또는 메인 영역의 이미지 추출
+        document.querySelectorAll('article img, main a[href*="/p/"] img').forEach((img) => {
+          const src = img.src;
+          if (!src || src.includes('profile') || src.includes('150x150') || seen.has(src)) return;
+          seen.add(src);
+
+          // 게시물 링크 찾기
+          const linkEl = img.closest('a[href*="/p/"]') || img.closest('a');
+          const postUrl = linkEl ? `https://www.instagram.com${linkEl.getAttribute('href')}` : '';
+
+          results.push({
+            imageUrl: src,
+            thumbUrl: src,
+            postUrl: postUrl,
+            caption: img.alt || '',
+            width: img.naturalWidth || 1080,
+            height: img.naturalHeight || 1080,
+          });
+        });
+
+        return results;
+      });
+
+      // 캐시 저장
+      if (posts.length > 0) {
+        try {
+          await cacheRef.set({ query, timestamp: Date.now(), posts: posts.slice(0, 50) });
+        } catch (e) { console.warn("Instagram 캐시 저장 실패:", e.message); }
+      }
+
+      res.json({ query, count: posts.length, posts: posts.slice(0, limit), cached: false });
+    } catch (error) {
+      console.error("Instagram 검색 실패:", error.message);
+      res.status(500).json({ error: "Instagram 검색 중 오류 발생", detail: error.message });
+    } finally {
+      if (browser) { try { await browser.close(); } catch (e) {} }
+    }
+  });
+
+/**
+ * Meta 광고 라이브러리 검색 Cloud Function
+ *
+ * Meta Ad Library(facebook.com/ads/library)에서 실제 집행 중인 광고 소재를 크롤링.
+ * 광고 라이브러리는 공개 페이지이므로 로그인 없이도 기본 검색 가능.
+ * 로그인 쿠키가 있으면 더 많은 결과 조회 가능.
+ * 검색 결과는 24시간 캐싱.
+ *
+ * 엔드포인트: GET /searchMetaAds?q=검색어&limit=30
+ */
+exports.searchMetaAds = functions
+  .runWith({
+    memory: "2GB",
+    timeoutSeconds: 120,
+    maxInstances: 3,
+  })
+  .https.onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    const query = (req.query.q || "").trim();
+    if (!query) {
+      res.status(400).json({ error: "검색어(q)를 입력해주세요" });
+      return;
+    }
+    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+
+    // ── 캐시 확인 (24시간 유효) ──
+    const cacheKey = `meta_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
+    const cacheRef = db.ref(`meta-ads-cache/${cacheKey}`);
+
+    try {
+      const cached = await cacheRef.once("value");
+      const cacheData = cached.val();
+      if (cacheData && cacheData.timestamp) {
+        const ageHours = (Date.now() - cacheData.timestamp) / (1000 * 60 * 60);
+        if (ageHours < 24) {
+          res.json({ query, count: cacheData.ads.length, ads: cacheData.ads.slice(0, limit), cached: true });
+          return;
+        }
+      }
+    } catch (e) { console.warn("Meta Ads 캐시 조회 실패:", e.message); }
+
+    // ── 저장된 쿠키 로드 (선택적 — 없어도 기본 검색 가능) ──
+    let savedCookies = null;
+    try {
+      const cookieSnap = await db.ref("crawl-cookies/facebook").once("value");
+      savedCookies = cookieSnap.val();
+    } catch (e) { console.warn("Facebook 쿠키 로드 실패:", e.message); }
+
+    let browser = null;
+    try {
+      const chromium = require("@sparticuz/chromium");
+      browser = await require("puppeteer-core").launch({
+        args: [...chromium.args, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+        defaultViewport: { width: 1280, height: 900 },
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+
+      const page = await browser.newPage();
+
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        const type = request.resourceType();
+        if (["font", "media"].includes(type)) {
+          request.abort();
+        } else {
+          request.continue();
+        }
+      });
+
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      );
+
+      // 저장된 쿠키 적용
+      if (savedCookies && Array.isArray(savedCookies)) {
+        await page.setCookie(...savedCookies);
+        console.log("Facebook 쿠키 복원 완료");
+      }
+
+      // Meta Ad Library 검색 페이지 이동
+      // active_status=all: 활성+비활성 광고 모두, ad_type=all: 모든 유형, country=ALL: 전체 국가
+      const adLibUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(query)}&media_type=image`;
+      await page.goto(adLibUrl, { waitUntil: "networkidle2", timeout: 45000 });
+
+      // 광고 카드 로딩 대기
+      await page.waitForSelector('[class*="ad"] img, [role="article"] img, div[class] > div > div img', {
+        timeout: 15000
+      }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 3000));
+
+      // 스크롤하여 더 많은 광고 로드
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+
+      // ── 광고 소재 이미지 추출 ──
+      const ads = await page.evaluate(() => {
+        const results = [];
+        const seen = new Set();
+
+        // Ad Library의 광고 카드에서 이미지 추출
+        // 광고 이미지는 보통 큰 사이즈 이미지 (100x100 이상)
+        document.querySelectorAll('img').forEach((img) => {
+          const src = img.src;
+          if (!src || seen.has(src)) return;
+
+          // 프로필 이미지, 아이콘 등 제외 (너무 작은 이미지)
+          const width = img.naturalWidth || img.width || 0;
+          const height = img.naturalHeight || img.height || 0;
+          if (width < 100 || height < 100) return;
+
+          // Facebook 시스템 이미지 제외
+          if (src.includes('static.xx.fbcdn.net') && !src.includes('scontent')) return;
+          if (src.includes('emoji') || src.includes('rsrc.php')) return;
+
+          seen.add(src);
+
+          // 광고주 이름 찾기 (가장 가까운 상위 요소에서)
+          let pageName = '';
+          const card = img.closest('[role="article"]') || img.closest('div[class]');
+          if (card) {
+            const nameEl = card.querySelector('a[href*="facebook.com/"] span, strong, h4');
+            if (nameEl) pageName = nameEl.textContent || '';
+          }
+
+          results.push({
+            imageUrl: src,
+            thumbUrl: src,
+            adUrl: '',
+            pageName: pageName.substring(0, 100),
+            title: img.alt || pageName || '',
+            width: width,
+            height: height,
+          });
+        });
+
+        return results;
+      });
+
+      // 캐시 저장
+      if (ads.length > 0) {
+        try {
+          await cacheRef.set({ query, timestamp: Date.now(), ads: ads.slice(0, 50) });
+        } catch (e) { console.warn("Meta Ads 캐시 저장 실패:", e.message); }
+      }
+
+      res.json({ query, count: ads.length, ads: ads.slice(0, limit), cached: false });
+    } catch (error) {
+      console.error("Meta Ads 검색 실패:", error.message);
+      res.status(500).json({ error: "Meta 광고 라이브러리 검색 중 오류 발생", detail: error.message });
+    } finally {
+      if (browser) { try { await browser.close(); } catch (e) {} }
+    }
+  });
+
+/**
+ * 로그인 쿠키 저장 Cloud Function
+ *
+ * Playwright/Puppeteer로 로그인한 후 추출한 쿠키를 Firebase에 저장.
+ * Pikbox 설정에서 호출하거나, Claude 세션에서 직접 호출.
+ *
+ * 엔드포인트: POST /saveCrawlCookies
+ * Body: { platform: "instagram"|"facebook"|"pinterest", cookies: [...] }
+ */
+exports.saveCrawlCookies = functions
+  .runWith({ memory: "256MB", timeoutSeconds: 10 })
+  .https.onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "POST만 허용" });
+      return;
+    }
+
+    const { platform, cookies } = req.body;
+    if (!platform || !cookies || !Array.isArray(cookies)) {
+      res.status(400).json({ error: "platform과 cookies 배열이 필요합니다" });
+      return;
+    }
+
+    const allowedPlatforms = ["instagram", "facebook", "pinterest"];
+    if (!allowedPlatforms.includes(platform)) {
+      res.status(400).json({ error: `허용된 플랫폼: ${allowedPlatforms.join(", ")}` });
+      return;
+    }
+
+    try {
+      await db.ref(`crawl-cookies/${platform}`).set(cookies);
+      console.log(`${platform} 쿠키 저장 완료: ${cookies.length}개`);
+      res.json({ success: true, platform, cookieCount: cookies.length });
+    } catch (error) {
+      console.error("쿠키 저장 실패:", error.message);
+      res.status(500).json({ error: "쿠키 저장 실패", detail: error.message });
+    }
+  });
+
+/**
  * YouTube Most Replayed 히트맵 Cloud Function
  *
  * YouTube 영상의 "가장 많이 재생된 구간" 데이터를 가져오는 프록시.
