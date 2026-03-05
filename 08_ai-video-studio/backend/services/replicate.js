@@ -92,11 +92,14 @@ async function run(input) {
       const stylePrefix = STYLE_PREFIXES[input.style] || '';
       const fullPrompt = stylePrefix + input.prompt;
 
+      // Replicate Wan 2.1 T2V 파라미터
+      // guide_scale: 프롬프트를 얼마나 충실히 따를지 (낮을수록 자연스러움)
+      // shift: 노이즈 스케줄링 (낮을수록 현실적)
       predictionInput = {
         prompt: fullPrompt,
-        num_frames: durationToFrames(input.duration || 5),
-        guidance_scale: 5.0,
-        negative_prompt: 'Bright tones, overexposed, static, blurred details, subtitles, worst quality, low quality, ugly, deformed',
+        guide_scale: 5.0,
+        shift: 5.0,
+        steps: 30,
       };
     } else if (type === 'image-to-video') {
       // ── 이미지→영상 ──
@@ -105,12 +108,15 @@ async function run(input) {
       // 모션 스타일을 영어 프롬프트로 변환
       const motionPrompt = MOTION_PROMPTS[input.motionStyle] || MOTION_PROMPTS['zoom-in'];
 
+      // Replicate Wan 2.1 I2V 파라미터
+      // image: 원본 이미지 (data URI 또는 URL)
+      // prompt: 어떤 움직임을 만들지 설명
       predictionInput = {
         image: input.image, // data:image/...;base64,... 형식
         prompt: motionPrompt,
-        num_frames: durationToFrames(input.duration || 5),
-        guidance_scale: 5.0,
-        negative_prompt: 'Bright tones, overexposed, static, blurred details, subtitles, worst quality, low quality, ugly, deformed',
+        guide_scale: 4.0,  // I2V에서는 낮은 값이 더 자연스러움
+        shift: 2.0,
+        steps: 30,
       };
     } else {
       throw new Error(`지원하지 않는 생성 유형: ${type}`);
