@@ -12022,6 +12022,9 @@ ${metaText}
       // 채팅 불러오기
       drLoadChat(id);
 
+      // 편집 상태 초기화 (디자인 변경 시)
+      drEditOnDesignChange(id);
+
       // 닉네임 선택기 표시
       const nickSel = document.getElementById('drNickSelector');
       if (nickSel) nickSel.style.display = '';
@@ -13460,6 +13463,193 @@ ${metaText}
     }
 
     /* ▲▲▲ 디자인 리뷰 탭 전체 코드 끝 ▲▲▲ */
+
+    /* ══════════════════════════════════════════════════
+       텍스트 편집 기능 — 디자인 리뷰 탭 내장 에디터
+       - Firebase DB에서 HTML 콘텐츠 로드
+       - DOMParser로 텍스트 요소 파싱 → DOM 직접 수정
+       - blob URL iframe으로 즉시 반영 + Firebase DB 저장
+    ══════════════════════════════════════════════════ */
+
+    const drEditState = {
+      active: false, parsedDoc: null, textElements: [],
+      originalHtml: '', editedHtml: '', hasChanges: false,
+      blobUrl: null, updateTimer: null,
+    };
+    const DR_HTML_CONTENT = `${DR_ROOT}/html-content`;
+
+    function drToggleEdit() {
+      const panel = document.getElementById('drEditPanel');
+      if (!panel) return;
+      if (panel.classList.contains('hidden')) {
+        const chatPanel = document.getElementById('drChatPanel');
+        if (chatPanel && !chatPanel.classList.contains('hidden')) {
+          chatPanel.classList.add('hidden');
+          const chatBtn = document.getElementById('drChatToggleBtn');
+          if (chatBtn) chatBtn.textContent = '💬 채팅 열기';
+        }
+      }
+      panel.classList.toggle('hidden');
+      const isOpen = !panel.classList.contains('hidden');
+      const btn = document.getElementById('drEditToggleBtn');
+      if (btn) btn.classList.toggle('dr-edit-active', isOpen);
+      if (isOpen && drState.currentDesignId && !drEditState.active) {
+        drEditLoadHtml(drState.currentDesignId);
+      }
+    }
+
+    async function drEditLoadHtml(designId) {
+      const listEl = document.getElementById('drEditList');
+      const emptyEl = document.getElementById('drEditEmpty');
+      const saveBar = document.getElementById('drEditSaveBar');
+      const titleEl = document.getElementById('drEditTitle');
+      emptyEl.style.display = 'flex';
+      emptyEl.innerHTML = '불러오는 중...';
+      listEl.style.display = 'none';
+      saveBar.style.display = 'none';
+      try {
+        const snap = await firebaseDb.ref(`${DR_HTML_CONTENT}/${designId}`).once('value');
+        let html = snap.val();
+        if (!html) {
+          const design = drState.allDesigns.find(d => d.id === designId);
+          if (design && design.url) {
+            try { const r = await fetch(design.url); if (r.ok) html = await r.text(); } catch(e) {}
+          }
+        }
+        if (!html) {
+          emptyEl.innerHTML = '이 디자인의 HTML을<br>불러올 수 없습니다.<br><small style="color:#9ca3af">HTML 파일만 편집 가능</small>';
+          return;
+        }
+        drEditState.originalHtml = html;
+        drEditState.editedHtml = html;
+        drEditState.hasChanges = false;
+        drEditState.active = true;
+        drEditParseTexts(html);
+        if (titleEl) titleEl.textContent = '텍스트 편집 (' + drEditState.textElements.length + '개)';
+        emptyEl.style.display = 'none';
+        listEl.style.display = 'block';
+        saveBar.style.display = 'flex';
+        drEditRenderList();
+        drEditUpdatePreview();
+      } catch (e) {
+        console.error('[편집] HTML 로드 실패:', e);
+        emptyEl.innerHTML = 'HTML 로드 중 오류 발생';
+      }
+    }
+
+    function drEditParseTexts(html) {
+      const parser = new DOMParser();
+      drEditState.parsedDoc = parser.parseFromString(html, 'text/html');
+      const results = [], seen = new Set();
+      const walker = drEditState.parsedDoc.createTreeWalker(drEditState.parsedDoc.body, NodeFilter.SHOW_ELEMENT);
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.closest('svg, script, style, link')) continue;
+        const textNodes = [];
+        node.childNodes.forEach(function(child) {
+          if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) textNodes.push(child);
+        });
+        if (textNodes.length === 0 && node.children.length === 0 && node.textContent.trim()) {
+          if (node.firstChild) textNodes.push(node.firstChild);
+        }
+        if (textNodes.length === 0) continue;
+        const directText = textNodes.map(function(n) { return n.textContent; }).join('').trim();
+        if (!directText || directText.length < 1) continue;
+        const key = directText.substring(0, 50);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const tag = node.tagName.toLowerCase();
+        const style = node.getAttribute('style') || '';
+        let fontSize = '';
+        const fMatch = style.match(/font-size:\s*(\d+)/);
+        if (fMatch) fontSize = fMatch[1] + 'px';
+        results.push({ text: directText, tag: tag, fontSize: fontSize, domTextNodes: textNodes, domElement: node });
+      }
+      drEditState.textElements = results;
+    }
+
+    function drEditRenderList() {
+      const listEl = document.getElementById('drEditList');
+      if (!listEl) return;
+      const tagLabels = { button:'버튼', a:'링크', h1:'제목1', h2:'제목2', h3:'제목3', span:'텍스트', div:'텍스트', p:'문단', li:'목록' };
+      listEl.innerHTML = drEditState.textElements.map(function(te, i) {
+        const label = tagLabels[te.tag] || '텍스트';
+        const sizeInfo = te.fontSize ? ' · ' + te.fontSize : '';
+        const lines = Math.max(1, Math.ceil(te.text.length / 25));
+        const height = Math.max(32, lines * 22);
+        return '<div class="dr-edit-item"><div class="dr-edit-item-label">' + escHtml(label) + sizeInfo + '</div><textarea rows="' + lines + '" style="height:' + height + 'px" oninput="drEditOnChange(' + i + ', this.value)">' + escHtml(te.text) + '</textarea></div>';
+      }).join('');
+    }
+
+    function drEditOnChange(index, newText) {
+      const te = drEditState.textElements[index];
+      if (!te || !drEditState.parsedDoc) return;
+      if (te.domTextNodes && te.domTextNodes.length > 0) {
+        te.domTextNodes[0].textContent = newText;
+        for (let i = 1; i < te.domTextNodes.length; i++) te.domTextNodes[i].textContent = '';
+      }
+      te.text = newText;
+      drEditState.hasChanges = true;
+      drEditState.editedHtml = '<!DOCTYPE html>\n' + drEditState.parsedDoc.documentElement.outerHTML;
+      clearTimeout(drEditState.updateTimer);
+      drEditState.updateTimer = setTimeout(function() { drEditUpdatePreview(); }, 300);
+    }
+
+    function drEditUpdatePreview() {
+      const iframe = document.getElementById('drViewerIframe');
+      if (!iframe) return;
+      if (drEditState.blobUrl) URL.revokeObjectURL(drEditState.blobUrl);
+      const blob = new Blob([drEditState.editedHtml], { type: 'text/html; charset=utf-8' });
+      drEditState.blobUrl = URL.createObjectURL(blob);
+      iframe.src = drEditState.blobUrl;
+    }
+
+    function drEditReset() {
+      if (!drEditState.originalHtml) return;
+      drEditState.editedHtml = drEditState.originalHtml;
+      drEditState.hasChanges = false;
+      drEditParseTexts(drEditState.originalHtml);
+      drEditRenderList();
+      drEditUpdatePreview();
+      toast('원본으로 되돌렸습니다', 'success');
+    }
+
+    async function drEditSave() {
+      if (!drState.currentDesignId || !drEditState.editedHtml) return;
+      if (!drEditState.hasChanges) { toast('변경 사항이 없습니다', 'info'); return; }
+      try {
+        await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).set(drEditState.editedHtml);
+        drEditState.originalHtml = drEditState.editedHtml;
+        drEditState.hasChanges = false;
+        toast('저장 완료!', 'success');
+      } catch (e) {
+        console.error('[편집] 저장 실패:', e);
+        toast('저장 실패: ' + e.message, 'error');
+      }
+    }
+
+    function drEditOnDesignChange(designId) {
+      drEditState.active = false;
+      drEditState.parsedDoc = null;
+      drEditState.textElements = [];
+      drEditState.originalHtml = '';
+      drEditState.editedHtml = '';
+      drEditState.hasChanges = false;
+      if (drEditState.blobUrl) { URL.revokeObjectURL(drEditState.blobUrl); drEditState.blobUrl = null; }
+      const panel = document.getElementById('drEditPanel');
+      if (panel && !panel.classList.contains('hidden')) {
+        drEditLoadHtml(designId);
+      } else {
+        const listEl = document.getElementById('drEditList');
+        const emptyEl = document.getElementById('drEditEmpty');
+        const saveBar = document.getElementById('drEditSaveBar');
+        const titleEl = document.getElementById('drEditTitle');
+        if (listEl) listEl.style.display = 'none';
+        if (emptyEl) { emptyEl.style.display = 'flex'; emptyEl.innerHTML = '디자인을 선택하면<br>텍스트를 편집할 수 있습니다'; }
+        if (saveBar) saveBar.style.display = 'none';
+        if (titleEl) titleEl.textContent = '텍스트 편집';
+      }
+    }
 
     /* ═══════════════════════════════════════
        에이전트 내보내기 — 현재 카테고리를 MD 파일로 다운로드
