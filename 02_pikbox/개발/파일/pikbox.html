@@ -9263,8 +9263,12 @@
 
       } catch (e) {
         console.warn('[Pikbox] 영상 분석 에러:', e.message);
-        // 네트워크 에러 등 → 폴백
-        ytAnalyzeVideoFallback(videoId, videoData, analysisEl);
+        analysisEl.innerHTML = `
+          <div style="background:#ffebee;border-radius:8px;padding:12px;border:1px solid #ef9a9a;">
+            <div style="font-size:11px;font-weight:600;color:#c62828;">분석 에러</div>
+            <div style="font-size:10px;color:#b71c1c;margin:4px 0;">${escHtml(e.message)}</div>
+            <button onclick="ytAnalyzeVideo('${videoId}')" style="margin-top:6px;padding:6px 12px;border:1px solid #ef9a9a;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;color:#c62828;">다시 시도</button>
+          </div>`;
       }
     }
 
