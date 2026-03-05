@@ -8624,11 +8624,15 @@
       bar.style.display = '';
 
       try {
-        const res = await fetch(`${config.ytHeatmapUrl}?videoId=${videoId}`, {
+        const fetchUrl = `${config.ytHeatmapUrl}?videoId=${videoId}`;
+        console.log('[Pikbox Heatmap] fetch:', fetchUrl);
+        const res = await fetch(fetchUrl, {
           signal: AbortSignal.timeout(15000)
         });
-        if (!res.ok) throw new Error('히트맵 API 오류');
+        console.log('[Pikbox Heatmap] status:', res.status);
+        if (!res.ok) throw new Error('히트맵 API 오류: ' + res.status);
         const data = await res.json();
+        console.log('[Pikbox Heatmap] markers:', data.markers?.length, 'cached:', data.cached);
 
         if (!data.markers || data.markers.length === 0) {
           bar.className = 'yt-heatmap-loading';
