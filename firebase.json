@@ -36,6 +36,8 @@
       ],
       "rewrites": [
         { "source": "/", "destination": "/pikbox.html" },
+        { "source": "/editor", "destination": "/pikbox-editor.html" },
+        { "source": "/editor/**", "destination": "/pikbox-editor.html" },
         { "source": "**", "destination": "/pikbox.html" }
       ]
     },
