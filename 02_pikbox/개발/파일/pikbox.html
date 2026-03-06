@@ -9936,7 +9936,8 @@
             return bRel - aRel;
           });
 
-          if (newItems.length < 5) ytState.hasMore = false;
+          // Serper+YouTube API 양쪽 모두 소진 시 더 이상 없음
+          if (newItems.length < 5 && !ytState.ytApiPageToken) ytState.hasMore = false;
           ytState.results.push(...newItems);
 
           // 정렬 + 렌더링
@@ -9946,10 +9947,10 @@
             ytRenderCards(newItems);
           }
 
-          // YouTube API로 통계 보강 (비동기, 검색 결과 표시 후 백그라운드)
-          // videos endpoint = 1 unit/video (search endpoint 100 unit 대비 대폭 절약)
-          if (hasYtApi && newItems.length > 0) {
-            ytEnrichWithStats(newItems);
+          // Serper 결과만 YouTube API로 통계 보강 (API 검색 결과는 이미 통계 포함)
+          const serperOnlyItems = newItems.filter(item => !item._fromYtApi);
+          if (hasYtApi && serperOnlyItems.length > 0) {
+            ytEnrichWithStats(serperOnlyItems);
           }
 
           // 결과 없으면 빈 상태
