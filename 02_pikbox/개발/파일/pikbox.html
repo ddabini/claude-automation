@@ -6597,7 +6597,11 @@
         promises.push(searchMetaAdsNative(baseQuery, 30));
         sources.push('meta_ads');
 
-        // ── 3) Pinterest — 기존 Cloud Function 크롤링 ──
+        // ── 3) Google Ads Transparency — Cloud Function 크롤링 ──
+        promises.push(searchGoogleAdsNative(baseQuery, 30));
+        sources.push('google_ads');
+
+        // ── 4) Pinterest — 기존 Cloud Function 크롤링 ──
         promises.push(searchPinterestNative(baseQuery, 30));
         sources.push('pinterest');
 
@@ -6617,6 +6621,10 @@
           sources.push('meta_ads');
           promises.push(searchSerperImages(baseQuery + ' ad creative', 'site:facebook.com/ads/library', 1, { gl: 'us' }));
           sources.push('meta_ads');
+
+          // Google Ads Serper 보조 (1호출)
+          promises.push(searchSerperImages(baseQuery + ' 광고', 'site:adstransparency.google.com', 1));
+          sources.push('google_ads');
 
           // Pinterest Serper 보조 (2호출)
           promises.push(searchSerperImages(searchQuery, 'site:pinterest.com', 1));
