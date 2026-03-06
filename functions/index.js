@@ -392,11 +392,11 @@ exports.searchInstagram = functions
   });
 
 /**
- * Meta 광고 라이브러리 검색 Cloud Function
+ * Meta 광고 라이브러리 검색 Cloud Function (v2 — 전면 개선)
  *
- * Meta Ad Library(facebook.com/ads/library)에서 실제 집행 중인 광고 소재를 크롤링.
- * 광고 라이브러리는 공개 페이지이므로 로그인 없이도 기본 검색 가능.
- * 로그인 쿠키가 있으면 더 많은 결과 조회 가능.
+ * facebook.com/ads/library에서 한국(KR) 대상 활성 광고 소재를 크롤링.
+ * URL에 검색어를 직접 포함하여 카테고리 선택 UI를 우회.
+ * 이미지(scontent CDN) + 동영상 썸네일을 추출.
  * 검색 결과는 24시간 캐싱.
  *
  * 엔드포인트: GET /searchMetaAds?q=검색어&limit=30
@@ -436,29 +436,25 @@ exports.searchMetaAds = functions
       }
     } catch (e) { console.warn("Meta Ads 캐시 조회 실패:", e.message); }
 
-    // ── 저장된 쿠키 로드 (선택적 — 없어도 기본 검색 가능) ──
-    let savedCookies = null;
-    try {
-      const cookieSnap = await db.ref("crawl-cookies/facebook").once("value");
-      savedCookies = cookieSnap.val();
-    } catch (e) { console.warn("Facebook 쿠키 로드 실패:", e.message); }
-
     let browser = null;
     try {
       const chromium = require("@sparticuz/chromium");
       browser = await require("puppeteer-core").launch({
         args: [...chromium.args, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
-        defaultViewport: { width: 1280, height: 900 },
+        defaultViewport: { width: 1280, height: 1200 },
         executablePath: await chromium.executablePath(),
         headless: chromium.headless,
       });
 
       const page = await browser.newPage();
 
+      // 동영상 로딩 차단 (속도 향상)
       await page.setRequestInterception(true);
       page.on("request", (request) => {
         const type = request.resourceType();
-        if (["font", "media"].includes(type)) {
+        const url = request.url();
+        // 동영상, 폰트 차단 / 이미지·스크립트·CSS는 허용
+        if (type === "media" || type === "font" || url.includes('.mp4') || url.includes('.webm')) {
           request.abort();
         } else {
           request.continue();
@@ -466,60 +462,74 @@ exports.searchMetaAds = functions
       });
 
       await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
       );
 
-      // 저장된 쿠키 적용
-      if (savedCookies && Array.isArray(savedCookies)) {
-        await page.setCookie(...savedCookies);
-        console.log("Facebook 쿠키 복원 완료");
-      }
+      // Meta Ad Library — 한국 활성 광고, 키워드 검색, 모든 미디어 타입
+      const adLibUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=KR&q=${encodeURIComponent(query)}&search_type=keyword_unordered&media_type=all`;
+      await page.goto(adLibUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-      // Meta Ad Library 검색 페이지 이동
-      // active_status=all: 활성+비활성 광고 모두, ad_type=all: 모든 유형, country=ALL: 전체 국가
-      const adLibUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(query)}&media_type=image`;
-      await page.goto(adLibUrl, { waitUntil: "networkidle2", timeout: 45000 });
+      // 광고 카드 로딩 대기 — Facebook의 동적 렌더링
+      await new Promise((r) => setTimeout(r, 5000));
 
-      // 광고 카드 로딩 대기
-      await page.waitForSelector('[class*="ad"] img, [role="article"] img, div[class] > div > div img', {
-        timeout: 15000
-      }).catch(() => {});
-      await new Promise((r) => setTimeout(r, 3000));
+      // "결과 ~N개" 텍스트가 나타날 때까지 추가 대기 (최대 15초)
+      await page.waitForFunction(
+        () => document.body.innerText.includes('결과') || document.querySelectorAll('img[src*="scontent"]').length > 0,
+        { timeout: 15000 }
+      ).catch(() => console.warn("Meta Ads: 결과 텍스트 미감지 — 계속 진행"));
 
-      // 스크롤하여 더 많은 광고 로드
-      for (let i = 0; i < 3; i++) {
+      // 스크롤하여 더 많은 광고 카드 로드
+      for (let i = 0; i < 4; i++) {
         await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
         await new Promise((r) => setTimeout(r, 2000));
       }
 
-      // ── 광고 소재 이미지 추출 ──
+      // ── 광고 소재 이미지 추출 (v2 — 정밀 셀렉터) ──
       const ads = await page.evaluate(() => {
         const results = [];
         const seen = new Set();
 
-        // Ad Library의 광고 카드에서 이미지 추출
-        // 광고 이미지는 보통 큰 사이즈 이미지 (100x100 이상)
-        document.querySelectorAll('img').forEach((img) => {
+        // scontent CDN 이미지만 타겟 (광고 소재 이미지)
+        document.querySelectorAll('img[src*="scontent"]').forEach((img) => {
           const src = img.src;
           if (!src || seen.has(src)) return;
 
-          // 프로필 이미지, 아이콘 등 제외 (너무 작은 이미지)
-          const width = img.naturalWidth || img.width || 0;
-          const height = img.naturalHeight || img.height || 0;
-          if (width < 100 || height < 100) return;
-
-          // Facebook 시스템 이미지 제외
-          if (src.includes('static.xx.fbcdn.net') && !src.includes('scontent')) return;
-          if (src.includes('emoji') || src.includes('rsrc.php')) return;
+          // 프로필 이미지 제외 (40x40, 36x36 등 작은 원형 이미지)
+          const rect = img.getBoundingClientRect();
+          if (rect.width < 80 || rect.height < 80) return;
 
           seen.add(src);
 
-          // 광고주 이름 찾기 (가장 가까운 상위 요소에서)
+          // 광고주 이름 — 가장 가까운 광고 카드에서 추출
           let pageName = '';
-          const card = img.closest('[role="article"]') || img.closest('div[class]');
-          if (card) {
-            const nameEl = card.querySelector('a[href*="facebook.com/"] span, strong, h4');
-            if (nameEl) pageName = nameEl.textContent || '';
+          let adText = '';
+          // 광고 카드 영역 탐색 (Facebook Ad Library의 카드 구조)
+          let card = img.parentElement;
+          for (let depth = 0; depth < 15 && card; depth++) {
+            // "활성" 배지가 있는 요소가 카드 루트
+            if (card.innerText && card.innerText.includes('라이브러리 ID:')) {
+              // 광고주 이름: "광고" 라벨 바로 위의 텍스트
+              const spans = card.querySelectorAll('span');
+              for (const span of spans) {
+                if (span.textContent === '광고' && span.previousElementSibling) {
+                  pageName = span.previousElementSibling.textContent || '';
+                  break;
+                }
+              }
+              // 광고주 이름 대안: strong 또는 링크
+              if (!pageName) {
+                const strong = card.querySelector('strong, a[role="link"] span');
+                if (strong) pageName = strong.textContent || '';
+              }
+              // 광고 텍스트 (광고주 이름 아래의 본문)
+              const textEls = card.querySelectorAll('div[style*="webkit-line-clamp"], div[dir="auto"]');
+              for (const el of textEls) {
+                const t = el.textContent || '';
+                if (t.length > 20 && t.length < 500) { adText = t.substring(0, 200); break; }
+              }
+              break;
+            }
+            card = card.parentElement;
           }
 
           results.push({
@@ -527,9 +537,25 @@ exports.searchMetaAds = functions
             thumbUrl: src,
             adUrl: '',
             pageName: pageName.substring(0, 100),
-            title: img.alt || pageName || '',
-            width: width,
-            height: height,
+            title: adText || pageName || img.alt || '',
+            width: img.naturalWidth || Math.round(rect.width),
+            height: img.naturalHeight || Math.round(rect.height),
+          });
+        });
+
+        // 동영상 썸네일도 추출 (video 포스터 이미지)
+        document.querySelectorAll('video[poster]').forEach((video) => {
+          const src = video.poster;
+          if (!src || seen.has(src)) return;
+          seen.add(src);
+          results.push({
+            imageUrl: src,
+            thumbUrl: src,
+            adUrl: '',
+            pageName: '',
+            title: '동영상 광고',
+            width: video.videoWidth || 1080,
+            height: video.videoHeight || 1080,
           });
         });
 
@@ -547,6 +573,181 @@ exports.searchMetaAds = functions
     } catch (error) {
       console.error("Meta Ads 검색 실패:", error.message);
       res.status(500).json({ error: "Meta 광고 라이브러리 검색 중 오류 발생", detail: error.message });
+    } finally {
+      if (browser) { try { await browser.close(); } catch (e) {} }
+    }
+  });
+
+/**
+ * Google Ads Transparency Center 검색 Cloud Function
+ *
+ * adstransparency.google.com에서 한국 대상 광고 소재를 크롤링.
+ * 검색 키워드로 광고주를 찾고, 상위 광고주의 광고 크리에이티브를 추출.
+ * 광고 이미지는 tpc.googlesyndication.com에서 제공.
+ * 검색 결과는 24시간 캐싱.
+ *
+ * 엔드포인트: GET /searchGoogleAds?q=검색어&limit=30
+ */
+exports.searchGoogleAds = functions
+  .runWith({
+    memory: "2GB",
+    timeoutSeconds: 120,
+    maxInstances: 3,
+  })
+  .https.onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    const query = (req.query.q || "").trim();
+    if (!query) {
+      res.status(400).json({ error: "검색어(q)를 입력해주세요" });
+      return;
+    }
+    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+
+    // ── 캐시 확인 (24시간 유효) ──
+    const cacheKey = `gads_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
+    const cacheRef = db.ref(`google-ads-cache/${cacheKey}`);
+
+    try {
+      const cached = await cacheRef.once("value");
+      const cacheData = cached.val();
+      if (cacheData && cacheData.timestamp) {
+        const ageHours = (Date.now() - cacheData.timestamp) / (1000 * 60 * 60);
+        if (ageHours < 24) {
+          res.json({ query, count: cacheData.ads.length, ads: cacheData.ads.slice(0, limit), cached: true });
+          return;
+        }
+      }
+    } catch (e) { console.warn("Google Ads 캐시 조회 실패:", e.message); }
+
+    let browser = null;
+    try {
+      const chromium = require("@sparticuz/chromium");
+      browser = await require("puppeteer-core").launch({
+        args: [...chromium.args, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+        defaultViewport: { width: 1280, height: 900 },
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+
+      const page = await browser.newPage();
+
+      // 동영상·폰트 차단 (속도 향상)
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        const type = request.resourceType();
+        if (type === "media" || type === "font") {
+          request.abort();
+        } else {
+          request.continue();
+        }
+      });
+
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+      );
+
+      // Google Ads Transparency Center — 한국 지역
+      await page.goto('https://adstransparency.google.com/?region=KR', {
+        waitUntil: "networkidle2",
+        timeout: 30000
+      });
+
+      // 검색창에 키워드 입력
+      await page.waitForSelector('input[type="text"], input[aria-label]', { timeout: 10000 });
+      const searchInput = await page.$('input[type="text"]') || await page.$('input[aria-label*="검색"]');
+      if (!searchInput) {
+        res.status(500).json({ error: "검색창을 찾을 수 없습니다" });
+        return;
+      }
+
+      await searchInput.click();
+      await searchInput.type(query, { delay: 80 });
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // 자동완성 제안 목록에서 첫 번째 광고주 클릭
+      const firstSuggestion = await page.$('li[role="option"], [role="listbox"] [role="option"]');
+      if (firstSuggestion) {
+        await firstSuggestion.click();
+        await new Promise((r) => setTimeout(r, 3000));
+      } else {
+        // 제안이 없으면 Enter로 검색
+        await page.keyboard.press('Enter');
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+
+      // 광고 카드 로딩 대기
+      await page.waitForSelector('img[src*="googlesyndication"], img[src*="ytimg"]', {
+        timeout: 15000
+      }).catch(() => console.warn("Google Ads: 이미지 셀렉터 미감지 — 계속 진행"));
+
+      // 스크롤하여 더 많은 광고 로드
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+
+      // ── 광고 소재 이미지 추출 ──
+      const ads = await page.evaluate(() => {
+        const results = [];
+        const seen = new Set();
+
+        // Google 광고 이미지 (simgad = Google 광고 소재 CDN)
+        document.querySelectorAll('img[src*="googlesyndication.com/archive/simgad"]').forEach((img) => {
+          const src = img.src;
+          if (!src || seen.has(src)) return;
+          seen.add(src);
+
+          results.push({
+            imageUrl: src,
+            thumbUrl: src,
+            adUrl: window.location.href,
+            advertiser: '',
+            title: img.alt || '',
+            width: img.naturalWidth || 300,
+            height: img.naturalHeight || 250,
+          });
+        });
+
+        // YouTube 광고 썸네일
+        document.querySelectorAll('img[src*="ytimg.com"]').forEach((img) => {
+          const src = img.src;
+          if (!src || seen.has(src)) return;
+          seen.add(src);
+
+          results.push({
+            imageUrl: src,
+            thumbUrl: src,
+            adUrl: window.location.href,
+            advertiser: '',
+            title: img.alt || 'YouTube 광고',
+            width: img.naturalWidth || 1280,
+            height: img.naturalHeight || 720,
+          });
+        });
+
+        // 페이지 제목에서 광고주 이름 추출
+        const pageTitle = document.querySelector('h1, [class*="advertiser"]');
+        const advertiserName = pageTitle ? pageTitle.textContent.trim() : '';
+        results.forEach(ad => { ad.advertiser = advertiserName; });
+
+        return results;
+      });
+
+      // 캐시 저장
+      if (ads.length > 0) {
+        try {
+          await cacheRef.set({ query, timestamp: Date.now(), ads: ads.slice(0, 50) });
+        } catch (e) { console.warn("Google Ads 캐시 저장 실패:", e.message); }
+      }
+
+      res.json({ query, count: ads.length, ads: ads.slice(0, limit), cached: false });
+    } catch (error) {
+      console.error("Google Ads 검색 실패:", error.message);
+      res.status(500).json({ error: "Google 광고 투명성 센터 검색 중 오류 발생", detail: error.message });
     } finally {
       if (browser) { try { await browser.close(); } catch (e) {} }
     }
