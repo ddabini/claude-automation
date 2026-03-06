@@ -7091,7 +7091,7 @@
         },
         body: JSON.stringify({
           q: fullQuery,
-          num: 20,
+          num: 100,
           page: Math.max(1, page),
           gl: opts.gl || 'kr',     // 기본 한국, opts.gl로 글로벌 전환 가능
           hl: opts.gl === 'us' ? 'en' : 'ko',  // 글로벌 검색 시 영어 인터페이스
