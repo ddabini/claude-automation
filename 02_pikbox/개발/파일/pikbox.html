@@ -14542,12 +14542,15 @@ ${metaText}
       drEditUpdatePreview();
     }
 
-    /* ─── 키보드 단축키 — Ctrl+Z/Y, Ctrl+C/V, Delete ─── */
+    /* ─── 키보드 단축키 — Ctrl+Z/Y, Ctrl+C/V/X, Delete ─── */
     document.addEventListener('keydown', function(e) {
       // 디자인 리뷰 탭 + 편집 모드가 활성일 때만
       var drView = document.getElementById('designReviewView');
       if (!drView || drView.style.display === 'none') return;
-      if (!drEditState.active || !drEditState.iframeDoc) return;
+      if (!drEditState.active) return;
+      // iframe 로딩 중이면 단축키 무시 (undo/redo 연속 충돌 방지)
+      if (drEditState._loading) { e.preventDefault(); return; }
+      if (!drEditState.iframeDoc) return;
 
       // 입력 필드에 포커스 중이면 무시 (속성 패널 input/textarea)
       var tag = document.activeElement ? document.activeElement.tagName : '';
