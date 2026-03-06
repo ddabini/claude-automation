@@ -1,4 +1,52 @@
-# 프로젝트 메모리 (2026-03-04 세션 13 기준)
+# 프로젝트 메모리 (2026-03-06 세션 16 기준)
+
+## 최근 세션 요약 (2026-03-06 세션 16 - Pinterest API 완전 전환)
+
+### 핵심 작업 (1가지)
+**Pikbox Pinterest 검색 품질 대폭 개선 — Puppeteer 삭제 → Pinterest 내부 API 직접 호출**
+
+**문제점**:
+- 기존 방식 (Puppeteer + 모바일 UA 스크래핑): 474x 저해상도, 영어 auto-alt 제목만, 14~21개 결과
+- 실제 Pinterest: 736x+ 고해상도, 한국어 제목, 50개+ 결과
+
+**원인 분석**:
+- Puppeteer가 모바일 페이지를 로드 → 모바일 버전은 474x 영상만 제공
+- img.alt는 AI 자동 설명 (영어)
+- DOM 스크래핑의 근본 한계
+
+**해결책 (성공)**:
+- Pinterest 내부 API 역공학: `POST kr.pinterest.com/resource/BaseSearchResource/get/`
+- **핵심 발견**:
+  - kr.pinterest.com은 비로그인 쿠키만으로 작동 (인증 필수 아님 — research-crawler 보고 수정됨)
+  - 요청: POST (GET 아님) + field_set_key: "unauth_react"
+  - 응답: 원본 해상도 + 한국어 제목 + 무한 페이징 (bookmark 토큰)
+  - 쿠키 자동 획득: kr.pinterest.com GET 1회 → _pinterest_sess + csrftoken 발급
+  - 세션 유효: 1시간 → 메모리 캐시로 최적화
+
+**변경 파일**:
+1. `functions/index.js`:
+   - searchPinterest 함수 전면 재작성 (Puppeteer 삭제)
+   - 메모리: 2GB → 256MB, 타임아웃: 120s → 30s, 인스턴스: 3 → 5
+   - pinterestSession 전역 변수 (1시간 캐시)
+   - 2페이지 자동 페이징 (limit > 25일 때)
+   - 세션 만료 시 자동 초기화
+
+2. `02_pikbox/개발/파일/pikbox.html`:
+   - searchPinterestNative 함수 업데이트
+   - 타임아웃: 45s → 15s, limit: 25 → 50
+   - origUrl 필드 추가 (원본 다운로드용)
+
+**배포 및 검증** (6개 키워드 모두 성공):
+- 네이버페이: 50개, 736x, 한국어 제목 ✓
+- 토스앱: 50개, 736x, 한국어 제목 ✓
+- 카페 인테리어: 25개, 736x, 한국어 제목 ✓
+- 화보 촬영: 25개, 736x, 한국어 제목 ✓
+- sns 마케팅: 25개, 736x, 한국어 제목 ✓
+- 브랜드 디자인: 25개, 736x, 한국어 제목 ✓
+
+**Git 커밋**: `[auto-save] Pinterest API 전환 — Puppeteer 삭제, 내부 API 직접 호출, 이미지 품질/속도 대폭 개선`
+
+---
 
 ## 최근 세션 요약 (2026-03-05 세션 11 - Pikbox YouTube 탭 완성)
 
