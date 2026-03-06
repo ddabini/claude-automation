@@ -14520,6 +14520,24 @@ ${metaText}
     }
 
     /* ─── 되돌리기 ─── */
+    /* ─── 저장 드롭업 메뉴 토글/선택 ─── */
+    function drToggleSaveMenu(e) {
+      e.stopPropagation();
+      var menu = document.getElementById('drSaveMenu');
+      if (menu) menu.classList.toggle('show');
+    }
+    function drSaveMenuPick(action) {
+      var menu = document.getElementById('drSaveMenu');
+      if (menu) menu.classList.remove('show');
+      if (action === 'save') drEditSave();
+      else if (action === 'saveAs') drEditSaveAs();
+    }
+    // 메뉴 바깥 클릭 시 닫기
+    document.addEventListener('click', function() {
+      var menu = document.getElementById('drSaveMenu');
+      if (menu) menu.classList.remove('show');
+    });
+
     function drEditReset() {
       if (!drEditState.originalHtml) return;
       drEditState.editedHtml = drEditState.originalHtml;
