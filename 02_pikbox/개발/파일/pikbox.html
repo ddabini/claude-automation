@@ -9648,10 +9648,11 @@
 
       try {
         // 50개씩 배치 처리 (YouTube API 최대 50개/요청)
+        // snippet도 요청하여 정확한 업로드 날짜(publishedAt)를 가져옴
         for (let i = 0; i < videoIds.length; i += 50) {
           const batch = videoIds.slice(i, i + 50);
           const params = new URLSearchParams({
-            part: 'statistics,contentDetails',
+            part: 'snippet,statistics,contentDetails',
             id: batch.join(','),
             key: apiKey
           });
