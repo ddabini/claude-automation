@@ -12851,19 +12851,70 @@ ${metaText}
     }
 
     /**
-     * drSaveImageFallback — cross-origin 제약으로 직접 캡처 불가할 때
-     * 디자인을 새 탭에서 열어 사용자가 직접 스크린샷을 찍도록 안내
+     * drSaveImageFromDB — cross-origin일 때 DB에서 HTML을 가져와 임시 iframe으로 캡처
+     * DB에도 HTML이 없으면 새 탭 fallback
      */
-    function drSaveImageFallback(design, filename) {
-      // 새 탭에서 디자인 열기
-      if (design?.url) {
-        window.open(design.url, '_blank');
-        toast(
-          '외부 URL 디자인은 직접 캡처가 제한됩니다.\n새 탭에서 열었습니다 — 브라우저 스크린샷으로 저장해 주세요.',
-          'error'
-        );
-      } else {
-        toast('저장 가능한 URL이 없습니다', 'error');
+    async function drSaveImageFromDB(design, filename, btn) {
+      try {
+        var snap = await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).once('value');
+        var html = snap.val();
+        if (!html) {
+          // DB에 HTML 없음 → 새 탭 fallback
+          if (design?.url) {
+            window.open(design.url, '_blank');
+            toast('외부 URL 디자인은 직접 캡처가 제한됩니다.\n새 탭에서 열었습니다.', 'error');
+          } else {
+            toast('저장 가능한 HTML이 없습니다', 'error');
+          }
+          return;
+        }
+        // 숨겨진 임시 iframe 생성 → same-origin blob URL로 로드
+        var tmpIframe = document.createElement('iframe');
+        tmpIframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1080px;border:none;';
+        var pageH = drState.viewerPageHeight || 1200;
+        var totalPages = drState.viewerTotalPages || 1;
+        tmpIframe.style.height = (pageH * totalPages) + 'px';
+        document.body.appendChild(tmpIframe);
+
+        var blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+        var blobUrl = URL.createObjectURL(blob);
+        tmpIframe.src = blobUrl;
+
+        tmpIframe.onload = async function() {
+          try {
+            var tDoc = tmpIframe.contentDocument;
+            if (!tDoc || !tDoc.body) { toast('캡처 실패', 'error'); return; }
+            var pageIdx = (drState.viewerPage || 1) - 1;
+            var canvas = await html2canvas(tDoc.body, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: false,
+              y: pageIdx * pageH,
+              height: pageH,
+              windowHeight: pageH,
+              scrollY: -(pageIdx * pageH),
+            });
+            canvas.toBlob(function(imgBlob) {
+              if (!imgBlob) { toast('이미지 생성 실패', 'error'); return; }
+              var url = URL.createObjectURL(imgBlob);
+              var a = document.createElement('a');
+              a.href = url; a.download = filename; a.click();
+              URL.revokeObjectURL(url);
+              toast(filename + ' 저장 완료!', 'success');
+            }, 'image/png');
+          } catch (e2) {
+            console.error('[Pikbox] DB HTML 캡처 실패:', e2);
+            toast('이미지 캡처 실패: ' + e2.message, 'error');
+          } finally {
+            document.body.removeChild(tmpIframe);
+            URL.revokeObjectURL(blobUrl);
+            if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; }
+          }
+        };
+      } catch (e) {
+        console.error('[Pikbox] DB HTML 로드 실패:', e);
+        toast('저장 실패: ' + e.message, 'error');
+        if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; }
       }
     }
 
