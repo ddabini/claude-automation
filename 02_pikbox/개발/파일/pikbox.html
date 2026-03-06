@@ -15056,6 +15056,12 @@ ${metaText}
         var fwVal = document.getElementById('drEditPropFW').value;
         el.style.fontWeight = fwVal;
       }
+      if (prop === 'color') {
+        el.style.color = document.getElementById('drEditPropColor').value;
+      }
+      if (prop === 'bgColor') {
+        el.style.backgroundColor = document.getElementById('drEditPropBg').value;
+      }
       if (prop === 'text') {
         var newText = document.getElementById('drEditPropText').value;
         var children = Array.from(el.childNodes);
