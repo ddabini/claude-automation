@@ -652,12 +652,12 @@ exports.searchGoogleAds = functions
 
       // 광고주 목록 추출 — 광고 수 기준 내림차순 정렬 (최대 5명)
       const suggestions = (suggestData["1"] || []).filter((s) => s["1"]);
-      const advertisers = suggestions.map((s) => ({
-        name: s["1"]["1"] || "",
-        id: s["1"]["2"] || "",
-        country: s["1"]["3"] || "",
-        adCount: parseInt((s["1"]["4"] || {})["2"] || {})["2"] || parseInt((s["1"]["4"] || {})["2"] || {})["1"] || 0,
-      })).sort((a, b) => b.adCount - a.adCount).slice(0, 5);
+      const advertisers = suggestions.map((s) => {
+        // 광고 수: s["1"]["4"]["2"]["2"] (최대치) 또는 s["1"]["4"]["2"]["1"] (최소치)
+        const countObj = ((s["1"]["4"] || {})["2"]) || {};
+        const adCount = parseInt(countObj["2"] || countObj["1"] || "0");
+        return { name: s["1"]["1"] || "", id: s["1"]["2"] || "", country: s["1"]["3"] || "", adCount };
+      }).sort((a, b) => b.adCount - a.adCount).slice(0, 5);
 
       if (advertisers.length === 0) {
         res.json({ query, count: 0, ads: [], cached: false, note: "매칭되는 광고주 없음" });
