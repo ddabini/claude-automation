@@ -1350,15 +1350,29 @@
       line-height: 1.5;
       background: transparent;
     }
-    /* 편집 패널 하단 저장 바 */
+    /* 편집 패널 하단 저장 바 — 2행 구조 */
     .dr-edit-save-bar {
       padding: 10px 14px;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
       flex-shrink: 0;
     }
-    .dr-edit-save-bar .dr-btn { flex: 1; }
+    .dr-edit-save-row { display: flex; gap: 8px; }
+    .dr-edit-save-row .dr-btn { flex: 1; }
+    .dr-edit-save-bar .dr-btn-saveas {
+      width: 100%;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .dr-edit-save-bar .dr-btn-saveas:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-bg);
+    }
     /* 편집 모드 활성 표시 — 툴바 버튼 */
     .dr-btn.dr-edit-active {
       background: var(--primary);
