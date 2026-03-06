@@ -14794,6 +14794,16 @@ ${metaText}
       if (hEl) hEl.value = Math.round(rect.height);
       if (fsEl) fsEl.value = parseInt(cs.fontSize) || '';
 
+      // 현재 폰트를 드롭다운에 반영
+      var fontSel = document.getElementById('drEditPropFont');
+      if (fontSel) {
+        var curFont = cs.fontFamily.replace(/['"]/g, '').split(',')[0].trim();
+        fontSel.value = '';
+        for (var fi = 0; fi < fontSel.options.length; fi++) {
+          if (fontSel.options[fi].value === curFont) { fontSel.value = curFont; break; }
+        }
+      }
+
       // 텍스트 편집 영역
       var textWrap = document.getElementById('drEditPropTextWrap');
       var textArea = document.getElementById('drEditPropText');
