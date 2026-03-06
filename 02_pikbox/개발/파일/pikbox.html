@@ -14676,6 +14676,12 @@ ${metaText}
         drEditRedo();
         return;
       }
+      // Ctrl+Shift+S — 다른이름으로 저장
+      if (ctrl && e.key === 's' && e.shiftKey) {
+        e.preventDefault();
+        drEditSaveAs();
+        return;
+      }
       // Ctrl+S — 저장
       if (ctrl && e.key === 's') {
         e.preventDefault();
