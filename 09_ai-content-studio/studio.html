@@ -1918,6 +1918,64 @@ function updateApiStatus(elementId, connected) {
 }
 
 // ──────────────────────────────────────────
+// 프리셋 캐릭터 불러오기
+// ──────────────────────────────────────────
+
+/* 빡곰 프리셋: 아기 북극곰 캐릭터 */
+function loadPresetBbakgom() {
+  // 이미 빡곰이 있으면 중복 방지
+  const existing = state.profiles.find(p => p.name === '빡곰');
+  if (existing) {
+    selectProfile(existing.id);
+    alert('빡곰 캐릭터가 이미 등록되어 있어서 선택했습니다.');
+    return;
+  }
+
+  const bbakgom = {
+    id: 'preset-bbakgom',
+    name: '빡곰',
+    genderAge: '아기 북극곰',
+    ethnicity: '',
+    faceShape: '둥글고 납작한 아기곰',
+    skinTone: '',
+    eyes: '크고 동글동글한 다크브라운/블랙, 광택, 넓은 간격',
+    nose: '작고 둥근 검정 코',
+    mouth: '보통 다물고 있거나 살짝 벌림',
+    jaw: '볼살 통통',
+    hairLength: '',
+    hairStyle: '',
+    hairColor: '',
+    bangs: '',
+    height: '50~70cm (유아 크기)',
+    build: '통통하고 컴팩트',
+    proportion: '1:2 (머리:몸)',
+    shoulders: '',
+    limbs: '짧고 굵음',
+    top: '',
+    bottom: '',
+    shoes: '',
+    accessory: '가끔 회색 캔버스 백팩',
+    vibe: '귀엽지만 진지한, 사회생활 잘하는 어른스러운',
+    expression: '정면 응시, 약간 무표정하면서도 귀여운',
+    customEnglish: `A photorealistic baby polar bear cub with round flat face,
+large glossy dark brown-black round eyes set wide apart,
+small oval black wet nose, tiny rounded ears on top of head,
+dense fluffy cream-white fur with slightly warm tone,
+chubby compact body with short thick limbs,
+large head-to-body ratio (approximately 1:2),
+pink-brown paw pads, barely visible tiny round tail.
+Realistic fur texture, soft and fluffy appearance.`,
+  };
+
+  state.profiles.push(bbakgom);
+  state.selectedProfileId = bbakgom.id;
+  saveProfilesToStorage();
+  renderProfiles();
+  generateEnglishProfile();
+  alert('빡곰 캐릭터가 등록되었습니다!');
+}
+
+// ──────────────────────────────────────────
 // 데이터 내보내기/가져오기
 // ──────────────────────────────────────────
 
