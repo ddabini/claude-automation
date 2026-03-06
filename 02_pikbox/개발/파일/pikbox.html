@@ -7504,10 +7504,10 @@
         const siteFilter = platform?.site || '';
         const pagePromises = [];
 
-        // Serper — 3페이지 병렬 (30개)
+        // Serper — 5페이지 병렬 (500개)
         if (config.serperKey) {
-          for (let i = 0; i < 3; i++) {
-            runState.googleStart += 10;
+          for (let i = 0; i < 5; i++) {
+            runState.googleStart += 100;
             pagePromises.push(searchSerperImages(
               runState.enhancedQuery || runState.query, siteFilter, runState.googleStart
             ));
