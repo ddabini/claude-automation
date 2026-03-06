@@ -3912,17 +3912,7 @@
       <!-- 하단 저장 바 -->
       <div class="dr-edit-save-bar" id="drEditSaveBar" style="display:none;">
         <button class="dr-btn" onclick="drEditReset()">되돌리기</button>
-        <div class="dr-save-wrap">
-          <button class="dr-btn dr-btn-primary" onclick="drToggleSaveMenu(event)">💾 저장</button>
-          <div class="dr-save-menu" id="drSaveMenu">
-            <button class="dr-save-menu-item" onclick="drSaveMenuPick('save')">
-              💾 바로 저장<small>현재 디자인에 덮어쓰기 (Ctrl+S)</small>
-            </button>
-            <button class="dr-save-menu-item" onclick="drSaveMenuPick('saveAs')">
-              📄 다른이름으로 저장<small>새 디자인으로 복사 저장 (Ctrl+Shift+S)</small>
-            </button>
-          </div>
-        </div>
+        <button class="dr-btn dr-btn-primary" onclick="drOpenSaveDialog()">💾 저장</button>
       </div>
     </aside>
 
