@@ -15019,6 +15019,18 @@ ${metaText}
       }
     }
 
+    // rgb(r, g, b) 문자열을 #hex로 변환하는 헬퍼
+    function drRgbToHex(rgb) {
+      if (!rgb) return null;
+      if (rgb.charAt(0) === '#') return rgb;
+      var m = rgb.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (!m) return null;
+      return '#' + [m[1], m[2], m[3]].map(function(c) {
+        var hex = parseInt(c).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('');
+    }
+
     /* ─── 속성값 적용 ─── */
     function drEditApplyProp(prop) {
       var el = drEditState.selectedElement;
