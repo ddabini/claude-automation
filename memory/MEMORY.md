@@ -193,7 +193,25 @@
 | **iCloud 동기화 갈등** | 파일 수정 중 동기화 충돌 가능 → Edit 전 반드시 Read로 최신 상태 확인 |
 | **이미지 CORS 프록시** | Firebase Storage + CORS 문제 → weserv.nl 등 프록시 서비스 활용 |
 
+## Pikbox 검색 엔진 현황 (2026-03-06 Pinterest API 전환)
+
+| 플랫폼 | 방식 | 특징 | 최대 결과 |
+|--------|------|------|---------|
+| Instagram | Cloud Functions 크롤링 | 비로그인 쿠키 → 캡션 수집 | 50+ |
+| Meta Ads | Google Ads Transparency API | Ad Library 크리에이티브 | 50+ |
+| **Pinterest** | **내부 API 직접** (2026-03-06) | **비로그인 세션, 1h 캐시** | **50+ (무한 페이징)** |
+| Unsplash/Pexels/Pixabay | Serper.dev fallback | 공개 API | 50 (플랫폼별) |
+
+**Pinterest API 최적화**:
+- 요청 포맷: `POST kr.pinterest.com/resource/BaseSearchResource/get/`
+- 응답 품질: 736x+ (모바일 474x → 웹 고해상도로 승격)
+- 세션 캐시: 1시간 유지 (같은 쿠키로 재사용)
+- Cloud Function 메모리/타임아웃: 2GB→256MB, 120s→30s (효율 5배 개선)
+
+---
+
 ## 다음 세션 시 확인사항
-- Pikbox YouTube 탭 API 응답 속도 및 캐싱 전략 (월 할당량 1M 요청)
-- 마소닉 레이아웃 성능 (large scale 이미지 로드 시 reflow 최적화)
+- Pinterest API 안정성 모니터링 (kr.pinterest.com 정책 변경 감지)
+- Cloud Function searchPinterest 호출 로그 (실패율, 응답시간)
+- Pikbox YouTube 탭 API 응답 속도 (월 할당량 1M 요청 추적)
 - MCP 서버 연결 상태 (`.mcp.json` + GEMINI_API_KEY)
