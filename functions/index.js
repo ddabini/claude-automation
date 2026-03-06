@@ -49,8 +49,8 @@ exports.searchPinterest = functions
       return;
     }
 
-    // 결과 개수 제한 (기본 25, 최대 50)
-    const limit = Math.min(parseInt(req.query.limit) || 25, 50);
+    // 결과 개수 제한 (기본 50, 최대 100)
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
 
     // ── 1단계: 캐시 확인 (24시간 유효) ──
     const cacheKey = query
