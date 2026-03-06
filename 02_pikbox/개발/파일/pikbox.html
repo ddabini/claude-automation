@@ -9837,43 +9837,70 @@
 
           const serperPromises = [];
           if (!appendMode) {
-            // 첫 검색: 쿼리 변형 병렬 호출 (채널명/키워드 모두 대응)
-            promises.push(searchSerperVideos(fullQuery, 1));
-            promises.push(searchSerperVideos(fullQuery, 2));
-            promises.push(searchSerperVideos(fullQuery, 3));
+            serperPromises.push(searchSerperVideos(fullQuery, 1));
+            serperPromises.push(searchSerperVideos(fullQuery, 2));
+            serperPromises.push(searchSerperVideos(fullQuery, 3));
             if (chip === 'ad') {
-              promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
-              promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
+              serperPromises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
+              serperPromises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
             } else {
-              promises.push(searchSerperVideos(query + ' 유튜브 영상', 1));
-              promises.push(searchSerperVideos(query + ' 채널 최신 영상', 1));
+              serperPromises.push(searchSerperVideos(query + ' 유튜브 영상', 1));
+              serperPromises.push(searchSerperVideos(query + ' 채널 최신 영상', 1));
               if (chipExtra) {
-                promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
+                serperPromises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
               }
-              // 필터 활성 시 추가 쿼리로 결과 수 확대
               if (hasActiveFilter) {
-                promises.push(searchSerperVideos(fullQuery, 4));
-                promises.push(searchSerperVideos(fullQuery, 5));
-                promises.push(searchSerperVideos(query + ' 유튜브', 2));
-                promises.push(searchSerperVideos(query + ' 인기 영상', 1));
+                serperPromises.push(searchSerperVideos(fullQuery, 4));
+                serperPromises.push(searchSerperVideos(fullQuery, 5));
+                serperPromises.push(searchSerperVideos(query + ' 유튜브', 2));
+                serperPromises.push(searchSerperVideos(query + ' 인기 영상', 1));
               }
             }
           } else {
-            // 더 보기: 다음 페이지 (필터 시 더 많이 가져오기)
             const pagesToFetch = hasActiveFilter ? 5 : 3;
             for (let i = 0; i < pagesToFetch; i++) {
               ytState.page++;
-              promises.push(searchSerperVideos(fullQuery, ytState.page));
+              serperPromises.push(searchSerperVideos(fullQuery, ytState.page));
             }
           }
 
-          const results = await Promise.allSettled(promises);
+          // ── YouTube Data API 검색 (보조 엔진) ──
+          // search = 100 units/call → 하루 10,000 유닛 = ~100회
+          // 필터 활성 시 YouTube API가 특히 유용 (서버 측 네이티브 필터링)
+          let ytApiPromise = null;
+          if (hasYtApi && chip !== 'ad') {
+            const pageToken = appendMode ? ytState.ytApiPageToken : '';
+            ytApiPromise = ytSearchWithYouTubeAPI(
+              fullQuery, ytApiOrder, pageToken, 50,
+              ytApiDuration, ytApiPublishedAfter, ytApiRegion
+            ).catch(err => {
+              console.warn('[Pikbox] YouTube API 검색 실패, Serper만 사용:', err.message);
+              return { items: [], nextPageToken: '' };
+            });
+          }
+
+          // ── Serper + YouTube API 병렬 실행 ──
+          const [serperResults, ytApiResult] = await Promise.all([
+            Promise.allSettled(serperPromises),
+            ytApiPromise || Promise.resolve({ items: [], nextPageToken: '' })
+          ]);
+
+          // Serper 결과 수집
           let newItems = [];
-          results.forEach(r => {
+          serperResults.forEach(r => {
             if (r.status === 'fulfilled' && r.value?.length > 0) {
               newItems.push(...r.value);
             }
           });
+
+          // YouTube API 결과 합산 (이미 통계 데이터 포함 — enrichment 불필요)
+          if (ytApiResult && ytApiResult.items?.length > 0) {
+            ytApiResult.items.forEach(item => { item._fromYtApi = true; });
+            newItems.push(...ytApiResult.items);
+            ytState.ytApiPageToken = ytApiResult.nextPageToken || '';
+          } else if (!appendMode) {
+            ytState.ytApiPageToken = '';
+          }
 
           // 칩별 클라이언트 필터링 — 영상/쇼츠 분리
           if (chip === 'video') {
@@ -9881,13 +9908,20 @@
           } else if (chip === 'shorts') {
             newItems = newItems.filter(r => r.isShorts);
           }
-          // 광고 칩은 필터링 없이 전체 표시
 
-          // 중복 제거 — sourceUrl 기준
+          // 중복 제거 — videoId 기준 (Serper+YouTube API 양쪽 결과 머지)
           const existingUrls = new Set(ytState.results.map(r => r.sourceUrl));
+          const seenVideoIds = new Set();
+          ytState.results.forEach(r => {
+            const vid = ytExtractVideoId(r.sourceUrl);
+            if (vid) seenVideoIds.add(vid);
+          });
           newItems = newItems.filter(r => {
             if (existingUrls.has(r.sourceUrl)) return false;
+            const vid = ytExtractVideoId(r.sourceUrl);
+            if (vid && seenVideoIds.has(vid)) return false;
             existingUrls.add(r.sourceUrl);
+            if (vid) seenVideoIds.add(vid);
             return true;
           });
 
