@@ -3901,7 +3901,13 @@
             <label>H</label><input type="number" id="drEditPropH" oninput="drEditApplyProp('h')">
           </div>
           <div class="dr-edit-prop-row">
-            <label>글꼴</label><input type="number" id="drEditPropFS" oninput="drEditApplyProp('fontSize')" style="grid-column: span 3;">
+            <label>크기</label><input type="number" id="drEditPropFS" oninput="drEditApplyProp('fontSize')" style="grid-column: span 3;">
+          </div>
+          <div class="dr-edit-prop-row" style="grid-template-columns: auto 1fr;">
+            <label>폰트</label>
+            <select id="drEditPropFont" onchange="drEditApplyProp('fontFamily')" style="grid-column: span 1; font-size:12px; padding:4px 6px; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text);">
+              <option value="">— 현재 유지 —</option>
+            </select>
           </div>
           <div class="dr-edit-prop-text" id="drEditPropTextWrap" style="display:none;">
             <label>텍스트</label>
