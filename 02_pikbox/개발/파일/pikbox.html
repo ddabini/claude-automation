@@ -15140,6 +15140,171 @@ ${metaText}
       iDoc.head.appendChild(link);
     }
 
+    /* ─── 이미지 추가: 파일 선택 → Firebase Storage 업로드 → iframe에 <img> 삽입 ─── */
+    function drEditAddImage() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) { toast('편집 모드를 먼저 시작하세요', 'error'); return; }
+      document.getElementById('drEditImgInput').click();
+    }
+    async function drEditHandleImageFile(input) {
+      var file = input.files[0];
+      if (!file) return;
+      input.value = ''; // 같은 파일 재선택 가능하도록 초기화
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+
+      toast('이미지 업로드 중...', 'info');
+      try {
+        // Firebase Storage에 업로드
+        var ext = file.name.split('.').pop().toLowerCase();
+        var fileName = 'design-edit/' + Date.now() + '_' + Math.random().toString(36).substr(2,6) + '.' + ext;
+        var storageRef = firebase.storage().ref(fileName);
+        await storageRef.put(file);
+        var url = await storageRef.getDownloadURL();
+
+        // iframe 안에 이미지 삽입
+        var img = iDoc.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:300px; height:auto; position:relative; display:block; margin:10px auto; cursor:move;';
+        img.alt = file.name;
+
+        // 현재 선택된 요소 뒤에 삽입, 없으면 body 맨 끝
+        var sel = drEditState.selectedElement;
+        if (sel && sel.parentNode) {
+          sel.parentNode.insertBefore(img, sel.nextSibling);
+        } else {
+          iDoc.body.appendChild(img);
+        }
+
+        drEditState.hasChanges = true;
+        toast('이미지가 추가되었습니다', 'success');
+      } catch (err) {
+        console.error('[편집] 이미지 업로드 실패:', err);
+        // 업로드 실패 시 로컬 Data URL로 대체 삽입
+        try {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var img = iDoc.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'max-width:300px; height:auto; position:relative; display:block; margin:10px auto; cursor:move;';
+            iDoc.body.appendChild(img);
+            drEditState.hasChanges = true;
+            toast('이미지 추가됨 (로컬)', 'success');
+          };
+          reader.readAsDataURL(file);
+        } catch (e2) {
+          toast('이미지 추가 실패', 'error');
+        }
+      }
+    }
+
+    /* ─── 텍스트 추가: iframe에 편집 가능한 텍스트 블록 삽입 ─── */
+    function drEditAddText() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) { toast('편집 모드를 먼저 시작하세요', 'error'); return; }
+
+      var div = iDoc.createElement('div');
+      div.textContent = '텍스트를 입력하세요';
+      div.style.cssText = 'font-size:24px; color:#333; padding:8px 12px; position:relative; display:inline-block; cursor:move;';
+
+      // 현재 선택된 요소 뒤에 삽입, 없으면 body 맨 끝
+      var sel = drEditState.selectedElement;
+      if (sel && sel.parentNode) {
+        sel.parentNode.insertBefore(div, sel.nextSibling);
+      } else {
+        iDoc.body.appendChild(div);
+      }
+
+      drEditState.hasChanges = true;
+      toast('텍스트 블록이 추가되었습니다', 'success');
+    }
+
+    /* ─── 커스텀 폰트 추가: 폰트 파일 업로드 → @font-face 주입 + 드롭다운에 추가 ─── */
+    function drEditAddCustomFont() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) { toast('편집 모드를 먼저 시작하세요', 'error'); return; }
+      document.getElementById('drEditFontInput').click();
+    }
+    async function drEditHandleFontFile(input) {
+      var file = input.files[0];
+      if (!file) return;
+      input.value = '';
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+
+      // 폰트 이름 = 파일명에서 확장자 제거
+      var rawName = file.name.replace(/\.(woff2?|ttf|otf)$/i, '');
+      var fontName = prompt('폰트 이름을 입력하세요:', rawName);
+      if (!fontName) return;
+
+      toast('폰트 업로드 중...', 'info');
+      try {
+        // Firebase Storage에 업로드
+        var ext = file.name.split('.').pop().toLowerCase();
+        var fileName = 'design-edit/fonts/' + Date.now() + '_' + fontName.replace(/\s+/g, '-') + '.' + ext;
+        var storageRef = firebase.storage().ref(fileName);
+        await storageRef.put(file);
+        var url = await storageRef.getDownloadURL();
+
+        // format 결정
+        var format = 'truetype';
+        if (ext === 'woff2') format = 'woff2';
+        else if (ext === 'woff') format = 'woff';
+        else if (ext === 'otf') format = 'opentype';
+
+        // iframe에 @font-face 주입
+        var style = iDoc.createElement('style');
+        style.id = 'pkb-custom-font-' + fontName.replace(/\s+/g, '-').toLowerCase();
+        style.textContent = "@font-face { font-family: '" + fontName + "'; src: url('" + url + "') format('" + format + "'); font-weight: 100 900; font-display: swap; }";
+        iDoc.head.appendChild(style);
+
+        // 폰트 드롭다운에 추가
+        var sel = document.getElementById('drEditPropFont');
+        if (sel) {
+          var opt = document.createElement('option');
+          opt.value = fontName;
+          opt.textContent = '✦ ' + fontName + ' (업로드)';
+          sel.appendChild(opt);
+          // 바로 선택
+          sel.value = fontName;
+        }
+
+        // DR_FREE_FONTS 배열에도 추가 (주입 함수 호환)
+        DR_FREE_FONTS.push({ name: fontName, cdn: url, label: '✦ ' + fontName + ' (업로드)' });
+
+        toast(fontName + ' 폰트가 추가되었습니다', 'success');
+      } catch (err) {
+        console.error('[편집] 폰트 업로드 실패:', err);
+        // 업로드 실패 시 로컬 Data URL로 대체
+        try {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var ext2 = file.name.split('.').pop().toLowerCase();
+            var format2 = ext2 === 'woff2' ? 'woff2' : ext2 === 'woff' ? 'woff' : ext2 === 'otf' ? 'opentype' : 'truetype';
+            var style = iDoc.createElement('style');
+            style.textContent = "@font-face { font-family: '" + fontName + "'; src: url('" + e.target.result + "') format('" + format2 + "'); font-weight: 100 900; font-display: swap; }";
+            iDoc.head.appendChild(style);
+            var sel = document.getElementById('drEditPropFont');
+            if (sel) {
+              var opt = document.createElement('option');
+              opt.value = fontName;
+              opt.textContent = '✦ ' + fontName + ' (로컬)';
+              sel.appendChild(opt);
+              sel.value = fontName;
+            }
+            DR_FREE_FONTS.push({ name: fontName, cdn: 'local', label: '✦ ' + fontName + ' (로컬)' });
+            toast(fontName + ' 폰트 추가됨 (로컬)', 'success');
+          };
+          reader.readAsDataURL(file);
+        } catch (e2) {
+          toast('폰트 추가 실패', 'error');
+        }
+      }
+    }
+
+    /* ─── 색상 속성 적용 ─── */
+    // drEditApplyProp에 color/bgColor 추가하기 위한 보조 (아래 drEditApplyProp에 통합됨)
+
     /* ─── 저장 다이얼로그 열기/선택 ─── */
     function drOpenSaveDialog() {
       var overlay = document.getElementById('drSaveDialogOverlay');
