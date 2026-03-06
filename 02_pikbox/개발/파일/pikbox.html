@@ -14855,8 +14855,47 @@ ${metaText}
     function drSaveDialogPick(action) {
       var overlay = document.getElementById('drSaveDialogOverlay');
       if (overlay) overlay.classList.remove('show');
-      if (action === 'save') drEditSave();
-      else if (action === 'saveAs') drEditSaveAs();
+      if (action === 'image') drSaveImage();
+      else if (action === 'saveAs') drDesignSaveAs();
+    }
+
+    /* ─── 다른이름으로 저장 — 편집 모드 없이도 동작 (뷰어에서 바로 복사) ─── */
+    async function drDesignSaveAs() {
+      if (!drState.currentDesignId) { toast('디자인을 먼저 선택하세요', 'error'); return; }
+      var original = drState.currentDesignData || {};
+      var currentName = original.name || '디자인';
+      var newName = prompt('새 디자인 이름을 입력하세요:', currentName + ' (사본)');
+      if (!newName || !newName.trim()) return;
+      newName = newName.trim();
+
+      try {
+        // 새 디자인 항목 생성
+        var newRef = firebaseDb.ref(DR_DESIGNS).push();
+        var designData = {
+          name: newName,
+          status: 'review',
+          url: original.url || '',
+          type: original.type || 'file',
+          created_at: new Date().toISOString(),
+          width: original.width || 1080,
+          height: original.height || 1080,
+          pages: original.pages || 1,
+        };
+        await newRef.set(designData);
+
+        // DB에 HTML이 있으면 함께 복사
+        var htmlSnap = await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).once('value');
+        var htmlContent = htmlSnap.val();
+        if (htmlContent) {
+          await firebaseDb.ref(DR_HTML_CONTENT + '/' + newRef.key).set(htmlContent);
+        }
+
+        toast('"' + newName + '" 저장 완료!', 'success');
+        drSelectDesign(newRef.key);
+      } catch (e) {
+        console.error('[저장] 다른이름 저장 실패:', e);
+        toast('저장 실패: ' + e.message, 'error');
+      }
     }
 
     function drEditReset() {
