@@ -14820,6 +14820,16 @@ ${metaText}
         }
       }
 
+      // 현재 굵기를 드롭다운에 반영
+      var fwSel = document.getElementById('drEditPropFW');
+      if (fwSel) {
+        var curWeight = cs.fontWeight || '400';
+        // 브라우저가 "normal"/"bold"로 반환할 수 있음
+        if (curWeight === 'normal') curWeight = '400';
+        if (curWeight === 'bold') curWeight = '700';
+        fwSel.value = curWeight;
+      }
+
       // 텍스트 편집 영역
       var textWrap = document.getElementById('drEditPropTextWrap');
       var textArea = document.getElementById('drEditPropText');
