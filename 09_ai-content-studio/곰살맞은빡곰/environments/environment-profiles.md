@@ -12,26 +12,28 @@
 **레퍼런스**: `env-01-home.png`
 
 ### 한국어 설명
-- 한국 신축 아파트 25평형 원룸형 거실+주방
+- 한국 소형 아파트 20평형 거실+주방 (아담한 1인 가구 느낌)
 - 벽: 밝은 크림화이트 페인트
 - 바닥: 내추럴 오크 원목마루 (중간 톤 갈색)
-- 소파: 라이트 그레이 패브릭 L자 소파 + 그레이 쿠션
-- 테이블: 낮은 직사각형 오크 원목 커피테이블
-- TV: 벽걸이 65인치 TV + 화이트 TV 콘솔
-- 주방: 화이트 상하부장, 빌트인 가전, 오픈형
-- 식탁: 원형 소형 오크 원목 테이블 + 원목 의자 2개
-- 조명: 따뜻한 톤 골드 펜던트 조명 (식탁 위)
+- 소파: 라이트 그레이/베이지 패브릭 소파 (벽에 붙여서 배치)
+- 테이블: 작은 낮은 오크 원목 커피테이블
+- TV: 벽걸이 TV + 작은 화이트 TV 스탠드
+- 주방: 화이트 상부장 + 우드톤 하부장, 소형 ㄱ자 배치
+- 식탁: 소형 원형 오크 테이블 + 원목 의자 2개
+- 조명: 따뜻한 톤 펜던트 조명 (식탁 위) + 플로어 스탠드
 - 발코니: 슬라이딩 유리문 + 시어 커튼
-- 소품: 화분 2~3개 (몬스테라, 산세베리아), 스탠드 조명
+- 소품: 화분 1~2개, 벽선반, 아담한 생활감 있는 느낌
 
 ### English Prompt (복사용)
 ```
-in a modern Korean apartment living room with cream-white walls,
-natural oak hardwood floor, light gray fabric L-shaped sofa with gray cushions,
-low rectangular oak coffee table, wall-mounted TV on white console,
-open kitchen with white cabinets, small round oak dining table,
-warm gold pendant lamp, sliding glass balcony door with sheer curtains,
-potted monstera and snake plants, warm cozy evening ambient lighting
+in a small cozy Korean apartment living room with cream-white walls,
+natural oak hardwood floor, compact light gray fabric sofa against the wall,
+small low oak coffee table, wall-mounted TV on a simple white stand,
+small open kitchen with white upper cabinets and wood-tone lower cabinets,
+small round oak dining table with warm pendant lamp above,
+sliding glass balcony door with sheer curtains, floor lamp,
+small potted plants, compact lived-in cozy feeling,
+warm evening ambient lighting
 ```
 
 ---
