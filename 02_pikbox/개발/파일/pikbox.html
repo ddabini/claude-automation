@@ -14691,6 +14691,9 @@ ${metaText}
         drEditState.iframeDoc = null;
         if (emptyEl) emptyEl.style.display = 'none';
         if (saveBar) saveBar.style.display = 'flex';
+        // 요소 추가 도구 표시
+        var addTools = document.getElementById('drEditAddTools');
+        if (addTools) addTools.style.display = 'block';
         if (titleEl) titleEl.textContent = '디자인 편집';
         drEditUpdatePreview();
       } catch (e) {
