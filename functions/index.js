@@ -202,7 +202,7 @@ exports.searchPinterest = functions
           await cacheRef.set({
             query: query,
             timestamp: Date.now(),
-            pins: pins.slice(0, 50), // 최대 50개까지 캐싱
+            pins: pins.slice(0, 100), // 최대 100개까지 캐싱
           });
           console.log(`캐시 저장: "${query}" (${pins.length}개 핀)`);
         } catch (saveErr) {
