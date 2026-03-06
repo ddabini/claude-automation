@@ -14491,6 +14491,8 @@ ${metaText}
 
     function drEditUndo() {
       if (drEditState.undoStack.length === 0) { toast('되돌릴 내용이 없습니다', 'info'); return; }
+      // iframe 로딩 중이면 무시 (연속 Ctrl+Z 충돌 방지)
+      if (drEditState._loading) return;
       // 현재 상태를 redo에 저장
       var iDoc = drEditState.iframeDoc;
       if (iDoc) {
@@ -14509,7 +14511,7 @@ ${metaText}
       var snap = drEditState.undoStack.pop();
       drEditState.editedHtml = snap;
       drEditState.selectedElement = null;
-      drEditState.iframeDoc = null;
+      drEditState._loading = true;
       drEditUpdatePreview();
     }
 
