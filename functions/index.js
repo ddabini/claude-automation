@@ -1,11 +1,11 @@
 /**
- * Pikbox — Pinterest 네이티브 검색 프록시
+ * Pikbox — Cloud Functions 검색 프록시
  *
- * Pinterest 검색 결과를 서버사이드에서 가져와 Pikbox에 전달하는 Cloud Function.
- * Puppeteer(헤드리스 브라우저)로 Pinterest 페이지를 렌더링하여 네이티브 검색 품질을 제공.
+ * Pinterest/Instagram/Meta Ads/Google Ads 검색 결과를 서버사이드에서 가져와 Pikbox에 전달.
+ * Pinterest는 내부 API 직접 호출 (Puppeteer 불필요, 고해상도 originals + 한국어 제목).
  * 결과는 Firebase Realtime DB에 24시간 캐싱하여 비용 절감.
  *
- * 엔드포인트: GET /searchPinterest?q=검색어&limit=25
+ * 엔드포인트: GET /searchPinterest?q=검색어&limit=50
  */
 
 const functions = require("firebase-functions");
@@ -16,19 +16,85 @@ admin.initializeApp();
 // 실시간 DB 참조 — 캐시 저장/조회용
 const db = admin.database();
 
+// ── Pinterest 세션 쿠키 캐시 (cold start 간 재사용) ──
+// kr.pinterest.com 방문 시 자동 발급되는 비로그인 쿠키를 메모리에 보관
+let pinterestSession = { cookies: null, csrf: null, appVersion: null, timestamp: 0 };
+
 /**
- * Pinterest 검색 Cloud Function
+ * Pinterest 세션 쿠키 획득
+ *
+ * kr.pinterest.com에 GET 요청 → Set-Cookie에서 csrftoken, _pinterest_sess 추출
+ * 쿠키는 1시간 동안 메모리에 캐시 (매번 요청하면 차단 위험)
+ */
+async function getPinterestSession() {
+  // 1시간 이내 쿠키가 있으면 재사용
+  const ageMs = Date.now() - pinterestSession.timestamp;
+  if (pinterestSession.cookies && ageMs < 60 * 60 * 1000) {
+    return pinterestSession;
+  }
+
+  const fetch = require("node-fetch");
+
+  // kr.pinterest.com 메인 페이지 접속 → 쿠키 자동 발급
+  const resp = await fetch("https://kr.pinterest.com/", {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "ko-KR,ko;q=0.9",
+    },
+    redirect: "manual", // 리다이렉트 수동 처리 (쿠키가 첫 응답에 옴)
+  });
+
+  // Set-Cookie 헤더에서 쿠키 추출
+  const setCookies = resp.headers.raw()["set-cookie"] || [];
+  let csrf = "";
+  const cookieParts = [];
+
+  for (const c of setCookies) {
+    const nameVal = c.split(";")[0]; // "csrftoken=xxx" 부분만
+    cookieParts.push(nameVal);
+    if (nameVal.startsWith("csrftoken=")) {
+      csrf = nameVal.split("=")[1];
+    }
+  }
+
+  // HTML에서 appVersion 추출 (API 호출에 필요)
+  let appVersion = "4f340f4"; // 기본값
+  try {
+    const html = await resp.text();
+    const verMatch = html.match(/"appVersion":"([^"]+)"/);
+    if (verMatch) appVersion = verMatch[1];
+  } catch (e) { /* 무시 — 기본값 사용 */ }
+
+  const cookieStr = cookieParts.join("; ");
+
+  // 세션 캐시 업데이트
+  pinterestSession = {
+    cookies: cookieStr,
+    csrf: csrf,
+    appVersion: appVersion,
+    timestamp: Date.now(),
+  };
+
+  console.log(`Pinterest 세션 획득: csrf=${csrf.substring(0, 8)}... appVer=${appVersion}`);
+  return pinterestSession;
+}
+
+/**
+ * Pinterest 검색 Cloud Function — 내부 API 직접 호출 방식
  *
  * 흐름:
  * 1. 캐시 확인 (24시간 이내 같은 쿼리 결과 있으면 바로 반환)
- * 2. 캐시 없으면 Puppeteer로 Pinterest 검색 → 핀 데이터 추출
- * 3. 결과를 캐시에 저장 후 반환
+ * 2. kr.pinterest.com 세션 쿠키 획득 (비로그인, 1시간 캐시)
+ * 3. POST BaseSearchResource/get/ API로 검색 (25개/페이지, 최대 2페이지=50개)
+ * 4. 결과에서 originals 이미지 URL + 한국어 grid_title 추출
+ * 5. 캐시 저장 후 반환
  */
 exports.searchPinterest = functions
   .runWith({
-    memory: "2GB",           // Puppeteer + Chromium에 넉넉한 메모리
-    timeoutSeconds: 120,     // Pinterest 로딩에 최대 120초 허용 (cold start 포함)
-    maxInstances: 3,         // 동시 실행 제한 (비용 제어)
+    memory: "256MB",         // HTTP API만 사용하므로 최소 메모리
+    timeoutSeconds: 30,      // API 호출은 빠름 (Puppeteer 대비 1/4)
+    maxInstances: 5,         // 가벼우므로 동시 실행 여유 확대
   })
   .https.onRequest(async (req, res) => {
     // ── CORS 설정 — 모든 출처에서 접근 허용 ──
@@ -79,122 +145,143 @@ exports.searchPinterest = functions
         }
       }
     } catch (cacheErr) {
-      // 캐시 에러는 무시하고 계속 진행 (Pinterest에서 새로 가져옴)
+      // 캐시 에러는 무시하고 계속 진행
       console.warn("캐시 조회 실패:", cacheErr.message);
     }
 
-    // ── 2단계: Puppeteer로 Pinterest 검색 ──
-    let browser = null;
-
+    // ── 2단계: Pinterest 내부 API로 검색 ──
     try {
-      // Chromium 바이너리 로드 (서버리스 환경용 경량 크로미움)
-      const chromium = require("@sparticuz/chromium");
+      const fetch = require("node-fetch");
 
-      browser = await require("puppeteer-core").launch({
-        args: [
-          ...chromium.args,
-          "--no-sandbox",            // Cloud Function 환경에서 필수
-          "--disable-gpu",           // GPU 없는 환경
-          "--disable-dev-shm-usage", // 메모리 사용 최적화
-        ],
-        defaultViewport: { width: 1280, height: 900 },
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+      // 세션 쿠키 획득 (비로그인 — kr.pinterest.com 방문만으로 발급)
+      const session = await getPinterestSession();
+      if (!session.csrf) {
+        throw new Error("Pinterest 세션 쿠키 획득 실패");
+      }
+
+      // API 요청에 사용할 공통 헤더
+      const apiHeaders = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/javascript, */*, q=0.01",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRFToken": session.csrf,
+        "X-Pinterest-AppState": "active",
+        "X-APP-VERSION": session.appVersion,
+        "Referer": "https://kr.pinterest.com/",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cookie": session.cookies,
+      };
+
+      // 검색어 URL 인코딩
+      const encodedQuery = encodeURIComponent(query);
+
+      // ── 1페이지 검색 (25개) ──
+      const page1Body = new URLSearchParams({
+        source_url: `/search/pins/?q=${query}`,
+        data: JSON.stringify({
+          options: {
+            query: query,
+            scope: "pins",
+            page_size: 25,
+            field_set_key: "unauth_react",
+          },
+          context: {},
+        }),
       });
 
-      const page = await browser.newPage();
-
-      // 불필요한 리소스 차단 (속도 대폭 향상)
-      await page.setRequestInterception(true);
-      page.on("request", (request) => {
-        const type = request.resourceType();
-        const url = request.url();
-        // 이미지, 폰트, 미디어, 스타일시트, 추적 스크립트 차단 (DOM 구조만 필요)
-        if (
-          ["font", "media", "stylesheet"].includes(type) ||
-          url.includes("recaptcha") ||
-          url.includes("google-analytics") ||
-          url.includes("facebook.com/x/") ||
-          url.includes("accounts.google.com")
-        ) {
-          request.abort();
-        } else {
-          request.continue();
-        }
-      });
-
-      // 모바일 User-Agent — Pinterest 모바일 페이지가 더 가볍고 빠르게 로드됨
-      await page.setUserAgent(
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      const page1Resp = await fetch(
+        "https://kr.pinterest.com/resource/BaseSearchResource/get/",
+        { method: "POST", headers: apiHeaders, body: page1Body.toString() }
       );
 
-      // Pinterest 검색 페이지 이동
-      const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
-      await page.goto(searchUrl, {
-        waitUntil: "domcontentloaded", // networkidle2보다 훨씬 빠름
-        timeout: 45000,
-      });
+      if (!page1Resp.ok) {
+        // 세션 만료 시 쿠키 초기화하여 다음 요청에서 재발급
+        pinterestSession = { cookies: null, csrf: null, appVersion: null, timestamp: 0 };
+        throw new Error(`Pinterest API 응답 에러: ${page1Resp.status}`);
+      }
 
-      // 핀 카드가 로드될 때까지 대기 (최대 30초)
-      await page.waitForSelector('[role="group"] img, [data-test-id="pin"] img, [role="listitem"] img', {
-        timeout: 30000,
-      });
+      const page1Data = await page1Resp.json();
+      const page1Results = page1Data?.resource_response?.data?.results || [];
+      const bookmark = page1Data?.resource_response?.bookmark || null;
 
-      // 핀 이미지가 실제로 렌더링될 시간 추가 대기
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // 스크롤하여 더 많은 핀 로드 (1회만 — 속도 우선)
-      await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // ── 핀 데이터 추출 ──
-      const pins = await page.evaluate(() => {
-        const results = [];
-        const seen = new Set(); // 중복 제거용
-
-        document.querySelectorAll('[role="group"]').forEach((el) => {
-          const img = el.querySelector("img");
-          const link = el.querySelector('a[href*="/pin/"]');
-          if (!img || !link) return;
-
-          // 핀 URL에서 ID 추출
-          const pinMatch = link.href.match(/\/pin\/(\d+)/);
-          if (!pinMatch) return;
-
-          const pinId = pinMatch[1];
-          if (seen.has(pinId)) return; // 중복 핀 건너뛰기
-          seen.add(pinId);
-
-          // srcset에서 가장 큰 이미지 URL 추출
-          // Pinterest srcset 패턴: 236x(1x), 474x(2x), 736x(3x), originals(4x)
-          const srcset = img.srcset || "";
-          let imageUrl = img.src; // 기본값: 현재 src (보통 236x)
-
-          if (srcset) {
-            const parts = srcset.split(",").map((s) => s.trim());
-            // 4x(originals) > 3x(736x) > 2x(474x) 순으로 선택
-            const best =
-              parts.find((p) => p.includes("4x")) ||
-              parts.find((p) => p.includes("3x")) ||
-              parts[parts.length - 1];
-            if (best) imageUrl = best.split(" ")[0];
-          }
-
-          // 236x 썸네일도 별도 저장 (빠른 미리보기용)
-          const thumbUrl = img.src || imageUrl.replace(/\/(originals|736x|474x)\//, "/236x/");
-
-          results.push({
-            id: pinId,
-            pinUrl: `https://www.pinterest.com/pin/${pinId}/`,
-            imageUrl: imageUrl,
-            thumbUrl: thumbUrl,
-            title: img.alt || "",
-            source: "pinterest_native",
+      // ── 2페이지 검색 (추가 25개 — limit이 25 초과일 때만) ──
+      let page2Results = [];
+      if (limit > 25 && bookmark && bookmark !== "-end-") {
+        try {
+          const page2Body = new URLSearchParams({
+            source_url: `/search/pins/?q=${query}`,
+            data: JSON.stringify({
+              options: {
+                query: query,
+                scope: "pins",
+                page_size: 25,
+                bookmarks: [bookmark],
+                field_set_key: "unauth_react",
+              },
+              context: {},
+            }),
           });
-        });
 
-        return results;
-      });
+          const page2Resp = await fetch(
+            "https://kr.pinterest.com/resource/BaseSearchResource/get/",
+            { method: "POST", headers: apiHeaders, body: page2Body.toString() }
+          );
+
+          if (page2Resp.ok) {
+            const page2Data = await page2Resp.json();
+            page2Results = page2Data?.resource_response?.data?.results || [];
+          }
+        } catch (p2Err) {
+          console.warn("Pinterest 2페이지 실패 (무시):", p2Err.message);
+        }
+      }
+
+      // ── 결과 합치고 Pikbox 형식으로 변환 ──
+      const allResults = [...page1Results, ...page2Results];
+      const seen = new Set(); // 중복 제거용
+
+      const pins = allResults
+        .filter((r) => {
+          // 핀 타입만 (광고 등 제외)
+          if (!r || !r.id) return false;
+          if (seen.has(r.id)) return false;
+          seen.add(r.id);
+          return true;
+        })
+        .map((r) => {
+          const images = r.images || {};
+
+          // 이미지 URL: originals > 736x > 474x 순으로 선택
+          const origImg = images.orig || images["736x"] || images["474x"] || images["236x"] || {};
+          const thumbImg = images["236x"] || images["170x"] || origImg;
+
+          // 이미지 URL이 없으면 건너뛰기
+          const imageUrl = origImg.url || "";
+          if (!imageUrl) return null;
+
+          // 736x URL 생성 (Pikbox 그리드 표시용 — originals는 너무 크므로)
+          const displayUrl = (images["736x"] || origImg).url || imageUrl;
+
+          return {
+            id: String(r.id),
+            pinUrl: `https://kr.pinterest.com/pin/${r.id}/`,
+            imageUrl: displayUrl,           // 그리드 표시용 (736x 우선)
+            origUrl: imageUrl,              // 원본 다운로드용 (originals)
+            thumbUrl: thumbImg.url || displayUrl,
+            title: r.grid_title || r.title || r.description || "",
+            description: (r.description || "").substring(0, 200),
+            domain: r.domain || "",
+            link: r.link || "",
+            width: origImg.width || 0,
+            height: origImg.height || 0,
+            source: "pinterest_native",
+          };
+        })
+        .filter(Boolean); // null 제거
+
+      console.log(`Pinterest API 검색: "${query}" → ${pins.length}개 (1p: ${page1Results.length}, 2p: ${page2Results.length})`);
 
       // ── 3단계: 결과를 캐시에 저장 ──
       if (pins.length > 0) {
@@ -202,9 +289,8 @@ exports.searchPinterest = functions
           await cacheRef.set({
             query: query,
             timestamp: Date.now(),
-            pins: pins.slice(0, 100), // 최대 100개까지 캐싱
+            pins: pins.slice(0, 100),
           });
-          console.log(`캐시 저장: "${query}" (${pins.length}개 핀)`);
         } catch (saveErr) {
           console.warn("캐시 저장 실패:", saveErr.message);
         }
@@ -223,15 +309,6 @@ exports.searchPinterest = functions
         error: "Pinterest 검색 중 오류 발생",
         detail: error.message,
       });
-    } finally {
-      // 브라우저 리소스 정리 (메모리 누수 방지)
-      if (browser) {
-        try {
-          await browser.close();
-        } catch (e) {
-          console.warn("브라우저 종료 실패:", e.message);
-        }
-      }
     }
   });
 
