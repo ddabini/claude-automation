@@ -650,13 +650,14 @@ exports.searchGoogleAds = functions
       });
       const suggestData = await suggestRes.json();
 
-      // 광고주 목록 추출 (최대 3명 — 속도와 품질 균형)
+      // 광고주 목록 추출 — 광고 수 기준 내림차순 정렬 (최대 5명)
       const suggestions = (suggestData["1"] || []).filter((s) => s["1"]);
-      const advertisers = suggestions.slice(0, 3).map((s) => ({
+      const advertisers = suggestions.map((s) => ({
         name: s["1"]["1"] || "",
         id: s["1"]["2"] || "",
         country: s["1"]["3"] || "",
-      }));
+        adCount: parseInt((s["1"]["4"] || {})["2"] || {})["2"] || parseInt((s["1"]["4"] || {})["2"] || {})["1"] || 0,
+      })).sort((a, b) => b.adCount - a.adCount).slice(0, 5);
 
       if (advertisers.length === 0) {
         res.json({ query, count: 0, ads: [], cached: false, note: "매칭되는 광고주 없음" });
