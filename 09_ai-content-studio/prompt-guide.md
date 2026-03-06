@@ -319,59 +319,118 @@ Same person, consistent appearance.
 
 ---
 
-## 6. 실전 예시
+## 6. 실전 예시 - 빡곰 (곰살맞은빡곰)
 
-### 예시: "카페에서 커피 마시는 여성" 영상 제작
+> 아기 북극곰 캐릭터 "빡곰"의 실제 프로필과 프롬프트 예시.
+> 전체 프로필: `곰살맞은빡곰/character-profile.md` 참조
 
-**Step 1: 캐릭터 프로필 (1회 작성, 재사용)**
+### 빡곰 프로필 (Core - 모든 프롬프트에 복사)
 ```
-A mid-20s Korean woman with a slim oval face, light ivory skin,
-large almond-shaped brown eyes with double eyelids, small upturned nose,
-full lips in natural pink,
-shoulder-length dark brown hair with natural waves and see-through bangs,
-slim build with 7.5-head-tall proportions, narrow shoulders
-```
-
-**Step 2: 턴어라운드 시트 (최초 1회)**
-```
-Character turnaround model sheet of a mid-20s Korean woman with a slim
-oval face, light ivory skin, large almond-shaped brown eyes with double
-eyelids, small upturned nose, full lips in natural pink,
-shoulder-length dark brown hair with natural waves and see-through bangs,
-slim build with 7.5-head-tall proportions.
-Wearing a cream linen shirt and wide-leg denim pants.
-Full body A-pose, three views: front (center), three-quarter (left),
-back (right). White background, character design reference sheet,
-4K, highly detailed.
+A photorealistic baby polar bear cub with round flat face,
+large glossy dark brown-black round eyes set wide apart,
+small oval black wet nose, tiny rounded ears on top of head,
+dense fluffy cream-white fur with slightly warm tone,
+chubby compact body with short thick limbs,
+large head-to-body ratio (approximately 1:2),
+pink-brown paw pads, barely visible tiny round tail.
+Realistic fur texture, soft and fluffy appearance.
 ```
 
-**Step 3: 장면 이미지 생성 (나노바나나)**
+### 빡곰 일관성 강제 문구
 ```
-A mid-20s Korean woman with a slim oval face, light ivory skin,
-large almond-shaped brown eyes with double eyelids, small upturned nose,
-full lips in natural pink,
-shoulder-length dark brown hair with natural waves and see-through bangs,
-slim build, wearing a cream knit sweater,
-sitting at a wooden table in a cozy minimalist cafe,
-holding a white ceramic latte cup with both hands,
-looking out through a large window with a gentle smile,
-warm ambient indoor lighting, soft afternoon sun through the window,
-medium close-up from waist up, 50mm lens, eye level,
+Maintain exact same facial features: round flat face, large glossy
+dark eyes set wide apart, small black oval nose, tiny rounded ears.
+Keep same body proportions: chubby compact body, short thick limbs,
+large head relative to body. Same dense cream-white fluffy fur texture.
+Do not alter the character's identity. Same bear, consistent appearance.
+```
+
+---
+
+### 예시 A: 배달음식 먹방 (이미지 → 영상)
+
+**Step 1: 장면 이미지 (나노바나나)**
+```
+A photorealistic baby polar bear cub with round flat face,
+large glossy dark brown-black round eyes set wide apart,
+small oval black wet nose, dense fluffy cream-white fur,
+chubby compact body with short thick limbs,
+sitting at a low table in a modern Korean apartment,
+excitedly looking at a steaming black plastic bowl of tteokbokki and noodles,
+holding wooden chopsticks with both front paws,
+warm ambient evening lighting, delivery food containers on table,
+medium shot, slightly high angle looking down, 35mm lens,
 photorealistic, editorial photography style, 4K resolution, highly detailed.
 Maintain exact same facial features and body proportions as the reference.
 ```
 
-**Step 4: 영상 프롬프트 (하이루오 S2V-01)**
-→ Step 3의 이미지를 Subject Reference로 업로드 후:
+**Step 2: 영상 프롬프트 (하이루오 S2V-01)**
+→ Step 1 이미지를 Subject Reference로 업로드 후:
 ```
-The subject slowly lifts the latte cup and takes a gentle sip,
-then lowers the cup and looks out the window with a warm smile,
-soft steam rising from the cup, afternoon sunlight shifting subtly,
+The baby polar bear eagerly picks up noodles with chopsticks,
+slurps them with a satisfied expression, steam rising from the bowl,
+warm kitchen lighting with slight flicker,
 slow dolly in toward the subject,
 warm cozy atmosphere, cinematic quality, photorealistic, natural motion
 ```
 
-**결과: 기획→완성 이미지→영상까지 프롬프트 3개로 끝**
+---
+
+### 예시 B: 지하철 출근 (이미지 → 영상)
+
+**Step 1: 장면 이미지 (나노바나나)**
+```
+A photorealistic baby polar bear cub with round flat face,
+large glossy dark brown-black round eyes set wide apart,
+small oval black wet nose, dense fluffy cream-white fur,
+chubby compact body, wearing a gray canvas backpack with brown leather straps,
+standing in a crowded Korean subway train among human commuters in winter coats,
+looking directly at camera with calm expression,
+natural fluorescent subway lighting,
+medium close-up, 35mm lens, eye level,
+photorealistic, street photography style, 4K resolution, highly detailed.
+Maintain exact same facial features and body proportions as the reference.
+```
+
+**Step 2: 영상 프롬프트 (하이루오 S2V-01)**
+```
+The baby polar bear in a backpack stands in a packed subway,
+the train gently sways, commuters shift around the small bear,
+the bear looks left and right observing passengers then stares ahead stoically,
+natural subway fluorescent lighting,
+static camera with subtle handheld shake,
+calm mundane atmosphere, cinematic quality, photorealistic, smooth motion
+```
+
+---
+
+### 예시 C: 퇴근 후 치맥 (이미지 → 영상)
+
+**Step 1: 장면 이미지 (나노바나나)**
+```
+A photorealistic baby polar bear cub with round flat face,
+large glossy dark brown-black round eyes set wide apart,
+small oval black wet nose, dense fluffy cream-white fur,
+chubby compact body with short thick limbs,
+sitting on a couch in a Korean apartment living room,
+fried chicken box and beer cans on a coffee table in front,
+reaching one paw toward a chicken drumstick with eager expression,
+warm ambient TV-glow lighting, cozy evening atmosphere,
+medium shot, eye level, 50mm lens,
+photorealistic, lifestyle photography style, 4K resolution, highly detailed.
+Maintain exact same facial features and body proportions as the reference.
+```
+
+**Step 2: 영상 프롬프트 (하이루오)**
+```
+The baby polar bear grabs a fried chicken drumstick and takes a big bite,
+chews happily with eyes slightly closed in satisfaction,
+then reaches for another piece, TV flickering in background,
+slow dolly in,
+warm cozy evening atmosphere, cinematic quality, photorealistic, natural motion
+```
+
+**결과: 기획→완성 이미지→영상까지 프롬프트 2개로 끝 (프로필은 재사용)**
 
 ---
 
