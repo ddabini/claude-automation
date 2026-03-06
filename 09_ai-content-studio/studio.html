@@ -784,11 +784,32 @@ body {
       <label>배경 / 장소</label>
       <select id="envPreset" onchange="applyEnvPreset()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:8px;background:var(--surface);">
         <option value="">직접 입력</option>
-        <option value="home">빡곰의 집 (아파트 거실+주방)</option>
-        <option value="subway">지하철 (서울 2호선)</option>
-        <option value="cvs">편의점 (CU 스타일)</option>
-        <option value="office">회사 사무실 (스타트업)</option>
-        <option value="gym">헬스장 (피트니스 센터)</option>
+        <optgroup label="집">
+          <option value="home_sofa">집 - 소파 구역 (TV, 치맥)</option>
+          <option value="home_table">집 - 식탁 구역 (밥, 배달, 혼술)</option>
+          <option value="home_kitchen">집 - 주방 구역 (요리, 라면)</option>
+          <option value="home_entrance">집 - 현관 구역 (배달, 외출)</option>
+        </optgroup>
+        <optgroup label="지하철">
+          <option value="subway_standing">지하철 - 서있기 (출퇴근)</option>
+          <option value="subway_sitting">지하철 - 앉아있기 (졸기)</option>
+          <option value="subway_platform">지하철 - 플랫폼 (기다리기)</option>
+        </optgroup>
+        <optgroup label="편의점">
+          <option value="cvs_shelf">편의점 - 진열대 (간식 고르기)</option>
+          <option value="cvs_hotfood">편의점 - 즉석식품 (떡볶이, 어묵)</option>
+          <option value="cvs_counter">편의점 - 창가 바 (먹기)</option>
+        </optgroup>
+        <optgroup label="사무실">
+          <option value="office_desk">사무실 - 내 자리 (일하기)</option>
+          <option value="office_meeting">사무실 - 회의실 (미팅)</option>
+          <option value="office_coffee">사무실 - 커피 스테이션 (휴식)</option>
+        </optgroup>
+        <optgroup label="헬스장">
+          <option value="gym_freeweight">헬스장 - 프리웨이트 (덤벨)</option>
+          <option value="gym_cardio">헬스장 - 유산소 (러닝머신)</option>
+          <option value="gym_stretch">헬스장 - 스트레칭 (매트)</option>
+        </optgroup>
       </select>
       <input type="text" id="sceneBackground" placeholder="예: 미니멀한 카페, 큰 창문, 나무 테이블">
     </div>
