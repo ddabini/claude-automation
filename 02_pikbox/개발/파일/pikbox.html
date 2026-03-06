@@ -14009,6 +14009,7 @@ ${metaText}
       iframe.src = drEditState.blobUrl;
       iframe.onload = function() {
         drEditInjectCanvas();
+        drEditState._loading = false; // undo/redo 로딩 완료 — 다음 조작 허용
       };
     }
 
