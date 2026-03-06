@@ -635,29 +635,48 @@ exports.searchGoogleAds = functions
 
     try {
       // ── 1단계: SearchSuggestions — 키워드로 광고주 찾기 ──
-      const suggestBody = JSON.stringify({
-        "1": query,     // 검색 키워드
-        "2": 10,        // 광고주 제안 수
-        "3": 10,        // 웹사이트 제안 수
-        "4": [2410],    // 한국 지역 코드
-        "5": { "1": 1 } // 모든 주제
-      });
+      // Google Ads는 광고주 이름 기반 검색이므로, 일반 키워드에서 핵심 단어 추출
+      // "부동산 광고", "삼성 마케팅" → 첫 단어("부동산", "삼성")로 검색 시도
+      const searchTerms = [query];
+      const words = query.split(/\s+/).filter((w) => w.length >= 2);
+      if (words.length > 1) {
+        // 일반적인 수식어 제거 (광고, 마케팅, 디자인, 소재 등)
+        const modifiers = ["광고", "마케팅", "디자인", "소재", "레퍼런스", "브랜드", "캠페인", "프로모션", "이벤트", "배너"];
+        const coreWords = words.filter((w) => !modifiers.includes(w));
+        if (coreWords.length > 0 && coreWords.join(" ") !== query) {
+          searchTerms.push(coreWords.join(" "));
+        }
+      }
 
-      const suggestRes = await fetch(`${API_BASE}/SearchSuggestions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
-        body: `f.req=${encodeURIComponent(suggestBody)}`,
-      });
-      const suggestData = await suggestRes.json();
+      let advertisers = [];
 
-      // 광고주 목록 추출 — 광고 수 기준 내림차순 정렬 (최대 5명)
-      const suggestions = (suggestData["1"] || []).filter((s) => s["1"]);
-      const advertisers = suggestions.map((s) => {
-        // 광고 수: s["1"]["4"]["2"]["2"] (최대치) 또는 s["1"]["4"]["2"]["1"] (최소치)
-        const countObj = ((s["1"]["4"] || {})["2"]) || {};
-        const adCount = parseInt(countObj["2"] || countObj["1"] || "0");
-        return { name: s["1"]["1"] || "", id: s["1"]["2"] || "", country: s["1"]["3"] || "", adCount };
-      }).sort((a, b) => b.adCount - a.adCount).slice(0, 5);
+      // 원본 키워드 + 핵심 단어 순서로 시도 (첫 번째에서 결과 나오면 멈춤)
+      for (const term of searchTerms) {
+        const suggestBody = JSON.stringify({
+          "1": term,      // 검색 키워드
+          "2": 10,        // 광고주 제안 수
+          "3": 10,        // 웹사이트 제안 수
+          "4": [2410],    // 한국 지역 코드
+          "5": { "1": 1 } // 모든 주제
+        });
+
+        const suggestRes = await fetch(`${API_BASE}/SearchSuggestions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
+          body: `f.req=${encodeURIComponent(suggestBody)}`,
+        });
+        const suggestData = await suggestRes.json();
+
+        // 광고주 목록 추출 — 광고 수 기준 내림차순 정렬 (최대 5명)
+        const suggestions = (suggestData["1"] || []).filter((s) => s["1"]);
+        advertisers = suggestions.map((s) => {
+          const countObj = ((s["1"]["4"] || {})["2"]) || {};
+          const adCount = parseInt(countObj["2"] || countObj["1"] || "0");
+          return { name: s["1"]["1"] || "", id: s["1"]["2"] || "", country: s["1"]["3"] || "", adCount };
+        }).sort((a, b) => b.adCount - a.adCount).slice(0, 5);
+
+        if (advertisers.length > 0) break;  // 결과 있으면 더 이상 검색 안 함
+      }
 
       if (advertisers.length === 0) {
         res.json({ query, count: 0, ads: [], cached: false, note: "매칭되는 광고주 없음" });
