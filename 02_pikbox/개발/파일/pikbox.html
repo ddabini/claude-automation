@@ -14466,6 +14466,7 @@ ${metaText}
     // drEditState에 undoStack, redoStack 추가
     drEditState.undoStack = [];
     drEditState.redoStack = [];
+    drEditState.clipboard = null; // Ctrl+C로 복사한 요소의 outerHTML 저장
 
     // 현재 상태를 스냅샷으로 저장 (변경 전에 호출)
     function drEditPushUndo() {
