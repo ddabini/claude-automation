@@ -12714,7 +12714,22 @@ ${metaText}
       empty.style.display  = 'none';
       zoomBar.style.display = 'flex';
 
-      iframe.src = design.url || '';
+      // DB에 저장된 HTML이 있으면 blob URL(same-origin)로 로드 → html2canvas 캡처 가능
+      // DB에 없으면 design.url 직접 로드 (cross-origin — PNG 저장 불가)
+      try {
+        var htmlSnap = await firebaseDb.ref(DR_HTML_CONTENT + '/' + id).once('value');
+        var htmlContent = htmlSnap.val();
+        if (htmlContent) {
+          if (drState._viewerBlobUrl) URL.revokeObjectURL(drState._viewerBlobUrl);
+          var blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+          drState._viewerBlobUrl = URL.createObjectURL(blob);
+          iframe.src = drState._viewerBlobUrl;
+        } else {
+          iframe.src = design.url || '';
+        }
+      } catch (e) {
+        iframe.src = design.url || '';
+      }
 
       // 메타데이터에서 페이지 수와 높이 읽기 — DB 필드: pages/height (또는 meta_ 접두사)
       const totalPages = design.pages || design.meta_pages || 1;
