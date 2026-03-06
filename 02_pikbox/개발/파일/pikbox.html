@@ -2996,6 +2996,55 @@
     .yt-empty { text-align: center; padding: 60px 20px; }
 
     /* 정렬 바 — 결과 개수 + 정렬 버튼 */
+
+    /* ── 필터 바 — 검색 헤더 하단, 정렬 바 위 ── */
+    .yt-filter-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 0 8px; flex-wrap: wrap;
+    }
+    .yt-filter-toggle {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+      font-family: 'Pretendard', sans-serif; transition: all 0.15s;
+    }
+    .yt-filter-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .yt-filter-toggle.has-filter { border-color: #ff0000; color: #ff0000; background: rgba(255,0,0,0.05); }
+    .yt-filter-dropdown {
+      position: relative; display: inline-block;
+    }
+    .yt-filter-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 500;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+      font-family: 'Pretendard', sans-serif; transition: all 0.15s;
+    }
+    .yt-filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .yt-filter-btn.active { border-color: #ff0000; color: #ff0000; background: rgba(255,0,0,0.06); }
+    .yt-filter-btn .arrow { font-size: 10px; opacity: 0.5; }
+    .yt-filter-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; z-index: 20;
+      min-width: 140px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 4px; display: none;
+    }
+    .yt-filter-menu.show { display: block; }
+    .yt-filter-opt {
+      display: block; width: 100%; padding: 7px 12px; border: none; background: none;
+      font-size: 12px; color: var(--text-secondary); cursor: pointer;
+      text-align: left; border-radius: 6px; font-family: 'Pretendard', sans-serif;
+      transition: background 0.1s;
+    }
+    .yt-filter-opt:hover { background: var(--bg); color: var(--text-primary); }
+    .yt-filter-opt.selected { color: #ff0000; font-weight: 600; }
+    .yt-filter-reset {
+      display: inline-flex; align-items: center; padding: 5px 8px;
+      border: none; background: none; font-size: 11px; color: var(--text-muted);
+      cursor: pointer; border-radius: 6px; font-family: 'Pretendard', sans-serif;
+    }
+    .yt-filter-reset:hover { color: #ff0000; background: rgba(255,0,0,0.05); }
     .yt-sort-bar {
       display: flex;
       align-items: center;
@@ -4214,6 +4263,61 @@
         </div>
         <!-- 카테고리 퀵 칩 — ytInit()에서 동적 렌더링 -->
         <div class="yt-chips" id="ytChips"></div>
+        <!-- 필터 바 — 국가/구독자수/길이/업로드 날짜 -->
+        <div class="yt-filter-bar" id="ytFilterBar" style="display:none;">
+          <!-- 국가 -->
+          <div class="yt-filter-dropdown" data-filter="country">
+            <button class="yt-filter-btn" onclick="ytToggleFilterMenu(this)">
+              🌏 한국 <span class="arrow">▾</span>
+            </button>
+            <div class="yt-filter-menu">
+              <button class="yt-filter-opt selected" data-value="" onclick="ytSelectFilter('country','','전체')">전체 (글로벌)</button>
+              <button class="yt-filter-opt" data-value="kr" onclick="ytSelectFilter('country','kr','한국')">🇰🇷 한국</button>
+            </div>
+          </div>
+          <!-- 구독자수 -->
+          <div class="yt-filter-dropdown" data-filter="subs">
+            <button class="yt-filter-btn" onclick="ytToggleFilterMenu(this)">
+              👥 구독자 <span class="arrow">▾</span>
+            </button>
+            <div class="yt-filter-menu">
+              <button class="yt-filter-opt selected" data-value="" onclick="ytSelectFilter('subs','','전체')">전체</button>
+              <button class="yt-filter-opt" data-value="10000" onclick="ytSelectFilter('subs','10000','1만 이하')">1만 이하</button>
+              <button class="yt-filter-opt" data-value="10000-50000" onclick="ytSelectFilter('subs','10000-50000','1만~5만')">1만 ~ 5만</button>
+              <button class="yt-filter-opt" data-value="100000" onclick="ytSelectFilter('subs','100000','10만 이상')">10만 이상</button>
+              <button class="yt-filter-opt" data-value="500000" onclick="ytSelectFilter('subs','500000','50만 이상')">50만 이상</button>
+              <button class="yt-filter-opt" data-value="1000000" onclick="ytSelectFilter('subs','1000000','100만 이상')">100만 이상</button>
+            </div>
+          </div>
+          <!-- 길이 -->
+          <div class="yt-filter-dropdown" data-filter="duration">
+            <button class="yt-filter-btn" onclick="ytToggleFilterMenu(this)">
+              ⏱ 길이 <span class="arrow">▾</span>
+            </button>
+            <div class="yt-filter-menu">
+              <button class="yt-filter-opt selected" data-value="" onclick="ytSelectFilter('duration','','전체')">전체</button>
+              <button class="yt-filter-opt" data-value="short" onclick="ytSelectFilter('duration','short','3분 미만')">3분 미만</button>
+              <button class="yt-filter-opt" data-value="medium" onclick="ytSelectFilter('duration','medium','3분~20분')">3분 ~ 20분</button>
+              <button class="yt-filter-opt" data-value="long" onclick="ytSelectFilter('duration','long','20분 초과')">20분 초과</button>
+            </div>
+          </div>
+          <!-- 업로드 날짜 -->
+          <div class="yt-filter-dropdown" data-filter="date">
+            <button class="yt-filter-btn" onclick="ytToggleFilterMenu(this)">
+              📅 기간 <span class="arrow">▾</span>
+            </button>
+            <div class="yt-filter-menu">
+              <button class="yt-filter-opt selected" data-value="" onclick="ytSelectFilter('date','','전체')">전체</button>
+              <button class="yt-filter-opt" data-value="today" onclick="ytSelectFilter('date','today','오늘')">오늘</button>
+              <button class="yt-filter-opt" data-value="3days" onclick="ytSelectFilter('date','3days','3일 이내')">지난 3일</button>
+              <button class="yt-filter-opt" data-value="week" onclick="ytSelectFilter('date','week','일주일')">일주일</button>
+              <button class="yt-filter-opt" data-value="month" onclick="ytSelectFilter('date','month','한달')">한달</button>
+              <button class="yt-filter-opt" data-value="year" onclick="ytSelectFilter('date','year','1년')">1년</button>
+            </div>
+          </div>
+          <!-- 초기화 -->
+          <button class="yt-filter-reset" id="ytFilterReset" style="display:none;" onclick="ytResetFilters()">✕ 초기화</button>
+        </div>
         <!-- 정렬 바 — 검색 결과 있을 때만 표시 -->
         <div class="yt-sort-bar" id="ytSortBar" style="display:none;">
           <span class="yt-result-count" id="ytResultCount"></span>
@@ -6370,7 +6474,7 @@
       body.innerHTML = `
         <div style="padding:8px 0;">
           <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">
-            <b>Instagram · Meta 광고 · Pinterest</b>에서 광고 소재 레퍼런스를 수집합니다.
+            <b>Instagram · Meta 광고 · Google 광고 · Pinterest</b>에서 광고 소재 레퍼런스를 수집합니다.
           </p>
 
           <!-- 검색 키워드 입력 -->
@@ -7976,6 +8080,13 @@
       savedSort: 'newest',         // 'newest' | 'oldest' | 'name' | 'favorites'
       ytDragSel: { active: false, startX: 0, startY: 0 },
       ytSelectedColor: '#6366f1',  // 카테고리 색상
+      // ─── 필터 상태 ───
+      filters: {
+        country: 'kr',    // '' = 글로벌, 'kr' = 한국
+        subs: '',          // '' = 전체, '10000' = 1만이하, '10000-50000' = 1만~5만, '100000'+ = N 이상
+        duration: '',      // '' = 전체, 'short' = 3분 미만, 'medium' = 3~20분, 'long' = 20분 초과
+        date: '',          // '' = 전체, 'today' / '3days' / 'week' / 'month' / 'year'
+      },
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
@@ -8079,6 +8190,8 @@
     // ─── Serper.dev YouTube 영상 검색 (/videos 엔드포인트) ───
     // 한국 채널 중심 — gl:kr + hl:ko + 한국어 결과만 필터링
     async function searchSerperVideos(query, page) {
+      // 국가 필터에 따라 Serper 검색 지역 설정
+      const isGlobal = ytState.filters.country === '';
       const res = await fetch('https://google.serper.dev/videos', {
         method: 'POST',
         headers: {
@@ -8089,18 +8202,18 @@
           q: query,
           num: 10,
           page: Math.max(1, page),
-          gl: 'kr',     // 한국 로컬 결과 우선
-          hl: 'ko'      // 한국어 인터페이스
+          gl: isGlobal ? 'us' : 'kr',
+          hl: isGlobal ? 'en' : 'ko'
         })
       });
       const data = await res.json();
       if (!res.ok || !data.videos) return [];
 
       // YouTube 영상 URL만 필터링 (채널/사용자 페이지 제외)
-      // /watch?v= 또는 /shorts/ 패턴만 허용 — /channel/, /@, /user/ 등 제외
+      // 글로벌 모드에서는 한국어 필터 스킵
       return data.videos
         .filter(v => v.link && (v.link.includes('/watch?v=') || v.link.includes('/shorts/')))
-        .filter(v => ytIsKorean(v))
+        .filter(v => isGlobal || ytIsKorean(v))
         .map(v => {
           // 고화질 썸네일 생성 (Serper 기본 썸네일은 저화질일 수 있음)
           const hqThumb = ytGetHqThumb(v.link, v.thumbnail);
@@ -9507,6 +9620,9 @@
         if (grid) grid.innerHTML = '';
         const sortBar = document.getElementById('ytSortBar');
         if (sortBar) sortBar.style.display = 'none';
+        // 필터 바 표시
+        const filterBar = document.getElementById('ytFilterBar');
+        if (filterBar) filterBar.style.display = 'flex';
       }
 
       ytState.loading = true;
@@ -9776,20 +9892,64 @@
                 matchItem.dateNum = publishedAt;
                 matchItem.date = ytFormatRelativeDate(publishedAt);
               }
-              // 재생시간으로 쇼츠 판별 보강
+              // 재생시간(초) 저장 — 길이 필터에 사용
               const duration = v.contentDetails?.duration || '';
               const totalSec = ytParseDurationISO(duration);
+              matchItem.durationSec = totalSec;
               if (totalSec > 0) {
                 matchItem.isShorts = totalSec <= 60;
                 matchItem.duration = ytFormatDurationISO(duration);
               }
+              // channelId 저장 — 구독자수 조회에 사용
+              if (snippet.channelId) matchItem.channelId = snippet.channelId;
             }
           });
         }
+        // 채널 구독자수 가져오기 (필터에 사용)
+        await ytFetchSubscriberCounts(items, apiKey);
         // 통계 업데이트 후 카드 리렌더링 (조회수 표시 갱신)
         ytSortAndRerender();
       } catch (e) {
         console.warn('[Pikbox] YouTube 통계 보강 실패:', e.message);
+      }
+    }
+
+
+    // ─── 채널 구독자수 조회 — channels API (1 unit/요청, 최대 50채널) ───
+    async function ytFetchSubscriberCounts(items, apiKey) {
+      // channelId가 있는 아이템에서 고유 channelId 추출
+      const channelMap = {};
+      items.forEach(item => {
+        if (item.channelId && item.subscriberCount == null) {
+          if (!channelMap[item.channelId]) channelMap[item.channelId] = [];
+          channelMap[item.channelId].push(item);
+        }
+      });
+      const channelIds = Object.keys(channelMap);
+      if (channelIds.length === 0) return;
+
+      try {
+        for (let i = 0; i < channelIds.length; i += 50) {
+          const batch = channelIds.slice(i, i + 50);
+          const params = new URLSearchParams({
+            part: 'statistics',
+            id: batch.join(','),
+            key: apiKey
+          });
+          const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?${params}`);
+          const data = await res.json();
+          if (!res.ok || !data.items) continue;
+
+          data.items.forEach(ch => {
+            const subCount = parseInt(ch.statistics?.subscriberCount || '0', 10);
+            // 해당 channelId에 연결된 모든 영상에 구독자수 저장
+            (channelMap[ch.id] || []).forEach(item => {
+              item.subscriberCount = subCount;
+            });
+          });
+        }
+      } catch (e) {
+        console.warn('[Pikbox] 구독자수 조회 실패:', e.message);
       }
     }
 
@@ -9861,7 +10021,10 @@
       if (sortBar && ytState.results.length > 0) {
         sortBar.style.display = 'flex';
         const chipLabel = isShortsList ? '쇼츠' : ytState.activeChip === 'ad' ? '광고' : '영상';
-        if (countEl) countEl.textContent = `${chipLabel} ${ytState.results.length}개`;
+        const filteredCount = ytApplyFilters(ytState.results).length;
+          if (countEl) countEl.textContent = filteredCount < ytState.results.length
+            ? `${chipLabel} ${filteredCount}개 / ${ytState.results.length}개`
+            : `${chipLabel} ${ytState.results.length}개`;
       }
     }
 
@@ -9938,7 +10101,8 @@
     // 결과 정렬 후 그리드 전체 다시 그리기
     // 채널명 검색 시 해당 채널 영상을 상단에 우선 배치
     function ytSortAndRerender() {
-      const sorted = [...ytState.results];
+      // 필터 적용 후 정렬
+      const sorted = [...ytApplyFilters(ytState.results)];
       const queryLower = (ytState.query || '').toLowerCase();
 
       // 관련도 점수 계산 — 채널명/제목에 검색어 포함 여부로 우선순위 결정
@@ -10134,6 +10298,123 @@
       // ESC 키로도 닫기
       const onKey = (e) => { if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', onKey); } };
       document.addEventListener('keydown', onKey);
+    }
+
+
+    // ─── 필터 드롭다운 토글 ───
+    function ytToggleFilterMenu(btn) {
+      const menu = btn.nextElementSibling;
+      // 다른 열린 메뉴 닫기
+      document.querySelectorAll('.yt-filter-menu.show').forEach(m => {
+        if (m !== menu) m.classList.remove('show');
+      });
+      menu.classList.toggle('show');
+    }
+    // 바깥 클릭 시 모든 필터 메뉴 닫기
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.yt-filter-dropdown')) {
+        document.querySelectorAll('.yt-filter-menu.show').forEach(m => m.classList.remove('show'));
+      }
+    });
+
+    // ─── 필터 옵션 선택 ───
+    function ytSelectFilter(filterKey, value, label) {
+      ytState.filters[filterKey] = value;
+      // UI 업데이트 — 해당 드롭다운의 버튼 텍스트 + 활성 상태
+      const dropdown = document.querySelector(`.yt-filter-dropdown[data-filter="${filterKey}"]`);
+      if (dropdown) {
+        const btn = dropdown.querySelector('.yt-filter-btn');
+        const icon = { country: '🌏', subs: '👥', duration: '⏱', date: '📅' }[filterKey] || '';
+        btn.innerHTML = `${icon} ${label} <span class="arrow">▾</span>`;
+        btn.classList.toggle('active', value !== '');
+        // 선택 상태 표시
+        dropdown.querySelectorAll('.yt-filter-opt').forEach(opt => {
+          opt.classList.toggle('selected', opt.dataset.value === value);
+        });
+        // 메뉴 닫기
+        dropdown.querySelector('.yt-filter-menu').classList.remove('show');
+      }
+      // 초기화 버튼 표시/숨김
+      ytUpdateFilterResetBtn();
+      // 필터 적용 — 결과가 있으면 클라이언트 필터링, 없으면 재검색
+      if (ytState.results.length > 0) {
+        ytSortAndRerender();
+      } else if (ytState.query) {
+        ytSearch(false);
+      }
+    }
+
+    // 필터 전체 초기화
+    function ytResetFilters() {
+      ytState.filters = { country: 'kr', subs: '', duration: '', date: '' };
+      // 모든 드롭다운 버튼 초기 상태로
+      const defaults = { country: '한국', subs: '구독자', duration: '길이', date: '기간' };
+      const icons = { country: '🌏', subs: '👥', duration: '⏱', date: '📅' };
+      Object.keys(defaults).forEach(key => {
+        const dd = document.querySelector(`.yt-filter-dropdown[data-filter="${key}"]`);
+        if (dd) {
+          const btn = dd.querySelector('.yt-filter-btn');
+          btn.innerHTML = `${icons[key]} ${defaults[key]} <span class="arrow">▾</span>`;
+          btn.classList.remove('active');
+          // country는 기본이 'kr'이므로 active 표시 안 함
+          dd.querySelectorAll('.yt-filter-opt').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.value === (key === 'country' ? 'kr' : ''));
+          });
+        }
+      });
+      ytUpdateFilterResetBtn();
+      if (ytState.results.length > 0) ytSortAndRerender();
+    }
+
+    // 초기화 버튼 표시 여부
+    function ytUpdateFilterResetBtn() {
+      const f = ytState.filters;
+      const hasFilter = f.country !== 'kr' || f.subs || f.duration || f.date;
+      const resetBtn = document.getElementById('ytFilterReset');
+      if (resetBtn) resetBtn.style.display = hasFilter ? '' : 'none';
+    }
+
+    // ─── 클라이언트 측 필터 적용 — results 배열에서 조건에 맞는 것만 반환 ───
+    function ytApplyFilters(items) {
+      const f = ytState.filters;
+      return items.filter(item => {
+        // 국가 필터 — 'kr'이면 한국어 콘텐츠만, ''면 전체
+        if (f.country === 'kr' && !ytIsKorean(item)) return false;
+
+        // 구독자수 필터 — subscriberCount가 있을 때만 적용
+        if (f.subs && item.subscriberCount != null) {
+          const sc = item.subscriberCount;
+          if (f.subs === '10000' && sc > 10000) return false;
+          if (f.subs === '10000-50000' && (sc < 10000 || sc > 50000)) return false;
+          if (f.subs === '100000' && sc < 100000) return false;
+          if (f.subs === '500000' && sc < 500000) return false;
+          if (f.subs === '1000000' && sc < 1000000) return false;
+        }
+
+        // 길이 필터 — durationSec가 있을 때만 적용
+        if (f.duration && item.durationSec > 0) {
+          const sec = item.durationSec;
+          if (f.duration === 'short' && sec >= 180) return false;
+          if (f.duration === 'medium' && (sec < 180 || sec > 1200)) return false;
+          if (f.duration === 'long' && sec <= 1200) return false;
+        }
+
+        // 업로드 날짜 필터 — dateNum(타임스탬프)이 있을 때만 적용
+        if (f.date && item.dateNum > 0) {
+          const now = Date.now();
+          const cutoffs = {
+            today: 86400000,         // 24시간
+            '3days': 259200000,      // 3일
+            week: 604800000,         // 7일
+            month: 2592000000,       // 30일
+            year: 31536000000,       // 365일
+          };
+          const cutoff = cutoffs[f.date];
+          if (cutoff && (now - item.dateNum) > cutoff) return false;
+        }
+
+        return true;
+      });
     }
 
     // ─── 인라인 플레이어 닫기 ───
