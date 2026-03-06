@@ -9671,9 +9671,10 @@
 
           if (!data.items) continue;
 
-          // 통계 데이터를 검색 결과에 병합
+          // 통계 + 정확한 날짜 데이터를 검색 결과에 병합
           data.items.forEach(v => {
             const stats = v.statistics || {};
+            const snippet = v.snippet || {};
             const matchItem = items.find(item =>
               item.sourceUrl && item.sourceUrl.includes(v.id)
             );
@@ -9683,6 +9684,12 @@
               matchItem.viewsRaw = ytFormatViewCount(viewCount);
               matchItem.likeCount = parseInt(stats.likeCount || '0', 10);
               matchItem.commentCount = parseInt(stats.commentCount || '0', 10);
+              // 정확한 업로드 날짜로 교체 (Serper 상대 날짜 → API 절대 날짜)
+              if (snippet.publishedAt) {
+                const publishedAt = new Date(snippet.publishedAt).getTime();
+                matchItem.dateNum = publishedAt;
+                matchItem.date = ytFormatRelativeDate(publishedAt);
+              }
               // 재생시간으로 쇼츠 판별 보강
               const duration = v.contentDetails?.duration || '';
               const totalSec = ytParseDurationISO(duration);
