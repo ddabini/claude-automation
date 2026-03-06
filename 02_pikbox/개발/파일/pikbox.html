@@ -7108,7 +7108,7 @@
       const activeContentTypes = runState.contentTypes.map(ctId => CONTENT_TYPES.find(ct => ct.id === ctId)?.label).filter(Boolean);
 
       // 활성화된 플랫폼 필터 목록 (토글 표시용)
-      const platformFilterTargets = ['instagram', 'meta_ads', 'pinterest'];
+      const platformFilterTargets = ['instagram', 'meta_ads', 'google_ads', 'pinterest'];
 
       body.innerHTML = `
         <!-- 상단 고정 액션 바 — 다시검색 / 닫기 / 선택 저장 -->
