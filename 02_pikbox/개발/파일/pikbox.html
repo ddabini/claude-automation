@@ -14989,10 +14989,20 @@ ${metaText}
       var fwSel = document.getElementById('drEditPropFW');
       if (fwSel) {
         var curWeight = cs.fontWeight || '400';
-        // 브라우저가 "normal"/"bold"로 반환할 수 있음
         if (curWeight === 'normal') curWeight = '400';
         if (curWeight === 'bold') curWeight = '700';
         fwSel.value = curWeight;
+      }
+
+      // 현재 색상을 컬러픽커에 반영
+      var colorEl = document.getElementById('drEditPropColor');
+      var bgEl = document.getElementById('drEditPropBg');
+      if (colorEl) {
+        colorEl.value = drRgbToHex(cs.color) || '#333333';
+      }
+      if (bgEl) {
+        var bgc = cs.backgroundColor;
+        bgEl.value = (bgc === 'rgba(0, 0, 0, 0)' || bgc === 'transparent') ? '#ffffff' : (drRgbToHex(bgc) || '#ffffff');
       }
 
       // 텍스트 편집 영역
