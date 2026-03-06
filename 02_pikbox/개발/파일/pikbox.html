@@ -6560,7 +6560,7 @@
     async function doSearch(body, isFirstSearch) {
       const statusEl = document.getElementById('runStatus');
       const hasSerper = !!config.serperKey;
-      const hasCloudFunctions = !!(config.instagramFnUrl || config.metaAdsFnUrl || config.pinterestFnUrl);
+      const hasCloudFunctions = !!(config.instagramFnUrl || config.metaAdsFnUrl || config.googleAdsFnUrl || config.pinterestFnUrl);
 
       // Cloud Function도 Serper 키도 없으면 검색 불가
       if (!hasSerper && !hasCloudFunctions) {
