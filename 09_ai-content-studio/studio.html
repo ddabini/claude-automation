@@ -779,9 +779,17 @@ body {
       <input type="text" id="sceneOutfit" placeholder="예: 크림색 니트 스웨터, 베이지 슬랙스">
     </div>
 
-    <!-- 배경 -->
+    <!-- 배경 (프리셋 선택 또는 직접 입력) -->
     <div class="form-group">
       <label>배경 / 장소</label>
+      <select id="envPreset" onchange="applyEnvPreset()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:8px;background:var(--surface);">
+        <option value="">직접 입력</option>
+        <option value="home">빡곰의 집 (아파트 거실+주방)</option>
+        <option value="subway">지하철 (서울 2호선)</option>
+        <option value="cvs">편의점 (CU 스타일)</option>
+        <option value="office">회사 사무실 (스타트업)</option>
+        <option value="gym">헬스장 (피트니스 센터)</option>
+      </select>
       <input type="text" id="sceneBackground" placeholder="예: 미니멀한 카페, 큰 창문, 나무 테이블">
     </div>
 
