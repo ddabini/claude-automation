@@ -14813,7 +14813,15 @@ ${metaText}
     function drToggleSaveMenu(e) {
       e.stopPropagation();
       var menu = document.getElementById('drSaveMenu');
-      if (menu) menu.classList.toggle('show');
+      if (!menu) return;
+      var isOpen = menu.classList.toggle('show');
+      if (isOpen) {
+        // 버튼 위치 기준으로 메뉴를 바로 위에 배치
+        var btn = e.currentTarget;
+        var rect = btn.getBoundingClientRect();
+        menu.style.left = rect.left + 'px';
+        menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+      }
     }
     function drSaveMenuPick(action) {
       var menu = document.getElementById('drSaveMenu');
