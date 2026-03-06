@@ -14582,6 +14582,53 @@ ${metaText}
         drEditState.hasChanges = true;
         return;
       }
+      // Ctrl+C — 선택한 요소 복사 (클립보드에 저장)
+      if (ctrl && e.key === 'c' && drEditState.selectedElement) {
+        e.preventDefault();
+        var el = drEditState.selectedElement;
+        el.classList.remove('pkb-sel'); // 선택 표시 제거 후 복사
+        drEditState.clipboard = el.outerHTML;
+        el.classList.add('pkb-sel');
+        toast('요소를 복사했습니다', 'success');
+        return;
+      }
+      // Ctrl+V — 복사한 요소 붙여넣기
+      if (ctrl && e.key === 'v' && drEditState.clipboard) {
+        e.preventDefault();
+        var iDoc = drEditState.iframeDoc;
+        if (!iDoc || !iDoc.body) return;
+        drEditPushUndo();
+        // 임시 컨테이너에 HTML을 넣고 첫 번째 자식을 추출
+        var tmp = iDoc.createElement('div');
+        tmp.innerHTML = drEditState.clipboard;
+        var pasted = tmp.firstElementChild;
+        if (!pasted) return;
+        // 붙여넣기 위치를 살짝 이동 (원본과 겹치지 않도록)
+        var curLeft = parseInt(pasted.style.left) || 0;
+        var curTop = parseInt(pasted.style.top) || 0;
+        pasted.style.left = (curLeft + 20) + 'px';
+        pasted.style.top = (curTop + 20) + 'px';
+        pasted.classList.remove('pkb-sel');
+        iDoc.body.appendChild(pasted);
+        drEditSelectElement(pasted);
+        drEditState.hasChanges = true;
+        toast('붙여넣기 완료', 'success');
+        return;
+      }
+      // Ctrl+X — 선택한 요소 잘라내기 (복사 + 삭제)
+      if (ctrl && e.key === 'x' && drEditState.selectedElement) {
+        e.preventDefault();
+        var el = drEditState.selectedElement;
+        el.classList.remove('pkb-sel');
+        drEditState.clipboard = el.outerHTML;
+        el.classList.add('pkb-sel');
+        drEditPushUndo();
+        drEditState.selectedElement.remove();
+        drEditDeselectAll();
+        drEditState.hasChanges = true;
+        toast('요소를 잘라냈습니다', 'success');
+        return;
+      }
       // Ctrl+D — 선택한 요소 복제
       if (ctrl && e.key === 'd' && drEditState.selectedElement) {
         e.preventDefault();
