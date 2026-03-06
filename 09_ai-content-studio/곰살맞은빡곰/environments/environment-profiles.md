@@ -152,37 +152,194 @@ clean modern gym atmosphere
 
 ---
 
-## 사용 예시: 캐릭터 + 환경 조합
+## 구역별 축약 프롬프트 (Zone Prompts)
 
-### 집에서 라면 먹는 빡곰
+실제 콘텐츠에서는 공간 전체가 아니라 특정 구역만 보입니다.
+아래 축약 프롬프트를 쓰면 **같은 공간의 다른 앵글**로 자연스럽게 연결됩니다.
+
+> **핵심 원칙**: 벽 색(cream-white) + 바닥재(oak hardwood) + 조명 톤(warm)만 매번 동일하면 어떤 앵글이든 같은 집으로 인식됨
+
+---
+
+### ENV-01 집: 구역별
+
+**소파 구역** (TV 보기, 쉬기, 치맥)
+```
+on a compact light gray fabric sofa,
+cream-white walls, oak hardwood floor,
+wall-mounted TV visible in front, small low oak coffee table,
+warm evening ambient lighting from floor lamp
+```
+
+**식탁 구역** (밥 먹기, 배달음식, 혼술)
+```
+at a small round oak dining table,
+cream-white walls, oak hardwood floor,
+small kitchen with white upper cabinets and wood-tone lower cabinets visible behind,
+warm pendant lamp hanging directly above the table
+```
+
+**주방 구역** (요리, 라면 끓이기)
+```
+standing in a small Korean apartment kitchen,
+white upper cabinets, wood-tone lower cabinets, white tile backsplash,
+gas stove with a pot, basic cooking utensils hanging on wall,
+cream-white walls, oak hardwood floor,
+warm overhead kitchen lighting
+```
+
+**현관 구역** (배달 수령, 외출/귀가)
+```
+standing at the entrance of a small Korean apartment,
+shoe rack by the door, delivery bag in hand,
+cream-white walls, oak hardwood floor visible behind,
+warm indoor lighting spilling into the dim entryway
+```
+
+---
+
+### ENV-02 지하철: 구역별
+
+**서있기** (출퇴근, 붐비는 상황)
+```
+standing in a crowded Seoul subway car,
+silver grab poles, overhead triangle handles,
+commuters in dark winter coats packed around,
+fluorescent tube lighting with slight warm tint
+```
+
+**앉아있기** (자리 잡은 상황, 졸기)
+```
+sitting on a blue plastic subway seat,
+stainless steel interior walls, silver grab poles,
+other passengers standing nearby,
+fluorescent subway lighting, LED route display above doors
+```
+
+**지하철역 플랫폼** (기다리기, 뛰어가기)
+```
+on a Seoul subway station platform,
+yellow safety line on floor, train arriving,
+overhead digital departure board with Korean text,
+bright fluorescent station lighting, tiled walls
+```
+
+---
+
+### ENV-03 편의점: 구역별
+
+**진열대 앞** (간식 고르기, 라면 고르기)
+```
+standing in front of colorful snack shelves in a Korean convenience store,
+bright white fluorescent ceiling lights, white tile floor,
+rows of Korean packaged snacks and ramen cups,
+bright commercial lighting
+```
+
+**즉석식품 코너** (떡볶이, 어묵, 핫바)
+```
+standing at the heated food counter in a Korean convenience store,
+steaming tteokbokki and fish cake skewers in display warmers,
+bright fluorescent lighting, white tile floor
+```
+
+**창가 바 카운터** (먹기, 혼밥)
+```
+sitting at a narrow eating counter by the window in a Korean convenience store,
+on a tall bar stool, cup ramen and triangular kimbap on counter,
+neon store signs visible through the window outside,
+bright fluorescent interior lighting
+```
+
+---
+
+### ENV-04 사무실: 구역별
+
+**내 자리** (일하기, 지치기, 모니터 보기)
+```
+sitting at a white office desk with dual monitors,
+gray ergonomic chair, coffee mug and keyboard on desk,
+light gray walls, light wood laminate floor,
+overhead panel LED lighting, potted plant nearby
+```
+
+**회의실** (미팅, 발표)
+```
+sitting at a large oak meeting table in a glass-walled meeting room,
+whiteboard with colorful sticky notes on wall,
+light gray walls, overhead LED panel lighting,
+city skyline visible through large windows
+```
+
+**커피 스테이션** (휴식, 수다)
+```
+standing by the office coffee machine and water cooler,
+holding a paper cup, light gray walls, light wood floor,
+potted plants nearby, clean bright office lighting
+```
+
+---
+
+### ENV-05 헬스장: 구역별
+
+**프리웨이트 구역** (덤벨, 벤치프레스)
+```
+in front of the mirror at the free weight area,
+dark charcoal rubber flooring, full wall mirror reflecting,
+black metal dumbbell rack with dumbbells nearby,
+cool white LED strip ceiling lighting
+```
+
+**유산소 구역** (러닝머신, 걷기)
+```
+on a treadmill by large windows with city view,
+dark charcoal rubber flooring,
+row of treadmills lined up,
+cool white LED ceiling lighting, modern gym interior
+```
+
+**스트레칭/매트 구역** (스트레칭, 쉬기)
+```
+sitting on a yoga mat on dark charcoal rubber gym flooring,
+full wall mirror visible, light gray walls,
+cool white LED strip lighting,
+water bottle and towel beside
+```
+
+---
+
+## 사용 예시: 캐릭터 + 구역 축약 조합
+
+### 집 식탁에서 마라샹궈 먹는 빡곰
 ```
 [빡곰 Core Description]
-sitting at a low rectangular oak coffee table,
-eagerly eating instant ramen from a pot with chopsticks,
-[ENV-01 Home prompt],
-warm cozy evening ambient lighting,
+at a small round oak dining table,
+eagerly eating from a steaming pot of malatang with chopsticks,
+cream-white walls, oak hardwood floor,
+small kitchen with white upper cabinets and wood-tone lower cabinets visible behind,
+warm pendant lamp hanging directly above the table,
 medium shot, slightly high angle, 35mm lens,
 photorealistic, lifestyle photography, highly detailed.
 ```
 
-### 사무실에서 일하는 빡곰
+### 편의점 창가에서 컵라면 먹는 빡곰
 ```
 [빡곰 Core Description]
-sitting in a gray ergonomic office chair at a white desk,
-staring at a dual monitor with a tired expression, one paw on mouse,
-[ENV-04 Office prompt],
-clean bright office lighting,
+sitting at a narrow eating counter by the window in a Korean convenience store,
+on a tall bar stool, slurping cup ramen with chopsticks,
+neon store signs visible through the window outside,
+bright fluorescent interior lighting,
 medium shot, eye level, 50mm lens,
-photorealistic, corporate photography, highly detailed.
+photorealistic, street photography style, highly detailed.
 ```
 
-### 헬스장에서 운동하는 빡곰
+### 사무실 자리에서 야근하는 빡곰
 ```
 [빡곰 Core Description]
-standing in front of the mirror, lifting a small dumbbell with one paw,
-looking at its own reflection with a determined expression,
-[ENV-05 Gym prompt],
-cool white LED lighting with mirror reflections,
-medium full body shot, 35mm lens, eye level,
-photorealistic, fitness photography, highly detailed.
+sitting at a white office desk with dual monitors,
+one paw on mouse, head drooping with sleepy half-closed eyes,
+empty coffee cups scattered on desk,
+light gray walls, light wood floor, overhead panel LED lighting,
+medium shot, eye level, 50mm lens,
+photorealistic, corporate photography, highly detailed.
 ```
