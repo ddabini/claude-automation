@@ -14517,6 +14517,8 @@ ${metaText}
 
     function drEditRedo() {
       if (drEditState.redoStack.length === 0) { toast('다시 실행할 내용이 없습니다', 'info'); return; }
+      // iframe 로딩 중이면 무시
+      if (drEditState._loading) return;
       // 현재 상태를 undo에 저장
       var iDoc = drEditState.iframeDoc;
       if (iDoc) {
@@ -14535,7 +14537,7 @@ ${metaText}
       var snap = drEditState.redoStack.pop();
       drEditState.editedHtml = snap;
       drEditState.selectedElement = null;
-      drEditState.iframeDoc = null;
+      drEditState._loading = true;
       drEditUpdatePreview();
     }
 
