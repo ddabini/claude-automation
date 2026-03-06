@@ -14395,6 +14395,8 @@ ${metaText}
       drEditState.textElements = [];
       drEditState.undoStack = [];
       drEditState.redoStack = [];
+      drEditState._loading = false;
+      // clipboard는 유지 — 다른 디자인에도 붙여넣기 가능
       if (drEditState.blobUrl) { URL.revokeObjectURL(drEditState.blobUrl); drEditState.blobUrl = null; }
       var panel = document.getElementById('drEditPanel');
       if (panel && !panel.classList.contains('hidden')) {
