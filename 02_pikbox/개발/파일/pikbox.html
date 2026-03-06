@@ -6829,6 +6829,42 @@
       }
     }
 
+    // ─── Google Ads Transparency Center 크롤링 — Cloud Function으로 광고 소재 수집 ───
+    // adstransparency.google.com에서 한국 대상 활성 광고의 크리에이티브를 크롤링
+    async function searchGoogleAdsNative(query, limit = 30) {
+      if (!config.googleAdsFnUrl) return [];
+
+      try {
+        const url = `${config.googleAdsFnUrl}?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(60000) }); // 60초 타임아웃
+
+        if (!res.ok) {
+          console.warn('Google Ads Cloud Function 에러:', res.status);
+          return [];
+        }
+
+        const data = await res.json();
+        if (!data.ads || data.ads.length === 0) return [];
+
+        // Cloud Function 결과를 Pikbox 내부 형식으로 변환
+        return data.ads.map(ad => ({
+          title: ad.advertiser || ad.title || '',
+          imageUrl: ad.imageUrl || '',
+          normalizedUrl: normalizeImageUrl(ad.imageUrl || ''),
+          thumbUrl: ad.thumbUrl || ad.imageUrl || '',
+          sourceUrl: ad.adUrl || 'https://adstransparency.google.com/?region=KR',
+          platform: 'google_ads',
+          width: ad.width || 300,
+          height: ad.height || 250,
+          color: '#4285F4', // Google 브랜드 컬러
+          source: data.cached ? 'google_ads_cached' : 'google_ads_native'
+        }));
+      } catch (err) {
+        console.warn('Google Ads 크롤링 실패:', err.message);
+        return [];
+      }
+    }
+
     async function searchPinterestNative(query, limit = 25) {
       if (!config.pinterestFnUrl) return null; // Cloud Function 미설정 시 스킵
 
