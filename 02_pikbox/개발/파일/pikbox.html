@@ -9811,13 +9811,31 @@
             ytSortAndRerender();
 
         } else {
-          // ─── Serper 기반 영상/쇼츠 검색 (메인 엔진) ───
+          // ─── 하이브리드 검색: Serper + YouTube Data API 병렬 ───
+          // Serper: 빠르고 저렴 (메인) / YouTube API: 네이티브 필터링 + 더 많은 결과 (보조)
           const chipExtra = YT_CHIP_QUERIES[chip] || '';
           const fullQuery = chipExtra ? `${query} ${chipExtra}` : query;
 
-          const promises = [];
-          // 필터가 활성화되어 있으면 더 많은 결과가 필요 (필터링 후 남는 수 확보)
-          const hasActiveFilter = ytState.filters.subs || ytState.filters.duration || ytState.filters.date;
+          // ── 필터 상태를 YouTube API 파라미터로 매핑 ──
+          const f = ytState.filters;
+          const hasActiveFilter = f.subs || f.duration || f.date;
+
+          // YouTube API 정렬: recommend→relevance, newest→date, views→viewCount
+          const ytApiOrderMap = { recommend: 'relevance', newest: 'date', views: 'viewCount' };
+          const ytApiOrder = ytApiOrderMap[ytState.sort] || 'relevance';
+          // YouTube API 길이: short(4분이하), medium(4~20분), long(20분이상)
+          const ytApiDuration = f.duration || '';
+          // YouTube API 날짜 → publishedAfter ISO 문자열
+          let ytApiPublishedAfter = '';
+          if (f.date) {
+            const cutoffMs = { today: 86400000, '3days': 259200000, week: 604800000,
+              month: 2592000000, year: 31536000000 }[f.date];
+            if (cutoffMs) ytApiPublishedAfter = new Date(Date.now() - cutoffMs).toISOString();
+          }
+          // YouTube API 국가
+          const ytApiRegion = f.country === 'kr' ? 'KR' : '';
+
+          const serperPromises = [];
           if (!appendMode) {
             // 첫 검색: 쿼리 변형 병렬 호출 (채널명/키워드 모두 대응)
             promises.push(searchSerperVideos(fullQuery, 1));
