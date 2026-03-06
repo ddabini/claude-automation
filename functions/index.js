@@ -667,11 +667,13 @@ exports.searchGoogleAds = functions
       // ── 2단계: SearchCreatives — 각 광고주의 크리에이티브 조회 ──
       const allAds = [];
       const seenImages = new Set();
-      const creativesPerAdvertiser = Math.ceil(limit / advertisers.length);
+      // 광고주별 크리에이티브 수 — 넉넉하게 가져와서 이미지 추출 실패분 보충
+      const creativesPerAdvertiser = Math.min(Math.ceil((limit * 2) / advertisers.length), 40);
 
       for (const advertiser of advertisers) {
+        if (allAds.length >= limit) break;  // 이미 충분하면 중단
         const creativesBody = JSON.stringify({
-          "2": Math.min(creativesPerAdvertiser + 5, 40),
+          "2": creativesPerAdvertiser,
           "3": {
             "8": [2410],          // 한국 지역
             "12": { "1": "", "2": true },
