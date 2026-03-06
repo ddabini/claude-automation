@@ -61,27 +61,32 @@
 
 ```
 A photorealistic baby polar bear cub with round flat face,
-large glossy dark brown-black round eyes set wide apart,
+proportionally sized glossy dark brown-black round eyes set wide apart,
 small oval black wet nose, tiny rounded clean white fur ears on top of head,
 dense fluffy cream-white fur with slightly warm tone all over body,
 chubby compact body with short thick limbs,
 large head-to-body ratio (approximately 1:2),
 barely visible tiny round tail.
 Realistic fur texture, soft and fluffy appearance,
-no markings or patterns on face or ears.
+clean unblemished fur with no markings, scars, wounds, or patterns anywhere.
+No accessories, no jewelry, no necklaces, no bracelets unless explicitly specified in the scene.
 ```
 
-> **주의**: 프롬프트에 "pink-brown paw pads" 넣으면 귀에 패드 텍스처가 번짐.
-> 발바닥 패드는 전신/발 클로즈업 장면에서만 언급할 것.
+> **주의사항 (테스트에서 발견된 문제)**:
+> - "pink-brown paw pads" 넣으면 귀에 패드 텍스처 번짐 → 전신/발 클로즈업에서만 언급
+> - 악세서리/장신구가 자동 생성됨 → 반드시 "no accessories, no jewelry" 명시
+> - 눈이 과하게 커짐 → "proportionally sized" 추가 (anime-style 방지)
+> - 이마/몸에 상처 자국 생김 → "clean unblemished fur, no scars, no wounds" 명시
 
 ### Consistency Enforcement (일관성 강제 문구)
 
 ```
-Maintain exact same facial features: round flat face, large glossy
-dark eyes set wide apart, small black oval nose, tiny rounded ears.
+Maintain exact same facial features: round flat face, proportionally sized
+glossy dark eyes set wide apart, small black oval nose, tiny rounded ears.
 Keep same body proportions: chubby compact body, short thick limbs,
 large head relative to body. Same dense cream-white fluffy fur texture.
 Do not alter the character's identity. Same bear, consistent appearance.
+No scars, no wounds, no marks on fur. No jewelry or accessories unless specified.
 ```
 
 ### Turnaround Sheet Prompt (턴어라운드 시트)
