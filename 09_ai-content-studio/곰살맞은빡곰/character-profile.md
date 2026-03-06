@@ -62,13 +62,17 @@
 ```
 A photorealistic baby polar bear cub with round flat face,
 large glossy dark brown-black round eyes set wide apart,
-small oval black wet nose, tiny rounded ears on top of head,
-dense fluffy cream-white fur with slightly warm tone,
+small oval black wet nose, tiny rounded clean white fur ears on top of head,
+dense fluffy cream-white fur with slightly warm tone all over body,
 chubby compact body with short thick limbs,
 large head-to-body ratio (approximately 1:2),
-pink-brown paw pads, barely visible tiny round tail.
-Realistic fur texture, soft and fluffy appearance.
+barely visible tiny round tail.
+Realistic fur texture, soft and fluffy appearance,
+no markings or patterns on face or ears.
 ```
+
+> **주의**: 프롬프트에 "pink-brown paw pads" 넣으면 귀에 패드 텍스처가 번짐.
+> 발바닥 패드는 전신/발 클로즈업 장면에서만 언급할 것.
 
 ### Consistency Enforcement (일관성 강제 문구)
 
