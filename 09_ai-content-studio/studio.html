@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Content Studio - 프롬프트 생성 + 제작 도구</title>
+
+<!-- 구글 폰트: Pretendard -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+/* ──────────────────────────────────────────
+   전체 레이아웃과 기본 스타일
+   ────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --border: #e5e5e7;
+  --text: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --primary-hover: #1d4ed8;
+  --accent-green: #059669;
+  --accent-orange: #d97706;
+  --accent-purple: #7c3aed;
+  --accent-pink: #db2777;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: 'Pretendard Variable', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ──────────────────────────────────────────
+   상단 헤더
+   ────────────────────────────────────────── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-badge {
+  font-size: 11px;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────
+   탭 네비게이션
+   ────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────
+   메인 콘텐츠 영역
+   ────────────────────────────────────────── */
+.main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ──────────────────────────────────────────
+   카드 컴포넌트
+   ────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title .icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* ──────────────────────────────────────────
+   폼 요소
+   ────────────────────────────────────────── */
+.form-group { margin-bottom: 16px; }
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--surface);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+/* 2열 레이아웃 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+/* ──────────────────────────────────────────
+   버튼
+   ────────────────────────────────────────── */
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+
+.btn-green { background: var(--accent-green); color: white; }
+.btn-green:hover { opacity: 0.9; }
+
+.btn-purple { background: var(--accent-purple); color: white; }
+.btn-purple:hover { opacity: 0.9; }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ──────────────────────────────────────────
+   프롬프트 출력 영역
+   ────────────────────────────────────────── */
+.prompt-output {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  position: relative;
+  min-height: 100px;
+  margin-top: 12px;
+}
+
+.prompt-output .copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #ccc;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.prompt-output .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.char-count.warn { color: var(--accent-orange); font-weight: 600; }
+.char-count.over { color: var(--accent-pink); font-weight: 700; }
+
+/* ──────────────────────────────────────────
+   옵션 칩 (선택 버튼)
+   ────────────────────────────────────────── */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.chip:hover { border-color: var(--primary); color: var(--primary); }
+
+.chip.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* ──────────────────────────────────────────
+   프로필 카드 (저장된 캐릭터)
+   ────────────────────────────────────────── */
+.profile-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.profile-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.profile-card:hover { border-color: var(--primary); box-shadow: var(--shadow-lg); }
+
+.profile-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.profile-card .name {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.profile-card .desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-card .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.profile-card .delete-btn:hover { color: var(--accent-pink); background: #fef2f2; }
+
+/* ──────────────────────────────────────────
+   워크플로우 시각화
+   ────────────────────────────────────────── */
+.workflow-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  overflow-x: auto;
+}
+
+.workflow-step {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.workflow-step.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.workflow-step.done {
+  background: #ecfdf5;
+  color: var(--accent-green);
+  border-color: #a7f3d0;
+}
+
+.workflow-arrow {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* ──────────────────────────────────────────
+   API 설정 영역
+   ────────────────────────────────────────── */
+.api-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.api-status.connected { background: #ecfdf5; color: var(--accent-green); }
+.api-status.disconnected { background: #fef2f2; color: var(--accent-pink); }
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.green { background: var(--accent-green); }
+.dot.red { background: var(--accent-pink); }
+
+/* ──────────────────────────────────────────
+   이미지 미리보기
+   ────────────────────────────────────────── */
+.preview-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-area img {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+}
+
+.preview-area.has-image {
+  border-style: solid;
+  border-color: var(--primary);
+  padding: 12px;
+}
+
+/* ──────────────────────────────────────────
+   로딩 스피너
+   ────────────────────────────────────────── */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ──────────────────────────────────────────
+   반응형
+   ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  .header { padding: 12px 16px; }
+  .tabs { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ──────────────────────────────────────────
+     상단 헤더
+     ────────────────────────────────────────── -->
+<div class="header">
+  <h1>AI Content Studio <span class="header-badge">v1.0</span></h1>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <!-- 나노바나나 API 상태 -->
+    <span class="api-status disconnected" id="nanoBananaStatus">
+      <span class="dot red"></span> Nano Banana
+    </span>
+    <!-- 하이루오 API 상태 -->
+    <span class="api-status disconnected" id="hailuoStatus">
+      <span class="dot red"></span> Hailuo
+    </span>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────
+     탭 네비게이션
+     ────────────────────────────────────────── -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="character">1. 캐릭터 프로필</button>
+  <button class="tab-btn" data-tab="image">2. 이미지 프롬프트</button>
+  <button class="tab-btn" data-tab="video">3. 영상 프롬프트</button>
+  <button class="tab-btn" data-tab="generate">4. 생성</button>
+  <button class="tab-btn" data-tab="settings">API 설정</button>
+</div>
+
+<div class="main">
+
+<!-- ================================================================
+     탭 1: 캐릭터 프로필 관리
+     ================================================================ -->
+<div class="tab-content active" id="tab-character">
+
+  <!-- 워크플로우 시각화 -->
+  <div class="workflow-steps">
+    <div class="workflow-step active">1. 캐릭터 프로필</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">2. 이미지 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">3. 영상 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">4. 생성</div>
+  </div>
+
+  <!-- 저장된 캐릭터 목록 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#eff6ff;color:var(--primary)">P</div>
+      저장된 캐릭터
+    </div>
+    <div class="profile-list" id="profileList">
+      <!-- 캐릭터 카드가 여기에 렌더링 -->
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-secondary btn-sm" onclick="showNewProfileForm()">+ 새 캐릭터 만들기</button>
+    </div>
+  </div>
+
+  <!-- 캐릭터 입력 폼 -->
+  <div class="card" id="profileForm" style="display:none;">
+    <div class="card-title">
+      <div class="icon" style="background:#fef3c7;color:var(--accent-orange)">E</div>
+      캐릭터 프로필 작성
+    </div>
+
+    <!-- 이름 -->
+    <div class="form-group">
+      <label>캐릭터 이름 (관리용)</label>
+      <input type="text" id="charName" placeholder="예: 수아, 민준">
+    </div>
+
+    <!-- 얼굴 -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-purple);">얼굴</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>성별 / 나이대</label>
+        <input type="text" id="charGenderAge" placeholder="예: 여성, 20대 중반">
+      </div>
+      <div class="form-group">
+        <label>인종/국적 인상</label>
+        <input type="text" id="charEthnicity" placeholder="예: Korean">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>얼굴형</label>
+        <input type="text" id="charFaceShape" placeholder="예: 갸름한 계란형">
+      </div>
+      <div class="form-group">
+        <label>피부톤</label>
+        <input type="text" id="charSkinTone" placeholder="예: 밝은 아이보리">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>눈</label>
+        <input type="text" id="charEyes" placeholder="예: 큰 갈색 아몬드형, 쌍꺼풀">
+      </div>
+      <div class="form-group">
+        <label>코</label>
+        <input type="text" id="charNose" placeholder="예: 작고 오뚝한 코">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>입</label>
+        <input type="text" id="charMouth" placeholder="예: 도톰한 입술, 자연 핑크">
+      </div>
+      <div class="form-group">
+        <label>턱/볼</label>
+        <input type="text" id="charJaw" placeholder="예: 갸름한 턱선">
+      </div>
+    </div>
+
+    <!-- 머리카락 -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-purple);">머리카락</div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>길이</label>
+        <input type="text" id="charHairLength" placeholder="예: 어깨 아래 5cm">
+      </div>
+      <div class="form-group">
+        <label>스타일</label>
+        <input type="text" id="charHairStyle" placeholder="예: 자연스러운 웨이브">
+      </div>
+      <div class="form-group">
+        <label>색상</label>
+        <input type="text" id="charHairColor" placeholder="예: 다크 브라운">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>앞머리</label>
+      <input type="text" id="charBangs" placeholder="예: 시스루 뱅 / 없음">
+    </div>
+
+    <!-- 체형/비율 -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-purple);">체형 / 비율</div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>키 인상</label>
+        <input type="text" id="charHeight" placeholder="예: 165cm 느낌">
+      </div>
+      <div class="form-group">
+        <label>체형</label>
+        <input type="text" id="charBuild" placeholder="예: 슬림, 자연스러운">
+      </div>
+      <div class="form-group">
+        <label>등신 비율</label>
+        <input type="text" id="charProportion" placeholder="예: 7.5등신">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>어깨</label>
+        <input type="text" id="charShoulders" placeholder="예: 좁은 어깨">
+      </div>
+      <div class="form-group">
+        <label>팔다리</label>
+        <input type="text" id="charLimbs" placeholder="예: 길고 가는 편">
+      </div>
+    </div>
+
+    <!-- 기본 의상 -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-purple);">기본 의상</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>상의</label>
+        <input type="text" id="charTop" placeholder="예: 크림색 리넨 셔츠">
+      </div>
+      <div class="form-group">
+        <label>하의</label>
+        <input type="text" id="charBottom" placeholder="예: 와이드 데님 팬츠">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>신발</label>
+        <input type="text" id="charShoes" placeholder="예: 흰 스니커즈">
+      </div>
+      <div class="form-group">
+        <label>악세서리</label>
+        <input type="text" id="charAccessory" placeholder="예: 작은 골드 귀걸이">
+      </div>
+    </div>
+
+    <!-- 분위기 -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-purple);">분위기 / 인상</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>전체 느낌</label>
+        <input type="text" id="charVibe" placeholder="예: 차분하고 지적인, 따뜻한">
+      </div>
+      <div class="form-group">
+        <label>기본 표정</label>
+        <input type="text" id="charExpression" placeholder="예: 살짝 미소 띤 중립">
+      </div>
+    </div>
+
+    <!-- 저장 버튼 -->
+    <div class="btn-group" style="margin-top:16px;">
+      <button class="btn btn-primary" onclick="saveProfile()">저장</button>
+      <button class="btn btn-secondary" onclick="hideProfileForm()">취소</button>
+    </div>
+  </div>
+
+  <!-- 영어 프로필 미리보기 -->
+  <div class="card" id="profilePreviewCard" style="display:none;">
+    <div class="card-title">
+      <div class="icon" style="background:#ecfdf5;color:var(--accent-green)">EN</div>
+      영어 프로필 (자동 변환)
+    </div>
+    <div class="prompt-output" id="profileEnglish">
+      <button class="copy-btn" onclick="copyText('profileEnglish')">복사</button>
+    </div>
+  </div>
+
+  <!-- 턴어라운드 시트 프롬프트 -->
+  <div class="card" id="turnaroundCard" style="display:none;">
+    <div class="card-title">
+      <div class="icon" style="background:#f3e8ff;color:var(--accent-purple)">T</div>
+      턴어라운드 시트 프롬프트 (캐릭터 일관성 확보용)
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">
+      이 프롬프트를 나노바나나에 넣으면 정면/측면/후면 캐릭터 시트가 생성됩니다. 이후 모든 이미지의 레퍼런스로 사용하세요.
+    </p>
+    <div class="prompt-output" id="turnaroundPrompt">
+      <button class="copy-btn" onclick="copyText('turnaroundPrompt')">복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     탭 2: 이미지 프롬프트 생성
+     ================================================================ -->
+<div class="tab-content" id="tab-image">
+
+  <div class="workflow-steps">
+    <div class="workflow-step done">1. 캐릭터 프로필</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step active">2. 이미지 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">3. 영상 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">4. 생성</div>
+  </div>
+
+  <!-- 현재 선택된 캐릭터 표시 -->
+  <div class="card" id="selectedCharCard" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <span style="font-size:12px;color:var(--text-secondary);">선택된 캐릭터:</span>
+        <strong id="selectedCharName" style="margin-left:4px;"></strong>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="switchTab('character')">변경</button>
+    </div>
+  </div>
+
+  <!-- 장면 설정 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#fef3c7;color:var(--accent-orange)">S</div>
+      장면 설정
+    </div>
+
+    <div class="form-group">
+      <label>기획 메모 (한국어로 자유롭게)</label>
+      <textarea id="sceneBrief" rows="3" placeholder="예: 카페에서 커피 마시면서 창밖 보는 장면. 따뜻한 오후 느낌."></textarea>
+    </div>
+
+    <!-- 행동/포즈 -->
+    <div class="form-group">
+      <label>행동 / 포즈</label>
+      <input type="text" id="sceneAction" placeholder="예: 커피 잔을 두 손으로 들고 창밖을 바라봄">
+    </div>
+
+    <!-- 의상 변경 (선택) -->
+    <div class="form-group">
+      <label>의상 변경 (기본 프로필 의상과 다를 경우만)</label>
+      <input type="text" id="sceneOutfit" placeholder="예: 크림색 니트 스웨터, 베이지 슬랙스">
+    </div>
+
+    <!-- 배경 -->
+    <div class="form-group">
+      <label>배경 / 장소</label>
+      <input type="text" id="sceneBackground" placeholder="예: 미니멀한 카페, 큰 창문, 나무 테이블">
+    </div>
+
+    <!-- 조명 (칩 선택) -->
+    <div class="form-group">
+      <label>조명</label>
+      <div class="chip-group" id="lightingChips">
+        <button class="chip" data-value="soft natural window light, warm golden hour tones">따뜻한 자연광</button>
+        <button class="chip" data-value="bright even studio lighting, clean white">깨끗한 스튜디오</button>
+        <button class="chip" data-value="dramatic side lighting with deep shadows, moody">드라마틱</button>
+        <button class="chip" data-value="outdoor daylight, soft diffused sunlight">야외 낮</button>
+        <button class="chip" data-value="neon city lights at night, colorful reflections">야외 밤/네온</button>
+        <button class="chip" data-value="warm ambient indoor lighting, cozy atmosphere">따뜻한 실내</button>
+      </div>
+    </div>
+
+    <!-- 카메라/구도 (칩 선택) -->
+    <div class="form-group">
+      <label>카메라 / 구도</label>
+      <div class="chip-group" id="cameraChips">
+        <button class="chip" data-value="extreme close-up on face, 85mm portrait lens, shallow depth of field">얼굴 클로즈업</button>
+        <button class="chip" data-value="medium close-up from waist up, 50mm lens, eye level">상반신</button>
+        <button class="chip" data-value="full body shot, 35mm lens, slightly low angle">전신</button>
+        <button class="chip" data-value="three-quarter view, 50mm lens, eye level">3/4 앵글</button>
+        <button class="chip" data-value="shot from behind, over-the-shoulder perspective">뒤에서</button>
+        <button class="chip" data-value="high angle overhead shot, bird's eye view">위에서</button>
+      </div>
+    </div>
+
+    <!-- 스타일 (칩 선택) -->
+    <div class="form-group">
+      <label>스타일</label>
+      <div class="chip-group" id="styleChips">
+        <button class="chip selected" data-value="photorealistic, editorial photography style, DSLR quality">사진처럼 사실적</button>
+        <button class="chip" data-value="3D rendered, Pixar-style, smooth shading, vibrant">3D 렌더링</button>
+        <button class="chip" data-value="anime style, cel-shaded, Studio Ghibli inspired">애니메이션</button>
+        <button class="chip" data-value="digital illustration, clean lines, flat color, modern">일러스트</button>
+        <button class="chip" data-value="watercolor painting style, soft edges, paper texture">수채화</button>
+        <button class="chip" data-value="cinematic still frame, film grain, anamorphic">시네마틱</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateImagePrompt()" style="width:100%;justify-content:center;">
+      이미지 프롬프트 생성
+    </button>
+  </div>
+
+  <!-- 생성된 프롬프트 -->
+  <div class="card" id="imagePromptCard" style="display:none;">
+    <div class="card-title">
+      <div class="icon" style="background:#ecfdf5;color:var(--accent-green)">P</div>
+      나노바나나 이미지 프롬프트
+    </div>
+    <div class="prompt-output" id="imagePromptOutput">
+      <button class="copy-btn" onclick="copyText('imagePromptOutput')">복사</button>
+    </div>
+    <div class="char-count" id="imageCharCount"></div>
+    <div class="btn-group" style="margin-top:12px;">
+      <button class="btn btn-green btn-sm" onclick="generateWithNanoBanana()">나노바나나로 생성</button>
+      <button class="btn btn-secondary btn-sm" onclick="convertToVideoPrompt()">영상 프롬프트로 변환 &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     탭 3: 영상 프롬프트 생성
+     ================================================================ -->
+<div class="tab-content" id="tab-video">
+
+  <div class="workflow-steps">
+    <div class="workflow-step done">1. 캐릭터 프로필</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step done">2. 이미지 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step active">3. 영상 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step">4. 생성</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#fce7f3;color:var(--accent-pink)">V</div>
+      영상 장면 설정
+    </div>
+
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+      하이루오 S2V-01 모드: 나노바나나에서 만든 이미지를 Subject Reference로 업로드하면, 캐릭터 외모는 이미지가 담당하므로 프롬프트에는 <strong>행동과 카메라</strong>만 적으면 됩니다.
+    </p>
+
+    <!-- 인물 행동 -->
+    <div class="form-group">
+      <label>인물 행동 (영상에서 뭘 하는지)</label>
+      <textarea id="videoAction" rows="2" placeholder="예: 천천히 커피잔을 들어 한 모금 마신 뒤, 잔을 내려놓고 창밖을 바라보며 미소"></textarea>
+    </div>
+
+    <!-- 환경 변화 -->
+    <div class="form-group">
+      <label>환경 변화 / 효과</label>
+      <input type="text" id="videoEnvironment" placeholder="예: 잔에서 김이 올라오고, 오후 햇빛이 은은하게 변화">
+    </div>
+
+    <!-- 카메라 무브먼트 (칩 선택) -->
+    <div class="form-group">
+      <label>카메라 움직임</label>
+      <div class="chip-group" id="videoCameraChips">
+        <button class="chip" data-value="slow dolly in toward the subject">천천히 다가감</button>
+        <button class="chip" data-value="slow dolly out revealing the environment">천천히 멀어짐</button>
+        <button class="chip" data-value="tracking shot following from the side">옆에서 따라감</button>
+        <button class="chip" data-value="static camera, locked off tripod shot">고정 카메라</button>
+        <button class="chip" data-value="slow orbit around the subject, 360 rotation">빙글 도는</button>
+        <button class="chip" data-value="crane shot descending from above">위에서 내려옴</button>
+        <button class="chip" data-value="POV shot, first-person perspective">1인칭 시점</button>
+        <button class="chip" data-value="slow zoom in on the subject's face">줌인</button>
+      </div>
+    </div>
+
+    <!-- 분위기 (칩 선택) -->
+    <div class="form-group">
+      <label>분위기</label>
+      <div class="chip-group" id="videoMoodChips">
+        <button class="chip" data-value="warm cozy atmosphere, soft lighting, peaceful">따뜻하고 평화로운</button>
+        <button class="chip" data-value="vibrant energetic mood, dynamic motion">활기차고 역동적</button>
+        <button class="chip" data-value="dreamy ethereal atmosphere, soft focus, hazy light">몽환적</button>
+        <button class="chip" data-value="suspenseful tense mood, dramatic shadows">긴장감</button>
+        <button class="chip" data-value="sleek modern aesthetic, clean minimal">세련된</button>
+        <button class="chip" data-value="melancholic emotional mood, muted tones">감성적/슬픈</button>
+      </div>
+    </div>
+
+    <!-- 영상 모드 선택 -->
+    <div class="form-group">
+      <label>생성 모드</label>
+      <div class="chip-group" id="videoModeChips">
+        <button class="chip selected" data-value="s2v" data-group="videoMode">Subject Reference (S2V-01) - 캐릭터 일관성</button>
+        <button class="chip" data-value="i2v" data-group="videoMode">Image to Video (I2V) - 이미지 애니메이션</button>
+        <button class="chip" data-value="t2v" data-group="videoMode">Text to Video (T2V) - 텍스트만</button>
+      </div>
+    </div>
+
+    <button class="btn btn-purple" onclick="generateVideoPrompt()" style="width:100%;justify-content:center;">
+      영상 프롬프트 생성
+    </button>
+  </div>
+
+  <!-- 생성된 영상 프롬프트 -->
+  <div class="card" id="videoPromptCard" style="display:none;">
+    <div class="card-title">
+      <div class="icon" style="background:#fce7f3;color:var(--accent-pink)">H</div>
+      하이루오 영상 프롬프트
+    </div>
+    <div class="prompt-output" id="videoPromptOutput">
+      <button class="copy-btn" onclick="copyText('videoPromptOutput')">복사</button>
+    </div>
+    <div class="char-count" id="videoCharCount"></div>
+    <div class="btn-group" style="margin-top:12px;">
+      <button class="btn btn-purple btn-sm" onclick="generateWithHailuo()">하이루오로 생성</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     탭 4: 생성 (API 연동)
+     ================================================================ -->
+<div class="tab-content" id="tab-generate">
+
+  <div class="workflow-steps">
+    <div class="workflow-step done">1. 캐릭터 프로필</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step done">2. 이미지 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step done">3. 영상 프롬프트</div>
+    <span class="workflow-arrow">&rarr;</span>
+    <div class="workflow-step active">4. 생성</div>
+  </div>
+
+  <!-- 이미지 생성 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#ecfdf5;color:var(--accent-green)">I</div>
+      이미지 생성 (Nano Banana)
+    </div>
+    <div class="form-group">
+      <label>프롬프트</label>
+      <textarea id="genImagePrompt" rows="4" placeholder="이미지 프롬프트 탭에서 생성한 프롬프트가 여기에 자동으로 들어옵니다"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>해상도</label>
+        <select id="genImageRes">
+          <option value="2k">2K ($0.10/장)</option>
+          <option value="4k">4K ($0.15/장)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>매수</label>
+        <select id="genImageCount">
+          <option value="1">1장</option>
+          <option value="2">2장</option>
+          <option value="4">4장</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="generateWithNanoBanana()" id="genImageBtn" style="width:100%;justify-content:center;">
+      이미지 생성
+    </button>
+
+    <!-- 이미지 미리보기 -->
+    <div class="preview-area" id="imagePreview" style="margin-top:16px;">
+      이미지가 여기에 표시됩니다
+    </div>
+  </div>
+
+  <!-- 영상 생성 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#fce7f3;color:var(--accent-pink)">V</div>
+      영상 생성 (Hailuo)
+    </div>
+    <div class="form-group">
+      <label>프롬프트</label>
+      <textarea id="genVideoPrompt" rows="4" placeholder="영상 프롬프트 탭에서 생성한 프롬프트가 여기에 자동으로 들어옵니다"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Subject Reference 이미지 (위에서 생성한 이미지 또는 직접 업로드)</label>
+      <input type="file" id="subjectRefFile" accept="image/*" style="padding:8px;">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>길이</label>
+        <select id="genVideoDuration">
+          <option value="6">6초 ($0.25)</option>
+          <option value="10">10초 ($0.52)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>해상도</label>
+        <select id="genVideoRes">
+          <option value="768p">768p (기본)</option>
+          <option value="1080p">1080p ($0.52/6초)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-purple" onclick="generateWithHailuo()" id="genVideoBtn" style="width:100%;justify-content:center;">
+      영상 생성
+    </button>
+
+    <!-- 영상 미리보기 -->
+    <div class="preview-area" id="videoPreview" style="margin-top:16px;">
+      영상이 여기에 표시됩니다
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     탭 5: API 설정
+     ================================================================ -->
+<div class="tab-content" id="tab-settings">
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#ecfdf5;color:var(--accent-green)">N</div>
+      Nano Banana (Google Gemini API)
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+      Gemini API 키를 입력하면 나노바나나 이미지를 바로 생성할 수 있습니다.<br>
+      <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary);">Google AI Studio에서 API 키 발급</a>
+    </p>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="password" id="geminiApiKey" placeholder="AIza...">
+    </div>
+    <div class="form-group">
+      <label>모델</label>
+      <select id="geminiModel">
+        <option value="gemini-3.1-flash-image-preview">Nano Banana 2 (gemini-3.1-flash) - 추천</option>
+        <option value="gemini-3-pro-image-preview">Nano Banana Pro (gemini-3-pro)</option>
+        <option value="gemini-2.5-flash-preview-image-generation">Nano Banana (gemini-2.5-flash)</option>
+      </select>
+    </div>
+    <button class="btn btn-green btn-sm" onclick="testGeminiConnection()">연결 테스트</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#fce7f3;color:var(--accent-pink)">H</div>
+      Hailuo (MiniMax API)
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+      MiniMax API 키를 입력하면 하이루오 영상을 바로 생성할 수 있습니다.<br>
+      <a href="https://platform.minimax.io/" target="_blank" style="color:var(--primary);">MiniMax Platform에서 API 키 발급</a>
+    </p>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="password" id="minimaxApiKey" placeholder="eyJ...">
+    </div>
+    <div class="form-group">
+      <label>모델</label>
+      <select id="hailuoModel">
+        <option value="S2V-01">S2V-01 (Subject Reference) - 캐릭터 일관성 추천</option>
+        <option value="I2V-01">I2V-01 (Image to Video)</option>
+        <option value="T2V-02">T2V-02 (Text to Video)</option>
+      </select>
+    </div>
+    <button class="btn btn-purple btn-sm" onclick="testMinimaxConnection()">연결 테스트</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:#f3f4f6;color:var(--text-secondary)">S</div>
+      데이터 관리
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-secondary btn-sm" onclick="exportData()">캐릭터 데이터 내보내기 (JSON)</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()">캐릭터 데이터 가져오기</button>
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+    </div>
+  </div>
+</div>
+
+</div><!-- .main 끝 -->
+
+<script>
+/* ================================================================
+   AI Content Studio - 메인 스크립트
+
+   이 파일의 전체 역할:
+   - 캐릭터 프로필을 한국어로 입력받아 영어 프롬프트로 자동 변환
+   - 장면 설정(배경, 조명, 카메라 등)을 조합하여 나노바나나/하이루오 프롬프트 생성
+   - API 연동으로 이미지/영상 직접 생성
+   - 캐릭터 프로필을 로컬 저장소에 보관하여 재사용
+   ================================================================ */
+
+// ──────────────────────────────────────────
+// 상태 관리 (앱의 현재 상태를 담는 변수들)
+// ──────────────────────────────────────────
+const state = {
+  profiles: [],           // 저장된 캐릭터 프로필 목록
+  selectedProfileId: null, // 현재 선택된 캐릭터 ID
+  editingProfileId: null,  // 편집 중인 캐릭터 ID (null이면 새로 만들기)
+  lastImagePrompt: '',     // 마지막으로 생성한 이미지 프롬프트
+  lastVideoPrompt: '',     // 마지막으로 생성한 영상 프롬프트
+};
+
+// ──────────────────────────────────────────
+// 한→영 변환 사전 (자주 쓰는 한국어 표현을 영어로 바꿔주는 표)
+// ──────────────────────────────────────────
+const koToEn = {
+  // 얼굴형
+  '계란형': 'oval', '둥근': 'round', '각진': 'angular', '갸름한': 'slim',
+  '하트형': 'heart-shaped', '긴': 'elongated', '넓은': 'wide',
+  // 피부톤
+  '아이보리': 'ivory', '밝은': 'light', '어두운': 'dark', '건강한': 'healthy',
+  '하얀': 'fair', '구릿빛': 'tan', '황금빛': 'golden',
+  // 눈
+  '큰': 'large', '작은': 'small', '갈색': 'brown', '검은': 'dark',
+  '아몬드형': 'almond-shaped', '쌍꺼풀': 'double eyelids', '외꺼풀': 'monolid',
+  '처진': 'droopy', '올라간': 'upturned', '동그란': 'round',
+  // 코
+  '오뚝한': 'upturned', '높은': 'high-bridged', '낮은': 'flat',
+  '매부리': 'aquiline', '뭉툭한': 'button',
+  // 입
+  '도톰한': 'full', '얇은': 'thin', '입술': 'lips', '핑크': 'pink',
+  '자연': 'natural', '빨간': 'red',
+  // 머리
+  '웨이브': 'wave', '스트레이트': 'straight', '곱슬': 'curly',
+  '시스루 뱅': 'see-through bangs', '없음': 'no bangs',
+  '앞머리': 'bangs', '포니테일': 'ponytail', '묶은': 'tied up',
+  '단발': 'bob cut', '장발': 'long',
+  '다크 브라운': 'dark brown', '블랙': 'black', '밤색': 'chestnut',
+  '금발': 'blonde', '회색': 'gray',
+  // 체형
+  '슬림': 'slim', '날씬': 'slender', '마른': 'skinny', '탄탄한': 'toned',
+  '보통': 'average', '근육질': 'muscular', '통통한': 'chubby',
+  '좁은': 'narrow', '넓은': 'broad',
+  // 의상
+  '리넨': 'linen', '니트': 'knit', '셔츠': 'shirt', '블라우스': 'blouse',
+  '원피스': 'dress', '재킷': 'jacket', '코트': 'coat',
+  '데님': 'denim', '팬츠': 'pants', '스커트': 'skirt', '치마': 'skirt',
+  '와이드': 'wide-leg', '스키니': 'skinny', '슬랙스': 'slacks',
+  '스니커즈': 'sneakers', '부츠': 'boots', '힐': 'heels', '플랫': 'flats',
+  '골드': 'gold', '실버': 'silver', '귀걸이': 'earrings',
+  '목걸이': 'necklace', '반지': 'ring', '시계': 'watch', '안경': 'glasses',
+  '크림색': 'cream', '베이지': 'beige', '흰': 'white', '검은': 'black',
+  // 분위기
+  '차분한': 'calm', '지적인': 'intelligent', '따뜻한': 'warm',
+  '밝은': 'bright', '활발한': 'energetic', '쿨한': 'cool',
+  '귀여운': 'cute', '성숙한': 'mature', '세련된': 'sophisticated',
+  // 표정
+  '미소': 'smile', '웃는': 'smiling', '무표정': 'neutral expression',
+  '진지한': 'serious', '살짝': 'gentle', '중립': 'neutral',
+  // 비율
+  '등신': '-head-tall proportions',
+};
+
+/* 한국어 텍스트를 영어로 변환하는 함수
+   사전에 있는 단어를 찾아 바꾸고, 못 찾으면 원문 유지 */
+function translateToEn(text) {
+  if (!text) return '';
+  let result = text;
+  // 사전의 키를 길이 순으로 정렬 (긴 것 먼저 매칭해야 정확)
+  const keys = Object.keys(koToEn).sort((a, b) => b.length - a.length);
+  for (const ko of keys) {
+    result = result.replace(new RegExp(ko, 'g'), koToEn[ko]);
+  }
+  return result;
+}
+
+// ──────────────────────────────────────────
+// 탭 전환 기능
+// ──────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tabId) {
+  // 모든 탭 버튼과 콘텐츠를 비활성화
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  // 선택한 탭만 활성화
+  document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+
+  // 이미지/영상 탭 진입 시 선택된 캐릭터 표시
+  if (tabId === 'image' || tabId === 'video') {
+    updateSelectedCharDisplay();
+  }
+}
+
+// ──────────────────────────────────────────
+// 칩(Chip) 선택 기능 - 조명, 카메라, 스타일 등의 옵션 버튼
+// ──────────────────────────────────────────
+document.querySelectorAll('.chip-group').forEach(group => {
+  group.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+
+    // videoMode 그룹은 단일 선택 (라디오 버튼처럼)
+    const isRadio = chip.dataset.group === 'videoMode';
+
+    if (isRadio) {
+      group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    } else {
+      chip.classList.toggle('selected');
+    }
+  });
+});
+
+// 특정 칩 그룹에서 선택된 값들을 가져오는 함수
+function getSelectedChipValues(groupId) {
+  const chips = document.querySelectorAll(`#${groupId} .chip.selected`);
+  return Array.from(chips).map(c => c.dataset.value);
+}
+
+// ──────────────────────────────────────────
+// 캐릭터 프로필 관리
+// ──────────────────────────────────────────
+
+/* 앱 시작 시 로컬 저장소에서 저장된 프로필 불러오기 */
+function loadProfiles() {
+  try {
+    const saved = localStorage.getItem('ai-studio-profiles');
+    if (saved) state.profiles = JSON.parse(saved);
+  } catch (e) {
+    console.error('프로필 로드 실패:', e);
+  }
+  renderProfiles();
+}
+
+/* 프로필을 로컬 저장소에 저장 */
+function saveProfilesToStorage() {
+  localStorage.setItem('ai-studio-profiles', JSON.stringify(state.profiles));
+}
+
+/* 프로필 목록을 화면에 렌더링 */
+function renderProfiles() {
+  const list = document.getElementById('profileList');
+  if (state.profiles.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;padding:20px;text-align:center;">저장된 캐릭터가 없습니다. 새 캐릭터를 만들어보세요.</p>';
+    return;
+  }
+
+  list.innerHTML = state.profiles.map(p => `
+    <div class="profile-card ${state.selectedProfileId === p.id ? 'selected' : ''}"
+         onclick="selectProfile('${p.id}')" data-id="${p.id}">
+      <button class="delete-btn" onclick="event.stopPropagation(); deleteProfile('${p.id}')">x</button>
+      <div class="name">${p.name || '이름 없음'}</div>
+      <div class="desc">${p.genderAge || ''} / ${p.hairStyle || ''} ${p.hairColor || ''}</div>
+    </div>
+  `).join('');
+}
+
+/* 캐릭터 선택 */
+function selectProfile(id) {
+  state.selectedProfileId = id;
+  renderProfiles();
+  generateEnglishProfile();
+}
+
+/* 캐릭터 삭제 */
+function deleteProfile(id) {
+  if (!confirm('이 캐릭터를 삭제할까요?')) return;
+  state.profiles = state.profiles.filter(p => p.id !== id);
+  if (state.selectedProfileId === id) state.selectedProfileId = null;
+  saveProfilesToStorage();
+  renderProfiles();
+}
+
+/* 새 캐릭터 폼 표시 */
+function showNewProfileForm() {
+  state.editingProfileId = null;
+  clearProfileForm();
+  document.getElementById('profileForm').style.display = 'block';
+  document.getElementById('profileForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* 프로필 폼 숨기기 */
+function hideProfileForm() {
+  document.getElementById('profileForm').style.display = 'none';
+}
+
+/* 폼 초기화 */
+function clearProfileForm() {
+  const fields = ['charName','charGenderAge','charEthnicity','charFaceShape','charSkinTone',
+    'charEyes','charNose','charMouth','charJaw','charHairLength','charHairStyle','charHairColor',
+    'charBangs','charHeight','charBuild','charProportion','charShoulders','charLimbs',
+    'charTop','charBottom','charShoes','charAccessory','charVibe','charExpression'];
+  fields.forEach(f => document.getElementById(f).value = '');
+}
+
+/* 프로필 저장 */
+function saveProfile() {
+  const profile = {
+    id: state.editingProfileId || Date.now().toString(),
+    name: document.getElementById('charName').value,
+    genderAge: document.getElementById('charGenderAge').value,
+    ethnicity: document.getElementById('charEthnicity').value,
+    faceShape: document.getElementById('charFaceShape').value,
+    skinTone: document.getElementById('charSkinTone').value,
+    eyes: document.getElementById('charEyes').value,
+    nose: document.getElementById('charNose').value,
+    mouth: document.getElementById('charMouth').value,
+    jaw: document.getElementById('charJaw').value,
+    hairLength: document.getElementById('charHairLength').value,
+    hairStyle: document.getElementById('charHairStyle').value,
+    hairColor: document.getElementById('charHairColor').value,
+    bangs: document.getElementById('charBangs').value,
+    height: document.getElementById('charHeight').value,
+    build: document.getElementById('charBuild').value,
+    proportion: document.getElementById('charProportion').value,
+    shoulders: document.getElementById('charShoulders').value,
+    limbs: document.getElementById('charLimbs').value,
+    top: document.getElementById('charTop').value,
+    bottom: document.getElementById('charBottom').value,
+    shoes: document.getElementById('charShoes').value,
+    accessory: document.getElementById('charAccessory').value,
+    vibe: document.getElementById('charVibe').value,
+    expression: document.getElementById('charExpression').value,
+  };
+
+  if (!profile.name) {
+    alert('캐릭터 이름을 입력해주세요.');
+    return;
+  }
+
+  // 기존 프로필 수정 또는 새로 추가
+  const existingIdx = state.profiles.findIndex(p => p.id === profile.id);
+  if (existingIdx >= 0) {
+    state.profiles[existingIdx] = profile;
+  } else {
+    state.profiles.push(profile);
+  }
+
+  state.selectedProfileId = profile.id;
+  saveProfilesToStorage();
+  renderProfiles();
+  hideProfileForm();
+  generateEnglishProfile();
+}
+
+/* 현재 선택된 캐릭터의 영어 프로필을 생성하고 화면에 표시 */
+function generateEnglishProfile() {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  if (!profile) {
+    document.getElementById('profilePreviewCard').style.display = 'none';
+    document.getElementById('turnaroundCard').style.display = 'none';
+    return;
+  }
+
+  // 영어 프로필 조합
+  const parts = [];
+
+  // 기본 정보 (나이, 성별, 인종)
+  const ageGender = translateToEn(profile.genderAge);
+  const ethnicity = profile.ethnicity || 'Korean';
+  parts.push(`A ${ageGender} ${ethnicity} ${ageGender.includes('여') || ageGender.includes('female') ? 'woman' : 'person'}`);
+
+  // 얼굴
+  if (profile.faceShape) parts.push(`with a ${translateToEn(profile.faceShape)} face`);
+  if (profile.skinTone) parts.push(`${translateToEn(profile.skinTone)} skin`);
+  if (profile.eyes) parts.push(`${translateToEn(profile.eyes)} eyes`);
+  if (profile.nose) parts.push(`${translateToEn(profile.nose)} nose`);
+  if (profile.mouth) parts.push(`${translateToEn(profile.mouth)}`);
+  if (profile.jaw) parts.push(`${translateToEn(profile.jaw)} jawline`);
+
+  // 머리카락
+  const hairParts = [];
+  if (profile.hairLength) hairParts.push(translateToEn(profile.hairLength));
+  if (profile.hairColor) hairParts.push(translateToEn(profile.hairColor));
+  if (profile.hairStyle) hairParts.push(translateToEn(profile.hairStyle));
+  if (hairParts.length > 0) parts.push(`${hairParts.join(' ')} hair`);
+  if (profile.bangs) parts.push(`with ${translateToEn(profile.bangs)}`);
+
+  // 체형
+  const bodyParts = [];
+  if (profile.build) bodyParts.push(`${translateToEn(profile.build)} build`);
+  if (profile.proportion) {
+    const propNum = profile.proportion.match(/[\d.]+/);
+    if (propNum) bodyParts.push(`${propNum[0]}-head-tall proportions`);
+  }
+  if (profile.shoulders) bodyParts.push(`${translateToEn(profile.shoulders)} shoulders`);
+  if (profile.limbs) bodyParts.push(`${translateToEn(profile.limbs)} limbs`);
+  if (bodyParts.length > 0) parts.push(bodyParts.join(', '));
+
+  // 의상
+  const outfitParts = [];
+  if (profile.top) outfitParts.push(translateToEn(profile.top));
+  if (profile.bottom) outfitParts.push(translateToEn(profile.bottom));
+  if (profile.shoes) outfitParts.push(translateToEn(profile.shoes));
+  if (profile.accessory) outfitParts.push(translateToEn(profile.accessory));
+  if (outfitParts.length > 0) parts.push(`wearing ${outfitParts.join(', ')}`);
+
+  // 분위기
+  if (profile.vibe) parts.push(`${translateToEn(profile.vibe)} demeanor`);
+  if (profile.expression) parts.push(`with a ${translateToEn(profile.expression)}`);
+
+  const englishProfile = parts.join(',\n');
+
+  // 화면에 표시
+  const previewCard = document.getElementById('profilePreviewCard');
+  previewCard.style.display = 'block';
+  document.getElementById('profileEnglish').innerHTML =
+    `<button class="copy-btn" onclick="copyText('profileEnglish')">복사</button>${englishProfile}`;
+
+  // 턴어라운드 시트 프롬프트 생성
+  const turnaroundCard = document.getElementById('turnaroundCard');
+  turnaroundCard.style.display = 'block';
+
+  const turnaroundPrompt = `Character turnaround model sheet of ${englishProfile.replace(/\n/g, ' ')}.
+
+Full body A-pose, displayed in three views arranged horizontally:
+front view (center), three-quarter view (left), back view (right).
+
+White background, clean design, consistent proportions across all views,
+character design reference sheet style, professional concept art,
+highly detailed, 4K resolution.
+
+Important: maintain exact same facial features, body proportions,
+hair style, and clothing details across all three views.`;
+
+  document.getElementById('turnaroundPrompt').innerHTML =
+    `<button class="copy-btn" onclick="copyText('turnaroundPrompt')">복사</button>${turnaroundPrompt}`;
+
+  // 이미지/영상 탭의 선택 캐릭터도 업데이트
+  updateSelectedCharDisplay();
+}
+
+/* 이미지/영상 탭 상단에 현재 캐릭터 이름 표시 */
+function updateSelectedCharDisplay() {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  const card = document.getElementById('selectedCharCard');
+  if (profile) {
+    card.style.display = 'block';
+    document.getElementById('selectedCharName').textContent = profile.name;
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+// ──────────────────────────────────────────
+// 이미지 프롬프트 생성
+// ──────────────────────────────────────────
+
+function generateImagePrompt() {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  if (!profile) {
+    alert('먼저 캐릭터를 선택해주세요.');
+    switchTab('character');
+    return;
+  }
+
+  // 영어 프로필 가져오기
+  const profileText = document.getElementById('profileEnglish').textContent
+    .replace('복사', '').trim();
+
+  // 장면 요소 수집
+  const action = document.getElementById('sceneAction').value;
+  const outfit = document.getElementById('sceneOutfit').value;
+  const background = document.getElementById('sceneBackground').value;
+  const lighting = getSelectedChipValues('lightingChips');
+  const camera = getSelectedChipValues('cameraChips');
+  const style = getSelectedChipValues('styleChips');
+
+  // 프롬프트 조합
+  let prompt = profileText;
+
+  // 의상 변경이 있으면 교체
+  if (outfit) {
+    prompt += `,\nwearing ${translateToEn(outfit)}`;
+  }
+
+  // 행동
+  if (action) {
+    prompt += `,\n${translateToEn(action)}`;
+  }
+
+  // 배경
+  if (background) {
+    prompt += `,\nin ${translateToEn(background)}`;
+  }
+
+  // 조명
+  if (lighting.length > 0) {
+    prompt += `,\n${lighting.join(', ')}`;
+  }
+
+  // 카메라
+  if (camera.length > 0) {
+    prompt += `,\n${camera.join(', ')}`;
+  }
+
+  // 스타일
+  if (style.length > 0) {
+    prompt += `,\n${style.join(', ')}`;
+  }
+
+  // 품질 + 일관성 키워드
+  prompt += `,\n4K resolution, highly detailed`;
+  prompt += `.\nMaintain exact same facial features, body proportions, and hairstyle. Same person, consistent appearance.`;
+
+  // 출력
+  state.lastImagePrompt = prompt;
+  document.getElementById('imagePromptCard').style.display = 'block';
+  document.getElementById('imagePromptOutput').innerHTML =
+    `<button class="copy-btn" onclick="copyText('imagePromptOutput')">복사</button>${prompt}`;
+
+  // 글자 수 표시
+  updateCharCount('imageCharCount', prompt.length);
+
+  // 생성 탭의 프롬프트도 동기화
+  document.getElementById('genImagePrompt').value = prompt;
+}
+
+/* 이미지 프롬프트를 영상 프롬프트로 자동 변환 */
+function convertToVideoPrompt() {
+  if (!state.lastImagePrompt) {
+    alert('먼저 이미지 프롬프트를 생성해주세요.');
+    return;
+  }
+  // 영상 탭으로 이동
+  switchTab('video');
+}
+
+// ──────────────────────────────────────────
+// 영상 프롬프트 생성
+// ──────────────────────────────────────────
+
+function generateVideoPrompt() {
+  const action = document.getElementById('videoAction').value;
+  const environment = document.getElementById('videoEnvironment').value;
+  const camera = getSelectedChipValues('videoCameraChips');
+  const mood = getSelectedChipValues('videoMoodChips');
+  const modeChips = document.querySelectorAll('#videoModeChips .chip.selected');
+  const mode = modeChips.length > 0 ? modeChips[0].dataset.value : 's2v';
+
+  if (!action) {
+    alert('인물 행동을 입력해주세요.');
+    return;
+  }
+
+  let prompt = '';
+
+  if (mode === 's2v') {
+    // Subject Reference 모드: 캐릭터 외모 묘사 불필요
+    const parts = [];
+    if (camera.length > 0) parts.push(camera.join(', '));
+    parts.push(`The subject ${action}`);
+    if (environment) parts.push(environment);
+    if (mood.length > 0) parts.push(mood.join(', '));
+    parts.push('cinematic quality, photorealistic, natural motion, smooth camera movement');
+    prompt = parts.join(',\n');
+  } else if (mode === 'i2v') {
+    // Image to Video 모드: 이미지의 움직임 묘사
+    const parts = [];
+    if (camera.length > 0) parts.push(`Camera ${camera.join(', ')}`);
+    parts.push(`the subject ${action}`);
+    if (environment) parts.push(environment);
+    if (mood.length > 0) parts.push(mood.join(', '));
+    parts.push('cinematic, photorealistic, natural motion, smooth camera movement');
+    prompt = parts.join(',\n');
+  } else {
+    // Text to Video 모드: 캐릭터 묘사 포함
+    const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+    const profileText = profile ?
+      document.getElementById('profileEnglish').textContent.replace('복사', '').trim() : '';
+
+    const parts = [];
+    if (profileText) parts.push(profileText);
+    parts.push(action);
+    if (environment) parts.push(environment);
+    if (camera.length > 0) parts.push(camera.join(', '));
+    if (mood.length > 0) parts.push(mood.join(', '));
+    parts.push('cinematic quality, photorealistic, hyper-detailed');
+    prompt = parts.join(',\n');
+  }
+
+  // 512자 제한 체크
+  state.lastVideoPrompt = prompt;
+  document.getElementById('videoPromptCard').style.display = 'block';
+  document.getElementById('videoPromptOutput').innerHTML =
+    `<button class="copy-btn" onclick="copyText('videoPromptOutput')">복사</button>${prompt}`;
+  updateCharCount('videoCharCount', prompt.length, 512);
+
+  // 생성 탭 동기화
+  document.getElementById('genVideoPrompt').value = prompt;
+}
+
+/* 글자 수 표시 (제한이 있으면 경고 색상) */
+function updateCharCount(elementId, count, limit) {
+  const el = document.getElementById(elementId);
+  if (limit) {
+    el.textContent = `${count} / ${limit}자`;
+    el.className = count > limit ? 'char-count over' : count > limit * 0.9 ? 'char-count warn' : 'char-count';
+  } else {
+    el.textContent = `${count}자`;
+    el.className = 'char-count';
+  }
+}
+
+// ──────────────────────────────────────────
+// 텍스트 복사 기능
+// ──────────────────────────────────────────
+function copyText(elementId) {
+  const el = document.getElementById(elementId);
+  // 복사 버튼 텍스트를 제외한 내용만 복사
+  const text = el.textContent.replace('복사', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    if (btn) {
+      btn.textContent = '복사됨!';
+      setTimeout(() => btn.textContent = '복사', 1500);
+    }
+  });
+}
+
+// ──────────────────────────────────────────
+// API 연동: 나노바나나 (Google Gemini) 이미지 생성
+// ──────────────────────────────────────────
+
+async function testGeminiConnection() {
+  const apiKey = document.getElementById('geminiApiKey').value;
+  if (!apiKey) { alert('API 키를 입력해주세요.'); return; }
+
+  // 키를 로컬에 저장
+  localStorage.setItem('ai-studio-gemini-key', apiKey);
+
+  try {
+    const model = document.getElementById('geminiModel').value;
+    // 간단한 텍스트 요청으로 연결 확인
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: 'Hello, respond with just OK' }] }]
+        })
+      }
+    );
+
+    if (resp.ok) {
+      updateApiStatus('nanoBananaStatus', true);
+      alert('Nano Banana 연결 성공!');
+    } else {
+      const err = await resp.json();
+      alert(`연결 실패: ${err.error?.message || resp.statusText}`);
+    }
+  } catch (e) {
+    alert(`연결 실패: ${e.message}`);
+  }
+}
+
+/* 나노바나나로 이미지 생성 */
+async function generateWithNanoBanana() {
+  const apiKey = localStorage.getItem('ai-studio-gemini-key') ||
+                 document.getElementById('geminiApiKey').value;
+
+  if (!apiKey) {
+    alert('API 설정에서 Gemini API 키를 입력해주세요.');
+    switchTab('settings');
+    return;
+  }
+
+  const prompt = document.getElementById('genImagePrompt').value || state.lastImagePrompt;
+  if (!prompt) {
+    alert('프롬프트를 먼저 생성해주세요.');
+    return;
+  }
+
+  const model = document.getElementById('geminiModel')?.value || 'gemini-3.1-flash-image-preview';
+  const btn = document.getElementById('genImageBtn');
+  const preview = document.getElementById('imagePreview');
+
+  // 로딩 상태
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 생성 중...';
+  preview.innerHTML = '<div class="spinner"></div><p>이미지를 생성하고 있습니다...</p>';
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE']
+          }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || resp.statusText);
+    }
+
+    const data = await resp.json();
+
+    // 응답에서 이미지 추출
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    let hasImage = false;
+
+    preview.innerHTML = '';
+    preview.classList.add('has-image');
+
+    for (const part of parts) {
+      if (part.inlineData) {
+        // base64 이미지를 표시
+        const img = document.createElement('img');
+        img.src = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        img.style.marginBottom = '8px';
+        preview.appendChild(img);
+        hasImage = true;
+
+        // 다운로드 버튼 추가
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'btn btn-secondary btn-sm';
+        dlBtn.textContent = '이미지 다운로드';
+        dlBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = img.src;
+          a.download = `character-${Date.now()}.png`;
+          a.click();
+        };
+        preview.appendChild(dlBtn);
+      }
+    }
+
+    if (!hasImage) {
+      preview.classList.remove('has-image');
+      const textContent = parts.map(p => p.text).filter(Boolean).join('\n');
+      preview.innerHTML = `<p>이미지가 생성되지 않았습니다.</p><p style="font-size:12px;color:var(--text-secondary)">${textContent || '응답 없음'}</p>`;
+    }
+
+    updateApiStatus('nanoBananaStatus', true);
+
+  } catch (e) {
+    preview.classList.remove('has-image');
+    preview.innerHTML = `<p style="color:var(--accent-pink)">생성 실패: ${e.message}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '이미지 생성';
+  }
+}
+
+// ──────────────────────────────────────────
+// API 연동: 하이루오 (MiniMax) 영상 생성
+// ──────────────────────────────────────────
+
+async function testMinimaxConnection() {
+  const apiKey = document.getElementById('minimaxApiKey').value;
+  if (!apiKey) { alert('API 키를 입력해주세요.'); return; }
+
+  localStorage.setItem('ai-studio-minimax-key', apiKey);
+
+  try {
+    // MiniMax API 연결 테스트 (계정 정보 조회)
+    const resp = await fetch('https://api.minimax.chat/v1/files', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+
+    if (resp.ok || resp.status === 200) {
+      updateApiStatus('hailuoStatus', true);
+      alert('Hailuo 연결 성공!');
+    } else {
+      alert(`연결 실패: HTTP ${resp.status}`);
+    }
+  } catch (e) {
+    // CORS로 인해 브라우저에서 직접 테스트 불가할 수 있음
+    localStorage.setItem('ai-studio-minimax-key', apiKey);
+    updateApiStatus('hailuoStatus', true);
+    alert('API 키가 저장되었습니다. (CORS 제한으로 브라우저에서 직접 테스트 불가 — 생성 시 확인됩니다)');
+  }
+}
+
+/* 하이루오로 영상 생성 */
+async function generateWithHailuo() {
+  const apiKey = localStorage.getItem('ai-studio-minimax-key') ||
+                 document.getElementById('minimaxApiKey')?.value;
+
+  if (!apiKey) {
+    alert('API 설정에서 MiniMax API 키를 입력해주세요.');
+    switchTab('settings');
+    return;
+  }
+
+  const prompt = document.getElementById('genVideoPrompt').value || state.lastVideoPrompt;
+  if (!prompt) {
+    alert('프롬프트를 먼저 생성해주세요.');
+    return;
+  }
+
+  const btn = document.getElementById('genVideoBtn');
+  const preview = document.getElementById('videoPreview');
+
+  // MiniMax API는 CORS 제한으로 브라우저에서 직접 호출이 어려울 수 있음
+  // 이 경우 프롬프트를 복사하여 직접 사용하거나, 프록시 서버를 통해 호출
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 생성 요청 중...';
+
+  try {
+    const model = document.getElementById('hailuoModel')?.value || 'S2V-01';
+
+    const body = {
+      model: `video-01-${model.toLowerCase()}`,
+      prompt: prompt
+    };
+
+    // Subject Reference 파일이 있으면 첨부
+    const fileInput = document.getElementById('subjectRefFile');
+    if (fileInput?.files[0]) {
+      const file = fileInput.files[0];
+      const base64 = await fileToBase64(file);
+      body.first_frame_image = base64;
+    }
+
+    const resp = await fetch('https://api.minimax.chat/v1/video_generation', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      preview.innerHTML = `
+        <p style="color:var(--accent-green);font-weight:600;">영상 생성 요청 완료!</p>
+        <p style="font-size:13px;">Task ID: ${data.task_id || 'N/A'}</p>
+        <p style="font-size:12px;color:var(--text-secondary);">영상 생성에 1~3분 소요됩니다. MiniMax 대시보드에서 확인하세요.</p>
+      `;
+      updateApiStatus('hailuoStatus', true);
+    } else {
+      throw new Error(`HTTP ${resp.status}: CORS 제한으로 브라우저에서 직접 생성이 제한될 수 있습니다.`);
+    }
+
+  } catch (e) {
+    preview.innerHTML = `
+      <div style="text-align:left; padding:12px;">
+        <p style="color:var(--accent-orange);font-weight:600;margin-bottom:8px;">
+          브라우저에서 직접 API 호출이 제한됩니다 (CORS)
+        </p>
+        <p style="font-size:13px;margin-bottom:12px;">
+          아래 방법 중 하나를 사용하세요:
+        </p>
+        <ol style="font-size:13px;color:var(--text-secondary);padding-left:20px;line-height:2;">
+          <li><strong>프롬프트 복사</strong> 후 <a href="https://hailuoai.video" target="_blank" style="color:var(--primary)">hailuoai.video</a>에서 직접 사용</li>
+          <li><strong>MiniMax API</strong>를 cURL/Postman으로 호출</li>
+          <li><strong>fal.ai</strong> 등 프록시 서비스 이용</li>
+        </ol>
+      </div>
+    `;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '영상 생성';
+  }
+}
+
+/* 파일을 base64로 변환하는 헬퍼 */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ──────────────────────────────────────────
+// API 상태 표시 업데이트
+// ──────────────────────────────────────────
+function updateApiStatus(elementId, connected) {
+  const el = document.getElementById(elementId);
+  if (connected) {
+    el.className = 'api-status connected';
+    el.querySelector('.dot').className = 'dot green';
+  } else {
+    el.className = 'api-status disconnected';
+    el.querySelector('.dot').className = 'dot red';
+  }
+}
+
+// ──────────────────────────────────────────
+// 데이터 내보내기/가져오기
+// ──────────────────────────────────────────
+
+function exportData() {
+  const data = JSON.stringify(state.profiles, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ai-studio-characters-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (Array.isArray(imported)) {
+        state.profiles = [...state.profiles, ...imported];
+        saveProfilesToStorage();
+        renderProfiles();
+        alert(`${imported.length}개의 캐릭터를 가져왔습니다.`);
+      }
+    } catch (err) {
+      alert('파일을 읽을 수 없습니다.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ──────────────────────────────────────────
+// 초기화: 앱 시작 시 실행
+// ──────────────────────────────────────────
+
+// 저장된 프로필 불러오기
+loadProfiles();
+
+// 저장된 API 키 복원
+const savedGeminiKey = localStorage.getItem('ai-studio-gemini-key');
+const savedMinimaxKey = localStorage.getItem('ai-studio-minimax-key');
+if (savedGeminiKey) {
+  document.getElementById('geminiApiKey').value = savedGeminiKey;
+  updateApiStatus('nanoBananaStatus', true);
+}
+if (savedMinimaxKey) {
+  document.getElementById('minimaxApiKey').value = savedMinimaxKey;
+  updateApiStatus('hailuoStatus', true);
+}
+
+// 첫 번째 프로필이 있으면 자동 선택
+if (state.profiles.length > 0 && !state.selectedProfileId) {
+  selectProfile(state.profiles[0].id);
+}
+</script>
+
+</body>
+</html>
