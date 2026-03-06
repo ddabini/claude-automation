@@ -1359,25 +1359,38 @@
       flex-shrink: 0;
     }
     .dr-edit-save-bar .dr-btn { flex: 1; }
-    /* 저장 버튼 + 드롭업 메뉴 래퍼 */
-    .dr-save-wrap { position: relative; flex: 1; }
-    .dr-save-wrap .dr-btn { width: 100%; }
-    .dr-save-menu {
-      display: none;
-      position: fixed;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-      overflow: hidden; z-index: 99999; width: 240px;
+    /* 저장 선택 다이얼로그 — 화면 중앙 오버레이 */
+    .dr-save-dialog-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 99999;
+      align-items: center; justify-content: center;
     }
-    .dr-save-menu.show { display: block; }
-    .dr-save-menu-item {
-      display: block; width: 100%; padding: 10px 14px;
-      border: none; background: none; text-align: left;
-      font-size: 13px; color: var(--text); cursor: pointer;
+    .dr-save-dialog-overlay.show { display: flex; }
+    .dr-save-dialog {
+      background: var(--surface); border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2); width: 300px;
+      overflow: hidden;
     }
-    .dr-save-menu-item:hover { background: var(--primary-bg); color: var(--primary); }
-    .dr-save-menu-item + .dr-save-menu-item { border-top: 1px solid var(--border); }
-    .dr-save-menu-item small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+    .dr-save-dialog-title {
+      padding: 16px 20px 12px; font-size: 14px; font-weight: 600;
+      color: var(--text); border-bottom: 1px solid var(--border);
+    }
+    .dr-save-dialog-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 14px 20px; border: none;
+      background: none; text-align: left; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .dr-save-dialog-btn:hover { background: var(--primary-bg); }
+    .dr-save-dialog-btn + .dr-save-dialog-btn { border-top: 1px solid var(--border); }
+    .dr-save-dialog-btn .icon { font-size: 20px; }
+    .dr-save-dialog-btn .label { font-size: 13px; font-weight: 500; color: var(--text); }
+    .dr-save-dialog-btn .desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .dr-save-dialog-cancel {
+      width: 100%; padding: 10px; border: none; border-top: 1px solid var(--border);
+      background: var(--bg); color: var(--text-secondary); font-size: 13px; cursor: pointer;
+    }
+    .dr-save-dialog-cancel:hover { background: #f3f4f6; }
     /* 편집 모드 활성 표시 — 툴바 버튼 */
     .dr-btn.dr-edit-active {
       background: var(--primary);
