@@ -7045,12 +7045,12 @@
       }
     }
 
-    async function searchPinterestNative(query, limit = 25) {
+    async function searchPinterestNative(query, limit = 50) {
       if (!config.pinterestFnUrl) return null; // Cloud Function 미설정 시 스킵
 
       try {
         const url = `${config.pinterestFnUrl}?q=${encodeURIComponent(query)}&limit=${limit}`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(45000) }); // 45초 타임아웃
+        const res = await fetch(url, { signal: AbortSignal.timeout(15000) }); // 15초 타임아웃 (API 방식이라 빠름)
 
         if (!res.ok) {
           console.warn('Pinterest Cloud Function 에러:', res.status);
@@ -7061,15 +7061,18 @@
         if (!data.pins || data.pins.length === 0) return null;
 
         // Cloud Function 결과를 Pikbox 내부 형식으로 변환
+        // 새 API는 originals 해상도 + 한국어 grid_title + 실제 width/height 반환
         return data.pins.map(pin => ({
-          title: pin.title || '',
-          imageUrl: pin.imageUrl || '',
+          title: pin.title || pin.description || '',
+          imageUrl: pin.imageUrl || '',            // 736x (그리드 표시용)
           normalizedUrl: normalizeImageUrl(pin.imageUrl || ''),
           thumbUrl: pin.thumbUrl || pin.imageUrl || '',
+          origUrl: pin.origUrl || '',              // originals (원본 다운로드용)
           sourceUrl: pin.pinUrl || '',
           platform: 'pinterest',
-          width: 736,  // Pinterest 기본 해상도
-          height: 0,   // 높이는 미확정 (Masonry 레이아웃)
+          width: pin.width || 736,                 // API에서 실제 크기 반환
+          height: pin.height || 0,
+          domain: pin.domain || '',
           color: '#E60023', // Pinterest 브랜드 컬러
           source: pin.cached ? 'pinterest_native_cached' : 'pinterest_native'
         }));
