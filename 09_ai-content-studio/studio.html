@@ -1439,17 +1439,22 @@ function generateEnglishProfile() {
   const turnaroundCard = document.getElementById('turnaroundCard');
   turnaroundCard.style.display = 'block';
 
+  // 커스텀 캐릭터(동물 등)에 맞게 턴어라운드 키워드 조정
+  const isCustom = !!profile.customEnglish;
+  const consistencyNote = isCustom
+    ? 'maintain exact same facial features, body proportions, and fur/skin texture across all three views.'
+    : 'maintain exact same facial features, body proportions, hair style, and clothing details across all three views.';
+
   const turnaroundPrompt = `Character turnaround model sheet of ${englishProfile.replace(/\n/g, ' ')}.
 
-Full body A-pose, displayed in three views arranged horizontally:
-front view (center), three-quarter view (left), back view (right).
+Full body standing pose, displayed in three views arranged horizontally:
+front view (center), side view (left), back view (right).
 
 White background, clean design, consistent proportions across all views,
 character design reference sheet style, professional concept art,
-highly detailed, 4K resolution.
+photorealistic, highly detailed, 4K resolution.
 
-Important: maintain exact same facial features, body proportions,
-hair style, and clothing details across all three views.`;
+Important: ${consistencyNote}`;
 
   document.getElementById('turnaroundPrompt').innerHTML =
     `<button class="copy-btn" onclick="copyText('turnaroundPrompt')">복사</button>${turnaroundPrompt}`;
