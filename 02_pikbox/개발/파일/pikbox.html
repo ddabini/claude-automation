@@ -8415,6 +8415,97 @@
       return { items, nextPageToken: searchData.nextPageToken || '' };
     }
 
+    // ─── YouTube Data API v3 — 확장 검색 (필터 네이티브 지원) ───
+    // searchYouTubeAPI의 확장 버전: publishedAfter(날짜), regionCode(국가) 추가 지원
+    // 하이브리드 검색에서 Serper와 병렬로 호출되어 더 많은 결과 확보
+    async function ytSearchWithYouTubeAPI(query, order = 'relevance', pageToken = '', maxResults = 50, videoDuration = '', publishedAfter = '', regionCode = 'KR') {
+      const apiKey = config.youtubeApiKey;
+      if (!apiKey) return { items: [], nextPageToken: '' };
+
+      // 1단계: search 엔드포인트 (100 units/call)
+      const searchParams = new URLSearchParams({
+        part: 'snippet', type: 'video', q: query,
+        order: order, maxResults: String(maxResults),
+        relevanceLanguage: 'ko', key: apiKey
+      });
+      // 국가 필터 — 빈 문자열이면 글로벌 검색
+      if (regionCode) searchParams.set('regionCode', regionCode);
+      if (pageToken) searchParams.set('pageToken', pageToken);
+      if (videoDuration) searchParams.set('videoDuration', videoDuration);
+      // 날짜 필터 — publishedAfter ISO 문자열 (예: 2026-03-01T00:00:00.000Z)
+      if (publishedAfter) searchParams.set('publishedAfter', publishedAfter);
+
+      const searchRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?${searchParams}`
+      );
+      const searchData = await searchRes.json();
+
+      if (!searchRes.ok || !searchData.items) {
+        // API 할당량 초과 시 세션 내 비활성화
+        if (searchData.error?.errors?.[0]?.reason === 'quotaExceeded') {
+          ytState.ytApiDisabled = true;
+          console.warn('[Pikbox] YouTube API 할당량 초과 — 세션 내 비활성화');
+        }
+        console.warn('[Pikbox] YouTube API 확장 검색 실패:', searchData.error?.message);
+        return { items: [], nextPageToken: '' };
+      }
+
+      const videoIds = searchData.items.map(item => item.id?.videoId).filter(Boolean);
+      if (videoIds.length === 0) {
+        return { items: [], nextPageToken: searchData.nextPageToken || '' };
+      }
+
+      // 2단계: videos 엔드포인트로 상세 정보 (1 unit/video)
+      const videoParams = new URLSearchParams({
+        part: 'snippet,statistics,contentDetails',
+        id: videoIds.join(','), key: apiKey
+      });
+      const videoRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?${videoParams}`
+      );
+      const videoData = await videoRes.json();
+      if (!videoRes.ok || !videoData.items) {
+        return { items: [], nextPageToken: searchData.nextPageToken || '' };
+      }
+
+      // Serper 결과와 동일한 카드 형식으로 변환
+      const items = videoData.items.map(v => {
+        const snippet = v.snippet;
+        const stats = v.statistics || {};
+        const duration = v.contentDetails?.duration || '';
+        const totalSec = ytParseDurationISO(duration);
+        const isShorts = totalSec > 0 && totalSec <= 60;
+        const publishedAt = new Date(snippet.publishedAt).getTime();
+        const viewCount = parseInt(stats.viewCount || '0', 10);
+
+        return {
+          title: snippet.title || '',
+          imageUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || '',
+          thumbUrl: snippet.thumbnails?.high?.url || '',
+          maxThumbUrl: `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
+          sourceUrl: isShorts
+            ? `https://www.youtube.com/shorts/${v.id}`
+            : `https://www.youtube.com/watch?v=${v.id}`,
+          platform: 'youtube',
+          width: 1280, height: 720,
+          isVideo: true, isShorts: isShorts,
+          durationSec: totalSec,
+          duration: ytFormatDurationISO(duration),
+          channel: snippet.channelTitle || '',
+          channelId: snippet.channelId || '',
+          date: ytFormatRelativeDate(publishedAt),
+          dateNum: publishedAt,
+          viewsRaw: ytFormatViewCount(viewCount),
+          viewsNum: viewCount,
+          likeCount: parseInt(stats.likeCount || '0', 10),
+          commentCount: parseInt(stats.commentCount || '0', 10),
+          description: snippet.description || '',
+        };
+      });
+
+      return { items, nextPageToken: searchData.nextPageToken || '' };
+    }
+
     // ─── YouTube Data API v3 — 광고 소재 전용 검색 ───
     // Google Ads Transparency Center는 공식 API가 없으므로
     // YouTube에 업로드된 실제 광고 소재를 찾는 대안 전략:
