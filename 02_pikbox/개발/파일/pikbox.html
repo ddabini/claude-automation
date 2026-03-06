@@ -3909,6 +3909,20 @@
               <option value="">— 현재 유지 —</option>
             </select>
           </div>
+          <div class="dr-edit-prop-row" style="grid-template-columns: auto 1fr;">
+            <label>굵기</label>
+            <select id="drEditPropFW" onchange="drEditApplyProp('fontWeight')" style="grid-column: span 1; font-size:12px; padding:4px 6px; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text);">
+              <option value="100">100 Thin</option>
+              <option value="200">200 ExtraLight</option>
+              <option value="300">300 Light</option>
+              <option value="400" selected>400 Regular</option>
+              <option value="500">500 Medium</option>
+              <option value="600">600 SemiBold</option>
+              <option value="700">700 Bold</option>
+              <option value="800">800 ExtraBold</option>
+              <option value="900">900 Black</option>
+            </select>
+          </div>
           <div class="dr-edit-prop-text" id="drEditPropTextWrap" style="display:none;">
             <label>텍스트</label>
             <textarea id="drEditPropText" rows="3" oninput="drEditApplyProp('text')"></textarea>
