@@ -8108,7 +8108,8 @@
       results: [],           // 영상 검색 결과 (video/shorts/ad 공유)
       communityResults: [],  // 커뮤니티 검색 결과 (이미지 기반)
       page: 1,               // 현재 Serper 페이지
-      nextPageToken: '',     // YouTube Data API 페이지 토큰 (통계 보강용)
+      nextPageToken: '',     // YouTube Data API 검색 페이지 토큰
+      ytApiPageToken: '',    // YouTube API 추가 페이지 토큰 (더 보기용)
       loading: false,        // 로딩 중 여부
       hasMore: true,         // 추가 결과 존재 여부
       activeChip: 'video',   // 활성 칩 (기본: 영상)
