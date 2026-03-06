@@ -687,6 +687,15 @@ body {
       </div>
     </div>
 
+    <!-- 커스텀 영어 프로필 (동물/특수 캐릭터용) -->
+    <div style="font-weight:600; font-size:14px; margin:16px 0 8px; color:var(--accent-green);">커스텀 영어 프로필 (선택)</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
+      동물, 로봇 등 비인간 캐릭터는 위 폼 대신 여기에 직접 영어 프로필을 작성하세요. 입력하면 자동 번역 대신 이 텍스트가 사용됩니다.
+    </p>
+    <div class="form-group">
+      <textarea id="charCustomEnglish" rows="5" style="width:100%;resize:vertical;font-family:monospace;font-size:12px;" placeholder="예: A photorealistic baby polar bear cub with round flat face, large glossy dark brown-black eyes..."></textarea>
+    </div>
+
     <!-- 저장 버튼 -->
     <div class="btn-group" style="margin-top:16px;">
       <button class="btn btn-primary" onclick="saveProfile()">저장</button>
