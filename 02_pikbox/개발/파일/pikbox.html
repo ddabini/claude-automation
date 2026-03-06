@@ -12835,14 +12835,16 @@ ${metaText}
           }, 'image/png');
 
         } else {
-          // ── cross-origin fallback: 새 탭에서 열기 안내 ──
-          drSaveImageFallback(design, filename);
+          // ── cross-origin: DB에서 HTML 가져와서 캡처 시도 ──
+          await drSaveImageFromDB(design, filename, btn);
+          return; // finally에서 버튼 복원
         }
 
       } catch (e) {
-        // html2canvas가 cross-origin 오류를 던진 경우 — 새 탭 fallback
-        console.warn('[Pikbox] html2canvas cross-origin 캡처 실패, fallback 적용:', e.message);
-        drSaveImageFallback(design, filename);
+        // html2canvas가 cross-origin 오류를 던진 경우 — DB에서 HTML 가져와서 재시도
+        console.warn('[Pikbox] html2canvas 캡처 실패, DB HTML로 재시도:', e.message);
+        await drSaveImageFromDB(design, filename, btn);
+        return;
       } finally {
         if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; }
       }
