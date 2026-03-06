@@ -14887,6 +14887,10 @@ ${metaText}
           el.style.fontFamily = "'" + fontName + "', sans-serif";
         }
       }
+      if (prop === 'fontWeight') {
+        var fwVal = document.getElementById('drEditPropFW').value;
+        el.style.fontWeight = fwVal;
+      }
       if (prop === 'text') {
         var newText = document.getElementById('drEditPropText').value;
         var children = Array.from(el.childNodes);
