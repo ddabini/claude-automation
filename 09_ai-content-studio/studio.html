@@ -1372,54 +1372,62 @@ function generateEnglishProfile() {
     return;
   }
 
-  // 영어 프로필 조합
-  const parts = [];
+  // 커스텀 영어 프로필이 있으면 자동 번역 대신 직접 사용
+  let englishProfile;
 
-  // 기본 정보 (나이, 성별, 인종)
-  const ageGender = translateToEn(profile.genderAge);
-  const ethnicity = profile.ethnicity || 'Korean';
-  parts.push(`A ${ageGender} ${ethnicity} ${ageGender.includes('여') || ageGender.includes('female') ? 'woman' : 'person'}`);
+  if (profile.customEnglish) {
+    // 동물/특수 캐릭터: 직접 작성한 영어 프로필 사용
+    englishProfile = profile.customEnglish;
+  } else {
+    // 인물 캐릭터: 폼 필드에서 자동 번역
+    const parts = [];
 
-  // 얼굴
-  if (profile.faceShape) parts.push(`with a ${translateToEn(profile.faceShape)} face`);
-  if (profile.skinTone) parts.push(`${translateToEn(profile.skinTone)} skin`);
-  if (profile.eyes) parts.push(`${translateToEn(profile.eyes)} eyes`);
-  if (profile.nose) parts.push(`${translateToEn(profile.nose)} nose`);
-  if (profile.mouth) parts.push(`${translateToEn(profile.mouth)}`);
-  if (profile.jaw) parts.push(`${translateToEn(profile.jaw)} jawline`);
+    // 기본 정보 (나이, 성별, 인종)
+    const ageGender = translateToEn(profile.genderAge);
+    const ethnicity = profile.ethnicity || 'Korean';
+    parts.push(`A ${ageGender} ${ethnicity} ${ageGender.includes('여') || ageGender.includes('female') ? 'woman' : 'person'}`);
 
-  // 머리카락
-  const hairParts = [];
-  if (profile.hairLength) hairParts.push(translateToEn(profile.hairLength));
-  if (profile.hairColor) hairParts.push(translateToEn(profile.hairColor));
-  if (profile.hairStyle) hairParts.push(translateToEn(profile.hairStyle));
-  if (hairParts.length > 0) parts.push(`${hairParts.join(' ')} hair`);
-  if (profile.bangs) parts.push(`with ${translateToEn(profile.bangs)}`);
+    // 얼굴
+    if (profile.faceShape) parts.push(`with a ${translateToEn(profile.faceShape)} face`);
+    if (profile.skinTone) parts.push(`${translateToEn(profile.skinTone)} skin`);
+    if (profile.eyes) parts.push(`${translateToEn(profile.eyes)} eyes`);
+    if (profile.nose) parts.push(`${translateToEn(profile.nose)} nose`);
+    if (profile.mouth) parts.push(`${translateToEn(profile.mouth)}`);
+    if (profile.jaw) parts.push(`${translateToEn(profile.jaw)} jawline`);
 
-  // 체형
-  const bodyParts = [];
-  if (profile.build) bodyParts.push(`${translateToEn(profile.build)} build`);
-  if (profile.proportion) {
-    const propNum = profile.proportion.match(/[\d.]+/);
-    if (propNum) bodyParts.push(`${propNum[0]}-head-tall proportions`);
+    // 머리카락
+    const hairParts = [];
+    if (profile.hairLength) hairParts.push(translateToEn(profile.hairLength));
+    if (profile.hairColor) hairParts.push(translateToEn(profile.hairColor));
+    if (profile.hairStyle) hairParts.push(translateToEn(profile.hairStyle));
+    if (hairParts.length > 0) parts.push(`${hairParts.join(' ')} hair`);
+    if (profile.bangs) parts.push(`with ${translateToEn(profile.bangs)}`);
+
+    // 체형
+    const bodyParts = [];
+    if (profile.build) bodyParts.push(`${translateToEn(profile.build)} build`);
+    if (profile.proportion) {
+      const propNum = profile.proportion.match(/[\d.]+/);
+      if (propNum) bodyParts.push(`${propNum[0]}-head-tall proportions`);
+    }
+    if (profile.shoulders) bodyParts.push(`${translateToEn(profile.shoulders)} shoulders`);
+    if (profile.limbs) bodyParts.push(`${translateToEn(profile.limbs)} limbs`);
+    if (bodyParts.length > 0) parts.push(bodyParts.join(', '));
+
+    // 의상
+    const outfitParts = [];
+    if (profile.top) outfitParts.push(translateToEn(profile.top));
+    if (profile.bottom) outfitParts.push(translateToEn(profile.bottom));
+    if (profile.shoes) outfitParts.push(translateToEn(profile.shoes));
+    if (profile.accessory) outfitParts.push(translateToEn(profile.accessory));
+    if (outfitParts.length > 0) parts.push(`wearing ${outfitParts.join(', ')}`);
+
+    // 분위기
+    if (profile.vibe) parts.push(`${translateToEn(profile.vibe)} demeanor`);
+    if (profile.expression) parts.push(`with a ${translateToEn(profile.expression)}`);
+
+    englishProfile = parts.join(',\n');
   }
-  if (profile.shoulders) bodyParts.push(`${translateToEn(profile.shoulders)} shoulders`);
-  if (profile.limbs) bodyParts.push(`${translateToEn(profile.limbs)} limbs`);
-  if (bodyParts.length > 0) parts.push(bodyParts.join(', '));
-
-  // 의상
-  const outfitParts = [];
-  if (profile.top) outfitParts.push(translateToEn(profile.top));
-  if (profile.bottom) outfitParts.push(translateToEn(profile.bottom));
-  if (profile.shoes) outfitParts.push(translateToEn(profile.shoes));
-  if (profile.accessory) outfitParts.push(translateToEn(profile.accessory));
-  if (outfitParts.length > 0) parts.push(`wearing ${outfitParts.join(', ')}`);
-
-  // 분위기
-  if (profile.vibe) parts.push(`${translateToEn(profile.vibe)} demeanor`);
-  if (profile.expression) parts.push(`with a ${translateToEn(profile.expression)}`);
-
-  const englishProfile = parts.join(',\n');
 
   // 화면에 표시
   const previewCard = document.getElementById('profilePreviewCard');
