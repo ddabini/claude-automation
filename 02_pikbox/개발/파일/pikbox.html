@@ -14842,6 +14842,15 @@ ${metaText}
       if (prop === 'fontSize') {
         el.style.fontSize = (parseInt(document.getElementById('drEditPropFS').value) || 16) + 'px';
       }
+      if (prop === 'fontFamily') {
+        var fontSel = document.getElementById('drEditPropFont');
+        var fontName = fontSel ? fontSel.value : '';
+        if (fontName) {
+          // iframe에 폰트 CDN 주입 (아직 없으면)
+          drEditInjectFont(fontName);
+          el.style.fontFamily = "'" + fontName + "', sans-serif";
+        }
+      }
       if (prop === 'text') {
         var newText = document.getElementById('drEditPropText').value;
         var children = Array.from(el.childNodes);
@@ -14855,6 +14864,75 @@ ${metaText}
       }
       drEditState.hasChanges = true;
       drEditRefreshHandles();
+    }
+
+    /* ─── 상업적 무료 한국어 폰트 목록 (Google Fonts CDN) ─── */
+    var DR_FREE_FONTS = [
+      // 고딕 계열
+      { name: 'Pretendard Variable', cdn: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css', label: 'Pretendard (기본 고딕)' },
+      { name: 'Noto Sans KR', cdn: 'google', label: 'Noto Sans KR (구글 고딕)' },
+      { name: 'Nanum Gothic', cdn: 'google', label: '나눔고딕' },
+      { name: 'Nanum Square', cdn: 'https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css', label: '나눔스퀘어' },
+      { name: 'Spoqa Han Sans Neo', cdn: 'https://spoqa.github.io/spoqa-han-sans/css/SpoqaHanSansNeo.css', label: '스포카 한 산스' },
+      { name: 'IBM Plex Sans KR', cdn: 'google', label: 'IBM Plex Sans KR' },
+      { name: 'Gothic A1', cdn: 'google', label: 'Gothic A1' },
+      { name: 'Do Hyeon', cdn: 'google', label: '도현 (둥근 고딕)' },
+      // 둥근/특이 고딕
+      { name: 'Jua', cdn: 'google', label: '주아 (둥근 귀여움)' },
+      { name: 'Gamja Flower', cdn: 'google', label: '감자꽃 (손글씨풍)' },
+      { name: 'Hi Melody', cdn: 'google', label: '하이멜로디 (캐주얼)' },
+      { name: 'Dokdo', cdn: 'google', label: '독도 (붓글씨풍)' },
+      { name: 'Black Han Sans', cdn: 'google', label: '블랙 한 산스 (굵은 타이틀)' },
+      { name: 'Gugi', cdn: 'google', label: '구기 (기하학적)' },
+      { name: 'Dongle', cdn: 'google', label: '동글 (가벼운)' },
+      { name: 'Gowun Dodum', cdn: 'google', label: '고운돋움' },
+      { name: 'Gowun Batang', cdn: 'google', label: '고운바탕 (명조)' },
+      // 명조/세리프
+      { name: 'Nanum Myeongjo', cdn: 'google', label: '나눔명조' },
+      { name: 'Noto Serif KR', cdn: 'google', label: 'Noto Serif KR' },
+      // 영문 특수
+      { name: 'Montserrat', cdn: 'google', label: 'Montserrat (영문 모던)' },
+      { name: 'Poppins', cdn: 'google', label: 'Poppins (영문 깔끔)' },
+      { name: 'Inter', cdn: 'google', label: 'Inter (영문 UI)' },
+      // Paperlogy (CDN)
+      { name: 'Paperlogy', cdn: 'https://cdn.jsdelivr.net/gh/niceplugin/Paperlogy/cdn/css/Paperlogy.css', label: 'Paperlogy (모던 타이틀)' },
+    ];
+
+    // 폰트 셀렉트박스 옵션 채우기 (한 번만)
+    (function() {
+      var sel = document.getElementById('drEditPropFont');
+      if (!sel) return;
+      DR_FREE_FONTS.forEach(function(f) {
+        var opt = document.createElement('option');
+        opt.value = f.name;
+        opt.textContent = f.label;
+        sel.appendChild(opt);
+      });
+    })();
+
+    // iframe에 폰트 CDN 링크 주입 (이미 주입된 폰트는 스킵)
+    function drEditInjectFont(fontName) {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+      var fontInfo = DR_FREE_FONTS.find(function(f) { return f.name === fontName; });
+      if (!fontInfo) return;
+
+      // 이미 주입 확인
+      var linkId = 'pkb-font-' + fontName.replace(/\s+/g, '-').toLowerCase();
+      if (iDoc.getElementById(linkId)) return;
+
+      var link = iDoc.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+
+      if (fontInfo.cdn === 'google') {
+        // Google Fonts URL 생성
+        link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName).replace(/%20/g, '+') + ':wght@100;300;400;500;700;900&display=swap';
+      } else {
+        link.href = fontInfo.cdn;
+      }
+
+      iDoc.head.appendChild(link);
     }
 
     /* ─── 저장 다이얼로그 열기/선택 ─── */
