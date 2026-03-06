@@ -261,7 +261,7 @@ exports.searchInstagram = functions
       res.status(400).json({ error: "검색어(q)를 입력해주세요" });
       return;
     }
-    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
 
     // ── 캐시 확인 (24시간 유효) ──
     const cacheKey = `ig_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
@@ -418,7 +418,7 @@ exports.searchMetaAds = functions
       res.status(400).json({ error: "검색어(q)를 입력해주세요" });
       return;
     }
-    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
 
     // ── 캐시 확인 (24시간 유효) ──
     const cacheKey = `meta_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
@@ -610,7 +610,7 @@ exports.searchGoogleAds = functions
       res.status(400).json({ error: "검색어(q)를 입력해주세요" });
       return;
     }
-    const limit = Math.min(parseInt(req.query.limit) || 30, 50);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
 
     // ── 캐시 확인 (24시간 유효) ──
     const cacheKey = `gads_${query.toLowerCase().replace(/[^a-z0-9가-힣]/g, "_").substring(0, 100)}`;
