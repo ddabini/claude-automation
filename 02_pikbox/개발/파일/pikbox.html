@@ -3226,6 +3226,15 @@
       font-family: 'Pretendard', sans-serif;
       flex-shrink: 0;
     }
+    .yt-insight-thumb { width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; cursor:pointer; position:relative; background:#000; flex-shrink:0; }
+    .yt-insight-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.2s; }
+    .yt-insight-thumb:hover img { transform:scale(1.03); }
+    .yt-insight-thumb-hint { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.7); color:#fff; font-size:11px; font-weight:600; padding:3px 8px; border-radius:4px; pointer-events:none; opacity:0; transition:opacity 0.2s; }
+    .yt-insight-thumb:hover .yt-insight-thumb-hint { opacity:1; }
+    .yt-thumb-lightbox { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; padding:40px; animation:ytFadeIn 0.15s ease; cursor:zoom-out; }
+    .yt-thumb-lightbox img { max-width:100%; max-height:100%; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+    .yt-thumb-lightbox-close { position:absolute; top:16px; right:20px; width:36px; height:36px; border:none; background:rgba(255,255,255,0.15); color:#fff; border-radius:50%; font-size:18px; cursor:pointer; }
+    .yt-thumb-lightbox-close:hover { background:rgba(255,255,255,0.3); }
     /* 인사이트 타이틀 */
     .yt-insight-title {
       font-size: 16px;
@@ -4871,6 +4880,8 @@
       instagramFnUrl: 'https://us-central1-did-ads.cloudfunctions.net/searchInstagram',
       // Meta 광고 라이브러리 크롤링 — Firebase Cloud Function 엔드포인트
       metaAdsFnUrl: 'https://us-central1-did-ads.cloudfunctions.net/searchMetaAds',
+      // Google Ads Transparency Center 크롤링 — Firebase Cloud Function 엔드포인트
+      googleAdsFnUrl: 'https://us-central1-did-ads.cloudfunctions.net/searchGoogleAds',
       // YouTube Most Replayed 히트맵 — Firebase Cloud Function 엔드포인트
       ytHeatmapUrl: 'https://us-central1-did-ads.cloudfunctions.net/getYoutubeHeatmap'
     };
@@ -9938,7 +9949,19 @@
 
       // 인사이트 패널 기본 정보 렌더링 (Serper 데이터)
       const viewsText = videoData.viewsRaw ? `조회수 ${escHtml(videoData.viewsRaw)}` : '정보 없음';
+      // 롱폼 영상이면 인사이트 상단에 썸네일 미리보기 추가
+      const thumbSrc = videoData.maxThumbUrl || videoData.thumbUrl || videoData.imageUrl || '';
+      const isLongForm = !videoData.isShorts;
+      const thumbHtml = (isLongForm && thumbSrc) ? `
+        <div class="yt-insight-thumb" onclick="ytOpenThumbLightbox(this)">
+          <img src="${escHtml(thumbSrc)}"
+               onerror="if(this.src.includes('maxres')){this.src=this.src.replace('maxresdefault','hqdefault')}"
+               alt="썸네일">
+          <span class="yt-insight-thumb-hint">크게 보기</span>
+        </div>` : '';
+
       insight.innerHTML = `
+        ${thumbHtml}
         <div class="yt-insight-title">${escHtml(videoData.title)}</div>
         <div class="yt-player-actions" id="ytPlayerActions"></div>
         <hr class="yt-insight-divider">
@@ -10018,6 +10041,24 @@
 
       // Most Replayed 히트맵 가져오기 (Cloud Function 경유)
       ytFetchHeatmap(videoId);
+    }
+
+
+    // 썸네일 크게 보기 라이트박스 — 클릭하면 전체 화면 오버레이로 확대
+    function ytOpenThumbLightbox(thumbEl) {
+      const img = thumbEl.querySelector('img');
+      if (!img) return;
+      const lb = document.createElement('div');
+      lb.className = 'yt-thumb-lightbox';
+      lb.onclick = (e) => { if (e.target === lb) lb.remove(); };
+      lb.innerHTML = `
+        <button class="yt-thumb-lightbox-close" onclick="this.parentElement.remove()">✕</button>
+        <img src="${img.src}" alt="썸네일 크게 보기">
+      `;
+      document.body.appendChild(lb);
+      // ESC 키로도 닫기
+      const onKey = (e) => { if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', onKey); } };
+      document.addEventListener('keydown', onKey);
     }
 
     // ─── 인라인 플레이어 닫기 ───
