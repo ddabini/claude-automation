@@ -1269,7 +1269,7 @@ function renderProfiles() {
          onclick="selectProfile('${p.id}')" data-id="${p.id}">
       <button class="delete-btn" onclick="event.stopPropagation(); deleteProfile('${p.id}')">x</button>
       <div class="name">${p.name || '이름 없음'}</div>
-      <div class="desc">${p.genderAge || ''} / ${p.hairStyle || ''} ${p.hairColor || ''}</div>
+      <div class="desc">${p.customEnglish ? (p.genderAge || '커스텀 캐릭터') : ((p.genderAge || '') + ' / ' + (p.hairStyle || '') + ' ' + (p.hairColor || ''))}</div>
     </div>
   `).join('');
 }
