@@ -582,17 +582,22 @@ exports.searchMetaAds = functions
  * Google Ads Transparency Center 검색 Cloud Function
  *
  * adstransparency.google.com에서 한국 대상 광고 소재를 크롤링.
- * 검색 키워드로 광고주를 찾고, 상위 광고주의 광고 크리에이티브를 추출.
- * 광고 이미지는 tpc.googlesyndication.com에서 제공.
- * 검색 결과는 24시간 캐싱.
+ * Google Ads Transparency Center의 내부 RPC API를 직접 호출하여 광고 소재 수집.
+ * Puppeteer 없이 순수 HTTP 호출로 동작 (OOM 방지).
+ *
+ * 흐름:
+ * 1. SearchSuggestions API로 키워드 매칭 광고주 목록 조회
+ * 2. 상위 광고주별 SearchCreatives API로 크리에이티브 목록 조회
+ * 3. 각 크리에이티브의 content.js URL을 fetch하여 이미지 URL 추출
+ * 4. 결과를 24시간 캐싱 후 반환
  *
  * 엔드포인트: GET /searchGoogleAds?q=검색어&limit=30
  */
 exports.searchGoogleAds = functions
   .runWith({
-    memory: "2GB",
-    timeoutSeconds: 120,
-    maxInstances: 3,
+    memory: "512MB",           // Puppeteer 불필요 → 메모리 대폭 절감
+    timeoutSeconds: 60,
+    maxInstances: 5,
   })
   .https.onRequest(async (req, res) => {
     res.set("Access-Control-Allow-Origin", "*");
@@ -623,133 +628,148 @@ exports.searchGoogleAds = functions
       }
     } catch (e) { console.warn("Google Ads 캐시 조회 실패:", e.message); }
 
-    let browser = null;
+    // ── node-fetch 또는 내장 fetch 사용 ──
+    const fetch = require("node-fetch");
+    const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+    const API_BASE = "https://adstransparency.google.com/anji/_/rpc/SearchService";
+
     try {
-      const chromium = require("@sparticuz/chromium");
-      browser = await require("puppeteer-core").launch({
-        args: [...chromium.args, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
-        defaultViewport: { width: 1280, height: 900 },
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+      // ── 1단계: SearchSuggestions — 키워드로 광고주 찾기 ──
+      const suggestBody = JSON.stringify({
+        "1": query,     // 검색 키워드
+        "2": 10,        // 광고주 제안 수
+        "3": 10,        // 웹사이트 제안 수
+        "4": [2410],    // 한국 지역 코드
+        "5": { "1": 1 } // 모든 주제
       });
 
-      const page = await browser.newPage();
-
-      // 동영상·폰트 차단 (속도 향상)
-      await page.setRequestInterception(true);
-      page.on("request", (request) => {
-        const type = request.resourceType();
-        if (type === "media" || type === "font") {
-          request.abort();
-        } else {
-          request.continue();
-        }
+      const suggestRes = await fetch(`${API_BASE}/SearchSuggestions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
+        body: `f.req=${encodeURIComponent(suggestBody)}`,
       });
+      const suggestData = await suggestRes.json();
 
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-      );
+      // 광고주 목록 추출 (최대 3명 — 속도와 품질 균형)
+      const suggestions = (suggestData["1"] || []).filter((s) => s["1"]);
+      const advertisers = suggestions.slice(0, 3).map((s) => ({
+        name: s["1"]["1"] || "",
+        id: s["1"]["2"] || "",
+        country: s["1"]["3"] || "",
+      }));
 
-      // Google Ads Transparency Center — 한국 지역
-      await page.goto('https://adstransparency.google.com/?region=KR', {
-        waitUntil: "networkidle2",
-        timeout: 30000
-      });
-
-      // 검색창에 키워드 입력
-      await page.waitForSelector('input[type="text"], input[aria-label]', { timeout: 10000 });
-      const searchInput = await page.$('input[type="text"]') || await page.$('input[aria-label*="검색"]');
-      if (!searchInput) {
-        res.status(500).json({ error: "검색창을 찾을 수 없습니다" });
+      if (advertisers.length === 0) {
+        res.json({ query, count: 0, ads: [], cached: false, note: "매칭되는 광고주 없음" });
         return;
       }
 
-      await searchInput.click();
-      await searchInput.type(query, { delay: 80 });
-      await new Promise((r) => setTimeout(r, 2000));
+      // ── 2단계: SearchCreatives — 각 광고주의 크리에이티브 조회 ──
+      const allAds = [];
+      const seenImages = new Set();
+      const creativesPerAdvertiser = Math.ceil(limit / advertisers.length);
 
-      // 자동완성 제안 목록에서 첫 번째 광고주 클릭
-      const firstSuggestion = await page.$('li[role="option"], [role="listbox"] [role="option"]');
-      if (firstSuggestion) {
-        await firstSuggestion.click();
-        await new Promise((r) => setTimeout(r, 3000));
-      } else {
-        // 제안이 없으면 Enter로 검색
-        await page.keyboard.press('Enter');
-        await new Promise((r) => setTimeout(r, 3000));
-      }
-
-      // 광고 카드 로딩 대기
-      await page.waitForSelector('img[src*="googlesyndication"], img[src*="ytimg"]', {
-        timeout: 15000
-      }).catch(() => console.warn("Google Ads: 이미지 셀렉터 미감지 — 계속 진행"));
-
-      // 스크롤하여 더 많은 광고 로드
-      for (let i = 0; i < 3; i++) {
-        await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
-        await new Promise((r) => setTimeout(r, 1500));
-      }
-
-      // ── 광고 소재 이미지 추출 ──
-      const ads = await page.evaluate(() => {
-        const results = [];
-        const seen = new Set();
-
-        // Google 광고 이미지 (simgad = Google 광고 소재 CDN)
-        document.querySelectorAll('img[src*="googlesyndication.com/archive/simgad"]').forEach((img) => {
-          const src = img.src;
-          if (!src || seen.has(src)) return;
-          seen.add(src);
-
-          results.push({
-            imageUrl: src,
-            thumbUrl: src,
-            adUrl: window.location.href,
-            advertiser: '',
-            title: img.alt || '',
-            width: img.naturalWidth || 300,
-            height: img.naturalHeight || 250,
-          });
+      for (const advertiser of advertisers) {
+        const creativesBody = JSON.stringify({
+          "2": Math.min(creativesPerAdvertiser + 5, 40),
+          "3": {
+            "8": [2410],          // 한국 지역
+            "12": { "1": "", "2": true },
+            "13": { "1": [advertiser.id] }
+          },
+          "7": { "1": 1, "2": 30, "3": 2410 }
         });
 
-        // YouTube 광고 썸네일
-        document.querySelectorAll('img[src*="ytimg.com"]').forEach((img) => {
-          const src = img.src;
-          if (!src || seen.has(src)) return;
-          seen.add(src);
+        const creativesRes = await fetch(`${API_BASE}/SearchCreatives`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
+          body: `f.req=${encodeURIComponent(creativesBody)}`,
+        });
+        const creativesData = await creativesRes.json();
+        const creatives = creativesData["1"] || [];
 
-          results.push({
-            imageUrl: src,
-            thumbUrl: src,
-            adUrl: window.location.href,
-            advertiser: '',
-            title: img.alt || 'YouTube 광고',
-            width: img.naturalWidth || 1280,
-            height: img.naturalHeight || 720,
-          });
+        // ── 3단계: 각 크리에이티브의 content.js에서 이미지 URL 추출 ──
+        // 병렬 처리 (최대 5개씩)
+        const contentPromises = creatives.slice(0, creativesPerAdvertiser).map(async (creative) => {
+          const contentUrl = (creative["3"] || {})["1"] || {};
+          let url = contentUrl["4"] || "";
+          if (!url) return null;
+
+          // htmlParentId와 responseCallback을 고정값으로 교체
+          url = url.replace(/htmlParentId=[^&]+/, "htmlParentId=server")
+                   .replace(/responseCallback=[^&]+/, "responseCallback=cb");
+
+          try {
+            const contentRes = await fetch(url, {
+              headers: { "User-Agent": UA },
+              timeout: 8000,
+            });
+            if (!contentRes.ok) return null;
+            const jsContent = await contentRes.text();
+
+            // 이미지 URL 추출 (YouTube 썸네일, 기타 이미지)
+            const imgMatches = jsContent.match(/https?:\/\/[^\s"'\\,)(]+?\.(jpg|jpeg|png|webp|gif)/gi) || [];
+            const ytMatches = jsContent.match(/https?:\/\/i[0-9]*\.ytimg\.com\/vi\/[^\s"'\\,)(]+/gi) || [];
+            const allImgUrls = [...new Set([...ytMatches, ...imgMatches])];
+
+            // 유용한 이미지만 필터 (내부 아이콘 제외)
+            const useful = allImgUrls.filter((u) =>
+              !u.includes("abg") && !u.includes("adchoices") &&
+              !u.includes("mtad") && !u.includes("googlelogo") &&
+              !u.includes("pagead/images")
+            );
+
+            // 광고 랜딩 URL 추출 (google 도메인 제외)
+            const urlMatches = jsContent.match(/https?:\/\/[^\s"'\\,)(]+/gi) || [];
+            const landingUrls = urlMatches.filter((u) =>
+              !u.includes("google") && !u.includes("gstatic") &&
+              !u.includes("cdn.amp") && !u.includes("github") &&
+              !u.includes("ytimg")
+            );
+
+            return { images: useful, landing: landingUrls[0] || "" };
+          } catch (e) {
+            return null;
+          }
         });
 
-        // 페이지 제목에서 광고주 이름 추출
-        const pageTitle = document.querySelector('h1, [class*="advertiser"]');
-        const advertiserName = pageTitle ? pageTitle.textContent.trim() : '';
-        results.forEach(ad => { ad.advertiser = advertiserName; });
+        const contentResults = await Promise.all(contentPromises);
 
-        return results;
-      });
+        // 결과 조합
+        creatives.slice(0, creativesPerAdvertiser).forEach((creative, idx) => {
+          const extracted = contentResults[idx];
+          if (!extracted || extracted.images.length === 0) return;
 
-      // 캐시 저장
-      if (ads.length > 0) {
+          const imageUrl = extracted.images[0];
+          if (seenImages.has(imageUrl)) return;
+          seenImages.add(imageUrl);
+
+          // 광고주 페이지 URL 생성
+          const adPageUrl = `https://adstransparency.google.com/advertiser/${advertiser.id}?region=KR`;
+
+          allAds.push({
+            imageUrl: imageUrl,
+            thumbUrl: imageUrl,
+            adUrl: extracted.landing || adPageUrl,
+            sourceUrl: adPageUrl,
+            advertiser: advertiser.name,
+            title: `${advertiser.name} 광고`,
+            width: imageUrl.includes("ytimg") ? 480 : 300,
+            height: imageUrl.includes("ytimg") ? 360 : 250,
+          });
+        });
+      }
+
+      // ── 캐시 저장 ──
+      if (allAds.length > 0) {
         try {
-          await cacheRef.set({ query, timestamp: Date.now(), ads: ads.slice(0, 50) });
+          await cacheRef.set({ query, timestamp: Date.now(), ads: allAds.slice(0, 50) });
         } catch (e) { console.warn("Google Ads 캐시 저장 실패:", e.message); }
       }
 
-      res.json({ query, count: ads.length, ads: ads.slice(0, limit), cached: false });
+      res.json({ query, count: allAds.length, ads: allAds.slice(0, limit), cached: false });
     } catch (error) {
       console.error("Google Ads 검색 실패:", error.message);
       res.status(500).json({ error: "Google 광고 투명성 센터 검색 중 오류 발생", detail: error.message });
-    } finally {
-      if (browser) { try { await browser.close(); } catch (e) {} }
     }
   });
 
