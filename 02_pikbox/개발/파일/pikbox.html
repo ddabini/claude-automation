@@ -10311,9 +10311,9 @@
         el.classList.toggle('active', el.dataset.sort === sortType);
       });
 
-      // YouTube API 사용 시 — 서버 측 정렬이 정확하므로 재검색
+      // YouTube API 키가 있으면 — 서버 측 정렬이 정확하므로 재검색
       // (date/relevance/viewCount를 API에서 직접 처리)
-      if (ytState.useYouTubeAPI && ytState.query) {
+      if (config.youtubeApiKey && !ytState.ytApiDisabled && ytState.query) {
         ytSearch(false); // 새 검색으로 재실행
         return;
       }
