@@ -6795,7 +6795,7 @@
           allNew.push(...items);
           // 플랫폼별 캐시 저장 (탭 전환용)
           const platformId = source;
-          if (['instagram', 'meta_ads', 'pinterest'].includes(platformId)) {
+          if (['instagram', 'meta_ads', 'google_ads', 'pinterest'].includes(platformId)) {
             if (!runState.platformResults[platformId]) runState.platformResults[platformId] = [];
             runState.platformResults[platformId].push(...items);
           } else {
