@@ -14847,32 +14847,17 @@ ${metaText}
       drEditRefreshHandles();
     }
 
-    /* ─── 되돌리기 ─── */
-    /* ─── 저장 드롭업 메뉴 토글/선택 ─── */
-    function drToggleSaveMenu(e) {
-      e.stopPropagation();
-      var menu = document.getElementById('drSaveMenu');
-      if (!menu) return;
-      var isOpen = menu.classList.toggle('show');
-      if (isOpen) {
-        // 버튼 위치 기준으로 메뉴를 바로 위에 배치
-        var btn = e.currentTarget;
-        var rect = btn.getBoundingClientRect();
-        menu.style.left = rect.left + 'px';
-        menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
-      }
+    /* ─── 저장 다이얼로그 열기/선택 ─── */
+    function drOpenSaveDialog() {
+      var overlay = document.getElementById('drSaveDialogOverlay');
+      if (overlay) overlay.classList.add('show');
     }
-    function drSaveMenuPick(action) {
-      var menu = document.getElementById('drSaveMenu');
-      if (menu) menu.classList.remove('show');
+    function drSaveDialogPick(action) {
+      var overlay = document.getElementById('drSaveDialogOverlay');
+      if (overlay) overlay.classList.remove('show');
       if (action === 'save') drEditSave();
       else if (action === 'saveAs') drEditSaveAs();
     }
-    // 메뉴 바깥 클릭 시 닫기
-    document.addEventListener('click', function() {
-      var menu = document.getElementById('drSaveMenu');
-      if (menu) menu.classList.remove('show');
-    });
 
     function drEditReset() {
       if (!drEditState.originalHtml) return;
