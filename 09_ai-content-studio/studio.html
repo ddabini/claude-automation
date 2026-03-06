@@ -1931,6 +1931,31 @@ function updateApiStatus(elementId, connected) {
 }
 
 // ──────────────────────────────────────────
+// 환경 프리셋 (배경 장소)
+// ──────────────────────────────────────────
+
+/* 5개 고정 배경 장소 — 프롬프트에 일관된 배경 묘사 삽입용 */
+const ENV_PRESETS = {
+  home: 'in a modern Korean apartment living room with cream-white walls, natural oak hardwood floor, light gray fabric L-shaped sofa with gray cushions, low rectangular oak coffee table, wall-mounted TV on white console, open kitchen with white cabinets, small round oak dining table, warm gold pendant lamp, sliding glass balcony door with sheer curtains, potted monstera and snake plants, warm cozy evening ambient lighting',
+  subway: 'inside a crowded Seoul subway Line 2 train car, stainless steel interior with blue and gray plastic seats, silver grab poles and overhead triangle handles, fluorescent tube lighting with slight warm tint, LED route display above doors, Korean advertisement posters, packed commuters in dark winter coats looking at phones',
+  cvs: 'inside a Korean CU-style convenience store at night, bright white fluorescent ceiling lights, white tile floor, colorful Korean snack shelves and ramen displays, glass-door refrigerated drinks section along back wall, heated food counter with tteokbokki and fish cake, microwave station, narrow eating counter by window with bar stools, neon store signs visible through window, bright commercial lighting',
+  office: 'in a modern Korean startup office space, light gray walls, light wood laminate floor, white desks with dual monitors and gray ergonomic chairs, large shared oak meeting table in center, glass-walled meeting room with whiteboard and sticky notes, potted plants on desks, overhead panel LED lighting, water cooler and coffee machine in corner, large windows with city skyline view, clean bright office lighting',
+  gym: 'in a modern Korean fitness gym, dark charcoal rubber flooring, light gray walls with full mirror on one side, black metal dumbbell rack with dumbbells arranged by weight, bench press station, cable machine, treadmills lined up by large windows with city view, wall-mounted TV showing workout channel, cool white LED strip ceiling lighting, towel rack and water station',
+};
+
+/* 드롭다운에서 환경 프리셋 선택 시 배경 입력칸에 자동 채움 */
+function applyEnvPreset() {
+  const sel = document.getElementById('envPreset').value;
+  const input = document.getElementById('sceneBackground');
+  if (sel && ENV_PRESETS[sel]) {
+    input.value = ENV_PRESETS[sel];
+  } else {
+    input.value = '';
+    input.focus();
+  }
+}
+
+// ──────────────────────────────────────────
 // 프리셋 캐릭터 불러오기
 // ──────────────────────────────────────────
 
