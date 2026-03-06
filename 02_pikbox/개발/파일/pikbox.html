@@ -1364,10 +1364,10 @@
     .dr-save-wrap .dr-btn { width: 100%; }
     .dr-save-menu {
       display: none;
-      position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+      position: fixed;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-      overflow: hidden; z-index: 10;
+      border-radius: var(--radius-sm); box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+      overflow: hidden; z-index: 99999; width: 240px;
     }
     .dr-save-menu.show { display: block; }
     .dr-save-menu-item {
@@ -8187,6 +8187,15 @@
       return koRegex.test(title) || koRegex.test(channel) || koRegex.test(date);
     }
 
+    // ─── Serper 날짜 필터(tbs) 생성 — 기간 필터를 서버 측에서 처리 ───
+    function ytGetSerperTbs() {
+      const d = ytState.filters.date;
+      if (!d) return {};
+      // Google 검색 tbs 파라미터: qdr:d=하루, qdr:w=일주일, qdr:m=한달, qdr:y=1년
+      const map = { today: 'qdr:d', '3days': 'qdr:w', week: 'qdr:w', month: 'qdr:m', year: 'qdr:y' };
+      return map[d] ? { tbs: map[d] } : {};
+    }
+
     // ─── Serper.dev YouTube 영상 검색 (/videos 엔드포인트) ───
     // 한국 채널 중심 — gl:kr + hl:ko + 한국어 결과만 필터링
     async function searchSerperVideos(query, page) {
@@ -8198,13 +8207,13 @@
           'X-API-KEY': config.serperKey,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: JSON.stringify(Object.assign({
           q: query,
-          num: 10,
+          num: 20,
           page: Math.max(1, page),
           gl: isGlobal ? 'us' : 'kr',
           hl: isGlobal ? 'en' : 'ko'
-        })
+        }, ytGetSerperTbs()))
       });
       const data = await res.json();
       if (!res.ok || !data.videos) return [];
@@ -9742,26 +9751,34 @@
           const fullQuery = chipExtra ? `${query} ${chipExtra}` : query;
 
           const promises = [];
+          // 필터가 활성화되어 있으면 더 많은 결과가 필요 (필터링 후 남는 수 확보)
+          const hasActiveFilter = ytState.filters.subs || ytState.filters.duration || ytState.filters.date;
           if (!appendMode) {
             // 첫 검색: 쿼리 변형 병렬 호출 (채널명/키워드 모두 대응)
             promises.push(searchSerperVideos(fullQuery, 1));
             promises.push(searchSerperVideos(fullQuery, 2));
+            promises.push(searchSerperVideos(fullQuery, 3));
             if (chip === 'ad') {
-              // 광고 칩: 광고 특화 쿼리 추가
               promises.push(searchSerperVideos(query + ' 광고 영상 레퍼런스', 1));
               promises.push(searchSerperVideos(query + ' 유튜브 영상 마케팅', 1));
             } else {
-              // 채널명 검색 대응: "유튜브 영상" 접미사로 실제 영상 결과 확보
               promises.push(searchSerperVideos(query + ' 유튜브 영상', 1));
-              // 채널명 검색 대응: "채널" 접미사로 해당 채널의 영상 발굴
               promises.push(searchSerperVideos(query + ' 채널 최신 영상', 1));
               if (chipExtra) {
                 promises.push(searchSerperVideos(query + ' ' + chipExtra, 1));
               }
+              // 필터 활성 시 추가 쿼리로 결과 수 확대
+              if (hasActiveFilter) {
+                promises.push(searchSerperVideos(fullQuery, 4));
+                promises.push(searchSerperVideos(fullQuery, 5));
+                promises.push(searchSerperVideos(query + ' 유튜브', 2));
+                promises.push(searchSerperVideos(query + ' 인기 영상', 1));
+              }
             }
           } else {
-            // 더 보기: 다음 페이지
-            for (let i = 0; i < 3; i++) {
+            // 더 보기: 다음 페이지 (필터 시 더 많이 가져오기)
+            const pagesToFetch = hasActiveFilter ? 5 : 3;
+            for (let i = 0; i < pagesToFetch; i++) {
               ytState.page++;
               promises.push(searchSerperVideos(fullQuery, ytState.page));
             }
@@ -10121,19 +10138,11 @@
       };
 
       if (ytState.sort === 'views') {
-        // 조회수순 — 관련도 높은 영상 먼저, 같은 관련도 내에서 조회수순
-        sorted.sort((a, b) => {
-          const relDiff = getRelevance(b) - getRelevance(a);
-          if (relDiff !== 0) return relDiff;
-          return (b.viewsNum || 0) - (a.viewsNum || 0);
-        });
+        // 조회수순 — 순수 조회수 내림차순 (관련도 무시)
+        sorted.sort((a, b) => (b.viewsNum || 0) - (a.viewsNum || 0));
       } else if (ytState.sort === 'newest') {
-        // 최신순 — 관련도 높은 영상 먼저, 같은 관련도 내에서 최신순
-        sorted.sort((a, b) => {
-          const relDiff = getRelevance(b) - getRelevance(a);
-          if (relDiff !== 0) return relDiff;
-          return (b.dateNum || 0) - (a.dateNum || 0);
-        });
+        // 최신순 — 순수 업로드 날짜 내림차순 (관련도 무시)
+        sorted.sort((a, b) => (b.dateNum || 0) - (a.dateNum || 0));
       } else {
         // 추천순 — 관련도 보너스 + 조회수(60%) + 최신성(40%)
         const maxViews = Math.max(...sorted.map(r => r.viewsNum || 0), 1);
@@ -10336,10 +10345,9 @@
       }
       // 초기화 버튼 표시/숨김
       ytUpdateFilterResetBtn();
-      // 필터 적용 — 결과가 있으면 클라이언트 필터링, 없으면 재검색
-      if (ytState.results.length > 0) {
-        ytSortAndRerender();
-      } else if (ytState.query) {
+      // 국가/날짜 필터는 Serper 파라미터가 바뀌므로 반드시 재검색
+      // 구독자/길이 필터도 재검색하여 더 많은 결과에서 필터링
+      if (ytState.query) {
         ytSearch(false);
       }
     }
@@ -10363,7 +10371,7 @@
         }
       });
       ytUpdateFilterResetBtn();
-      if (ytState.results.length > 0) ytSortAndRerender();
+      if (ytState.query) ytSearch(false);
     }
 
     // 초기화 버튼 표시 여부
