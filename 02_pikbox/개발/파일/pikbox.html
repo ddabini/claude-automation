@@ -15551,7 +15551,7 @@ ${metaText}
 
     /* ─── 변경 표시 + 자동저장 디바운스 트리거 (2초 후 자동 저장) ─── */
     function drEditMarkChanged() {
-      drEditMarkChanged();
+      drEditState.hasChanges = true;
       // 기존 타이머 취소 후 2초 디바운스
       clearTimeout(drEditState._autoSaveTimer);
       drEditState._autoSaveTimer = setTimeout(function() {
