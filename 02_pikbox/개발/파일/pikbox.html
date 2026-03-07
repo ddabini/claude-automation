@@ -10527,7 +10527,7 @@
             ${r.duration ? `<span class="yt-duration">${escHtml(r.duration)}</span>` : ''}
             <button class="yt-save-btn ${_saved ? 'saved' : ''}" data-vid="${_vid}" title="카테고리에 저장">${_saved ? '✓' : '📥'}</button>
             <!-- A/B 비교 모드 체크 오버레이 -->
-            <div class="yt-compare-check" onclick="event.stopPropagation(); ytToggleCompareCard('${_vid}', window._ytCompareTemp, this.closest('.yt-card'));">${_compareSelected ? '✓' : ''}</div>
+            <div class="yt-compare-check" onclick="event.stopPropagation(); ytToggleCompareCardById('${_vid}', this.closest('.yt-card'));">${_compareSelected ? '✓' : ''}</div>
           </div>
           <div class="yt-info">
             <div class="yt-title">${escHtml(r.title)}</div>
