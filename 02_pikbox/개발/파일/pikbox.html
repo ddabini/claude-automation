@@ -15629,9 +15629,11 @@ ${metaText}
         drEditState.originalHtml = html;
         drEditState.editedHtml = html;
         drEditState.hasChanges = false;
+        drEditUpdateSaveStatus('saved');
         toast('저장 완료!', 'success');
       } catch (e) {
         console.error('[편집] 저장 실패:', e);
+        drEditUpdateSaveStatus('error');
         toast('저장 실패: ' + e.message, 'error');
       }
     }
