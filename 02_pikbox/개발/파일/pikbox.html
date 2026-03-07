@@ -7399,32 +7399,30 @@
       // 사이트 필터가 있으면 검색어에 site: 연산자 추가
       const fullQuery = siteFilter ? `${query} ${siteFilter}` : query;
 
-      const res = await fetch('https://google.serper.dev/images', {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': config.serperKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          q: fullQuery,
-          num: 100,
-          page: Math.max(1, page),
-          gl: opts.gl || 'kr',     // 기본 한국, opts.gl로 글로벌 전환 가능
-          hl: opts.gl === 'us' ? 'en' : 'ko',  // 글로벌 검색 시 영어 인터페이스
-          tbs: 'qdr:y'  // 최근 1년 이내 게시물 (6개월→1년 완화: 고퀄 레퍼런스 과도 제외 방지)
-        })
-      });
+      try {
+        const res = await fetch('https://google.serper.dev/images', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': config.serperKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            q: fullQuery,
+            num: 100,
+            page: Math.max(1, page),
+            gl: opts.gl || 'kr',     // 기본 한국, opts.gl로 글로벌 전환 가능
+            hl: opts.gl === 'us' ? 'en' : 'ko',  // 글로벌 검색 시 영어 인터페이스
+            tbs: 'qdr:y'  // 최근 1년 이내 게시물 (6개월→1년 완화: 고퀄 레퍼런스 과도 제외 방지)
+          })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok || data.message) {
-        const code = res.status;
-        let errMsg = `Serper API ${code}`;
-        if (code === 401 || code === 403) errMsg = 'Serper API Key가 유효하지 않습니다';
-        if (code === 429) errMsg = 'Serper API 월간 한도 초과 (무료: 2,500회/월)';
-        if (data.message) errMsg = `Serper: ${data.message}`;
-        throw new Error(errMsg);
-      }
+        if (!res.ok || data.message) {
+          // Serper 실패 시 조용히 빈 배열 반환 — Cloud Functions + 스톡 API로 대체
+          console.warn(`[Serper] ${data.message || res.status} — "${fullQuery}"`);
+          return [];
+        }
 
       if (!data.images || data.images.length === 0) return [];
 
