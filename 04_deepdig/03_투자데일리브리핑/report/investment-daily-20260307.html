@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[3월7일]투자 데일리 브리핑</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 15px; line-height: 1.9; color: #1a1a1a;
+            background-color: #ffffff; -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 60px 32px 100px; }
+
+        /* COVER */
+        .cover { padding: 60px 0 56px; border-bottom: 1px solid #e5e5e5; margin-bottom: 56px; }
+        .cover-category { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 20px; }
+        .cover-year { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #555; border: 1px solid #ccc; padding: 3px 10px; border-radius: 2px; margin-bottom: 20px; }
+        .cover-title { font-size: 28px; font-weight: 700; line-height: 1.4; color: #111; margin-bottom: 16px; letter-spacing: -0.02em; }
+        .cover-subtitle { font-size: 15px; color: #666; margin-bottom: 32px; font-weight: 400; }
+        .cover-meta { display: flex; flex-wrap: wrap; gap: 20px; font-size: 12px; color: #888; }
+        .cover-meta span { display: flex; align-items: center; gap: 5px; }
+
+        /* TOC */
+        .toc { background: #fafafa; border: 1px solid #ebebeb; padding: 28px 32px; margin-bottom: 56px; border-radius: 2px; }
+        .toc-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+        .toc ol { list-style: none; counter-reset: toc-counter; }
+        .toc li { counter-increment: toc-counter; padding: 5px 0; border-bottom: 1px solid #ebebeb; font-size: 13px; color: #333; display: flex; gap: 12px; }
+        .toc li:last-child { border-bottom: none; }
+        .toc li::before { content: counter(toc-counter, decimal-leading-zero); font-size: 11px; font-weight: 600; color: #bbb; min-width: 22px; padding-top: 2px; }
+
+        /* SECTIONS */
+        .section { margin-bottom: 64px; }
+        .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid #1a1a1a; }
+        .section-number { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #aaa; padding-top: 6px; min-width: 24px; }
+        .section-title { font-size: 20px; font-weight: 700; color: #111; line-height: 1.35; letter-spacing: -0.02em; }
+        .section-desc { font-size: 13px; color: #888; margin-top: 4px; font-weight: 400; }
+
+        /* TEXT */
+        p { margin-bottom: 16px; color: #333; font-weight: 400; }
+        h3 { font-size: 15px; font-weight: 700; color: #111; margin: 28px 0 10px; letter-spacing: -0.01em; }
+        h4 { font-size: 13px; font-weight: 600; color: #444; margin: 20px 0 8px; }
+        strong { font-weight: 600; color: #111; }
+
+        /* STAT CARDS */
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+        .stat-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .stat-card { background: #fafafa; border: 1px solid #ebebeb; padding: 16px 14px; border-radius: 2px; }
+        .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #999; margin-bottom: 6px; }
+        .stat-value { font-size: 22px; font-weight: 700; color: #111; line-height: 1.1; letter-spacing: -0.02em; }
+        .stat-unit { font-size: 11px; color: #888; margin-top: 3px; }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead tr { background: #f5f5f5; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+        th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #555; white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid #ebebeb; color: #333; vertical-align: top; }
+        tbody tr:nth-child(even) { background: #fafafa; }
+        tbody tr:last-child td { border-bottom: none; }
+        .table-caption { font-size: 11px; color: #999; margin-top: 6px; text-align: right; }
+
+        /* NOTE BOXES */
+        .note-box { padding: 16px 18px; margin: 20px 0; border-radius: 2px; border-left: 3px solid; font-size: 13.5px; line-height: 1.75; }
+        .note-insight { background: #f7f9ff; border-color: #4a6cf7; color: #2d3a6b; }
+        .note-warning { background: #fff8f3; border-color: #e07b1a; color: #6b3a10; }
+        .note-forecast { background: #f4faf6; border-color: #2a9d5c; color: #1a4a30; }
+        .note-suggest { background: #f9f9f9; border-color: #888; color: #333; }
+        blockquote { border-left: 3px solid #ddd; padding: 10px 16px; margin: 16px 0; color: #555; font-size: 13.5px; background: #fafafa; }
+
+        /* SOURCE LIST */
+        .source-list { list-style: none; font-size: 12px; color: #777; }
+        .source-list li { padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px; }
+        .source-list li:last-child { border-bottom: none; }
+
+        /* GRADES */
+        .grade { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; letter-spacing: 0.06em; }
+        .grade-a { background: #e8f5e9; color: #2e7d32; }
+        .grade-b { background: #e3f2fd; color: #1565c0; }
+        .grade-c { background: #fce4ec; color: #880e4f; }
+        .up { color: #c0392b; }
+        .down { color: #2471a3; }
+        .neutral { color: #555; }
+
+        /* FOOTER */
+        .footer { border-top: 1px solid #e5e5e5; padding-top: 32px; margin-top: 64px; font-size: 12px; color: #aaa; line-height: 1.7; }
+
+        /* RESPONSIVE */
+        @media (max-width: 540px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media print {
+            body { font-size: 13px; }
+            .container { padding: 20px; }
+            .note-box { break-inside: avoid; }
+            table { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- COVER -->
+    <div class="cover">
+        <div class="cover-category">DeepDig / Investment Daily Briefing</div>
+        <div class="cover-year">2026.03.07</div>
+        <h1 class="cover-title">[3월7일]투자 데일리 브리핑</h1>
+        <p class="cover-subtitle">코스피 5,585 '롤러코스터' 강보합 — 미국 고용 쇼크(-92,000명), WTI $90 돌파, 트럼프 이란 핵협상 서한</p>
+        <div class="cover-meta">
+            <span>작성일 2026-03-07</span>
+            <span>데이터 기준 2026년 3월 6일</span>
+            <span>출처 21건</span>
+        </div>
+    </div>
+
+    <!-- TOC -->
+    <nav class="toc">
+        <div class="toc-title">목차</div>
+        <ol>
+            <li>한국 주식시장 — '롤러코스터' 강보합, 동학개미 2.9조 방어</li>
+            <li>미국 주식시장 — 고용 쇼크 + 유가 $90 '퍼펙트 스톰'</li>
+            <li>부동산 — 강남 하락 지속, 전세사기 최소보장제 추진</li>
+            <li>종합 — 3/9(월) 핵심 관전 포인트</li>
+            <li>출처</li>
+        </ol>
+    </nav>
+
+    <!-- SECTION 1: 한국 주식 -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">01</span>
+            <div>
+                <div class="section-title">한국 주식시장</div>
+                <div class="section-desc">'롤러코스터' 코스피 강보합, 동학개미 2.9조 방어</div>
+            </div>
+        </div>
+
+        <h3>3/6(금) 시장 마감</h3>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">코스피</div>
+                <div class="stat-value neutral">5,585</div>
+                <div class="stat-unit"><span class="neutral">+0.97p (+0.02%, 강보합)</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">코스닥</div>
+                <div class="stat-value up">1,155</div>
+                <div class="stat-unit"><span class="up">+38.26p (+3.43%)</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">원/달러</div>
+                <div class="stat-value up">1,476.4</div>
+                <div class="stat-unit"><span class="up">+8.3원 (원화 약세)</span></div>
+            </div>
+        </div>
+
+        <p>전일(3/5) +9.63% '용수철 반등' 이후 금요일 코스피는 <strong>'롤러코스터'</strong> 장세를 연출했다. 시초가 5,491(-92p)로 하락 출발한 뒤 장중 저점 5,381까지 밀렸다가, 개인 투자자의 강한 매수세에 힘입어 간신히 보합권(+0.02%)으로 마감했다. 장중 고저 차이가 약 220p에 달했다.</p>
+
+        <div class="note-box note-insight">
+            <strong>코스닥 상대 강세:</strong> 코스닥은 +3.43%로 코스피보다 강한 상승세를 보였다. 중소형 방산주·테마주 중심의 매수세가 코스닥 상승을 견인했으며, 센서뷰(+29.95%), 한일단조(+29.84%) 등 중소형 방산주가 급등했다.
+        </div>
+
+        <h3>수급 동향</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>투자 주체</th><th>3/6 순매수</th><th>비고</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>개인</strong></td><td class="up">+2조 9,500억</td><td>'동학개미 폭풍 쇼핑' — 지수 방어 주도</td></tr>
+                    <tr><td><strong>외국인</strong></td><td class="down">-1조 9,500억</td><td>유가 급등·원화 약세에 매도 지속</td></tr>
+                    <tr><td><strong>기관</strong></td><td class="down">-1조 1,200억</td><td>차익 실현 매도</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>외국인과 기관이 합산 약 <strong>3조원 규모</strong> 순매도를 쏟아냈지만, 개인이 2.95조원 순매수로 맞받아치며 지수를 방어했다. 외국인 매도 배경에는 한국의 중동 원유 의존도(70.7%)가 높아 유가 급등 시 타격이 크다는 인식이 있다.</p>
+
+        <h3>주요 종목</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>종목</th><th>3/6 등락</th><th>이슈</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>삼성전자</strong></td><td class="down">-5.2%</td><td>181,600원, 전일 반등분 되밀림</td></tr>
+                    <tr><td><strong>SK하이닉스</strong></td><td class="down">-2.13%</td><td>921,000원, 외국인 매도 지속</td></tr>
+                    <tr><td><strong>한화에어로</strong></td><td class="up">+7.24%</td><td>1,481,000원, 중동전쟁 장기화 수혜</td></tr>
+                    <tr><td><strong>센서뷰</strong></td><td class="up">+29.95%</td><td>중소형 방산주 급등</td></tr>
+                    <tr><td><strong>한일단조</strong></td><td class="up">+29.84%</td><td>방산 부품 테마 강세</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>반도체 대형주(삼성전자 -5.2%, SK하이닉스 -2.13%)가 전일 반등분을 되돌리며 코스피 지수를 짓눌렀다. 반면 방산주는 중동전쟁 장기화 우려에 전 종목 강세를 이어갔다. 건설(+5%대), 금속(+3%대) 업종도 강세를 보였다.</p>
+
+        <h3>환율 동향</h3>
+        <p>원/달러 환율은 시초가 1,479.0원(+10.9원)으로 급등 출발, 장중 <strong>1,480원</strong>을 돌파한 뒤 1,476.4원에 마감했다. 미국-이란 사태 장기화 우려와 외국인 매도에 따른 달러 수요가 원화 약세를 지속시키고 있다.</p>
+
+        <div class="note-box note-warning">
+            <strong>주의:</strong> 한국 증시 마감 후 미국에서 <strong>비농업 고용 -92,000명</strong> 쇼크와 <strong>WTI $90.90 돌파</strong>가 발생했다. 이 충격은 아직 한국 시장에 반영되지 않았으며, 3/9(월) 개장 시 큰 변동성이 예상된다.
+        </div>
+    </div>
+
+    <!-- SECTION 2: 미국 주식 -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">02</span>
+            <div>
+                <div class="section-title">미국 주식시장</div>
+                <div class="section-desc">고용 쇼크(-92,000명) + WTI $90 '퍼펙트 스톰'</div>
+            </div>
+        </div>
+
+        <h3>3/6(금) 뉴욕증시 마감</h3>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">S&P 500</div>
+                <div class="stat-value down">6,740</div>
+                <div class="stat-unit"><span class="down">-90.69 (-1.3%)</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">나스닥</div>
+                <div class="stat-value down">22,388</div>
+                <div class="stat-unit"><span class="down">-361.31 (-1.6%)</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">다우</div>
+                <div class="stat-value down">47,502</div>
+                <div class="stat-unit"><span class="down">-453.19 (-0.9%)</span></div>
+            </div>
+        </div>
+
+        <p>3월 6일 뉴욕증시는 <strong>'퍼펙트 스톰'</strong>에 직면했다. 2월 비농업 고용이 <strong>-92,000명</strong>으로 예상(+50,000)을 대폭 하회한 가운데, 호르무즈 봉쇄 장기화로 WTI가 <strong>$90.90</strong>을 돌파하며 경기침체(리세션)와 인플레이션이 동시에 나타나는 <strong>스태그플레이션</strong> 우려가 부각됐다.</p>
+
+        <h3>2월 고용지표 — 역대급 쇼크</h3>
+        <div class="stat-grid stat-grid-4" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card">
+                <div class="stat-label">비농업 고용</div>
+                <div class="stat-value down">-92,000</div>
+                <div class="stat-unit">예상 +50,000 대폭 하회</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">실업률</div>
+                <div class="stat-value">4.4%</div>
+                <div class="stat-unit">소폭 상승</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">시간당 임금</div>
+                <div class="stat-value">$37.32</div>
+                <div class="stat-unit">+0.4% MoM, +3.8% YoY</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">평균 실업기간</div>
+                <div class="stat-value up">25.7주</div>
+                <div class="stat-unit">2021.12 이래 최장</div>
+            </div>
+        </div>
+
+        <div class="note-box note-warning">
+            <strong>고용 쇼크 배경:</strong><br>
+            <strong>의료:</strong> -28,000명 (의사 파업으로 의원 -37,000명)<br>
+            <strong>연방정부:</strong> -10,000명 (트럼프 행정부 연방 인력 감축, 2024.10 이후 누적 -330,000명, 전체의 11%)<br>
+            <strong>건설업:</strong> -11,000명 (1월 +48,000명에서 반전, 기상 악화)<br>
+            평균 실업 기간 25.7주는 2021년 12월 이래 최장으로, 고용시장 구조적 악화를 시사한다.
+        </div>
+
+        <h3>유가 — WTI $90 돌파, 역대 최대 주간 상승</h3>
+        <div class="stat-grid stat-grid-2">
+            <div class="stat-card">
+                <div class="stat-label">WTI</div>
+                <div class="stat-value up">$90.90</div>
+                <div class="stat-unit"><span class="up">+$9.89 (+12.21%)</span> | 주간 <span class="up">+35.63%</span> 역대 최대</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">브렌트</div>
+                <div class="stat-value up">$92.69</div>
+                <div class="stat-unit"><span class="up">+$7.28 (+8.52%)</span> | 2022년 이후 최대 주간 상승</div>
+            </div>
+        </div>
+        <p>이란 혁명수비대의 호르무즈 해협 <strong>"완전한 작전 통제권"</strong> 선언으로 아시아·유럽향 원유 수백만 배럴이 사실상 봉쇄되었다. WTI는 하루 +12.21%, 주간 +35.63%를 기록하며 <strong>1983년 WTI 선물 거래 시작 이래 역대 최대 주간 상승률</strong>을 경신했다. 일부 애널리스트는 봉쇄 장기화 시 <strong>$100~$120</strong> 가능성을 경고하고 있다.</p>
+
+        <h3>업종별 동향</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>업종</th><th>동향</th><th>주요 종목</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="up"><strong>에너지</strong></td><td>급등</td><td>엑슨모빌(XOM), 쉐브론(CVX), 옥시덴탈(OXY)</td></tr>
+                    <tr><td class="down"><strong>기술</strong></td><td>하락</td><td>엔비디아 -1.4%, 메타 -1.1%, 알파벳 -1.2%</td></tr>
+                    <tr><td class="down"><strong>금융</strong></td><td>3~4% 하락</td><td>경기침체 우려 직격</td></tr>
+                    <tr><td class="down"><strong>산업재</strong></td><td>하락</td><td>고용 감소 + 유가 부담</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="table-caption">"실리콘에서 철강으로" — 기술주에서 에너지·Old Economy로 자금 이동(섹터 로테이션)</p>
+
+        <h3>주요 지표</h3>
+        <div class="stat-grid stat-grid-4" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card">
+                <div class="stat-label">VIX</div>
+                <div class="stat-value up">26+</div>
+                <div class="stat-unit">공포 구간 진입</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">10년물 금리</div>
+                <div class="stat-value">4.12%</div>
+                <div class="stat-unit">경기 둔화 우려로 하락</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">금</div>
+                <div class="stat-value">$5,081</div>
+                <div class="stat-unit">달러 강세에 상승 제한</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">비트코인</div>
+                <div class="stat-value down">$69,880</div>
+                <div class="stat-unit">ETF $2.27억 순유출</div>
+            </div>
+        </div>
+
+        <h3>연준 동향</h3>
+        <p><strong>현재 기준금리 3.50~3.75%</strong>(1/28 FOMC 동결). 차기 FOMC <strong>3/17~18일</strong> 예정. 고용 쇼크 이후 CME FedWatch에서 금리 인하 확률이 급등했으나, 유가 급등에 따른 인플레이션 우려로 연준은 딜레마에 봉착했다. <strong>파월 의장 임기 5/15 만료</strong> 예정이며, 트럼프는 후임으로 케빈 워시 전 연준 이사를 지명할 계획을 발표했다.</p>
+
+        <div class="note-box note-insight">
+            <strong>스태그플레이션 시나리오:</strong> 고용 -92,000명(경기 둔화) + WTI $90(인플레이션) = 연준이 금리를 내리기도, 올리기도 어려운 상황. 트럼프의 연방 인력 감축(누적 -33만명)과 중동 전쟁이 동시에 미국 경제를 압박하고 있다.
+        </div>
+    </div>
+
+    <!-- SECTION 3: 부동산 -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">03</span>
+            <div>
+                <div class="section-title">부동산</div>
+                <div class="section-desc">강남3구 3주 연속 하락, 전세사기 최소보장제 입법 추진</div>
+            </div>
+        </div>
+
+        <h3>서울 아파트 매매 동향</h3>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">서울 매매가</div>
+                <div class="stat-value">+0.09%</div>
+                <div class="stat-unit">5주 연속 오름폭 축소</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">매매 매물</div>
+                <div class="stat-value">7.2만건</div>
+                <div class="stat-unit"><span class="up">+26.1% 급증</span> (1개월)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">전월세 매물</div>
+                <div class="stat-value down">-16%</div>
+                <div class="stat-unit">전세 품귀 심화</div>
+            </div>
+        </div>
+
+        <h3>강남3구 + 용산 — 3주 연속 하락</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>지역</th><th>주간 변동</th><th>상세</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>강남구</strong></td><td class="down">-0.07%</td><td>100주 만에 하락 전환, 압구정 현대 128억 → 100~110억 급매</td></tr>
+                    <tr><td><strong>송파구</strong></td><td class="down">-0.09%</td><td>47주 만에 하락, 매물 +45.3% 급증</td></tr>
+                    <tr><td><strong>서초구</strong></td><td class="down">-0.01%</td><td>100주 만에 하락 전환</td></tr>
+                    <tr><td><strong>용산구</strong></td><td class="down">-0.05%</td><td>101주 만에 하락 전환</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>강남 30평대 아파트는 <strong>호가보다 6~7억원 낮춰야</strong> 겨우 계약이 체결되는 상황이다. 분당구 아파트 매물도 2,002가구에서 3,575가구로 <strong>+78.5%</strong> 급증했다. 반면 강북구는 10억원 이하 구축 대단지 중심으로 가격 강세를 보이며 <strong>풍선효과</strong>가 나타나고 있다.</p>
+
+        <h3>전세 시장 — 매매와 정반대</h3>
+        <p>서울 전월세 매물은 4.2만건에서 <strong>3.6만건으로 16% 감소</strong>(매매 매물 +26%와 정반대). 25개 전 자치구에서 감소(노원 -40.1%, 도봉 -32.8%). 서울 입주 물량이 2025년 4.2만 가구에서 2026년 <strong>2.9만 가구로 31.6% 급감</strong>한 것이 전세 품귀의 근본 원인이다. 2026년 전세 상승률 전망은 서울 <strong>+4.7%</strong>로 매매(+1~4.2%)를 상회한다.</p>
+
+        <h3>전세사기 최소보장제 — 3월 입법 추진</h3>
+        <div class="note-box note-insight">
+            <strong>전세사기 최소보장제 핵심:</strong><br>
+            경·공매 후 임차보증금 회수액이 일정 비율 미달 시 <strong>국가 재정으로 차액 보전</strong>. 보장 비율 30~50% 선에서 논의 중(피해자 단체는 최소 50% 요구). <strong>기존 피해자에 소급 적용</strong> 예정. 3월 국회 국토교통위원회에서 최종 확정 심의 진행.
+        </div>
+
+        <h3>주요 정책 변수</h3>
+        <div class="note-box note-warning">
+            <strong>5월 9일 양도세 중과배제 종료 (D-63)</strong><br>
+            종료 후 — 조정대상지역 2주택자: 기본세율+20%p, 3주택 이상: +30%p. 실효세율 <strong>최대 82.5%</strong> 가능. 장기보유특별공제도 배제될 수 있어 장기 보유자에게 불리. 3월 말~4월 초 추가 급매물 출회 예상.
+        </div>
+
+        <div class="note-box note-suggest">
+            <strong>3월 서울 대규모 분양</strong><br>
+            9개 단지 9,025가구 공급 예정. 라클라체자이드파인(노량진6구역, 1,499가구), 오티에르반포, 아크로드서초, 이촌르엘 등. 한강벨트(용산·동작구)에 대규모 단지 집중 — '로또 청약' 기대감 높은 상황.
+        </div>
+    </div>
+
+    <!-- SECTION 4: 종합 -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">04</span>
+            <div>
+                <div class="section-title">종합 — 3/9(월) 핵심 관전 포인트</div>
+                <div class="section-desc">미국 고용 쇼크 + 유가 $90 + 트럼프 서한 = 월요일 폭풍 예고</div>
+            </div>
+        </div>
+
+        <h3>3/9(월) 한국 증시 개장 시 반영될 악재/호재</h3>
+        <div class="note-box note-warning">
+            <strong>아직 한국 시장에 미반영된 충격:</strong><br><br>
+            <strong>1. 미국 고용 쇼크</strong> — 비농업 고용 -92,000명(예상 +50,000). 미국 경기침체 우려 → 글로벌 위험자산 매도 압력<br><br>
+            <strong>2. WTI $90.90 돌파</strong> — 한국 장중에는 $79대였으나, 미국 장에서 +12.21% 폭등. 한국 에너지 비용 급증 우려, 항공·운송 타격<br><br>
+            <strong>3. 뉴욕증시 추가 하락</strong> — 나스닥 -1.6%, S&P500 -1.3%. 주간 기준 다우 -3%(4월 이후 최악), S&P500 -2%(10월 이후 최악)<br><br>
+            <strong>4. VIX 26+ 공포 구간</strong> — 글로벌 투자 심리 악화, 외국인 추가 이탈 가능성
+        </div>
+
+        <div class="note-box note-forecast">
+            <strong>한국 시장에 미반영된 호재:</strong><br><br>
+            <strong>1. 트럼프, 하메네이에 핵협상 서한 (3/7)</strong> — 2개월 내 핵 프로그램 해체 요구, 수용 시 제재 해제·관계 정상화 제안, 거부 시 군사 공격 경고. 이란이 3월 말까지 협상 준비 의사를 답신한 것으로 알려져 <strong>휴전 기대감</strong>이 형성될 가능성<br><br>
+            <strong>2. 에너지·방산주 추가 상승 여력</strong> — 유가 $90 시대 진입으로 정유·에너지주 수혜 확대. 방산주도 중동 전쟁 장기화에 강세 지속 전망
+        </div>
+
+        <h3>섹터별 전망</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>섹터</th><th>방향</th><th>근거</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>방산</strong></td><td class="up">강세 지속</td><td>중동 전쟁 장기화, 한화에어로/LIG넥스원/중소형 방산</td></tr>
+                    <tr><td><strong>에너지/정유</strong></td><td class="up">강세 확대</td><td>WTI $90 시대, 정제마진 개선 기대</td></tr>
+                    <tr><td><strong>반도체</strong></td><td class="down">약세 우려</td><td>외국인 매도 + 미국 기술주 하락 동조</td></tr>
+                    <tr><td><strong>항공/여행</strong></td><td class="down">약세 심화</td><td>유가 $90 → 항공유 비용 급등</td></tr>
+                    <tr><td><strong>금융</strong></td><td class="down">약세 우려</td><td>미국 고용 쇼크 → 경기침체 우려</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>주요 일정</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>일자</th><th>이벤트</th><th>영향</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>3/9(월)</strong></td><td>한국 증시 개장</td><td>미국 고용 쇼크 + WTI $90 + 트럼프 서한 동시 반영</td></tr>
+                    <tr><td><strong>3/11(수)</strong></td><td>미국 2월 CPI 발표</td><td>유가 급등 → 인플레 재점화 여부 확인</td></tr>
+                    <tr><td><strong>3/17~18</strong></td><td>FOMC 회의</td><td>금리 결정 + 파월 기자회견 (임기 마지막 FOMC)</td></tr>
+                    <tr><td><strong>5/9</strong></td><td>양도세 중과배제 종료</td><td>다주택자 매물 출회 가속 (D-63)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>핵심 리스크</h3>
+        <div class="note-box note-warning">
+            <strong>1. 스태그플레이션:</strong> 고용 -92,000 + WTI $90 = 경기 둔화 + 물가 상승 동시 발생. 연준 정책 딜레마 심화<br>
+            <strong>2. 호르무즈 봉쇄 장기화:</strong> WTI $100~$120 시나리오. 한국 중동 원유 의존도 70.7%, 호르무즈 통과 95%<br>
+            <strong>3. 원/달러 1,500원 재돌파:</strong> 유가 급등 + 외국인 매도 → 환율 급등 시 외국인 자금 유출 가속<br>
+            <strong>4. 연방 인력 감축:</strong> 트럼프 행정부 누적 -33만명, 미국 내수 위축 → 글로벌 경기 둔화 전이
+        </div>
+
+        <h3>긍정 시그널</h3>
+        <div class="note-box note-forecast">
+            <strong>1. 트럼프-하메네이 서한:</strong> 이란이 3월 말 협상 의사 답신 → 4주 내 휴전 시나리오 재부상 가능<br>
+            <strong>2. 동학개미 저가 매수:</strong> 개인 투자자가 4거래일간 약 10조원 순매수, 하방 지지력 확인<br>
+            <strong>3. AI 투자 사이클:</strong> 브로드컴 AI 매출 +106%(전주 발표), 하이퍼스케일러 CapEx 확대 기조 유지<br>
+            <strong>4. 코스닥 상대 강세:</strong> +3.43%로 중소형주 매수세 견조, 방산·테마주 중심 자금 유입 지속
+        </div>
+    </div>
+
+    <!-- SECTION 5: 출처 -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">05</span>
+            <div>
+                <div class="section-title">출처</div>
+                <div class="section-desc">총 21건 (A급 5건, B급 16건)</div>
+            </div>
+        </div>
+
+        <ul class="source-list">
+            <li><span class="grade grade-a">A</span> BLS — February 2026 Employment Situation: Nonfarm payrolls -92,000 (bls.gov)</li>
+            <li><span class="grade grade-a">A</span> Federal Reserve — FOMC Statement Jan 28, rate 3.50~3.75% hold (federalreserve.gov)</li>
+            <li><span class="grade grade-a">A</span> CNBC — February 2026 jobs report: payrolls fall 92,000 (cnbc.com)</li>
+            <li><span class="grade grade-a">A</span> 금융위원회 — 3단계 스트레스 DSR 시행방안 확정 (fsc.go.kr)</li>
+            <li><span class="grade grade-a">A</span> 대한민국 정책브리핑 — 다주택 양도세 중과 유예 종료 안내 (korea.kr)</li>
+            <li><span class="grade grade-b">B</span> 머니투데이 — 동학개미 2.9조 폭풍 쇼핑 코스피 강보합 (mt.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 이비엔뉴스 — 코스피 개인 3조 순매수에 5580대 강보합 (ebn.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 겟뉴스 — 롤러코스터 코스피 중동전 확전에 등락 거듭 (getnews.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 이투데이 — 코스피 5584.87 강보합 코스닥 3%대 상승 (etoday.co.kr)</li>
+            <li><span class="grade grade-b">B</span> BusinessKorea — Retail investors drive KOSPI with 2.95T won (businesskorea.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 이비엔뉴스 — 원달러 환율 1476.4원 마감 (ebn.co.kr)</li>
+            <li><span class="grade grade-b">B</span> Yahoo Finance — Stocks drop to end volatile week as oil surges above $90 (yahoo.com)</li>
+            <li><span class="grade grade-b">B</span> CNN Business — US stocks drop as oil surges on Iran war (cnn.com)</li>
+            <li><span class="grade grade-b">B</span> UPI — February jobs report 2026: payrolls plunge (upi.com)</li>
+            <li><span class="grade grade-b">B</span> Fortune — Bitcoin price drops to $69,880, ETF outflows $227M (fortune.com)</li>
+            <li><span class="grade grade-b">B</span> CNBC — Iran war: oil prices WTI surges past $90 (cnbc.com)</li>
+            <li><span class="grade grade-b">B</span> 서울신문 — 서울 아파트 매물 26% 늘 때 전월세 16% 감소 (seoul.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 이투데이 — 강남 아파트 상승세 주춤 급매 늘며 하락 전환 (etoday.co.kr)</li>
+            <li><span class="grade grade-b">B</span> 헤럴드경제 — 강남3구 용산 100주 만에 하락 전환 (heraldcorp.com)</li>
+            <li><span class="grade grade-b">B</span> 글로벌이코노믹 — 트럼프 하메네이에 핵협상 서한 발송 (g-enews.com)</li>
+            <li><span class="grade grade-b">B</span> 에포크타임스 — 이란 CIA에 휴전 협상 제안 (epochtimes.kr)</li>
+        </ul>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>본 보고서는 DeepDig research-crawler가 자동 생성한 투자 참고 자료입니다.<br>
+        투자 판단의 최종 책임은 투자자 본인에게 있으며, 본 자료는 투자 권유가 아닙니다.<br>
+        생성일시: 2026-03-07 | DeepDig v1.0</p>
+    </div>
+
+</div>
+</body>
+</html>
