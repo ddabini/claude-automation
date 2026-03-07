@@ -14796,6 +14796,9 @@ ${metaText}
       if (hintEl) hintEl.style.display = 'block';
       var gridEl = document.getElementById('drEditPropGrid');
       if (gridEl) gridEl.style.display = 'none';
+      // 레이어 순서 도구 숨기기
+      var layerTools = document.getElementById('drEditLayerTools');
+      if (layerTools) layerTools.style.display = 'none';
     }
 
     /* ─── 요소 선택 ─── */
