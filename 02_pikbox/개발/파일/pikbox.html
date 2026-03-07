@@ -8440,6 +8440,10 @@
         duration: '',      // '' = 전체, 'short' = 3분 미만, 'medium' = 3~20분, 'long' = 20분 초과
         date: '',          // '' = 전체, 'today' / '3days' / 'week' / 'month' / 'year'
       },
+      // ─── A/B 비교 모드 상태 ───
+      compareMode: false,        // 비교 모드 켜짐/꺼짐
+      compareSet: new Map(),     // 선택된 영상 Map<videoId, videoData>
+      compareRadar: null,        // 레이더 차트 인스턴스
     };
 
     // ─── YouTube videoId에서 고화질 썸네일 URL 생성 ───
