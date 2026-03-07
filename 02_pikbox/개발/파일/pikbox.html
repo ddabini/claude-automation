@@ -9362,6 +9362,9 @@
         if (emptyEl) emptyEl.style.display = 'none';
         if (navSearch) navSearch.classList.remove('active');
         if (grid) grid.innerHTML = '';
+        // 무한 스크롤 sentinel 숨김 — 저장 모드에서 검색 로드 방지
+        var sentinel = document.getElementById('ytSentinel');
+        if (sentinel) sentinel.style.display = 'none';
         // 카테고리 선택은 ytSelectCategory에서 처리
       }
     }
