@@ -9944,7 +9944,7 @@
                 <th style="text-align:left;">지표</th>
                 ${items.map((item, i) => {
                   const colors = ['#ff0000','#6366f1','#10b981','#f59e0b'];
-                  return `<th><span style="color:${colors[i]};">${escHtml(truncate(item.channel || item.title, 15))}</span></th>`;
+                  return `<th><span style="color:${colors[i]};">${String.fromCharCode(65 + i)}. ${escHtml(truncate(item.title, 15))}</span></th>`;
                 }).join('')}
               </tr>
             </thead>
