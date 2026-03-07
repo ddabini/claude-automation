@@ -14755,6 +14755,13 @@ ${metaText}
       iDoc.addEventListener('dblclick', drEditCanvasDblClick, true);
       iDoc.addEventListener('click', function(e) { e.preventDefault(); }, true);
 
+      // iframe 내부에서도 키보드 단축키 동작하도록 (포커스가 iframe에 있을 때)
+      iDoc.addEventListener('keydown', function(e) {
+        // contenteditable 요소에서 타이핑 중이면 무시
+        if (e.target && e.target.contentEditable === 'true') return;
+        drEditHandleShortcut(e);
+      }, true);
+
       // 속성 패널에 안내 표시
       var propsEl = document.getElementById('drEditProps');
       if (propsEl) { propsEl.style.display = 'block'; }
