@@ -10949,17 +10949,11 @@ ${videoInfos}
         const card = document.createElement('div');
         // 쇼츠이면 세로 카드 클래스 추가
         const _vid = ytExtractVideoId(r.sourceUrl);
-        // 비교 모드에서 이미 선택된 카드인지 확인
-        const _compareSelected = ytState.compareSet.has(_vid);
-        card.className = 'yt-card' + (r.isShorts ? ' yt-card--shorts' : '') + (_compareSelected ? ' yt-compare-selected' : '');
+        card.className = 'yt-card' + (r.isShorts ? ' yt-card--shorts' : '');
         card.dataset.vid = _vid || '';
-        // 클릭 시 — 비교 모드이면 선택 토글, 아니면 플레이어 열기
+        // 클릭 시 플레이어 열기
         card.onclick = () => {
-          if (ytState.compareMode) {
-            ytToggleCompareCard(_vid, r, card);
-          } else {
-            ytOpenPlayer(r);
-          }
+          ytOpenPlayer(r);
         };
 
         // 이미 저장된 영상인지 확인
