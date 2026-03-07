@@ -15576,14 +15576,10 @@ ${metaText}
       var old = iDoc.getElementById('pkb-hbox');
       if (old) old.remove();
       var rect = el.getBoundingClientRect();
-      // body 기준 상대 좌표 계산 (줌·스크롤·마진 영향 제거)
-      var bodyRect = iDoc.body.getBoundingClientRect();
-      var left = rect.left - bodyRect.left;
-      var top = rect.top - bodyRect.top;
       var box = iDoc.createElement('div');
       box.id = 'pkb-hbox';
       box.className = 'pkb-hbox';
-      box.style.cssText = 'left:' + left + 'px;top:' + top + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;';
+      box.style.cssText = 'left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;';
       var positions = ['tl','tc','tr','ml','mr','bl','bc','br'];
       for (var i = 0; i < positions.length; i++) {
         var h = iDoc.createElement('div');
