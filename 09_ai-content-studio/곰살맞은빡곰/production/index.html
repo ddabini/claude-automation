@@ -475,12 +475,14 @@ function renderTopbar(){
     {id:'rules',label:'프롬프트 규칙'},
     {id:'cost',label:'비용'}
   ];
+  // 대기중인 수정 요청 개수 세기
+  const prodEdits = editsCache[currentProd.id] || {};
+  const pendingCount = Object.values(prodEdits).filter(e => e && e.status === 'pending').length;
   document.getElementById('topbar').innerHTML =
     `<strong style="margin-right:8px">#${currentProd.id} ${currentProd.title}</strong>` +
     tabs.map(t=>`<button class="tab ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('') +
     `<span class="spacer"></span>` +
-    `<button class="edit-toggle ${editMode?'on':''}" onclick="toggleEditMode()">` +
-    `${editMode ? '편집중' : '편집 모드'}</button>`;
+    (pendingCount > 0 ? `<span class="pending-count">수정 요청 ${pendingCount}건 대기중</span>` : '');
 }
 
 // ================================================================
