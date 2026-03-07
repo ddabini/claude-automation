@@ -15317,10 +15317,10 @@ ${metaText}
           reader.onload = function(e) {
             var img = iDoc.createElement('img');
             img.src = e.target.result;
-            var vpW2 = iDoc.documentElement.clientWidth || 1080;
-            var vpH2 = iDoc.documentElement.clientHeight || 1080;
-            img.style.cssText = 'max-width:300px; height:auto; position:absolute; left:' + Math.round((vpW2-300)/2) + 'px; top:' + Math.round(vpH2/4) + 'px; z-index:100; cursor:move;';
-            iDoc.body.appendChild(img);
+            var ct2 = drEditFindContainer();
+            var cr2 = ct2.getBoundingClientRect();
+            img.style.cssText = 'max-width:300px; height:auto; position:absolute; left:' + Math.round((cr2.width-300)/2) + 'px; top:' + Math.round(cr2.height/4) + 'px; z-index:100; cursor:move;';
+            ct2.appendChild(img);
             drEditState.hasChanges = true;
             toast('이미지 추가됨 (로컬)', 'success');
           };
