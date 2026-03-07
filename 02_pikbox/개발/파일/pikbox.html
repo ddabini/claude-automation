@@ -9857,6 +9857,7 @@
                 durationSec,
                 durationFmt: ytFormatDurationISO(cd.duration || ''),
                 channelTitle: sn.channelTitle || '',
+                _channelId: sn.channelId || '',  // 구독자 조회용
                 // 파생 지표
                 engagementRate: views > 0 ? ((likes + comments) / views * 100) : 0,
                 likeRate: views > 0 ? (likes / views * 100) : 0,
