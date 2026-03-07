@@ -16452,33 +16452,24 @@ ${metaText}
     /**
      * drResizeDesignHtml — 원본 HTML을 새 사이즈에 맞게 변환
      *
-     * 동작 원리:
-     * 1. 원본 HTML을 파싱하여 <head>와 <body> 내용 추출
-     * 2. 원본 콘텐츠 전체를 wrapper div로 감싸고 scale 변환 적용
-     * 3. 새 캔버스 사이즈(targetW × targetH)에 맞게 가운데 배치
-     * 4. 배경색은 원본에서 추출하여 빈 영역에 적용
+     * 동작 원리 (wrapper 없이 body 직접 수정):
+     * 1. body의 width/height를 타깃 사이즈로 변경
+     * 2. body의 첫 번째 자식 컨테이너(보통 .poster 등)에 CSS zoom 적용
+     *    — transform 대신 zoom 사용 → 좌표계가 유지되어 에디터 호환성 유지
+     * 3. 컨테이너를 margin:auto로 가운데 정렬
      *
-     * 이렇게 하면 원본 레이아웃이 깨지지 않고 비율에 맞게 축소/확대됨
-     * 사용자가 에디터에서 세부 위치를 조정할 수 있음
+     * CSS zoom 장점:
+     * - 에디터의 클릭/드래그/리사이즈가 정상 동작
+     * - getBoundingClientRect()가 zoom 반영된 값 반환
+     * - position:absolute/fixed 모두 정상 작동
      */
     function drResizeDesignHtml(html, origW, origH, origPages, targetW, targetH) {
-      // 원본 1페이지 높이
-      var pageH = origH;
-      var totalOrigH = pageH * origPages;
       var totalTargetH = targetH * origPages;
 
       // 스케일 계산 — 원본을 새 사이즈 안에 fit
       var scaleX = targetW / origW;
-      var scaleY = targetH / pageH;
+      var scaleY = targetH / origH;
       var fitScale = Math.min(scaleX, scaleY);
-
-      // 스케일된 콘텐츠 크기
-      var scaledW = origW * fitScale;
-      var scaledTotalH = totalOrigH * fitScale;
-
-      // 가운데 정렬 오프셋
-      var offsetX = (targetW - scaledW) / 2;
-      var offsetY = (totalTargetH - scaledTotalH) / 2;
 
       // HTML 파싱
       var parser = new DOMParser();
@@ -16495,40 +16486,24 @@ ${metaText}
       }
       if (!bgColor) bgColor = '#ffffff';
 
-      // body 안의 모든 콘텐츠를 wrapper로 이동
-      var wrapper = doc.createElement('div');
-      wrapper.className = 'pkb-var-content';
-      wrapper.style.cssText = [
-        'width:' + origW + 'px',
-        'height:' + totalOrigH + 'px',
-        'transform:scale(' + fitScale.toFixed(6) + ')',
-        'transform-origin:top left',
-        'position:absolute',
-        'left:' + offsetX.toFixed(2) + 'px',
-        'top:' + offsetY.toFixed(2) + 'px',
-      ].join(';');
-
-      // body의 자식들을 wrapper로 이동 (style, script 태그 제외)
-      var children = [];
-      for (var i = 0; i < doc.body.childNodes.length; i++) {
-        children.push(doc.body.childNodes[i]);
+      // body의 첫 번째 Element 자식에 zoom 적용 (보통 메인 컨테이너)
+      var mainContainer = doc.body.children[0];
+      if (mainContainer) {
+        // 가운데 정렬 + zoom으로 축소/확대
+        var marginTop = Math.max(0, (targetH - origH * fitScale) / 2);
+        mainContainer.style.cssText += ';zoom:' + fitScale.toFixed(6)
+          + ';margin:' + marginTop.toFixed(1) + 'px auto 0';
       }
-      for (var i = 0; i < children.length; i++) {
-        wrapper.appendChild(children[i]);
-      }
-      doc.body.appendChild(wrapper);
 
-      // body 스타일 업데이트 — 새 사이즈에 맞게
+      // body 스타일 — 타깃 사이즈로 변경, 원본 구조는 유지
       doc.body.style.cssText = [
         'margin:0', 'padding:0',
         'width:' + targetW + 'px',
         'height:' + totalTargetH + 'px',
         'overflow:hidden',
-        'position:relative',
         'background:' + bgColor,
       ].join(';');
 
-      // <html> 스타일도 동기화
       doc.documentElement.style.cssText = 'margin:0;padding:0;';
 
       return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
