@@ -51,6 +51,17 @@
           "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
         }
       ]
+    },
+    {
+      "target": "bbakgom",
+      "public": "09_ai-content-studio/곰살맞은빡곰/production",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "review.html"],
+      "headers": [
+        {
+          "source": "**/*.html",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0" }]
+        }
+      ]
     }
   ]
 }
