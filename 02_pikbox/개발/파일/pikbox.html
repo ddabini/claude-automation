@@ -4124,6 +4124,19 @@
           디자인 위의 요소를 클릭하여 선택하세요.<br>
           <small>클릭 = 선택/이동 · 더블클릭 = 텍스트 편집 · 핸들 = 크기 조절</small>
         </div>
+        <!-- 배경 편집 패널 — 배경 클릭 시 표시 -->
+        <div id="drEditBgGrid" style="display:none;">
+          <div class="dr-edit-prop-tag">🎨 배경</div>
+          <div class="dr-edit-prop-row" style="grid-template-columns: auto 1fr;">
+            <label>배경색</label>
+            <input type="color" id="drEditBgColor" oninput="drEditApplyBgProp('bgColor')" style="width:100%; height:32px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;">
+          </div>
+          <div class="dr-edit-prop-row" style="grid-template-columns: auto 1fr;">
+            <label>현재값</label>
+            <input type="text" id="drEditBgHex" oninput="drEditApplyBgProp('bgHex')" style="font-family:monospace; font-size:13px; text-align:center; padding:4px 8px; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text);" placeholder="#000000">
+          </div>
+        </div>
+        <!-- 요소 편집 패널 — 개별 요소 클릭 시 표시 -->
         <div id="drEditPropGrid" style="display:none;">
           <div class="dr-edit-prop-tag" id="drEditPropTag">-</div>
           <div class="dr-edit-prop-row">
