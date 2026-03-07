@@ -15292,20 +15292,20 @@ ${metaText}
         await storageRef.put(file);
         var url = await storageRef.getDownloadURL();
 
-        // iframe 안에 이미지 삽입 — position:absolute로 디자인 위에 올림
+        // iframe 안에 이미지 삽입 — 디자인 컨테이너 내부에 position:absolute로 올림
         drEditPushUndo();
+        var container = drEditFindContainer();
         var img = iDoc.createElement('img');
         img.src = url;
-        // 뷰포트 중앙 근처에 배치 (페이지 높이를 늘리지 않음)
-        var vpW = iDoc.documentElement.clientWidth || 1080;
-        var vpH = iDoc.documentElement.clientHeight || 1080;
-        var imgLeft = Math.max(20, Math.round((vpW - 300) / 2));
-        var imgTop = Math.max(20, Math.round(vpH / 4));
+        // 컨테이너 크기 기준으로 중앙 근처에 배치
+        var cRect = container.getBoundingClientRect();
+        var imgLeft = Math.max(20, Math.round((cRect.width - 300) / 2));
+        var imgTop = Math.max(20, Math.round(cRect.height / 4));
         img.style.cssText = 'max-width:300px; height:auto; position:absolute; left:' + imgLeft + 'px; top:' + imgTop + 'px; z-index:100; cursor:move;';
         img.alt = file.name;
 
-        // body에 직접 삽입 (absolute라 문서 흐름에 영향 없음)
-        iDoc.body.appendChild(img);
+        // 디자인 컨테이너 내부에 삽입 (컨테이너 밖으로 확장되지 않음)
+        container.appendChild(img);
 
         drEditState.hasChanges = true;
         toast('이미지가 추가되었습니다', 'success');
