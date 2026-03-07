@@ -15636,10 +15636,12 @@ ${metaText}
         return;
       }
 
-      // 배경 컨테이너 클릭 방지 — body 직속 자식이면서 자식 요소가 2개 이상인 컨테이너는
-      // "배경"으로 간주하여 선택하지 않음 (이동 시 전체가 같이 움직이는 문제 방지)
+      // 배경 컨테이너 클릭 — body 직속 자식이면서 자식 요소가 2개 이상이면
+      // "배경"으로 간주 → 배경 편집 패널 표시 (이동은 불가, 색상 변경만 가능)
       if (target.parentElement === iDoc.body && target.children.length >= 2) {
-        drEditDeselectAll();
+        e.preventDefault();
+        e.stopPropagation();
+        drEditSelectBg(target);
         return;
       }
 
