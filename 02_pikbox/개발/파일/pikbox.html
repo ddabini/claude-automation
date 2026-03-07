@@ -14669,6 +14669,8 @@ ${metaText}
       const isOpen = !panel.classList.contains('hidden');
       const btn = document.getElementById('drEditToggleBtn');
       if (btn) btn.classList.toggle('dr-edit-active', isOpen);
+      // 편집 패널 열림/닫힘 상태 기억 (새로고침 시 복원용)
+      drPersistSet('dr_editOpen', isOpen ? '1' : '0');
       if (isOpen && drState.currentDesignId && !drEditState.active) {
         drEditLoadHtml(drState.currentDesignId);
       }
