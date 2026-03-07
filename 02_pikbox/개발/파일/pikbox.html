@@ -14963,7 +14963,7 @@ ${metaText}
     /* ─── 마우스 이벤트: mouseup ─── */
     function drEditCanvasMouseUp(e) {
       if (drEditState.dragState) {
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         drEditState.dragState = null;
       }
     }
@@ -14996,11 +14996,11 @@ ${metaText}
       target.addEventListener('blur', function onBlur() {
         target.contentEditable = 'false';
         target.removeEventListener('blur', onBlur);
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         drEditUpdatePropsPanel(target);
       });
       target.addEventListener('input', function() {
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         drEditUpdatePropsPanel(target);
       });
     }
@@ -15163,7 +15163,7 @@ ${metaText}
           el.textContent = newText;
         }
       }
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       drEditRefreshHandles();
     }
 
@@ -15181,7 +15181,7 @@ ${metaText}
       });
       el.style.zIndex = maxZ + 1;
       el.style.position = el.style.position || 'relative';
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       toast('맨 앞으로 이동', 'success');
     }
     function drEditLayerBack() {
@@ -15190,7 +15190,7 @@ ${metaText}
       drEditPushUndo();
       el.style.zIndex = '0';
       el.style.position = el.style.position || 'relative';
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       toast('맨 뒤로 이동', 'success');
     }
     function drEditLayerUp() {
@@ -15200,7 +15200,7 @@ ${metaText}
       var curZ = parseInt(el.style.zIndex) || 0;
       el.style.zIndex = curZ + 1;
       el.style.position = el.style.position || 'relative';
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       toast('레이어 앞으로 (z:' + (curZ + 1) + ')', 'success');
     }
     function drEditLayerDown() {
@@ -15210,7 +15210,7 @@ ${metaText}
       var curZ = parseInt(el.style.zIndex) || 0;
       el.style.zIndex = Math.max(0, curZ - 1);
       el.style.position = el.style.position || 'relative';
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       toast('레이어 뒤로 (z:' + Math.max(0, curZ - 1) + ')', 'success');
     }
 
@@ -15342,7 +15342,7 @@ ${metaText}
         // 디자인 컨테이너 내부에 삽입 (컨테이너 밖으로 확장되지 않음)
         container.appendChild(img);
 
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         toast('이미지가 추가되었습니다', 'success');
       } catch (err) {
         console.error('[편집] 이미지 업로드 실패:', err);
@@ -15356,7 +15356,7 @@ ${metaText}
             var cr2 = ct2.getBoundingClientRect();
             img.style.cssText = 'max-width:300px; height:auto; position:absolute; left:' + Math.round((cr2.width-300)/2) + 'px; top:' + Math.round(cr2.height/4) + 'px; z-index:100; cursor:move;';
             ct2.appendChild(img);
-            drEditState.hasChanges = true;
+            drEditMarkChanged();
             toast('이미지 추가됨 (로컬)', 'success');
           };
           reader.readAsDataURL(file);
@@ -15384,7 +15384,7 @@ ${metaText}
       // 디자인 컨테이너 내부에 삽입 (컨테이너 밖으로 확장되지 않음)
       container.appendChild(div);
 
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       toast('텍스트 블록이 추가되었습니다', 'success');
     }
 
@@ -15549,7 +15549,7 @@ ${metaText}
 
     /* ─── 변경 표시 + 자동저장 디바운스 트리거 (2초 후 자동 저장) ─── */
     function drEditMarkChanged() {
-      drEditState.hasChanges = true;
+      drEditMarkChanged();
       // 기존 타이머 취소 후 2초 디바운스
       clearTimeout(drEditState._autoSaveTimer);
       drEditState._autoSaveTimer = setTimeout(function() {
@@ -15828,7 +15828,7 @@ ${metaText}
         drEditPushUndo();
         drEditState.selectedElement.remove();
         drEditDeselectAll();
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         return true;
       }
       // Ctrl+C — 선택한 요소 복사
@@ -15858,7 +15858,7 @@ ${metaText}
         pasted.classList.remove('pkb-sel');
         iDoc.body.appendChild(pasted);
         drEditSelectElement(pasted);
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         toast('붙여넣기 완료', 'success');
         return true;
       }
@@ -15872,7 +15872,7 @@ ${metaText}
         drEditPushUndo();
         drEditState.selectedElement.remove();
         drEditDeselectAll();
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         toast('요소를 잘라냈습니다', 'success');
         return true;
       }
@@ -15885,7 +15885,7 @@ ${metaText}
         clone.style.transform = 'translate(20px, 20px)';
         drEditState.selectedElement.parentNode.insertBefore(clone, drEditState.selectedElement.nextSibling);
         drEditSelectElement(clone);
-        drEditState.hasChanges = true;
+        drEditMarkChanged();
         return true;
       }
       return false;
