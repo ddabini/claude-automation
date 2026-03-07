@@ -10015,55 +10015,10 @@
       return thumbsHtml + tableHtml + radarHtml + aiHtml;
     }
 
-    // ─── 레이더 차트 렌더링 (5축: 인게이지먼트 · 좋아요율 · 일평균조회 · 댓글 · 조회수) ───
-    function ytRenderCompareRadar(items) {
-      const canvas = document.getElementById('ytCompareRadarChart');
-      if (!canvas || typeof Chart === 'undefined') return;
-
-      // 각 축 정규화 (0~100 범위)
-      const normalize = (arr) => {
-        const max = Math.max(...arr, 0.001);
-        return arr.map(v => (v / max) * 100);
-      };
-      const engArr   = normalize(items.map(i => i.engagementRate));
-      const likeArr  = normalize(items.map(i => i.likeRate));
-      const dailyArr = normalize(items.map(i => i.dailyViews));
-      const commArr  = normalize(items.map(i => i.comments));
-      const viewArr  = normalize(items.map(i => i.views));
-
-      const colors = [
-        { bg: 'rgba(255,0,0,0.15)',   border: '#ff0000' },
-        { bg: 'rgba(99,102,241,0.15)', border: '#6366f1' },
-        { bg: 'rgba(16,185,129,0.15)', border: '#10b981' },
-        { bg: 'rgba(245,158,11,0.15)', border: '#f59e0b' },
-      ];
-
-      // 기존 차트 파괴
-      if (ytState.compareRadar) {
-        ytState.compareRadar.destroy();
-        ytState.compareRadar = null;
-      }
-
-      ytState.compareRadar = new Chart(canvas, {
-        type: 'radar',
-        data: {
-          labels: ['인게이지먼트', '좋아요율', '일평균조회', '댓글', '조회수'],
-          datasets: items.map((item, i) => ({
-            label: String.fromCharCode(65 + i) + '. ' + truncate(item.title, 18),
-            data: [engArr[i], likeArr[i], dailyArr[i], commArr[i], viewArr[i]],
-            backgroundColor: colors[i].bg,
-            borderColor: colors[i].border,
-            borderWidth: 2,
-            pointRadius: 3,
-            pointBackgroundColor: colors[i].border,
-          })),
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              beginAtZero: true,
+    // (레이더 차트 함수 제거됨 — 테이블+AI 분석으로 대체)
+    if (false) { // 미사용 코드 블록 방지용
+      const _unused = {
+        beginAtZero: true,
               max: 100,
               ticks: { display: false },
               grid: { color: 'rgba(0,0,0,0.08)' },
