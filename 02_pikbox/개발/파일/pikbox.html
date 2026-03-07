@@ -9699,8 +9699,16 @@
        영상 2~4개를 선택하여 지표·AI 분석으로 비교
     ══════════════════════════════════════════ */
 
-    // 비교 모드 켜기/끄기
+    // 비교 모드 켜기/끄기 (카테고리 저장 탭에서만 동작)
     function ytToggleCompareMode() {
+      // 카테고리 모드가 아니면 무시
+      if (!ytState.ytActiveCatId) {
+        toast('카테고리에 저장된 영상에서만 A/B 비교가 가능합니다', 'error');
+        return;
+      }
+      // 멀티선택 모드와 충돌 방지
+      if (ytState.ytMultiMode) ytCancelMultiSelect();
+
       ytState.compareMode = !ytState.compareMode;
       ytState.compareSet.clear();
       const grid = document.getElementById('ytGrid');
