@@ -762,11 +762,12 @@ function switchTab(id){
 function render(){renderSidebar();renderTopbar();renderContent()}
 
 // ================================================================
-// 편집 모드 토글
+// textarea 자동 높이 조절 + has-text 클래스 토글
 // ================================================================
-function toggleEditMode(){
-  editMode = !editMode;
-  render();
+function autoGrow(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+  el.closest('.edit-area').classList.toggle('has-text', el.value.trim().length > 0);
 }
 
 // ================================================================
