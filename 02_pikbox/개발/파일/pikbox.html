@@ -15337,17 +15337,17 @@ ${metaText}
       if (!iDoc) { toast('편집 모드를 먼저 시작하세요', 'error'); return; }
 
       drEditPushUndo();
+      var container = drEditFindContainer();
       var div = iDoc.createElement('div');
       div.textContent = '텍스트를 입력하세요';
-      // 뷰포트 중앙에 배치 — position:absolute로 디자인 흐름에 영향 없음
-      var vpW = iDoc.documentElement.clientWidth || 1080;
-      var vpH = iDoc.documentElement.clientHeight || 1080;
-      var tLeft = Math.max(20, Math.round((vpW - 200) / 2));
-      var tTop = Math.max(20, Math.round(vpH / 3));
+      // 컨테이너 중앙에 배치 — position:absolute로 디자인 흐름에 영향 없음
+      var cRect = container.getBoundingClientRect();
+      var tLeft = Math.max(20, Math.round((cRect.width - 200) / 2));
+      var tTop = Math.max(20, Math.round(cRect.height / 3));
       div.style.cssText = 'font-size:24px; color:#333; padding:8px 12px; position:absolute; left:' + tLeft + 'px; top:' + tTop + 'px; z-index:100; cursor:move;';
 
-      // body에 직접 삽입 (absolute라 문서 흐름에 영향 없음)
-      iDoc.body.appendChild(div);
+      // 디자인 컨테이너 내부에 삽입 (컨테이너 밖으로 확장되지 않음)
+      container.appendChild(div);
 
       drEditState.hasChanges = true;
       toast('텍스트 블록이 추가되었습니다', 'success');
