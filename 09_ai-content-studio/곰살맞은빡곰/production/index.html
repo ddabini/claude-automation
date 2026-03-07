@@ -527,8 +527,6 @@ function renderEditBlock(editKey, placeholder){
 function renderContent(){
   const p = currentProd;
   let html = '';
-  // body에 edit-mode 클래스 토글
-  document.body.classList.toggle('edit-mode', editMode);
 
   // ---- 기획초안 탭 ----
   html += `<div class="section ${currentTab==='planning'?'on':''}" id="sec-planning">`;
