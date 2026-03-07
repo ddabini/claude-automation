@@ -14802,9 +14802,13 @@ ${metaText}
     function drEditSelectElement(el) {
       drEditDeselectAll();
       drEditState.selectedElement = el;
+      drEditState._propUndoPushed = false; // 새 선택 시 undo 플래그 초기화
       el.classList.add('pkb-sel');
       drEditShowHandles(el);
       drEditUpdatePropsPanel(el);
+      // 레이어 순서 도구 표시
+      var layerTools = document.getElementById('drEditLayerTools');
+      if (layerTools) layerTools.style.display = 'block';
     }
 
     /* ─── 리사이즈 핸들 표시 ─── */
