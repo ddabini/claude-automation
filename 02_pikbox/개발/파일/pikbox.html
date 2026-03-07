@@ -8971,7 +8971,11 @@
             gl: 'kr',
             hl: 'ko'
           })
-        }).then(r => r.json()).catch(() => ({ images: [] }))
+        }).then(r => r.json()).then(data => {
+          // Serper 에러 응답 시 빈 결과 반환
+          if (data.message) { console.warn(`[Serper Community] ${data.message}`); return { images: [] }; }
+          return data;
+        }).catch(() => ({ images: [] }))
       );
 
       const results = await Promise.allSettled(promises);
