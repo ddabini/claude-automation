@@ -6,6 +6,9 @@
 <title>빡곰 프로덕션 리뷰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <style>
 /* ========== 리셋 & 기본 ========== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -34,10 +37,14 @@ html{scroll-behavior:smooth}
 .main{margin-left:260px;flex:1;min-width:0}
 
 /* 탑바 */
-.topbar{background:#fff;border-bottom:1px solid #e5e5e7;padding:16px 32px;position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px}
+.topbar{background:#fff;border-bottom:1px solid #e5e5e7;padding:16px 32px;position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .topbar .tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #d2d2d7;background:#fff;font-family:inherit;transition:all .15s}
 .topbar .tab:hover{border-color:#86868b}
 .topbar .tab.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+.topbar .spacer{flex:1}
+.topbar .edit-toggle{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #ff9500;background:#fff;font-family:inherit;color:#ff9500;transition:all .15s}
+.topbar .edit-toggle:hover{background:#fff8f0}
+.topbar .edit-toggle.on{background:#ff9500;color:#fff}
 
 /* 콘텐츠 */
 .content{max-width:960px;margin:0 auto;padding:32px}
@@ -143,6 +150,30 @@ html{scroll-behavior:smooth}
 .rule-item:last-child{border-bottom:none}
 .rule-item strong{color:#0071e3}
 
+/* ========== 편집 기능 ========== */
+.edit-area{margin-top:12px;border:2px dashed #ff9500;border-radius:12px;padding:16px;background:#fffbf5;display:none}
+.edit-mode .edit-area{display:block}
+.edit-area .edit-label{font-size:11px;font-weight:700;color:#ff9500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.edit-area .edit-label::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9500}
+.edit-textarea{width:100%;min-height:80px;border:1px solid #e5e5e7;border-radius:8px;padding:12px;font-family:'Pretendard Variable',-apple-system,sans-serif;font-size:13px;line-height:1.6;resize:vertical;background:#fff;color:#1d1d1f;transition:border-color .2s}
+.edit-textarea:focus{outline:none;border-color:#ff9500}
+.edit-textarea::placeholder{color:#c7c7cc}
+.edit-actions{display:flex;align-items:center;gap:8px;margin-top:8px}
+.edit-save{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;border:none;background:#ff9500;color:#fff;cursor:pointer;font-family:inherit;transition:all .15s}
+.edit-save:hover{background:#e68600}
+.edit-save:disabled{opacity:.5;cursor:not-allowed}
+.edit-status{font-size:11px;color:#86868b}
+
+/* 저장된 메모 표시 (편집 모드 아닐 때도 보임) */
+.saved-memo{margin-top:12px;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;position:relative}
+.saved-memo.pending{background:#fff8e1;border:1px solid #ffe082;color:#6d4c00}
+.saved-memo.resolved{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.saved-memo .memo-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:6px}
+.saved-memo.pending .memo-badge{background:#ff9500;color:#fff}
+.saved-memo.resolved .memo-badge{background:#4caf50;color:#fff}
+.saved-memo .memo-text{white-space:pre-wrap}
+.saved-memo .memo-time{font-size:10px;color:#999;margin-top:6px}
+
 /* ========== 반응형 ========== */
 @media(max-width:900px){
   .sidebar{display:none}
@@ -178,6 +209,28 @@ html{scroll-behavior:smooth}
 </div>
 
 <script>
+// ================================================================
+// Firebase 초기화 — 수정사항을 실시간으로 저장/읽기
+// ================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyC4u-cTREFEIxFHMPLjLXcLGHGkaaFzCUg",
+  authDomain: "did-ads.firebaseapp.com",
+  databaseURL: "https://did-ads-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "did-ads",
+  storageBucket: "did-ads.firebasestorage.app",
+  messagingSenderId: "211524252003",
+  appId: "1:211524252003:web:5cbc84581def74d2896356"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ================================================================
+// 편집 모드 상태 & 저장된 메모 캐시
+// ================================================================
+let editMode = false;
+// editsCache[prodId][editKey] = { text, timestamp, status }
+let editsCache = {};
+
 // ================================================================
 // 프로덕션 데이터 — 새 프로덕션 추가 시 이 배열에 항목 추가
 // ================================================================
@@ -418,7 +471,7 @@ function renderSidebar(){
   `).join('');
 }
 
-// 탑바
+// 탑바 — 편집 모드 토글 포함
 function renderTopbar(){
   const tabs = [
     {id:'planning',label:'기획초안'},
@@ -428,13 +481,55 @@ function renderTopbar(){
   ];
   document.getElementById('topbar').innerHTML =
     `<strong style="margin-right:8px">#${currentProd.id} ${currentProd.title}</strong>` +
-    tabs.map(t=>`<button class="tab ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
+    tabs.map(t=>`<button class="tab ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('') +
+    `<span class="spacer"></span>` +
+    `<button class="edit-toggle ${editMode?'on':''}" onclick="toggleEditMode()">` +
+    `${editMode ? '편집중' : '편집 모드'}</button>`;
 }
 
-// 메인 콘텐츠
+// ================================================================
+// 편집 영역 생성 — 각 섹션 아래에 수정 메모 작성란
+// ================================================================
+
+// 저장된 메모 + 편집 textarea 를 합쳐서 렌더링
+function renderEditBlock(editKey, placeholder){
+  const prodEdits = editsCache[currentProd.id] || {};
+  const saved = prodEdits[editKey];
+  let html = '';
+
+  // 저장된 메모가 있으면 항상 표시 (편집 모드 아니어도)
+  if(saved && saved.text){
+    const st = saved.status || 'pending';
+    const label = st === 'resolved' ? '반영 완료' : '대기중';
+    const time = saved.timestamp ? new Date(saved.timestamp).toLocaleString('ko-KR') : '';
+    html += `<div class="saved-memo ${st}">
+      <span class="memo-badge">${label}</span>
+      <div class="memo-text">${esc(saved.text)}</div>
+      ${time ? `<div class="memo-time">${time}</div>` : ''}
+    </div>`;
+  }
+
+  // 편집 모드일 때만 입력 영역 표시
+  html += `<div class="edit-area" data-key="${editKey}">
+    <div class="edit-label">수정 요청</div>
+    <textarea class="edit-textarea" placeholder="${placeholder}" data-key="${editKey}">${saved && saved.text && saved.status !== 'resolved' ? saved.text : ''}</textarea>
+    <div class="edit-actions">
+      <button class="edit-save" onclick="saveEdit('${editKey}', this)">저장</button>
+      <span class="edit-status"></span>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+// ================================================================
+// 메인 콘텐츠 렌더링
+// ================================================================
 function renderContent(){
   const p = currentProd;
   let html = '';
+  // body에 edit-mode 클래스 토글
+  document.body.classList.toggle('edit-mode', editMode);
 
   // ---- 기획초안 탭 ----
   html += `<div class="section ${currentTab==='planning'?'on':''}" id="sec-planning">`;
@@ -446,6 +541,7 @@ function renderContent(){
       <span class="badge b-h">${p.targetLength}</span>
     </div>
     <div class="planning-concept">${p.planning.concept}</div>
+    ${renderEditBlock('planning-concept', '콘셉트 수정 요청을 적어주세요. 예: "공감 포인트를 이렇게 바꿔줘...", "유머 부분 삭제하고 감성으로 바꿔줘" 등')}
   </div>`;
 
   // 장면 구성표
@@ -463,6 +559,7 @@ function renderContent(){
         </tr>`).join('')}
       </tbody>
     </table>
+    ${renderEditBlock('storyboard', '장면 구성 수정 요청. 예: "03번 장면 삭제", "05번과 06번 순서 바꿔줘", "새 장면 추가: 올리브영 계산대에서 결제하는 장면" 등')}
   </div>`;
 
   // 자막 계획
@@ -471,6 +568,7 @@ function renderContent(){
     <div class="subtitle-plan">
       ${p.planning.subtitles.map((s,i)=>`<div class="sub-line">${i>0?'<span class="arrow">&rarr;</span>':''}<span>"${s}"</span></div>`).join('')}
     </div>
+    ${renderEditBlock('subtitles', '자막 수정 요청. 예: "점심시간이다 → 잠깐 나갈게로 바꿔줘", "마지막에 이 대사 추가해줘: 오늘도 성공적" 등')}
   </div>`;
 
   // 스토리보드 이미지 스트립
@@ -523,6 +621,7 @@ function renderContent(){
           <div class="core-toggle" onclick="toggleCore(this)"><span class="arrow">&#9654;</span> [공통] 캐릭터 Core Description 보기</div>
           <div class="core-content">${bilingualInline(CORE)}</div>
           ${bilingual(s.imgPrompt,'img-'+s.id)}
+          ${renderEditBlock('scene-'+s.id+'-img', '이미지 프롬프트 수정 요청. 예: "배경을 더 밝게", "앵글을 클로즈업으로", "표정을 더 귀엽게" 등')}
         </div>
 
         <!-- 시작 이미지 -->
@@ -541,6 +640,7 @@ function renderContent(){
         <div class="prompt-sec" style="margin-top:20px">
           <h4 class="pv">I2V 영상 프롬프트</h4>
           ${bilingual(s.vidPrompt,'vid-'+s.id)}
+          ${renderEditBlock('scene-'+s.id+'-vid', '영상 프롬프트 수정 요청. 예: "동작을 더 빠르게", "걸음걸이를 더 귀엽게", "카메라 앵글을 바꿔줘" 등')}
         </div>
         <!-- 영상 결과물 -->
         <div class="prompt-sec">
@@ -562,6 +662,7 @@ function renderContent(){
         <div class="prompt-sec" style="margin-top:20px">
           <h4 class="pv">I2V 영상 프롬프트</h4>
           ${bilingual(s.vidPrompt,'vid-'+s.id)}
+          ${renderEditBlock('scene-'+s.id+'-vid', '영상 프롬프트 수정 요청. 예: "이 장면은 이런 동작으로 바꿔줘", "필요 없으니 삭제해줘" 등')}
         </div>
         `}
         ${s.notes?`<div class="note-box"><strong>NOTE:</strong> ${s.notes}</div>`:''}
@@ -578,6 +679,7 @@ function renderContent(){
     <div style="background:#f5f5f7;border-radius:10px;padding:16px;font-size:13px;line-height:1.7;font-family:'SF Mono','Menlo',monospace;color:#424245;margin-bottom:16px">${esc(CORE.en)}</div>
     <h3>한국어</h3>
     <div style="background:#f5f5f7;border-radius:10px;padding:16px;font-size:13px;line-height:1.7;color:#1d1d1f">${esc(CORE.kr)}</div>
+    ${renderEditBlock('core-description', 'Core Description 수정 요청. 예: "눈 색상을 좀 더 밝게", "털 질감 설명 추가해줘" 등')}
   </div>`;
   html += `<div class="card">
     <h2>프롬프트 작성 규칙 (모든 장면 공통)</h2>
@@ -588,6 +690,7 @@ function renderContent(){
     <div class="rule-item"><strong>조명</strong> — "slightly dim warm lighting, controlled exposure"<br><span style="color:#86868b">약간 어두운 따뜻한 조명, 노출 제어 (과노출 방지)</span></div>
     <div class="rule-item"><strong>캐릭터 일관성</strong> — MCP Gemini에 maintainCharacterConsistency: true + 캐릭터 카드 inputImage 필수<br><span style="color:#86868b">매번 동일 캐릭터를 생성하기 위한 설정</span></div>
     <div class="rule-item"><strong>악세서리 방지</strong> — "No accessories, no jewelry, no necklaces" 반드시 명시<br><span style="color:#86868b">AI가 목걸이/팔찌 등을 자동 생성하는 문제 방지</span></div>
+    ${renderEditBlock('prompt-rules', '프롬프트 규칙 수정/추가 요청. 예: "새 규칙 추가: 배경에 사람 넣지 마", "조명 규칙 변경해줘" 등')}
   </div>`;
   html += `</div>`;
 
@@ -628,7 +731,9 @@ function bilingualInline(data){
   <div><strong style="font-size:11px;color:#86868b">KR:</strong><br><span style="font-size:12px">${esc(data.kr)}</span></div>`;
 }
 
-// 유틸
+// ================================================================
+// 유틸 함수
+// ================================================================
 function switchLang(btn,lang){
   const tabs = btn.parentElement;
   const body = tabs.nextElementSibling;
@@ -655,13 +760,85 @@ function switchTab(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
   const sec = document.getElementById('sec-'+id);
   if(sec) sec.classList.add('on');
-  // 탭 버튼 활성화
   document.querySelectorAll('.topbar .tab').forEach(t=>t.classList.toggle('active',t.textContent==={planning:'기획초안',scenes:'제작과정',rules:'프롬프트 규칙',cost:'비용'}[id]));
 }
 function render(){renderSidebar();renderTopbar();renderContent()}
 
+// ================================================================
+// 편집 모드 토글
+// ================================================================
+function toggleEditMode(){
+  editMode = !editMode;
+  render();
+}
+
+// ================================================================
+// Firebase 수정사항 저장
+// ================================================================
+function saveEdit(editKey, btnEl){
+  const area = btnEl.closest('.edit-area');
+  const textarea = area.querySelector('.edit-textarea');
+  const statusEl = area.querySelector('.edit-status');
+  const text = textarea.value.trim();
+
+  if(!text){
+    statusEl.textContent = '내용을 입력해주세요';
+    statusEl.style.color = '#ff3b30';
+    return;
+  }
+
+  btnEl.disabled = true;
+  statusEl.textContent = '저장중...';
+  statusEl.style.color = '#86868b';
+
+  // Firebase DB에 저장
+  const path = `bbakgom-review/${currentProd.id}/edits/${editKey}`;
+  db.ref(path).set({
+    text: text,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    status: 'pending'
+  }).then(()=>{
+    statusEl.textContent = '저장 완료!';
+    statusEl.style.color = '#34c759';
+    btnEl.disabled = false;
+    // 캐시 업데이트
+    if(!editsCache[currentProd.id]) editsCache[currentProd.id] = {};
+    editsCache[currentProd.id][editKey] = { text, timestamp: Date.now(), status: 'pending' };
+    // 리렌더링해서 저장된 메모 표시
+    setTimeout(()=> renderContent(), 500);
+  }).catch(err=>{
+    statusEl.textContent = '저장 실패: ' + err.message;
+    statusEl.style.color = '#ff3b30';
+    btnEl.disabled = false;
+  });
+}
+
+// ================================================================
+// Firebase에서 기존 수정사항 로드 (실시간 리스너)
+// ================================================================
+function watchEdits(){
+  PRODUCTIONS.forEach(prod=>{
+    const path = `bbakgom-review/${prod.id}/edits`;
+    db.ref(path).on('value', snap=>{
+      const data = snap.val();
+      if(data){
+        editsCache[prod.id] = data;
+      } else {
+        editsCache[prod.id] = {};
+      }
+      // 현재 보고있는 프로덕션이면 리렌더링
+      if(prod.id === currentProd.id){
+        renderContent();
+      }
+    });
+  });
+}
+
+// ================================================================
 // 초기화
+// ================================================================
 render();
+watchEdits();
 </script>
 </body>
 </html>
