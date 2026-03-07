@@ -223,10 +223,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ================================================================
-// 편집 모드 상태 & 저장된 메모 캐시
+// 저장된 메모 캐시 — editsCache[prodId][editKey] = { text, timestamp, status }
 // ================================================================
-let editMode = false;
-// editsCache[prodId][editKey] = { text, timestamp, status }
 let editsCache = {};
 
 // ================================================================
