@@ -9858,8 +9858,9 @@
           const channelIds = new Set();
           for (const entry of entries) {
             const s = statsMap[entry.videoId];
-            // results에서 channelId 찾기
-            const fromResults = ytState.results.find(r => ytExtractVideoId(r.sourceUrl) === entry.videoId);
+            // results 또는 savedVideos에서 channelId 찾기
+            const fromResults = ytState.results.find(r => ytExtractVideoId(r.sourceUrl) === entry.videoId)
+                             || ytState.savedVideos.find(r => (r.video_id || ytExtractVideoId(r.sourceUrl || r.videoUrl || '')) === entry.videoId);
             const chId = fromResults?.channelId || entry.channelId;
             if (chId) {
               channelIds.add(chId);
