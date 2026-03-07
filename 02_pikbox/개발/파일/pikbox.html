@@ -10030,7 +10030,7 @@
         data: {
           labels: ['인게이지먼트', '좋아요율', '일평균조회', '댓글', '조회수'],
           datasets: items.map((item, i) => ({
-            label: truncate(item.channel || item.title, 12),
+            label: String.fromCharCode(65 + i) + '. ' + truncate(item.title, 18),
             data: [engArr[i], likeArr[i], dailyArr[i], commArr[i], viewArr[i]],
             backgroundColor: colors[i].bg,
             borderColor: colors[i].border,
