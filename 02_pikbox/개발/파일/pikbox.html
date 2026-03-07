@@ -16067,6 +16067,43 @@ ${metaText}
     }
   </script>
 
+  <!-- 사이즈 베리에이션 모달 — 1개 시안을 여러 광고 사이즈로 변환 -->
+  <div class="dr-var-overlay" id="drVarOverlay" onclick="if(event.target===this)drCloseVariationModal()">
+    <div class="dr-var-modal">
+      <h3>📐 사이즈 베리에이션</h3>
+      <p class="dr-var-sub">현재 디자인을 다양한 광고 사이즈로 자동 변환합니다</p>
+
+      <!-- 현재 디자인 정보 -->
+      <div class="dr-var-current" id="drVarCurrent">
+        <div class="dr-var-current-thumb" id="drVarThumb"></div>
+        <div class="dr-var-current-info">
+          <div class="dr-var-current-name" id="drVarOrigName">-</div>
+          <div class="dr-var-current-dim" id="drVarOrigDim">-</div>
+        </div>
+      </div>
+
+      <!-- 프리셋 사이즈 선택 -->
+      <div class="dr-var-label">광고 사이즈 프리셋</div>
+      <div class="dr-var-grid" id="drVarGrid"></div>
+
+      <!-- 커스텀 사이즈 입력 -->
+      <div class="dr-var-label">커스텀 사이즈</div>
+      <div class="dr-var-custom">
+        <input type="number" id="drVarCustomW" placeholder="너비" min="100" max="4000">
+        <span style="color:var(--text-muted);">×</span>
+        <input type="number" id="drVarCustomH" placeholder="높이" min="100" max="4000">
+        <button class="dr-btn" onclick="drAddCustomVariation()">+ 추가</button>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="dr-var-footer">
+        <span class="dr-var-progress" id="drVarProgress"></span>
+        <button class="dr-btn" onclick="drCloseVariationModal()">취소</button>
+        <button class="dr-btn dr-btn-primary" id="drVarGenerateBtn" onclick="drGenerateVariations()">생성하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 저장 선택 다이얼로그 — body 직속 (overflow:hidden 영향 없음) -->
   <div class="dr-save-dialog-overlay" id="drSaveDialogOverlay" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="dr-save-dialog">
