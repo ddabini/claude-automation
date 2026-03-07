@@ -9303,10 +9303,20 @@
       if (emptyEl) emptyEl.style.display = 'none';
 
       ytState.savedVideos.forEach(v => {
+        // 비교 모드용 videoId 추출
+        const _savedVid = v.video_id || ytExtractVideoId(v.sourceUrl || v.videoUrl || '');
+        const _compareSelected = ytState.compareMode && _savedVid && ytState.compareSet.has(_savedVid);
         const card = document.createElement('div');
-        card.className = 'yt-card' + (v.isShorts ? ' yt-card--shorts' : '') + (ytState.ytSelectedIds.has(v.id) ? ' selected' : '');
+        card.className = 'yt-card' + (v.isShorts ? ' yt-card--shorts' : '') + (ytState.ytSelectedIds.has(v.id) ? ' selected' : '') + (_compareSelected ? ' yt-compare-selected' : '');
         card.setAttribute('data-vid', v.id);
-        card.onclick = (e) => ytHandleCardClick(v.id, v, e);
+        // 비교 모드일 때는 비교 선택, 아닐 때는 기존 클릭 처리
+        card.onclick = (e) => {
+          if (ytState.compareMode && _savedVid) {
+            ytToggleCompareCard(_savedVid, v, card);
+          } else {
+            ytHandleCardClick(v.id, v, e);
+          }
+        };
         card.innerHTML = `
           <div class="yt-thumb">
             <img alt="${escHtml(v.title)}" loading="lazy">
@@ -9315,6 +9325,8 @@
             ${v.duration ? `<span class="yt-duration">${escHtml(v.duration)}</span>` : ''}
             <div class="yt-check" onclick="event.stopPropagation(); ytToggleSelect('${v.id}', event)">${ytState.ytSelectedIds.has(v.id) ? '✓' : ''}</div>
             <button class="yt-star-btn ${v.favorite ? 'active' : ''}" onclick="event.stopPropagation(); ytToggleFavorite('${v.id}')">${v.favorite ? '★' : '☆'}</button>
+            <!-- A/B 비교 모드 체크 오버레이 -->
+            <div class="yt-compare-check" onclick="event.stopPropagation(); ytToggleCompareCardById('${_savedVid}', this.closest('.yt-card'));">${_compareSelected ? '✓' : ''}</div>
           </div>
           <div class="yt-info">
             <div class="yt-title">${escHtml(v.title)}</div>
