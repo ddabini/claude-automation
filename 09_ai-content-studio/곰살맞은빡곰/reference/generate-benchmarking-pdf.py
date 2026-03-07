@@ -432,70 +432,162 @@ def build_report():
 
     story.append(PageBreak())
 
-    # ========== 7. 빡곰 적용 인사이트 ==========
-    story.append(Paragraph("7. 빡곰에 적용할 인사이트", styles["h1"]))
+    # ========== 7. 빡곰 보유 도구 현황 ==========
+    story.append(Paragraph("7. 빡곰 보유 도구 현황", styles["h1"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
 
-    story.append(Paragraph("즉시 적용 가능", styles["h2"]))
+    story.append(Paragraph("현재 보유 도구", styles["h2"]))
     story.append(make_table(
-        ["항목", "김햄찌 방식", "빡곰 적용"],
+        ["도구", "용도", "잔여량"],
         [
-            ["멀티 도구", "Sora+Kling+Higglesfield+NanoBanana", "Hailuo Free + Kling + Sora(향후)"],
-            ["양산 후 선별", "같은 장면 4개 도구로 생성 best pick", "같은 프롬프트 3~4회 생성 선별"],
-            ["짧은 클립 편집", "6초 클립에서 2~3초만 사용", "Hailuo 6초 핵심 구간만 추출"],
-            ["자막 대사", "햄스터가 직접 말하는 형태", "빡곰 대사 자막 추가"],
-            ["효과음", "Capcut + suno", "CapCut 효과음 + suno 배경음악"],
+            ["Google Flow", "영상(Veo 3.1) + 이미지(Nano Banana)", "토큰 일부 충전"],
+            ["Hailuo AI Free", "I2V 영상 생성 (2.3-Fast)", "155 크레딧"],
+            ["CapCut", "영상 편집 + 효과음", "무제한"],
+            ["MCP Gemini", "이미지 생성 (Claude 연동)", "API 키 보유"],
+            ["Playwright", "브라우저 자동화", "-"],
         ],
-        col_widths=[W * 0.18, W * 0.41, W * 0.41],
+        col_widths=[W * 0.22, W * 0.50, W * 0.28],
+    ))
+    story.append(Spacer(1, 6))
+    story.append(make_highlight_box(
+        "Flow = Google의 Veo 3.1 + Nano Banana + Gemini 통합 워크스페이스.<br/>"
+        "김햄찌가 쓰는 Nano Banana가 이미 Flow에 내장되어 있다!",
+        bg_color=HexColor("#e8f4f8"), text_color=ACCENT2,
+    ))
+
+    story.append(PageBreak())
+
+    # ========== 8. 즉시 도입 가능 도구 ==========
+    story.append(Paragraph("8. 즉시 도입 가능 도구 (무료)", styles["h1"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
+
+    story.append(make_table(
+        ["도구", "용도", "무료 한도", "우선순위"],
+        [
+            ["Kling AI", "I2V 영상 생성", "매일 66크레딧 (리셋)", "최우선"],
+            ["suno", "AI 배경음악", "50크레딧/일 (~10곡)", "최우선"],
+            ["ElevenLabs", "TTS 캐릭터 음성", "10,000자/월 (~15분)", "높음"],
+            ["Higgsfield", "I2V 영상 생성", "1영상+1이미지 (테스트)", "높음"],
+            ["Freesound", "효과음 라이브러리", "무제한 무료", "높음"],
+        ],
+        col_widths=[W * 0.18, W * 0.27, W * 0.30, W * 0.25],
     ))
 
     story.append(Spacer(1, 10))
-    story.append(Paragraph("중기 과제", styles["h2"]))
+    story.append(Paragraph("상업적 사용권 주의사항", styles["h2"]))
     story.append(make_table(
-        ["항목", "설명"],
+        ["도구", "무료 상업 사용", "유료 전환 시"],
         [
-            ["TTS 도입", "eleven labs로 빡곰 전용 목소리 만들기"],
-            ["Sora 도입", "모션 품질이 가장 우수 — 유료 플랜 검토"],
-            ["Higglesfield 테스트", "김햄찌가 Hailuo 대신 선택한 도구 — 테스트 필요"],
-            ["시리즈화", "'사회생활 만점 빡곰' 같은 시리즈 카테고리"],
-            ["풀버전+Shorts", "1분 풀버전 + Shorts 티저 이중 업로드"],
+            ["suno 무료", "불가 (YouTube 수익화 X)", "Pro $10/월 가능"],
+            ["ElevenLabs 무료", "불가 (크레딧 표기 필수)", "Starter $5/월 가능"],
+            ["Kling 무료", "가능 (워터마크 포함)", "Standard $10/월 제거"],
+            ["Higgsfield 무료", "제한적", "Basic $9/월 150크레딧"],
+            ["Hailuo 무료", "가능 (워터마크 포함)", "유료 시 제거"],
+            ["Google Flow", "가능", "AI Pro $19.99/월"],
         ],
-        col_widths=[W * 0.3, W * 0.7],
+        col_widths=[W * 0.22, W * 0.36, W * 0.42],
+    ))
+    story.append(Spacer(1, 6))
+    story.append(make_highlight_box(
+        "초기 성장기에는 무료 tier로 충분.<br/>"
+        "YouTube 수익화 후 suno Pro($10) + ElevenLabs($5) = 월 $15만 추가하면 해결.",
+        bg_color=HexColor("#e8f5e9"), text_color=SUCCESS,
     ))
 
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("현재 한계 비교: 김햄찌 vs 빡곰", styles["h2"]))
+    # ========== 9. 김햄찌 vs 빡곰 도구 비교 ==========
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("9. 도구 비교: 김햄찌 vs 빡곰", styles["h1"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
+
     story.append(make_table(
-        ["항목", "김햄찌", "빡곰 (현재)"],
+        ["항목", "김햄찌", "빡곰 (보유+도입)"],
         [
-            ["영상 도구", "유료 4개", "무료 1개 (Hailuo Free)"],
-            ["이미지 도구", "Nano Banana", "MCP Gemini + Nano Banana"],
-            ["음향", "Capcut + suno + eleven labs", "없음 (미적용)"],
-            ["편집", "CapCut", "미적용"],
-            ["워터마크", "없음 (유료)", "있음 (무료)"],
-            ["양산량", "장면당 4+ 후보", "장면당 1~2 후보"],
+            ["영상 I2V", "Sora + Kling + Higgsfield (유료)", "Flow(Veo) + Hailuo + Kling무료 + Higgsfield"],
+            ["이미지", "Nano Banana", "Flow(NanoBanana) + MCP Gemini"],
+            ["음향", "Capcut + suno + ElevenLabs", "CapCut + suno무료 + ElevenLabs무료"],
+            ["편집", "CapCut", "CapCut (보유)"],
+            ["양산량", "장면당 4+ 후보", "4개 도구 병렬 = 장면당 4+ 가능"],
         ],
-        col_widths=[W * 0.2, W * 0.4, W * 0.4],
+        col_widths=[W * 0.15, W * 0.40, W * 0.45],
     ))
+
+    story.append(PageBreak())
+
+    # ========== 10. 실전 워크플로우 ==========
+    story.append(Paragraph("10. 실전 워크플로우", styles["h1"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
+
+    workflow_steps = [
+        ("Step 1: 기획 + 스크립트",
+         "장면별 행동/대사/감정 설계. 캐릭터 프로필 + 환경 프로필 참조."),
+        ("Step 2: 시작 이미지 생성",
+         "MCP Gemini 또는 Google Flow(Nano Banana)로 각 장면 시작 프레임 제작."),
+        ("Step 3: I2V 영상 멀티 양산",
+         "같은 이미지+프롬프트를 Flow(Veo) / Hailuo / Kling / Higgsfield에 동시 투입. "
+         "장면당 3~4개 후보 생성 후 best pick 선별."),
+        ("Step 4: 편집 (CapCut)",
+         "best pick 클립들 조합. 6초 클립에서 핵심 2~3초 추출. 전환효과, 자막 대사 추가."),
+        ("Step 5: 음향",
+         "suno 배경음악 + ElevenLabs 빡곰 TTS(선택) + CapCut/Freesound 효과음."),
+        ("Step 6: 최종 출력",
+         "풀버전(1분 내외) + Shorts(핵심 장면) 이중 업로드."),
+    ]
+    for title, desc in workflow_steps:
+        story.append(Paragraph(f"<b>{title}</b>", styles["body_bold"]))
+        story.append(Paragraph(f"    {desc}", styles["bullet"]))
+        story.append(Spacer(1, 6))
+
+    # ========== 11. 도입 로드맵 ==========
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("11. 도입 로드맵", styles["h1"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
+
+    story.append(Paragraph("Phase 1 — 지금 당장 (비용 $0)", styles["h2"]))
+    for b in [
+        "[보유] Google Flow (Veo 3.1 + Nano Banana)",
+        "[보유] Hailuo AI Free (155 크레딧)",
+        "[보유] CapCut (편집)",
+        "[도입] Kling AI 가입 — 매일 66크레딧 무료, 2.6 모델 네이티브 오디오",
+        "[도입] suno 가입 — 매일 50크레딧 무료 (~10곡)",
+        "[도입] ElevenLabs 가입 — 10,000자/월 무료",
+        "[도입] Higgsfield 가입 — 테스트용",
+        "[적용] 멀티 도구 양산 + 선별 전략",
+    ]:
+        story.append(Paragraph(f"  {b}", styles["bullet"]))
+
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("Phase 2 — 첫 수익화 후 (월 ~$15)", styles["h2"]))
+    for b in [
+        "suno Pro ($10/월) — 상업적 음악 사용권 확보",
+        "ElevenLabs Starter ($5/월) — 상업적 TTS 사용권",
+    ]:
+        story.append(Paragraph(f"  {b}", styles["bullet"]))
+
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("Phase 3 — 채널 성장 후 (월 ~$30~50)", styles["h2"]))
+    for b in [
+        "Kling Standard ($10/월) — 워터마크 제거 + 1080p",
+        "Higgsfield Basic ($9/월) — 150 크레딧",
+        "또는 Hailuo Premium — 워터마크 제거",
+    ]:
+        story.append(Paragraph(f"  {b}", styles["bullet"]))
 
     # 핵심 결론 박스
     story.append(Spacer(1, 16))
     story.append(make_highlight_box(
-        "<b>핵심 결론</b><br/><br/>"
-        "김햄찌의 품질 비결은 단일 도구의 성능이 아니라,<br/>"
-        "<b>멀티 도구 양산 후 선별 + 편집 + 음향</b>의 3단 프로세스.<br/><br/>"
-        "우리가 당장 따라잡으려면:<br/>"
-        "1. Hailuo에서 같은 장면 3~4회 생성 후 best pick (무료 가능)<br/>"
-        "2. CapCut에서 편집 + 효과음 추가 (무료)<br/>"
-        "3. suno로 배경음악 생성 (무료 tier 있음)<br/>"
-        "이 3단계만 추가해도 현재 대비 품질 대폭 향상",
+        "<b>핵심 결론: 김햄찌와의 격차는 생각보다 작다</b><br/><br/>"
+        "김햄찌: Sora + Kling + Higgsfield + Nano Banana (유료 4개)<br/>"
+        "빡곰: <b>Flow(Veo+NanoBanana) + Hailuo + Kling무료 + Higgsfield</b> (무료 4개)<br/><br/>"
+        "이미 4개 도구 병렬 사용이 가능하다.<br/>"
+        "부족한 것은 도구가 아니라 <b>양산 후 선별 습관 + 음향 + 편집 후반작업</b>.<br/>"
+        "이 3가지만 붙이면 김햄찌급 품질에 근접할 수 있다.",
         bg_color=HexColor("#fce4ec"), text_color=ACCENT,
     ))
 
     story.append(PageBreak())
 
-    # ========== 8. 커뮤니티/비즈니스 모델 ==========
-    story.append(Paragraph("8. 커뮤니티 / 비즈니스 모델", styles["h1"]))
+    # ========== 12. 커뮤니티/비즈니스 모델 ==========
+    story.append(Paragraph("12. 커뮤니티 / 비즈니스 모델 참고", styles["h1"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
 
     biz_items = [
