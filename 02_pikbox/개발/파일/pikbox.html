@@ -15523,6 +15523,7 @@ ${metaText}
         drEditState.selectedElement.classList.remove('pkb-sel');
       }
       drEditState.selectedElement = null;
+      drEditState.bgElement = null; // 배경 선택도 해제
       if (iDoc) {
         var box = iDoc.getElementById('pkb-hbox');
         if (box) box.remove();
@@ -15531,6 +15532,9 @@ ${metaText}
       if (hintEl) hintEl.style.display = 'block';
       var gridEl = document.getElementById('drEditPropGrid');
       if (gridEl) gridEl.style.display = 'none';
+      // 배경 편집 패널 숨기기
+      var bgGrid = document.getElementById('drEditBgGrid');
+      if (bgGrid) bgGrid.style.display = 'none';
       // 레이어 순서 도구 숨기기
       var layerTools = document.getElementById('drEditLayerTools');
       if (layerTools) layerTools.style.display = 'none';
