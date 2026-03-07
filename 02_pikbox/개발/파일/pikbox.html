@@ -15125,6 +15125,53 @@ ${metaText}
       drEditRefreshHandles();
     }
 
+    /* ─── 레이어 순서 관리 — 선택한 요소의 z-index 조절 ─── */
+    function drEditLayerFront() {
+      var el = drEditState.selectedElement;
+      var iDoc = drEditState.iframeDoc;
+      if (!el || !iDoc) { toast('요소를 먼저 선택하세요', 'info'); return; }
+      drEditPushUndo();
+      // 현재 문서에서 가장 높은 z-index 찾기
+      var maxZ = 0;
+      iDoc.querySelectorAll('*').forEach(function(node) {
+        var z = parseInt(node.style.zIndex) || 0;
+        if (z > maxZ) maxZ = z;
+      });
+      el.style.zIndex = maxZ + 1;
+      el.style.position = el.style.position || 'relative';
+      drEditState.hasChanges = true;
+      toast('맨 앞으로 이동', 'success');
+    }
+    function drEditLayerBack() {
+      var el = drEditState.selectedElement;
+      if (!el) { toast('요소를 먼저 선택하세요', 'info'); return; }
+      drEditPushUndo();
+      el.style.zIndex = '0';
+      el.style.position = el.style.position || 'relative';
+      drEditState.hasChanges = true;
+      toast('맨 뒤로 이동', 'success');
+    }
+    function drEditLayerUp() {
+      var el = drEditState.selectedElement;
+      if (!el) { toast('요소를 먼저 선택하세요', 'info'); return; }
+      drEditPushUndo();
+      var curZ = parseInt(el.style.zIndex) || 0;
+      el.style.zIndex = curZ + 1;
+      el.style.position = el.style.position || 'relative';
+      drEditState.hasChanges = true;
+      toast('레이어 앞으로 (z:' + (curZ + 1) + ')', 'success');
+    }
+    function drEditLayerDown() {
+      var el = drEditState.selectedElement;
+      if (!el) { toast('요소를 먼저 선택하세요', 'info'); return; }
+      drEditPushUndo();
+      var curZ = parseInt(el.style.zIndex) || 0;
+      el.style.zIndex = Math.max(0, curZ - 1);
+      el.style.position = el.style.position || 'relative';
+      drEditState.hasChanges = true;
+      toast('레이어 뒤로 (z:' + Math.max(0, curZ - 1) + ')', 'success');
+    }
+
     /* ─── 상업적 무료 한국어 폰트 목록 (Google Fonts CDN) ─── */
     var DR_FREE_FONTS = [
       // 고딕 계열
