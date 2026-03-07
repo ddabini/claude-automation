@@ -15638,6 +15638,7 @@ ${metaText}
 
     /* ─── 디자인 선택 시 편집 상태 초기화 ─── */
     function drEditOnDesignChange(designId) {
+      clearTimeout(drEditState._autoSaveTimer); // 자동저장 타이머 정리
       drEditState.active = false;
       drEditState.originalHtml = '';
       drEditState.editedHtml = '';
