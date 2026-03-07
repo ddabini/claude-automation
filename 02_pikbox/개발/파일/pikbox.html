@@ -15527,12 +15527,14 @@ ${metaText}
 
     function drEditReset() {
       if (!drEditState.originalHtml) return;
+      clearTimeout(drEditState._autoSaveTimer); // 자동저장 취소
       drEditState.editedHtml = drEditState.originalHtml;
       drEditState.hasChanges = false;
       drEditState.selectedElement = null;
       drEditState.iframeDoc = null;
       drEditState.dragState = null;
       drEditUpdatePreview();
+      drEditUpdateSaveStatus('idle');
       toast('원본으로 되돌렸습니다', 'success');
     }
 
