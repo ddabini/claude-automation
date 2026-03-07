@@ -13222,6 +13222,9 @@ ${metaText}
       if (!design) return;
       drState.currentDesignData = design;
 
+      // 마지막 선택한 디자인 ID 기억 (새로고침 시 복원용)
+      drPersistSet('dr_lastDesignId', id);
+
       // 목록에서 선택 표시 업데이트
       drRenderDesignList();
 
