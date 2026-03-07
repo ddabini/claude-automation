@@ -15678,12 +15678,15 @@ ${metaText}
       var ds = drEditState.dragState;
       if (!ds) return;
       e.preventDefault();
-      var dx = e.clientX - ds.startX;
-      var dy = e.clientY - ds.startY;
+      var zoom = ds.zoom || 1;
+      // 마우스 이동량을 zoom 팩터로 나눠서 실제 CSS 좌표로 변환
+      var dx = (e.clientX - ds.startX) / zoom;
+      var dy = (e.clientY - ds.startY) / zoom;
       var el = drEditState.selectedElement;
       if (!el) return;
 
       if (ds.type === 'move') {
+        // 이동: translate 값을 마우스 이동량만큼 변경
         el.style.transform = 'translate(' + (ds.tx + dx) + 'px, ' + (ds.ty + dy) + 'px)';
         drEditRefreshHandles();
         drEditUpdatePropsPanel(el);
@@ -15691,18 +15694,43 @@ ${metaText}
 
       if (ds.type === 'resize') {
         var newW = ds.startW, newH = ds.startH;
+        var offsetX = 0, offsetY = 0;
         var h = ds.handle;
-        if (h.indexOf('r') >= 0) newW = ds.startW + dx;
-        if (h.indexOf('l') >= 0) newW = ds.startW - dx;
-        if (h.indexOf('b') >= 0) newH = ds.startH + dy;
-        if (h.indexOf('t') >= 0) newH = ds.startH - dy;
-        newW = Math.max(20, newW);
-        newH = Math.max(20, newH);
-        el.style.width = newW + 'px';
-        el.style.height = newH + 'px';
+        // 뷰포트 좌표 기준 delta (핸들 위치 계산용)
+        var rawDx = e.clientX - ds.startX;
+        var rawDy = e.clientY - ds.startY;
+
+        // 오른쪽 핸들: 너비 증가 (오른쪽으로)
+        if (h.indexOf('r') >= 0) newW = ds.startW + rawDx;
+        // 왼쪽 핸들: 너비 증가 + 요소 왼쪽으로 이동
+        if (h.indexOf('l') >= 0) { newW = ds.startW - rawDx; offsetX = dx; }
+        // 아래쪽 핸들: 높이 증가 (아래로)
+        if (h.indexOf('b') >= 0) newH = ds.startH + rawDy;
+        // 위쪽 핸들: 높이 증가 + 요소 위로 이동
+        if (h.indexOf('t') >= 0) { newH = ds.startH - rawDy; offsetY = dy; }
+
+        // 최소 크기 제한 (20px) — 제한 시 오프셋도 보정
+        if (newW < 20) {
+          if (h.indexOf('l') >= 0) offsetX = (ds.startW - 20) / zoom;
+          newW = 20;
+        }
+        if (newH < 20) {
+          if (h.indexOf('t') >= 0) offsetY = (ds.startH - 20) / zoom;
+          newH = 20;
+        }
+
+        // zoom 보정한 CSS 값으로 크기 설정
+        el.style.width = (newW / zoom) + 'px';
+        el.style.height = (newH / zoom) + 'px';
         el.style.minWidth = 'unset';
         el.style.maxWidth = 'unset';
         el.style.overflow = 'visible';
+
+        // 왼쪽/위쪽 핸들 드래그 시 요소 위치도 함께 조정
+        if (offsetX !== 0 || offsetY !== 0) {
+          el.style.transform = 'translate(' + (ds.tx + offsetX) + 'px, ' + (ds.ty + offsetY) + 'px)';
+        }
+
         drEditRefreshHandles();
         drEditUpdatePropsPanel(el);
       }
