@@ -9875,14 +9875,13 @@
       let channelSubsMap = {};
       if (apiKey && !ytState.ytApiDisabled) {
         try {
-          // 각 영상의 channelId 수집
+          // 각 영상의 channelId 수집 — API 응답(statsMap._channelId)을 우선 사용
           const channelIds = new Set();
           for (const entry of entries) {
-            const s = statsMap[entry.videoId];
-            // results 또는 savedVideos에서 channelId 찾기
+            const apiChId = statsMap[entry.videoId]?._channelId;
             const fromResults = ytState.results.find(r => ytExtractVideoId(r.sourceUrl) === entry.videoId)
                              || ytState.savedVideos.find(r => (r.video_id || ytExtractVideoId(r.sourceUrl || r.videoUrl || '')) === entry.videoId);
-            const chId = fromResults?.channelId || entry.channelId;
+            const chId = apiChId || fromResults?.channelId || entry.channelId;
             if (chId) {
               channelIds.add(chId);
               if (!statsMap[entry.videoId]) statsMap[entry.videoId] = {};
