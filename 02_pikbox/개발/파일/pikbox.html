@@ -3960,7 +3960,8 @@
       <!-- 하단 저장 바 -->
       <div class="dr-edit-save-bar" id="drEditSaveBar" style="display:none;">
         <button class="dr-btn" onclick="drEditReset()">되돌리기</button>
-        <button class="dr-btn dr-btn-primary" onclick="drEditSave()">💾 저장</button>
+        <span id="drAutoSaveStatus" style="font-size:11px; color:#888; padding:0 6px; white-space:nowrap;"></span>
+        <button class="dr-btn dr-btn-primary" onclick="drEditSave()">💾 즉시저장</button>
         <button class="dr-btn" onclick="drDesignSaveAs()">📄 사본</button>
       </div>
     </aside>
