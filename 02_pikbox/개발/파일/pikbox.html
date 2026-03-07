@@ -9322,14 +9322,21 @@
         const card = document.createElement('div');
         card.className = 'yt-card' + (v.isShorts ? ' yt-card--shorts' : '') + (ytState.ytSelectedIds.has(v.id) ? ' selected' : '') + (_compareSelected ? ' yt-compare-selected' : '');
         card.setAttribute('data-vid', v.id);
-        // 비교 모드일 때는 비교 선택, 아닐 때는 기존 클릭 처리
-        card.onclick = (e) => {
+        // 비교 모드: pointerdown/pointerup으로 드래그에도 선택 가능하게
+        // 일반 모드: 기존 클릭 처리
+        let _pDown = null;
+        card.addEventListener('pointerdown', (e) => { _pDown = { x: e.clientX, y: e.clientY }; });
+        card.addEventListener('pointerup', (e) => {
+          if (!_pDown) return;
+          const dx = Math.abs(e.clientX - _pDown.x), dy = Math.abs(e.clientY - _pDown.y);
+          _pDown = null;
+          if (dx > 30 || dy > 30) return; // 진짜 드래그는 무시
           if (ytState.compareMode && _savedVid) {
             ytToggleCompareCard(_savedVid, v, card);
           } else {
             ytHandleCardClick(v.id, v, e);
           }
-        };
+        });
         card.innerHTML = `
           <div class="yt-thumb">
             <img alt="${escHtml(v.title)}" loading="lazy">
