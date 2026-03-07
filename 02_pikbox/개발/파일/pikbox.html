@@ -15540,6 +15540,53 @@ ${metaText}
       if (layerTools) layerTools.style.display = 'none';
     }
 
+    /* ─── 배경 선택 — 배경 컨테이너 클릭 시 배경 편집 패널 표시 ─── */
+    function drEditSelectBg(target) {
+      drEditDeselectAll();
+      drEditState.bgElement = target;
+
+      // 힌트 숨기고 배경 패널 표시
+      var hintEl = document.getElementById('drEditPropHint');
+      if (hintEl) hintEl.style.display = 'none';
+      var bgGrid = document.getElementById('drEditBgGrid');
+      if (bgGrid) bgGrid.style.display = 'block';
+
+      // 현재 배경색 읽기
+      var iDoc = drEditState.iframeDoc;
+      var cs = iDoc.defaultView.getComputedStyle(target);
+      var curBg = drRgbToHex(cs.backgroundColor) || '#000000';
+      var colorEl = document.getElementById('drEditBgColor');
+      var hexEl = document.getElementById('drEditBgHex');
+      if (colorEl) colorEl.value = curBg;
+      if (hexEl) hexEl.value = curBg;
+    }
+
+    /* ─── 배경 속성 적용 — 배경색 변경 ─── */
+    function drEditApplyBgProp(prop) {
+      var el = drEditState.bgElement;
+      if (!el) return;
+
+      var colorEl = document.getElementById('drEditBgColor');
+      var hexEl = document.getElementById('drEditBgHex');
+
+      if (prop === 'bgColor') {
+        // 컬러 피커에서 선택 → 배경색 변경 + hex 텍스트 동기화
+        var val = colorEl ? colorEl.value : '#000000';
+        el.style.backgroundColor = val;
+        if (hexEl) hexEl.value = val;
+        drEditMarkChanged();
+      }
+      if (prop === 'bgHex') {
+        // hex 텍스트 직접 입력 → 배경색 변경 + 컬러 피커 동기화
+        var hex = hexEl ? hexEl.value.trim() : '';
+        if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+          el.style.backgroundColor = hex;
+          if (colorEl) colorEl.value = hex;
+          drEditMarkChanged();
+        }
+      }
+    }
+
     /* ─── 요소 선택 ─── */
     function drEditSelectElement(el) {
       drEditDeselectAll();
