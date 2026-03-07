@@ -15536,9 +15536,72 @@ ${metaText}
       toast('원본으로 되돌렸습니다', 'success');
     }
 
-    /* ─── 저장 — 에디터 요소 제거 후 직렬화 → Firebase DB 저장 ─── */
+    /* ─── 자동저장 상태 표시 업데이트 ─── */
+    function drEditUpdateSaveStatus(status, msg) {
+      drEditState._autoSaveStatus = status;
+      var el = document.getElementById('drAutoSaveStatus');
+      if (!el) return;
+      if (status === 'saving') { el.textContent = '💾 저장 중...'; el.style.color = '#f59e0b'; }
+      else if (status === 'saved') { el.textContent = '✓ 자동 저장됨'; el.style.color = '#22c55e'; }
+      else if (status === 'error') { el.textContent = '⚠ 저장 실패'; el.style.color = '#ef4444'; }
+      else { el.textContent = ''; }
+    }
+
+    /* ─── 변경 표시 + 자동저장 디바운스 트리거 (2초 후 자동 저장) ─── */
+    function drEditMarkChanged() {
+      drEditState.hasChanges = true;
+      // 기존 타이머 취소 후 2초 디바운스
+      clearTimeout(drEditState._autoSaveTimer);
+      drEditState._autoSaveTimer = setTimeout(function() {
+        drEditDoAutoSave();
+      }, 2000);
+    }
+
+    /* ─── 자동저장 실행 — 에디터 요소 제거 후 직렬화 → Firebase 저장 (무음) ─── */
+    async function drEditDoAutoSave() {
+      if (!drState.currentDesignId) return;
+      if (!drEditState.hasChanges) return;
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc) return;
+
+      // 에디터 요소 임시 분리
+      var styleEl = iDoc.getElementById('pkb-editor-style');
+      var hbox = iDoc.getElementById('pkb-hbox');
+      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+      if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+      var selEls = iDoc.querySelectorAll('.pkb-sel');
+      selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
+
+      // HTML 직렬화
+      var html = '<!DOCTYPE html>\n' + iDoc.documentElement.outerHTML;
+
+      // 에디터 요소 복원
+      if (styleEl) iDoc.head.appendChild(styleEl);
+      if (hbox) iDoc.body.appendChild(hbox);
+      selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
+
+      try {
+        drEditUpdateSaveStatus('saving');
+        await firebaseDb.ref(DR_HTML_CONTENT + '/' + drState.currentDesignId).set(html);
+        drEditState.originalHtml = html;
+        drEditState.editedHtml = html;
+        drEditState.hasChanges = false;
+        drEditUpdateSaveStatus('saved');
+        // 5초 뒤 상태 표시 지우기
+        setTimeout(function() {
+          if (drEditState._autoSaveStatus === 'saved') drEditUpdateSaveStatus('idle');
+        }, 5000);
+      } catch (e) {
+        console.error('[자동저장] 실패:', e);
+        drEditUpdateSaveStatus('error');
+      }
+    }
+
+    /* ─── 즉시 저장 — 버튼 클릭 시 바로 저장 ─── */
     async function drEditSave() {
       if (!drState.currentDesignId) return;
+      // 자동저장 타이머 취소 (중복 저장 방지)
+      clearTimeout(drEditState._autoSaveTimer);
       if (!drEditState.hasChanges) { toast('변경 사항이 없습니다', 'info'); return; }
       var iDoc = drEditState.iframeDoc;
       if (!iDoc) return;
