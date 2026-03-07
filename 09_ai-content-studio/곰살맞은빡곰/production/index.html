@@ -489,13 +489,13 @@ function renderTopbar(){
 // 편집 영역 생성 — 각 섹션 아래에 수정 메모 작성란
 // ================================================================
 
-// 저장된 메모 + 편집 textarea 를 합쳐서 렌더링
+// 저장된 메모 + 수정 요청 textarea 를 합쳐서 렌더링 (항상 표시)
 function renderEditBlock(editKey, placeholder){
   const prodEdits = editsCache[currentProd.id] || {};
   const saved = prodEdits[editKey];
   let html = '';
 
-  // 저장된 메모가 있으면 항상 표시 (편집 모드 아니어도)
+  // 저장된 메모가 있으면 표시
   if(saved && saved.text){
     const st = saved.status || 'pending';
     const label = st === 'resolved' ? '반영 완료' : '대기중';
@@ -507,10 +507,11 @@ function renderEditBlock(editKey, placeholder){
     </div>`;
   }
 
-  // 편집 모드일 때만 입력 영역 표시
-  html += `<div class="edit-area" data-key="${editKey}">
+  // 수정 요청 입력 영역 (항상 표시, 포커스 시 저장 버튼 노출)
+  const prefill = saved && saved.text && saved.status !== 'resolved' ? saved.text : '';
+  html += `<div class="edit-area${prefill ? ' has-text' : ''}" data-key="${editKey}">
     <div class="edit-label">수정 요청</div>
-    <textarea class="edit-textarea" placeholder="${placeholder}" data-key="${editKey}">${saved && saved.text && saved.status !== 'resolved' ? saved.text : ''}</textarea>
+    <textarea class="edit-textarea" placeholder="${placeholder}" data-key="${editKey}" oninput="autoGrow(this)">${prefill}</textarea>
     <div class="edit-actions">
       <button class="edit-save" onclick="saveEdit('${editKey}', this)">저장</button>
       <span class="edit-status"></span>
