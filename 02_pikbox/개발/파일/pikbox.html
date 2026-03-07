@@ -10066,8 +10066,8 @@
       const resultEl = document.getElementById('ytCompareAiResult');
       if (!resultEl) return;
 
-      // Gemini API 키 확인
-      const geminiKey = config.geminiApiKey;
+      // Gemini API 키 확인 (config에서는 'geminiKey' 이름)
+      const geminiKey = config.geminiKey;
       if (!geminiKey) {
         resultEl.innerHTML = '<p style="color:var(--text-muted);">Gemini API 키가 설정되지 않아 AI 분석을 건너뜁니다.</p>';
         return;
