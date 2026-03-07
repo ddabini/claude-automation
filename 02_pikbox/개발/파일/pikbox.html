@@ -9627,6 +9627,18 @@
       const grid = document.getElementById('ytGrid');
       const navSearch = document.getElementById('ytNavSearch');
 
+      // 뷰 전환 시 비교 모드 자동 해제
+      if (ytState.compareMode) {
+        ytState.compareMode = false;
+        ytState.compareSet.clear();
+        const cGrid = document.getElementById('ytGrid');
+        const cBtn = document.getElementById('ytCompareModeBtn');
+        const cPanel = document.getElementById('ytComparePanel');
+        if (cGrid) cGrid.classList.remove('yt-compare-mode');
+        if (cBtn) { cBtn.classList.remove('btn-primary'); cBtn.textContent = 'A/B 비교'; }
+        if (cPanel) cPanel.classList.remove('show');
+      }
+
       if (mode === 'search') {
         // 검색 모드 — 검색 헤더 표시, 기존 결과 복원
         if (headerSearch) headerSearch.style.display = '';
