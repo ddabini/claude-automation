@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빡곰 프로덕션 리뷰</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+/* ========== 리셋 & 기본 ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6}
+html{scroll-behavior:smooth}
+
+/* ========== 레이아웃 ========== */
+.app{display:flex;min-height:100vh}
+
+/* 사이드바 */
+.sidebar{width:260px;background:#fff;border-right:1px solid #e5e5e7;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50}
+.sidebar-header{padding:24px 20px 16px;border-bottom:1px solid #f0f0f2}
+.sidebar-header h1{font-size:18px;font-weight:700}
+.sidebar-header p{font-size:12px;color:#86868b;margin-top:2px}
+.prod-list{padding:12px}
+.prod-item{padding:12px 16px;border-radius:10px;cursor:pointer;margin-bottom:4px;transition:all .15s}
+.prod-item:hover{background:#f5f5f7}
+.prod-item.active{background:#0071e3;color:#fff}
+.prod-item .prod-num{font-size:12px;font-weight:700;opacity:.6}
+.prod-item .prod-title{font-size:14px;font-weight:600;margin-top:2px}
+.prod-item .prod-status{font-size:11px;margin-top:4px;opacity:.7}
+.prod-item.active .prod-num,.prod-item.active .prod-status{opacity:.8}
+.sidebar-footer{padding:16px 20px;border-top:1px solid #f0f0f2;font-size:11px;color:#86868b}
+
+/* 메인 */
+.main{margin-left:260px;flex:1;min-width:0}
+
+/* 탑바 */
+.topbar{background:#fff;border-bottom:1px solid #e5e5e7;padding:16px 32px;position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px}
+.topbar .tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #d2d2d7;background:#fff;font-family:inherit;transition:all .15s}
+.topbar .tab:hover{border-color:#86868b}
+.topbar .tab.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+
+/* 콘텐츠 */
+.content{max-width:960px;margin:0 auto;padding:32px}
+
+/* ========== 카드 공통 ========== */
+.card{background:#fff;border-radius:16px;padding:32px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{font-size:22px;font-weight:700;margin-bottom:16px}
+.card h3{font-size:16px;font-weight:600;margin-bottom:12px}
+
+/* ========== 기획초안 ========== */
+.planning-concept{font-size:15px;line-height:1.8;color:#424245;margin-bottom:24px}
+.planning-concept strong{color:#1d1d1f}
+
+.scene-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+.scene-table th{background:#f5f5f7;padding:10px 12px;text-align:left;font-weight:600;font-size:12px;color:#86868b;text-transform:uppercase;letter-spacing:.3px}
+.scene-table td{padding:10px 12px;border-bottom:1px solid #f0f0f2;vertical-align:top}
+.scene-table tr:last-child td{border-bottom:none}
+.scene-table .scene-num{font-weight:700;color:#0071e3;white-space:nowrap}
+
+.subtitle-plan{margin-top:20px;padding:20px;background:#f9fafb;border-radius:10px;border-left:3px solid #0071e3}
+.subtitle-plan .sub-line{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:14px}
+.subtitle-plan .sub-line .arrow{color:#86868b;flex-shrink:0}
+
+/* ========== 통계 ========== */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{background:#f5f5f7;border-radius:12px;padding:16px;text-align:center}
+.stat .num{font-size:28px;font-weight:700;color:#0071e3}
+.stat .lbl{font-size:12px;color:#86868b;margin-top:2px}
+
+/* ========== 스토리보드 ========== */
+.storyboard-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.storyboard-strip::-webkit-scrollbar{height:5px}
+.storyboard-strip::-webkit-scrollbar-thumb{background:#c7c7cc;border-radius:3px}
+.s-thumb{flex-shrink:0;width:80px;cursor:pointer;transition:transform .2s}
+.s-thumb:hover{transform:scale(1.05)}
+.s-thumb img{width:80px;height:142px;object-fit:cover;border-radius:6px;border:2px solid transparent;transition:border-color .2s}
+.s-thumb.on img{border-color:#0071e3}
+.s-thumb span{display:block;font-size:10px;color:#86868b;text-align:center;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ========== 장면 카드 ========== */
+.scene-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:24px}
+.scene-hd{padding:20px 28px;border-bottom:1px solid #f0f0f2;display:flex;align-items:center;gap:14px}
+.scene-hd .sn{background:#0071e3;color:#fff;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.scene-hd .st{font-size:17px;font-weight:600}
+.scene-hd .sd{font-size:12px;color:#86868b;margin-top:1px}
+.scene-hd .badges{margin-left:auto;display:flex;gap:5px}
+.badge{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600}
+.b-h{background:#e8f5e9;color:#2e7d32}.b-f{background:#e3f2fd;color:#1565c0}.b-i{background:#fff3e0;color:#e65100}
+.compare-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:#fef3c7;color:#92400e;margin-left:6px}
+
+.scene-bd{padding:24px 28px}
+
+/* 프롬프트 섹션 */
+.prompt-sec{margin-bottom:20px}
+.prompt-sec h4{font-size:13px;font-weight:600;color:#86868b;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.prompt-sec h4::before{content:'';width:3px;height:12px;border-radius:2px}
+.prompt-sec h4.pi::before{background:#ff9500}
+.prompt-sec h4.pv::before{background:#0071e3}
+
+/* 이중 언어 프롬프트 박스 */
+.bilingual{border-radius:10px;overflow:hidden;border:1px solid #e5e5e7;margin-bottom:12px}
+.bilingual .lang-tab{display:flex;border-bottom:1px solid #e5e5e7;background:#fafafa}
+.bilingual .lang-tab button{flex:1;padding:8px;font-size:12px;font-weight:600;border:none;background:transparent;cursor:pointer;font-family:inherit;color:#86868b;transition:all .15s}
+.bilingual .lang-tab button.on{background:#fff;color:#1d1d1f;box-shadow:inset 0 -2px 0 #0071e3}
+.bilingual .lang-body{position:relative}
+.bilingual .lang-panel{padding:16px 18px;font-size:13px;line-height:1.7;display:none}
+.bilingual .lang-panel.on{display:block}
+.bilingual .lang-panel.en{font-family:'SF Mono','Menlo',monospace;color:#424245}
+.bilingual .lang-panel.kr{color:#1d1d1f}
+.bilingual .copy-btn{position:absolute;top:8px;right:8px;background:#fff;border:1px solid #d2d2d7;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .2s}
+.bilingual:hover .copy-btn{opacity:1}
+
+/* 공통 프롬프트 접기 */
+.core-toggle{padding:10px 14px;background:#f5f5f7;border-radius:8px;font-size:12px;color:#86868b;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.core-toggle .arrow{transition:transform .2s;font-size:10px}
+.core-toggle.open .arrow{transform:rotate(90deg)}
+.core-content{display:none;padding:12px 14px;background:#fafafa;border-radius:8px;font-size:12px;line-height:1.7;margin-bottom:8px}
+.core-content.on{display:block}
+
+/* 미디어 */
+.media-grid{display:grid;gap:16px;margin-top:12px}
+.media-grid.g1{grid-template-columns:1fr;max-width:320px}
+.media-grid.g2{grid-template-columns:1fr 1fr}
+.media-grid.g3{grid-template-columns:1fr 1fr 1fr}
+.m-item .m-label{font-size:11px;font-weight:600;color:#86868b;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-h{background:#4caf50}.dot-f{background:#2196f3}.dot-i{background:#ff9500}
+.m-item img{width:100%;border-radius:8px;aspect-ratio:9/16;object-fit:cover;background:#f0f0f2}
+.m-item video{width:100%;border-radius:8px;aspect-ratio:9/16;object-fit:contain;background:#000}
+.m-meta{font-size:10px;color:#86868b;margin-top:4px}
+
+/* 노트 */
+.note-box{margin-top:14px;padding:10px 14px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e}
+
+/* ========== 비용 테이블 ========== */
+.cost-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.cost-tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #e5e5e7}
+.cost-tbl td{padding:10px 14px;border-bottom:1px solid #f0f0f2}
+.cost-tbl .total td{font-weight:700;background:#f5f5f7;border-radius:8px;border-bottom:none}
+
+/* ========== 규칙 ========== */
+.rule-item{padding:10px 0;border-bottom:1px solid #f0f0f2;font-size:13px}
+.rule-item:last-child{border-bottom:none}
+.rule-item strong{color:#0071e3}
+
+/* ========== 반응형 ========== */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .media-grid.g2,.media-grid.g3{grid-template-columns:1fr;max-width:360px}
+}
+.hidden{display:none!important}
+.section{display:none}.section.on{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ===== 사이드바 ===== -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>빡곰 프로덕션</h1>
+    <p>@곰살맞은빡곰 제작 리뷰</p>
+  </div>
+  <div class="prod-list" id="prodList"></div>
+  <div class="sidebar-footer">
+    도구: MCP Gemini + Hailuo AI + Google Flow<br>
+    편집: CapCut (사용자 직접)
+  </div>
+</aside>
+
+<!-- ===== 메인 ===== -->
+<div class="main">
+  <div class="topbar" id="topbar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+</div>
+
+<script>
+// ================================================================
+// 프로덕션 데이터 — 새 프로덕션 추가 시 이 배열에 항목 추가
+// ================================================================
+const PRODUCTIONS = [
+{
+  id: '002',
+  folder: '002_점심산책',
+  title: '점심산책',
+  status: '제작중',
+  date: '2026-03-07',
+  category: 'A. 직장생활 + B. 혼자일상',
+  series: '사회생활 만점 빡곰',
+  targetLength: 'Shorts 20~30초',
+
+  // ---- 기획초안 ----
+  planning: {
+    concept: `<strong>콘셉트:</strong> 점심시간, 빡곰이 사무실에서 잠깐 빠져나와 근처 올리브영에 다녀온다.<br>
+스킨케어 테스터를 볼에 발라보고, 헤어 에센스의 감촉에 감탄하고, 립스틱 발색에 빠지는 모습.<br>
+<strong>공감 포인트:</strong> "점심시간 올리브영 털기" — 직장인이라면 누구나 공감하는 순간.<br>
+<strong>유머:</strong> 작고 귀여운 아기 곰이 뷰티 제품을 진지하게 테스트하는 대비.`,
+
+    storyboard: [
+      { num: '01', env: 'ENV-04 사무실', action: '자리에서 일어나 동료들에게 손 흔들며 인사하고 나감', dialogue: '"점심시간이다"', emotion: '밝음/신남' },
+      { num: '03', env: '올리브영 입구', action: '유리문을 열고 매장 안으로 들어감 (뒷모습)', dialogue: '—', emotion: '기대/설렘' },
+      { num: '05', env: '올리브영 스킨케어', action: '테스터 병을 집어서 냄새 맡고 볼에 발라봄', dialogue: '"이건 뭐지"', emotion: '호기심' },
+      { num: '06', env: '올리브영 헤어케어', action: '에센스를 머리에 바르며 눈 감고 만족', dialogue: '"오..."', emotion: '만족/황홀' },
+      { num: '07a', env: '올리브영 간식코너', action: '과자 진열대 앞에서 구경', dialogue: '—', emotion: '호기심' },
+      { num: '07b', env: '올리브영 메이크업', action: '핑크 립스틱을 집어 뚜껑 열고 발색 테스트', dialogue: '"이것도..."', emotion: '흥미/집중' },
+      { num: '07c', env: '올리브영 메이크업', action: '손등에 립스틱 발색 클로즈업', dialogue: '—', emotion: '감탄' },
+      { num: '08', env: 'ENV-04 사무실', action: '초록색 올리브영 쇼핑백 들고 자리로 복귀', dialogue: '"잘 샀다"', emotion: '뿌듯' },
+      { num: '09', env: '올리브영 앞 거리', action: '쇼핑백 들고 나오며 가방 안을 들여다봄', dialogue: '—', emotion: '행복/만족' }
+    ],
+
+    subtitles: [
+      '점심시간이다',
+      '(올리브영 입장)',
+      '이건 뭐지...',
+      '오...',
+      '이것도...',
+      '잘 샀다'
+    ]
+  },
+
+  // ---- 통계 ----
+  stats: { images: 11, hailuo: 7, flow: 6, cost: '~$2.4' },
+
+  // ---- 장면 데이터 ----
+  scenes: [
+    {
+      id:'01', title:'사무실에서 출발',
+      desc:'빡곰이 사무실 자리에서 일어나 동료들에게 인사하고 나가는 장면',
+      env:'ENV-04 사무실', hasCompare:false,
+      images:[
+        {file:'bbakgom-lunch-walk-01-office-front.png',label:'정면'},
+        {file:'bbakgom-lunch-walk-01b-office-side.png',label:'측면'},
+        {file:'bbakgom-lunch-walk-01c-office-left.png',label:'좌측'}
+      ],
+      imgPrompt:{
+        en:`Standing up from a white office desk with dual monitors, waving cheerfully at coworkers with one paw, cheerful excited expression.\n\nSitting at a white office desk with dual monitors, gray ergonomic chair, coffee mug and keyboard on desk, light gray walls, light wood laminate floor, overhead panel LED lighting, potted plant nearby.\n\nMedium shot, eye level, 50mm lens, photorealistic, corporate photography, highly detailed.`,
+        kr:`듀얼 모니터가 있는 흰색 사무실 책상에서 일어나며, 한쪽 앞발로 동료들에게 밝게 손 흔들고 있음. 밝고 신나는 표정.\n\n듀얼 모니터 흰색 책상, 회색 인체공학 의자, 책상 위 커피잔과 키보드, 밝은 회색 벽, 밝은 우드 라미네이트 바닥, 천장 LED 패널 조명, 근처에 화분.\n\n미디엄 샷, 눈높이 앵글, 50mm 렌즈, 포토리얼리스틱, 기업 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear stands up from its office desk, waves cheerfully at coworkers with one paw, and says goodbye. It grabs a small bag and walks toward the office exit with happy bouncy steps. Cheerful excited expression, eyes bright. Quick natural movements, real-time speed, not slow motion. Eyes focused on coworkers then ahead, never looks at camera. Static camera, bright office LED lighting, photorealistic.`,
+        kr:`아기 북극곰이 사무실 책상에서 일어나, 한쪽 앞발로 동료들에게 밝게 손 흔들며 인사한다. 작은 가방을 들고 사무실 출구를 향해 경쾌하게 걸어간다. 밝고 신난 표정, 눈이 반짝임. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 동료들을 보다가 앞을 봄, 카메라를 절대 보지 않음. 고정 카메라, 밝은 사무실 LED 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-01-office-front-hailuo-v1.mp4',size:'881KB',res:'768p'}],
+      flow:[]
+    },
+    {
+      id:'03', title:'올리브영 입장',
+      desc:'올리브영 유리문을 열고 들어가는 빡곰 (뒷모습)',
+      env:'올리브영 매장 (커스텀)', hasCompare:true,
+      images:[{file:'bbakgom-lunch-walk-03-entering.png',label:'입장 뒷모습'}],
+      imgPrompt:{
+        en:`The baby polar bear cub seen from behind, walking through glass entrance doors of a bright Olive Young beauty store. Small eager steps, head turning slightly to look at colorful product displays.\n\nBright Olive Young beauty store interior with white tile floor, green brand signage, colorful product shelves on both sides, glass entrance doors, bright commercial lighting.\n\nMedium shot from behind, eye level, 35mm lens, photorealistic, lifestyle photography, highly detailed.`,
+        kr:`뒤에서 본 아기 북극곰, 밝은 올리브영 매장의 유리 입구문을 지나 안으로 걸어 들어가는 중. 작고 성급한 걸음, 양옆의 화려한 제품 진열대를 보려고 고개를 살짝 돌림.\n\n밝은 올리브영 매장 내부, 흰색 타일 바닥, 초록색 브랜드 간판, 양쪽의 화려한 제품 진열대, 유리 입구문, 밝은 상업 조명.\n\n뒤에서 본 미디엄 샷, 눈높이, 35mm 렌즈, 포토리얼리스틱, 라이프스타일 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear walks through the glass entrance doors of a bright Olive Young beauty store, seen from behind. It takes small eager steps forward into the store, head turning slightly to look at the colorful product displays on both sides. The automatic doors slide open as it enters. Quick natural walking movements, real-time speed, not slow motion. The bear walks away from camera into the store. Static camera from behind, bright commercial store lighting, photorealistic.`,
+        kr:`아기 북극곰이 밝은 올리브영 매장의 유리 입구문을 지나 들어간다 (뒤에서 촬영). 매장 안으로 작고 성급한 걸음으로 나아가며, 양옆의 화려한 제품 진열대를 보려고 고개를 살짝 돌린다. 자동문이 입장하면서 열린다. 빠르고 자연스러운 걸음, 실시간 속도, 슬로우모션 아님. 곰은 카메라에서 멀어지며 매장 안으로 걸어감. 뒤에서 고정 카메라, 밝은 상업 매장 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-03-entering-hailuo-v1.mp4',size:'505KB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-lunch-walk-03-entering-flow-v1-1080p.mp4',size:'9.3MB',res:'1080p 업스케일'},
+        {file:'bbakgom-lunch-walk-03-entering-flow-v2-720p.mp4',size:'2.8MB',res:'720p 원본'}
+      ]
+    },
+    {
+      id:'05', title:'스킨케어 테스터',
+      desc:'스킨케어 제품을 집어서 볼에 발라보는 빡곰',
+      env:'올리브영 매장 (커스텀)', hasCompare:false,
+      images:[{file:'bbakgom-lunch-walk-05-skincare-v3.png',label:'스킨케어 (v3)'}],
+      imgPrompt:{
+        en:`Standing at a skincare tester station in a bright Olive Young beauty store, picking up a small bottle with one paw, sniffing it curiously.\n\nBright Olive Young beauty store interior with skincare product display shelves, tester bottles arranged neatly, white tile floor, bright commercial lighting.\n\nMedium close-up, slightly high angle, 50mm lens, photorealistic, lifestyle photography, highly detailed.`,
+        kr:`밝은 올리브영 매장 내 스킨케어 테스터 스테이션에 서서, 한쪽 앞발로 작은 병을 집어들고 호기심 가득하게 냄새를 맡는 중.\n\n밝은 올리브영 매장 내부, 스킨케어 제품 진열대, 깔끔하게 정렬된 테스터 병들, 흰색 타일 바닥, 밝은 상업 조명.\n\n미디엄 클로즈업, 약간 높은 앵글, 50mm 렌즈, 포토리얼리스틱, 라이프스타일 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear stands at a skincare tester station in a bright Olive Young beauty store. It picks up a small bottle with one paw, sniffs it curiously, then dabs a tiny amount onto its cheek fur with the other paw. It gently pats its cheek, tilting its head with a curious expression, feeling the texture. Quick natural movements, real-time speed, not slow motion. Eyes focused on the product and its own reflection, never looks at camera. Static camera, bright commercial store lighting, photorealistic.`,
+        kr:`아기 북극곰이 밝은 올리브영 매장의 스킨케어 테스터 코너에 서 있다. 한쪽 앞발로 작은 병을 집어 호기심 있게 냄새를 맡고, 다른 앞발로 소량을 볼 털에 톡톡 바른다. 고개를 기울이며 호기심 어린 표정으로 부드럽게 볼을 두드리고, 질감을 느낀다. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 제품과 자신의 반사를 봄, 카메라를 절대 보지 않음. 고정 카메라, 밝은 상업 매장 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-05-skincare-hailuo-v1.mp4',size:'1.0MB',res:'768p'}],
+      flow:[],
+      notes:'이미지 3번 재생성 (v1, v2에서 악세서리/상처 자동 생성 문제 발생)'
+    },
+    {
+      id:'06', title:'헤어 에센스',
+      desc:'헤어 에센스를 머리에 바르며 만족하는 빡곰',
+      env:'올리브영 매장 (커스텀)', hasCompare:true,
+      images:[{file:'bbakgom-lunch-walk-06-hair-essence.png',label:'헤어 에센스'}],
+      imgPrompt:{
+        en:`Standing in a bright Olive Young beauty store, gently applying hair essence onto the top of its head fur with one paw. Eyes slowly closing with deep satisfaction.\n\nBright Olive Young beauty store interior with hair care product display, colorful bottles on shelves, white tile floor, bright commercial lighting.\n\nMedium shot, eye level, 50mm lens, photorealistic, lifestyle photography, highly detailed.`,
+        kr:`밝은 올리브영 매장에 서서, 한쪽 앞발로 머리 꼭대기 털에 헤어 에센스를 부드럽게 바르는 중. 깊은 만족감으로 천천히 눈을 감음.\n\n밝은 올리브영 매장 내부, 헤어케어 제품 진열대, 선반 위 알록달록한 병들, 흰색 타일 바닥, 밝은 상업 조명.\n\n미디엄 샷, 눈높이, 50mm 렌즈, 포토리얼리스틱, 라이프스타일 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear stands in a bright Olive Young beauty store, gently applying hair essence onto the top of its head fur with one paw. It smooths the fur down with both paws, eyes slowly closing with deep satisfaction, a content smile forming. It tilts its head slightly, enjoying the silky feeling of its freshly treated fur. Quick natural movements, real-time speed, not slow motion. Eyes closed or looking down at the product, never looks at camera. Static camera, bright commercial store lighting, photorealistic.`,
+        kr:`아기 북극곰이 밝은 올리브영 매장에 서서, 한쪽 앞발로 머리 꼭대기 털에 헤어 에센스를 부드럽게 바른다. 양쪽 앞발로 털을 쓸어내리며, 깊은 만족감으로 천천히 눈을 감고 흐뭇한 미소를 짓는다. 고개를 살짝 기울이며 갓 관리한 털의 부드러운 감촉을 즐긴다. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 눈을 감거나 제품을 내려다봄, 카메라를 절대 보지 않음. 고정 카메라, 밝은 상업 매장 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-06-hair-essence-hailuo-v1.mp4',size:'1.0MB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-lunch-walk-06-hair-essence-flow-v1.mp4',size:'3.0MB',res:'720p 원본'},
+        {file:'bbakgom-lunch-walk-06-hair-essence-flow-v2.mp4',size:'11MB',res:'1080p 업스케일'}
+      ]
+    },
+    {
+      id:'07a', title:'과자 구경',
+      desc:'올리브영 간식 코너에서 과자를 구경하는 빡곰',
+      env:'올리브영 매장 (커스텀)', hasCompare:false,
+      images:[{file:'bbakgom-lunch-walk-07a-snacks.png',label:'과자 코너'}],
+      imgPrompt:{
+        en:`Standing in front of a snack display shelf in a bright Olive Young beauty store, reaching up with one paw toward a colorful snack package, curious expression.\n\nBright Olive Young beauty store interior with snack/food section, colorful Korean packaged snacks on shelves, white tile floor, bright commercial lighting.\n\nMedium shot, slightly low angle, 35mm lens, photorealistic, lifestyle photography, highly detailed.`,
+        kr:`밝은 올리브영 매장의 과자 진열대 앞에 서서, 한쪽 앞발을 화려한 과자 패키지를 향해 뻗고 있음. 호기심 가득한 표정.\n\n밝은 올리브영 매장 내부, 간식/식품 코너, 선반 위 알록달록한 한국 포장 과자들, 흰색 타일 바닥, 밝은 상업 조명.\n\n미디엄 샷, 약간 낮은 앵글, 35mm 렌즈, 포토리얼리스틱, 라이프스타일 사진 스타일.`
+      },
+      vidPrompt:{en:'(미생성)',kr:'(미생성 — 영상 스토리 구성에 따라 추가 예정)'},
+      hailuo:[],flow:[],
+      notes:'시작 이미지만 생성, I2V 미진행'
+    },
+    {
+      id:'07b', title:'립스틱 테스트',
+      desc:'립스틱을 집어서 발색 테스트하는 빡곰',
+      env:'올리브영 매장 (커스텀)', hasCompare:false,
+      images:[{file:'bbakgom-lunch-walk-07b-lipstick-v2.png',label:'립스틱 (v2)'}],
+      imgPrompt:{
+        en:`Standing at a lipstick display in a bright Olive Young beauty store, picking up a pink lipstick tube with one paw, examining it with wide curious eyes.\n\nBright Olive Young beauty store interior with makeup/lipstick display shelves, colorful cosmetics arranged neatly, mirror on display, white tile floor, bright commercial lighting.\n\nMedium close-up, eye level, 50mm lens, photorealistic, lifestyle photography, highly detailed.`,
+        kr:`밝은 올리브영 매장의 립스틱 진열대에 서서, 한쪽 앞발로 핑크색 립스틱 튜브를 집어들고 크게 뜬 호기심 가득한 눈으로 살펴보는 중.\n\n밝은 올리브영 매장 내부, 메이크업/립스틱 진열대, 깔끔하게 정렬된 화려한 화장품들, 진열대 위 거울, 흰색 타일 바닥, 밝은 상업 조명.\n\n미디엄 클로즈업, 눈높이, 50mm 렌즈, 포토리얼리스틱, 라이프스타일 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear stands at a lipstick display in a bright Olive Young beauty store. It picks up a pink lipstick tube with one paw, twists it open curiously, and examines the color closely with wide eyes. It brings the lipstick near its nose to sniff, then gently dabs a tiny bit on the back of its other paw to test the color, tilting its head with a fascinated expression. Quick natural movements, real-time speed, not slow motion. Eyes focused on the lipstick and its paw, never looks at camera. Static camera, bright commercial store lighting, photorealistic.`,
+        kr:`아기 북극곰이 밝은 올리브영 매장의 립스틱 진열대에 서 있다. 한쪽 앞발로 핑크색 립스틱 튜브를 집어 호기심 있게 뚜껑을 돌려 열고, 크게 뜬 눈으로 색상을 자세히 살핀다. 립스틱을 코 가까이 가져가 냄새를 맡고, 다른 앞발 등에 살짝 찍어 발색을 테스트하며, 매료된 표정으로 고개를 기울인다. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 립스틱과 자기 앞발에 시선 집중, 카메라를 절대 보지 않음. 고정 카메라, 밝은 상업 매장 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-07b-lipstick-hailuo-v1.mp4',size:'849KB',res:'768p'}],
+      flow:[],
+      notes:'이미지 2번 재생성 (v1에서 악세서리 자동 생성 문제)'
+    },
+    {
+      id:'07c', title:'립스틱 발색',
+      desc:'손등에 립스틱 발색 테스트 클로즈업',
+      env:'올리브영 매장 (커스텀)', hasCompare:false,
+      images:[{file:'bbakgom-lunch-walk-07c-lipstick-swatch.png',label:'발색 클로즈업'}],
+      imgPrompt:{
+        en:`Close-up of the baby polar bear's paw pad with a small pink lipstick swatch mark. The bear looking down at its paw with fascinated wide eyes.\n\nBright Olive Young beauty store interior, lipstick display in background blurred, bright commercial lighting.\n\nClose-up shot, slightly high angle, 85mm lens, shallow depth of field, photorealistic, product photography, highly detailed.`,
+        kr:`아기 북극곰의 앞발 패드에 작은 핑크색 립스틱 발색 자국이 있는 클로즈업. 곰이 매료된 큰 눈으로 자기 앞발을 내려다보고 있음.\n\n밝은 올리브영 매장 내부, 뒤쪽에 립스틱 진열대가 흐리게 보임, 밝은 상업 조명.\n\n클로즈업 샷, 약간 높은 앵글, 85mm 렌즈, 얕은 피사계심도, 포토리얼리스틱, 제품 사진 스타일.`
+      },
+      vidPrompt:{en:'(미생성)',kr:'(미생성 — 영상 스토리 구성에 따라 추가 예정)'},
+      hailuo:[],flow:[],
+      notes:'시작 이미지만 생성, I2V 미진행'
+    },
+    {
+      id:'08', title:'사무실 복귀',
+      desc:'올리브영 쇼핑백을 들고 사무실로 돌아오는 빡곰',
+      env:'ENV-04 사무실', hasCompare:false,
+      images:[{file:'bbakgom-lunch-walk-08-back-office.png',label:'사무실 복귀'}],
+      imgPrompt:{
+        en:`Walking back into the office carrying a green Olive Young shopping bag in one paw, satisfied happy expression.\n\nIn a modern Korean startup office space, light gray walls, light wood laminate floor, white desks with dual monitors and gray ergonomic chairs, overhead panel LED lighting, potted plants on desks, clean bright office lighting.\n\nMedium shot, eye level, 50mm lens, photorealistic, corporate photography, highly detailed.`,
+        kr:`한쪽 앞발에 초록색 올리브영 쇼핑백을 들고 사무실로 돌아오는 중. 만족스럽고 행복한 표정.\n\n한국 스타트업 스타일 사무실, 밝은 회색 벽, 밝은 우드 라미네이트 바닥, 듀얼 모니터와 회색 인체공학 의자가 있는 흰색 책상들, 천장 LED 패널 조명, 책상 위 화분들, 깨끗하고 밝은 사무실 조명.\n\n미디엄 샷, 눈높이, 50mm 렌즈, 포토리얼리스틱, 기업 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear walks back into the office carrying a green Olive Young shopping bag in one paw. It walks to its desk with a satisfied happy expression, places the bag down on the desk, and sits back in the office chair. It gives a small contented sigh and looks around the office cheerfully. Quick natural movements, real-time speed, not slow motion. Eyes looking ahead then at coworkers, never looks at camera. Static camera, bright office LED lighting, photorealistic.`,
+        kr:`아기 북극곰이 한쪽 앞발에 초록색 올리브영 쇼핑백을 들고 사무실로 돌아온다. 만족스러운 행복한 표정으로 자기 자리까지 걸어가, 책상 위에 가방을 내려놓고 의자에 다시 앉는다. 작게 만족스러운 한숨을 쉬며 밝은 표정으로 사무실을 둘러본다. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 앞을 보다가 동료들을 봄, 카메라를 절대 보지 않음. 고정 카메라, 밝은 사무실 LED 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-08-back-office-hailuo-v1.mp4',size:'750KB',res:'768p'}],
+      flow:[]
+    },
+    {
+      id:'09', title:'올리브영 퇴장',
+      desc:'쇼핑백을 들고 올리브영을 나서며 가방 안을 들여다보는 빡곰',
+      env:'올리브영 앞 거리 (커스텀)', hasCompare:true,
+      images:[{file:'bbakgom-lunch-walk-09-exiting.png',label:'매장 퇴장'}],
+      imgPrompt:{
+        en:`Exiting through glass doors of Olive Young beauty store, carrying a small green shopping bag, happy satisfied expression, walking onto the sidewalk.\n\nOlive Young store exterior, glass doors, green signage, bright daylight street, sidewalk.\n\nMedium shot, eye level, 35mm lens, photorealistic, street photography, highly detailed.`,
+        kr:`올리브영 매장의 유리문을 열고 나오는 중, 작은 초록색 쇼핑백을 들고 있음. 행복하고 만족스러운 표정, 인도 위로 걸어 나옴.\n\n올리브영 매장 외관, 유리문, 초록색 간판, 밝은 낮 거리, 인도.\n\n미디엄 샷, 눈높이, 35mm 렌즈, 포토리얼리스틱, 거리 사진 스타일.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear exits through the glass doors of Olive Young beauty store carrying a small green shopping bag. It walks out onto the sidewalk with a happy satisfied expression, takes a few bouncy steps, then pauses to peek inside the bag with curiosity and excitement. Quick natural movements, real-time speed, not slow motion. Eyes looking at the bag then ahead, never looks at camera. Static camera, bright daylight street lighting, photorealistic.`,
+        kr:`아기 북극곰이 작은 초록색 쇼핑백을 들고 올리브영 매장의 유리문을 열고 나온다. 행복하고 만족스러운 표정으로 인도 위를 경쾌하게 몇 걸음 걷다가, 멈춰서 호기심과 설렘으로 가방 안을 들여다본다. 빠르고 자연스러운 동작, 실시간 속도, 슬로우모션 아님. 가방을 보다가 앞을 봄, 카메라를 절대 보지 않음. 고정 카메라, 밝은 낮 거리 조명, 포토리얼리스틱.`
+      },
+      hailuo:[{file:'bbakgom-lunch-walk-09-exiting-hailuo-v1.mp4',size:'1.0MB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-lunch-walk-09-exiting-flow-v1-720p.mp4',size:'2.8MB',res:'720p A'},
+        {file:'bbakgom-lunch-walk-09-exiting-flow-v2-720p.mp4',size:'3.9MB',res:'720p B'}
+      ]
+    }
+  ],
+
+  // ---- 비용 ----
+  costs:[
+    {tool:'MCP Gemini (이미지)',usage:'~14회 API 호출',unit:'무료 티어',remain:'일 제한 내',price:'$0'},
+    {tool:'Hailuo AI (I2V)',usage:'7회 x 15 = 105 크레딧',unit:'15크레딧/회',remain:'~895 크레딧',price:'$0'},
+    {tool:'Google Flow (I2V)',usage:'3회 x 40 = 120 크레딧',unit:'40크레딧/회 (x2 생성)',remain:'~880/1,000',price:'~$2.4'}
+  ]
+}
+// 새 프로덕션은 여기에 추가
+];
+
+// ================================================================
+// 공통 프롬프트 (Core Description)
+// ================================================================
+const CORE = {
+  en: `A photorealistic baby polar bear cub with round flat face, proportionally sized glossy dark brown-black round eyes set wide apart, small oval black wet nose, tiny rounded clean white fur ears on top of head, dense fluffy cream-white fur with slightly warm tone all over body, chubby compact body with short thick limbs, large head-to-body ratio (approximately 1:2), barely visible tiny round tail. Realistic fur texture, soft and fluffy appearance, clean unblemished fur with no markings, scars, wounds, or patterns anywhere. No accessories, no jewelry, no necklaces, no bracelets unless explicitly specified in the scene.`,
+  kr: `포토리얼리스틱 아기 북극곰. 둥글고 납작한 얼굴, 비율에 맞는 광택 나는 다크브라운-블랙 둥근 눈(넓게 배치), 작은 타원형 검정 젖은 코, 머리 꼭대기에 작고 둥근 깨끗한 흰 털 귀, 전신에 약간 따뜻한 톤의 촘촘하고 복슬복슬한 크림화이트 털, 통통하고 컴팩트한 몸통에 짧고 굵은 팔다리, 머리:몸 비율 약 1:2, 거의 안 보이는 작은 둥근 꼬리. 사실적인 털 질감, 부드럽고 푹신한 외관, 어떤 무늬/흉터/상처/패턴도 없는 깨끗한 털. 장면에 명시되지 않는 한 악세서리/장신구/목걸이/팔찌 없음.`
+};
+
+// ================================================================
+// 렌더링
+// ================================================================
+let currentProd = PRODUCTIONS[0];
+let currentTab = 'planning';
+
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
+
+// 사이드바
+function renderSidebar(){
+  document.getElementById('prodList').innerHTML = PRODUCTIONS.map(p=>`
+    <div class="prod-item ${p===currentProd?'active':''}" onclick="selectProd('${p.id}')">
+      <div class="prod-num">#${p.id}</div>
+      <div class="prod-title">${p.title}</div>
+      <div class="prod-status">${p.status} / ${p.date}</div>
+    </div>
+  `).join('');
+}
+
+// 탑바
+function renderTopbar(){
+  const tabs = [
+    {id:'planning',label:'기획초안'},
+    {id:'scenes',label:'제작과정'},
+    {id:'rules',label:'프롬프트 규칙'},
+    {id:'cost',label:'비용'}
+  ];
+  document.getElementById('topbar').innerHTML =
+    `<strong style="margin-right:8px">#${currentProd.id} ${currentProd.title}</strong>` +
+    tabs.map(t=>`<button class="tab ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
+}
+
+// 메인 콘텐츠
+function renderContent(){
+  const p = currentProd;
+  let html = '';
+
+  // ---- 기획초안 탭 ----
+  html += `<div class="section ${currentTab==='planning'?'on':''}" id="sec-planning">`;
+  html += `<div class="card">
+    <h2>기획초안</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <span class="badge b-i">${p.category}</span>
+      <span class="badge b-f">시리즈: ${p.series}</span>
+      <span class="badge b-h">${p.targetLength}</span>
+    </div>
+    <div class="planning-concept">${p.planning.concept}</div>
+  </div>`;
+
+  // 장면 구성표
+  html += `<div class="card">
+    <h3>장면 구성표 (스토리보드)</h3>
+    <table class="scene-table">
+      <thead><tr><th>장면</th><th>환경</th><th>행동</th><th>대사</th><th>감정</th></tr></thead>
+      <tbody>${p.planning.storyboard.map(s=>`
+        <tr>
+          <td class="scene-num">${s.num}</td>
+          <td>${s.env}</td>
+          <td>${s.action}</td>
+          <td>${s.dialogue}</td>
+          <td>${s.emotion}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  // 자막 계획
+  html += `<div class="card">
+    <h3>자막 흐름 (예상)</h3>
+    <div class="subtitle-plan">
+      ${p.planning.subtitles.map((s,i)=>`<div class="sub-line">${i>0?'<span class="arrow">&rarr;</span>':''}<span>"${s}"</span></div>`).join('')}
+    </div>
+  </div>`;
+
+  // 스토리보드 이미지 스트립
+  html += `<div class="card">
+    <h3>시작 이미지 미리보기</h3>
+    <div class="storyboard-strip">
+      ${p.scenes.map(s=>`<div class="s-thumb" onclick="switchTab('scenes');setTimeout(()=>document.getElementById('sc-${s.id}')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
+        <img src="${p.folder}/${s.images[0].file}" loading="lazy">
+        <span>${s.id}. ${s.title}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  html += `</div>`;
+
+  // ---- 제작과정 탭 ----
+  html += `<div class="section ${currentTab==='scenes'?'on':''}" id="sec-scenes">`;
+
+  // 통계
+  html += `<div class="card">
+    <h2>제작 현황</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="num">${p.stats.images}</div><div class="lbl">시작 이미지</div></div>
+      <div class="stat"><div class="num">${p.stats.hailuo}</div><div class="lbl">Hailuo 영상</div></div>
+      <div class="stat"><div class="num">${p.stats.flow}</div><div class="lbl">Flow 영상</div></div>
+      <div class="stat"><div class="num">${p.stats.cost}</div><div class="lbl">총 비용</div></div>
+    </div>
+  </div>`;
+
+  // 장면별 카드
+  p.scenes.forEach(s=>{
+    const badges = [];
+    if(s.images.length) badges.push(`<span class="badge b-i">IMG x${s.images.length}</span>`);
+    if(s.hailuo.length) badges.push(`<span class="badge b-h">Hailuo x${s.hailuo.length}</span>`);
+    if(s.flow.length) badges.push(`<span class="badge b-f">Flow x${s.flow.length}</span>`);
+    const totalVid = s.hailuo.length + s.flow.length;
+    const gc = totalVid>=3?'g3':totalVid===2?'g2':'g1';
+    const gi = s.images.length>=3?'g3':s.images.length===2?'g2':'g1';
+
+    html += `<div class="scene-card" id="sc-${s.id}">
+      <div class="scene-hd">
+        <div class="sn">${s.id}</div>
+        <div><div class="st">${s.title}${s.hasCompare?'<span class="compare-tag">VS 비교</span>':''}</div><div class="sd">${s.desc} / ${s.env}</div></div>
+        <div class="badges">${badges.join('')}</div>
+      </div>
+      <div class="scene-bd">
+
+        <!-- 이미지 프롬프트 -->
+        <div class="prompt-sec">
+          <h4 class="pi">이미지 생성 프롬프트 (MCP Gemini)</h4>
+          <div class="core-toggle" onclick="toggleCore(this)"><span class="arrow">&#9654;</span> [공통] 캐릭터 Core Description 보기</div>
+          <div class="core-content">${bilingualInline(CORE)}</div>
+          ${bilingual(s.imgPrompt,'img-'+s.id)}
+        </div>
+
+        <!-- 시작 이미지 -->
+        <div class="prompt-sec">
+          <h4 class="pi">시작 이미지 결과</h4>
+          <div class="media-grid ${gi}">
+            ${s.images.map(img=>`<div class="m-item">
+              <div class="m-label"><span class="dot dot-i"></span>${img.label}</div>
+              <img src="${p.folder}/${img.file}" loading="lazy">
+            </div>`).join('')}
+          </div>
+        </div>
+
+        ${totalVid>0?`
+        <!-- I2V 프롬프트 -->
+        <div class="prompt-sec" style="margin-top:20px">
+          <h4 class="pv">I2V 영상 프롬프트</h4>
+          ${bilingual(s.vidPrompt,'vid-'+s.id)}
+        </div>
+        <!-- 영상 결과물 -->
+        <div class="prompt-sec">
+          <h4 class="pv">영상 결과물 ${s.hasCompare?'(Hailuo vs Flow)':''}</h4>
+          <div class="media-grid ${gc}">
+            ${s.hailuo.map(v=>`<div class="m-item">
+              <div class="m-label"><span class="dot dot-h"></span>Hailuo ${v.res}</div>
+              <video src="${p.folder}/${v.file}" controls preload="metadata" playsinline></video>
+              <div class="m-meta">${v.res} / 6s / ${v.size} / 워터마크 있음</div>
+            </div>`).join('')}
+            ${s.flow.map(v=>`<div class="m-item">
+              <div class="m-label"><span class="dot dot-f"></span>Flow ${v.res}</div>
+              <video src="${p.folder}/${v.file}" controls preload="metadata" playsinline></video>
+              <div class="m-meta">${v.res} / ~5s / ${v.size} / 워터마크 없음</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        `:`
+        <div class="prompt-sec" style="margin-top:20px">
+          <h4 class="pv">I2V 영상 프롬프트</h4>
+          ${bilingual(s.vidPrompt,'vid-'+s.id)}
+        </div>
+        `}
+        ${s.notes?`<div class="note-box"><strong>NOTE:</strong> ${s.notes}</div>`:''}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ---- 규칙 탭 ----
+  html += `<div class="section ${currentTab==='rules'?'on':''}" id="sec-rules">`;
+  html += `<div class="card">
+    <h2>캐릭터 Core Description</h2>
+    <h3>English</h3>
+    <div style="background:#f5f5f7;border-radius:10px;padding:16px;font-size:13px;line-height:1.7;font-family:'SF Mono','Menlo',monospace;color:#424245;margin-bottom:16px">${esc(CORE.en)}</div>
+    <h3>한국어</h3>
+    <div style="background:#f5f5f7;border-radius:10px;padding:16px;font-size:13px;line-height:1.7;color:#1d1d1f">${esc(CORE.kr)}</div>
+  </div>`;
+  html += `<div class="card">
+    <h2>프롬프트 작성 규칙 (모든 장면 공통)</h2>
+    <div class="rule-item"><strong>슬로우모션 방지</strong> — "quick snappy movements, real-time speed, not slow motion"<br><span style="color:#86868b">빠르고 경쾌한 동작, 실시간 속도, 슬로우모션 아님</span></div>
+    <div class="rule-item"><strong>카메라 응시 방지</strong> — "eyes fixed on [대상], never looks at camera"<br><span style="color:#86868b">[대상]에 시선 고정, 카메라를 절대 보지 않음</span></div>
+    <div class="rule-item"><strong>물체 합체 방지</strong> — 복잡한 소품 상호작용 최소화<br><span style="color:#86868b">AI가 소품과 캐릭터를 합쳐버리는 문제 방지</span></div>
+    <div class="rule-item"><strong>행동 제한</strong> — 한 장면에 행동 2~3개 이내<br><span style="color:#86868b">너무 많은 동작을 넣으면 AI가 혼란</span></div>
+    <div class="rule-item"><strong>조명</strong> — "slightly dim warm lighting, controlled exposure"<br><span style="color:#86868b">약간 어두운 따뜻한 조명, 노출 제어 (과노출 방지)</span></div>
+    <div class="rule-item"><strong>캐릭터 일관성</strong> — MCP Gemini에 maintainCharacterConsistency: true + 캐릭터 카드 inputImage 필수<br><span style="color:#86868b">매번 동일 캐릭터를 생성하기 위한 설정</span></div>
+    <div class="rule-item"><strong>악세서리 방지</strong> — "No accessories, no jewelry, no necklaces" 반드시 명시<br><span style="color:#86868b">AI가 목걸이/팔찌 등을 자동 생성하는 문제 방지</span></div>
+  </div>`;
+  html += `</div>`;
+
+  // ---- 비용 탭 ----
+  html += `<div class="section ${currentTab==='cost'?'on':''}" id="sec-cost">`;
+  html += `<div class="card">
+    <h2>비용 요약</h2>
+    <table class="cost-tbl">
+      <thead><tr><th>도구</th><th>사용량</th><th>단가</th><th>잔여</th><th>금액</th></tr></thead>
+      <tbody>
+        ${p.costs.map(c=>`<tr><td>${c.tool}</td><td>${c.usage}</td><td>${c.unit}</td><td>${c.remain}</td><td>${c.price}</td></tr>`).join('')}
+        <tr class="total"><td colspan="4">총 실비용</td><td>${p.stats.cost}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+  html += `</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// 이중 언어 프롬프트 박스
+function bilingual(data,id){
+  return `<div class="bilingual">
+    <div class="lang-tab">
+      <button class="on" onclick="switchLang(this,'en')">English</button>
+      <button onclick="switchLang(this,'kr')">한국어</button>
+    </div>
+    <div class="lang-body">
+      <button class="copy-btn" onclick="copyText(this)">복사</button>
+      <div class="lang-panel en on">${esc(data.en)}</div>
+      <div class="lang-panel kr">${esc(data.kr)}</div>
+    </div>
+  </div>`;
+}
+
+function bilingualInline(data){
+  return `<div style="margin-bottom:6px"><strong style="font-size:11px;color:#86868b">EN:</strong><br><span style="font-family:'SF Mono','Menlo',monospace;font-size:11px;color:#424245">${esc(data.en)}</span></div>
+  <div><strong style="font-size:11px;color:#86868b">KR:</strong><br><span style="font-size:12px">${esc(data.kr)}</span></div>`;
+}
+
+// 유틸
+function switchLang(btn,lang){
+  const tabs = btn.parentElement;
+  const body = tabs.nextElementSibling;
+  tabs.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  body.querySelectorAll('.lang-panel').forEach(p=>{p.classList.toggle('on',p.classList.contains(lang))});
+}
+function toggleCore(el){
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('on');
+}
+function copyText(btn){
+  const panel = btn.parentElement.querySelector('.lang-panel.on');
+  navigator.clipboard.writeText(panel.innerText).then(()=>{btn.textContent='복사됨!';setTimeout(()=>btn.textContent='복사',1500)});
+}
+function selectProd(id){
+  currentProd = PRODUCTIONS.find(p=>p.id===id)||PRODUCTIONS[0];
+  currentTab = 'planning';
+  render();
+}
+function switchTab(id){
+  currentTab = id;
+  renderTopbar();
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
+  const sec = document.getElementById('sec-'+id);
+  if(sec) sec.classList.add('on');
+  // 탭 버튼 활성화
+  document.querySelectorAll('.topbar .tab').forEach(t=>t.classList.toggle('active',t.textContent==={planning:'기획초안',scenes:'제작과정',rules:'프롬프트 규칙',cost:'비용'}[id]));
+}
+function render(){renderSidebar();renderTopbar();renderContent()}
+
+// 초기화
+render();
+</script>
+</body>
+</html>
