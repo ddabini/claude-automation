@@ -17,11 +17,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 
-# --- 폰트 등록 ---
+# --- 폰트 등록 (TTF만 지원 — OTF PostScript outline 미지원) ---
 FONT_DIR = os.path.expanduser("~/Library/Fonts")
-pdfmetrics.registerFont(TTFont("Pretendard", f"{FONT_DIR}/Pretendard-Regular.otf"))
-pdfmetrics.registerFont(TTFont("Pretendard-Bold", f"{FONT_DIR}/Pretendard-Bold.otf"))
-pdfmetrics.registerFont(TTFont("Pretendard-SemiBold", f"{FONT_DIR}/Pretendard-SemiBold.otf"))
+pdfmetrics.registerFont(TTFont("Pretendard", f"{FONT_DIR}/NanumBarunGothic.ttf"))
+pdfmetrics.registerFont(TTFont("Pretendard-Bold", f"{FONT_DIR}/NanumBarunGothicBold.ttf"))
+pdfmetrics.registerFont(TTFont("Pretendard-SemiBold", f"{FONT_DIR}/NanumBarunGothicBold.ttf"))
 
 # --- 색상 팔레트 ---
 PRIMARY = HexColor("#1a1a2e")      # 진한 네이비
