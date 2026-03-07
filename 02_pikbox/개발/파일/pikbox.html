@@ -15248,6 +15248,28 @@ ${metaText}
       iDoc.head.appendChild(link);
     }
 
+    /* ─── 디자인 컨테이너 찾기 — 새 요소를 삽입할 부모 결정 ─── */
+    // body 직접 삽입 대신 디자인의 메인 래퍼를 찾아 그 안에 넣음
+    // → body 아래 확장 문제 방지 (래퍼 내부에 position:absolute로 올림)
+    function drEditFindContainer() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc || !iDoc.body) return null;
+      // 1) 흔한 디자인 래퍼 클래스/태그 탐색
+      var sel = iDoc.querySelector('.poster, .design, .card, .page, .slide, .wrapper, .container, main, article, section');
+      if (sel) { sel.style.position = 'relative'; return sel; }
+      // 2) body의 첫 번째 의미있는 자식 (script/style/에디터요소 제외)
+      var children = iDoc.body.children;
+      for (var i = 0; i < children.length; i++) {
+        var c = children[i];
+        if (c.id === 'pkb-editor-style' || c.id === 'pkb-hbox') continue;
+        if (c.tagName === 'STYLE' || c.tagName === 'SCRIPT' || c.tagName === 'LINK') continue;
+        c.style.position = 'relative';
+        return c;
+      }
+      // 3) 폴백: body 자체
+      return iDoc.body;
+    }
+
     /* ─── 이미지 추가: 파일 선택 → Firebase Storage 업로드 → iframe에 <img> 삽입 ─── */
     function drEditAddImage() {
       var iDoc = drEditState.iframeDoc;
