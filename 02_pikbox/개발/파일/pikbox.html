@@ -15678,45 +15678,29 @@ ${metaText}
       drEditUpdatePreview();
     }
 
-    /* ─── 키보드 단축키 — Ctrl+Z/Y, Ctrl+C/V/X, Delete ─── */
-    document.addEventListener('keydown', function(e) {
-      // 디자인 리뷰 탭 + 편집 모드가 활성일 때만
-      var drView = document.getElementById('designReviewView');
-      if (!drView || drView.style.display === 'none') return;
-      if (!drEditState.active) return;
-      // iframe 로딩 중이면 단축키 무시 (undo/redo 연속 충돌 방지)
-      if (drEditState._loading) { e.preventDefault(); return; }
-      if (!drEditState.iframeDoc) return;
-
-      // 입력 필드에 포커스 중이면 무시 (속성 패널 input/textarea)
-      var tag = document.activeElement ? document.activeElement.tagName : '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    /* ─── 공유 단축키 처리 함수 — iframe 내부/외부 모두에서 호출 ─── */
+    function drEditHandleShortcut(e) {
+      if (!drEditState.active) return false;
+      if (drEditState._loading) { e.preventDefault(); return true; }
+      if (!drEditState.iframeDoc) return false;
 
       var ctrl = e.ctrlKey || e.metaKey;
 
       // Ctrl+Z — Undo
       if (ctrl && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        drEditUndo();
-        return;
+        e.preventDefault(); drEditUndo(); return true;
       }
       // Ctrl+Shift+Z 또는 Ctrl+Y — Redo
       if ((ctrl && e.key === 'z' && e.shiftKey) || (ctrl && e.key === 'y')) {
-        e.preventDefault();
-        drEditRedo();
-        return;
+        e.preventDefault(); drEditRedo(); return true;
       }
       // Ctrl+Shift+S — 다른이름으로 저장
       if (ctrl && e.key === 's' && e.shiftKey) {
-        e.preventDefault();
-        drEditSaveAs();
-        return;
+        e.preventDefault(); drEditSaveAs(); return true;
       }
       // Ctrl+S — 저장
       if (ctrl && e.key === 's') {
-        e.preventDefault();
-        drEditSave();
-        return;
+        e.preventDefault(); drEditSave(); return true;
       }
       // Delete/Backspace — 선택한 요소 삭제
       if ((e.key === 'Delete' || e.key === 'Backspace') && drEditState.selectedElement) {
@@ -15725,30 +15709,28 @@ ${metaText}
         drEditState.selectedElement.remove();
         drEditDeselectAll();
         drEditState.hasChanges = true;
-        return;
+        return true;
       }
-      // Ctrl+C — 선택한 요소 복사 (클립보드에 저장)
+      // Ctrl+C — 선택한 요소 복사
       if (ctrl && e.key === 'c' && drEditState.selectedElement) {
         e.preventDefault();
         var el = drEditState.selectedElement;
-        el.classList.remove('pkb-sel'); // 선택 표시 제거 후 복사
+        el.classList.remove('pkb-sel');
         drEditState.clipboard = el.outerHTML;
         el.classList.add('pkb-sel');
         toast('요소를 복사했습니다', 'success');
-        return;
+        return true;
       }
       // Ctrl+V — 복사한 요소 붙여넣기
       if (ctrl && e.key === 'v' && drEditState.clipboard) {
         e.preventDefault();
         var iDoc = drEditState.iframeDoc;
-        if (!iDoc || !iDoc.body) return;
+        if (!iDoc || !iDoc.body) return true;
         drEditPushUndo();
-        // 임시 컨테이너에 HTML을 넣고 첫 번째 자식을 추출
         var tmp = iDoc.createElement('div');
         tmp.innerHTML = drEditState.clipboard;
         var pasted = tmp.firstElementChild;
-        if (!pasted) return;
-        // 붙여넣기 위치를 살짝 이동 (원본과 겹치지 않도록)
+        if (!pasted) return true;
         var curLeft = parseInt(pasted.style.left) || 0;
         var curTop = parseInt(pasted.style.top) || 0;
         pasted.style.left = (curLeft + 20) + 'px';
@@ -15758,9 +15740,9 @@ ${metaText}
         drEditSelectElement(pasted);
         drEditState.hasChanges = true;
         toast('붙여넣기 완료', 'success');
-        return;
+        return true;
       }
-      // Ctrl+X — 선택한 요소 잘라내기 (복사 + 삭제)
+      // Ctrl+X — 선택한 요소 잘라내기
       if (ctrl && e.key === 'x' && drEditState.selectedElement) {
         e.preventDefault();
         var el = drEditState.selectedElement;
@@ -15772,7 +15754,7 @@ ${metaText}
         drEditDeselectAll();
         drEditState.hasChanges = true;
         toast('요소를 잘라냈습니다', 'success');
-        return;
+        return true;
       }
       // Ctrl+D — 선택한 요소 복제
       if (ctrl && e.key === 'd' && drEditState.selectedElement) {
@@ -15784,8 +15766,20 @@ ${metaText}
         drEditState.selectedElement.parentNode.insertBefore(clone, drEditState.selectedElement.nextSibling);
         drEditSelectElement(clone);
         drEditState.hasChanges = true;
-        return;
+        return true;
       }
+      return false;
+    }
+
+    /* ─── 키보드 단축키 — 부모 문서에서 캡처 ─── */
+    document.addEventListener('keydown', function(e) {
+      // 디자인 리뷰 탭 + 편집 모드가 활성일 때만
+      var drView = document.getElementById('designReviewView');
+      if (!drView || drView.style.display === 'none') return;
+      // 입력 필드에 포커스 중이면 무시 (속성 패널 input/textarea)
+      var tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      drEditHandleShortcut(e);
     });
 
     // 마우스 이벤트에 undo 스냅샷 추가 — 드래그 시작 시 저장
