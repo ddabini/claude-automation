@@ -15055,6 +15055,14 @@ ${metaText}
       var iDoc = drEditState.iframeDoc;
       if (!el || !iDoc) return;
 
+      // 속성 변경 전 undo 스냅샷 (연속 변경은 한 번만 저장)
+      if (!drEditState._propUndoPushed) {
+        drEditPushUndo();
+        drEditState._propUndoPushed = true;
+      }
+      clearTimeout(drEditState._propUndoTimer);
+      drEditState._propUndoTimer = setTimeout(function() { drEditState._propUndoPushed = false; }, 1000);
+
       var rect = el.getBoundingClientRect();
       var cs = iDoc.defaultView.getComputedStyle(el);
       var tx = 0, ty = 0;
