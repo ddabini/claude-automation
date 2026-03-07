@@ -4723,6 +4723,21 @@
   </div>
 
   <!-- ══════════════════════════════════════════
+       YouTube A/B 비교 분석 모달 — 영상 2~4개 비교
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="ytCompareModal">
+    <div class="modal" style="max-width:900px;">
+      <div class="modal-header">
+        <h2>A/B 비교 분석</h2>
+        <button class="modal-close" onclick="closeModal('ytCompareModal')">✕</button>
+      </div>
+      <div class="modal-body" id="ytCompareBody" style="max-height:75vh;overflow-y:auto;">
+        <!-- ytShowCompareAnalysis()가 동적으로 채움 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
        YouTube 인라인 플레이어 모달 — 영상 클릭 시 표시
        좌: iframe 플레이어 / 우: 인사이트 패널
   ══════════════════════════════════════════ -->
