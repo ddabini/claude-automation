@@ -8618,6 +8618,10 @@
             description: v.snippet || '' // 영상 설명 (Serper는 snippet으로 제공)
           };
         });
+      } catch (err) {
+        console.warn(`[Serper Videos] 네트워크 오류:`, err.message);
+        return [];
+      }
     }
 
     // ─── YouTube Data API v3 검색 — 정확한 날짜 + 통계 + 정렬 제공 ───
