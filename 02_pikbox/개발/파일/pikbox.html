@@ -14671,6 +14671,8 @@ ${metaText}
       textElements: [],
       parsedDoc: null,
       updateTimer: null,
+      _autoSaveTimer: null,   // 자동저장 디바운스 타이머
+      _autoSaveStatus: 'idle', // idle | saving | saved | error
     };
     const DR_HTML_CONTENT = DR_ROOT + '/html-content';
 
