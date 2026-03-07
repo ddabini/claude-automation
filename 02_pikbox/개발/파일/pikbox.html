@@ -9340,6 +9340,9 @@
         if (headerSearch) headerSearch.style.display = '';
         if (headerSaved) headerSaved.style.display = 'none';
         if (savedEmpty) savedEmpty.style.display = 'none';
+        // 무한 스크롤 sentinel 복원
+        var sentinel = document.getElementById('ytSentinel');
+        if (sentinel) sentinel.style.display = '';
         ytCancelMultiSelect();
         // 사이드바 검색 탭 활성화, 카테고리 비활성화
         if (navSearch) navSearch.classList.add('active');
