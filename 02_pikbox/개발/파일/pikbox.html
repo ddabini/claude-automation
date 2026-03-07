@@ -10140,21 +10140,39 @@ ${videoInfos}
       }
     }
 
-    // 마크다운 → HTML 간이 변환 (비교 분석용)
+    // 마크다운 → HTML 변환 (비교 분석용 — 섹션별 카드 분리)
     function ytCompareMarkdownToHtml(md) {
-      return md
-        .replace(/##### (.+)/g, '<h5>$1</h5>')
-        .replace(/#### (.+)/g, '<h5>$1</h5>')
-        .replace(/### (.+)/g, '<h5>$1</h5>')
-        .replace(/## (.+)/g, '<h5>$1</h5>')
-        .replace(/# (.+)/g, '<h5>$1</h5>')
+      // 기본 마크다운 변환
+      let html = md
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/^\- (.+)/gm, '<li>$1</li>')
-        .replace(/^\* (.+)/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/gs, (match) => `<ul>${match}</ul>`)
-        .replace(/<\/ul>\s*<ul>/g, '')
-        .replace(/\n\n/g, '<br><br>')
-        .replace(/\n/g, '<br>');
+        .replace(/^\* (.+)/gm, '<li>$1</li>');
+
+      // 연속된 <li>를 <ul>로 감싸기
+      html = html.replace(/((?:^<li>.*<\/li>\n?)+)/gm, (match) => `<ul>${match}</ul>`);
+      html = html.replace(/<\/ul>\s*<ul>/g, '');
+
+      // 헤딩 변환 (#~##### → h5)
+      html = html.replace(/^#{1,5}\s*(.+)$/gm, '<h5>$1</h5>');
+
+      // 빈 줄을 <p> 구분으로 변환
+      html = html.replace(/\n\n+/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      html = '<p>' + html + '</p>';
+      html = html.replace(/<p>\s*<\/p>/g, ''); // 빈 <p> 제거
+
+      // 각 h5 섹션을 .ai-section div로 감싸기
+      html = html.replace(/<h5>/g, '</div><div class="ai-section"><h5>');
+      // 첫 번째 빈 </div> 제거, 마지막에 </div> 추가
+      if (html.startsWith('</div>')) html = html.substring(6);
+      html += '</div>';
+      // 시작 부분에 섹션 없는 텍스트가 있으면 정리
+      html = html.replace(/^([^<]|<(?!div))+?<div class="ai-section">/, (match) => {
+        const intro = match.replace(/<div class="ai-section">$/, '');
+        return (intro.trim() ? `<div class="ai-section" style="background:transparent;border:none;padding:0;">${intro}</div>` : '') + '<div class="ai-section">';
+      });
+
+      return html;
     }
 
     // YouTube 탭 초기화 — 칩 렌더링 + 무한 스크롤 설정
