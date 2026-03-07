@@ -13148,6 +13148,27 @@ ${metaText}
 
       drState.initialized = true;
 
+      // 이전에 선택한 디자인 + 편집 모드 복원 (새로고침 시)
+      var lastDesignId = drPersistGet('dr_lastDesignId');
+      var editWasOpen = drPersistGet('dr_editOpen') === '1';
+      if (lastDesignId) {
+        // 디자인 목록이 로드된 후 선택 (Firebase 비동기)
+        var restoreCheck = setInterval(function() {
+          if (drState.allDesigns.length > 0) {
+            clearInterval(restoreCheck);
+            if (drState.allDesigns.find(function(d) { return d.id === lastDesignId; })) {
+              drSelectDesign(lastDesignId);
+              // 편집 패널도 열려있었으면 복원
+              if (editWasOpen) {
+                setTimeout(function() { drToggleEdit(); }, 500);
+              }
+            }
+          }
+        }, 200);
+        // 5초 안에 못 찾으면 포기
+        setTimeout(function() { clearInterval(restoreCheck); }, 5000);
+      }
+
       // 키보드 좌우 화살표로 카드뉴스 페이지 이동
       // — 텍스트 입력 중이면 무시 (채팅 입력창 등)
       document.addEventListener('keydown', (e) => {
