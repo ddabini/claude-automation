@@ -7453,6 +7453,11 @@
             color: '#f3f4f6'
           };
         });
+      } catch (err) {
+        // 네트워크 오류 등 — 조용히 빈 배열 반환
+        console.warn(`[Serper] 네트워크 오류:`, err.message);
+        return [];
+      }
     }
 
     // 이미지 URL 정규화 — 크기 파라미터·트래킹 파라미터 제거로 중복 감지 개선
