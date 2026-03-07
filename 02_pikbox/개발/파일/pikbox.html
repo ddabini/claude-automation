@@ -8559,24 +8559,28 @@
     // ─── Serper.dev YouTube 영상 검색 (/videos 엔드포인트) ───
     // 한국 채널 중심 — gl:kr + hl:ko + 한국어 결과만 필터링
     async function searchSerperVideos(query, page) {
-      // 국가 필터에 따라 Serper 검색 지역 설정
-      const isGlobal = ytState.filters.country === '';
-      const res = await fetch('https://google.serper.dev/videos', {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': config.serperKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(Object.assign({
-          q: query,
-          num: 20,
-          page: Math.max(1, page),
-          gl: isGlobal ? 'us' : 'kr',
-          hl: isGlobal ? 'en' : 'ko'
-        }, ytGetSerperTbs()))
-      });
-      const data = await res.json();
-      if (!res.ok || !data.videos) return [];
+      try {
+        // 국가 필터에 따라 Serper 검색 지역 설정
+        const isGlobal = ytState.filters.country === '';
+        const res = await fetch('https://google.serper.dev/videos', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': config.serperKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(Object.assign({
+            q: query,
+            num: 20,
+            page: Math.max(1, page),
+            gl: isGlobal ? 'us' : 'kr',
+            hl: isGlobal ? 'en' : 'ko'
+          }, ytGetSerperTbs()))
+        });
+        const data = await res.json();
+        if (!res.ok || !data.videos) {
+          if (data.message) console.warn(`[Serper Videos] ${data.message}`);
+          return [];
+        }
 
       // YouTube 영상 URL만 필터링 (채널/사용자 페이지 제외)
       // 글로벌 모드에서는 한국어 필터 스킵
