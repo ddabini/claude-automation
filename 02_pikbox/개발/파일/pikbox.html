@@ -13379,13 +13379,23 @@ ${metaText}
 
         if (iframeDoc && iframeDoc.body) {
           // ── same-origin: html2canvas 캡처 ──
+
+          // 편집 모드일 때 에디터 요소 임시 제거 (캡처에 포함되지 않도록)
+          var edStyleEl = iframeDoc.getElementById('pkb-editor-style');
+          var edHbox = iframeDoc.getElementById('pkb-hbox');
+          var edSelEls = iframeDoc.querySelectorAll('.pkb-sel');
+          if (edStyleEl && edStyleEl.parentNode) edStyleEl.parentNode.removeChild(edStyleEl);
+          if (edHbox && edHbox.parentNode) edHbox.parentNode.removeChild(edHbox);
+          edSelEls.forEach(function(el) { el.classList.remove('pkb-sel'); });
+
           const pageH   = drState.viewerPageHeight || 1200;
           const pageIdx = (drState.viewerPage || 1) - 1; // 0-based offset
 
           const canvas = await html2canvas(iframeDoc.body, {
             scale: 2,          // 2배 해상도로 캡처 (고화질)
             useCORS: true,
-            allowTaint: false,
+            allowTaint: true,  // taint 허용 — 외부 이미지도 캡처 (export만 안 되면 됨)
+            logging: false,
             // 현재 장 위치만 캡처 (y 오프셋, 높이 고정)
             y: pageIdx * pageH,
             height: pageH,
@@ -13393,17 +13403,26 @@ ${metaText}
             scrollY: -(pageIdx * pageH),
           });
 
+          // 편집 모드 에디터 요소 복원
+          if (edStyleEl) iframeDoc.head.appendChild(edStyleEl);
+          if (edHbox) iframeDoc.body.appendChild(edHbox);
+          edSelEls.forEach(function(el) { el.classList.add('pkb-sel'); });
+
           // canvas를 PNG Blob으로 변환 후 다운로드
-          canvas.toBlob((blob) => {
-            if (!blob) { toast('이미지 생성 실패', 'error'); return; }
+          canvas.toBlob(function(blob) {
+            if (!blob) { toast('이미지 생성 실패', 'error'); if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; } return; }
             const url = URL.createObjectURL(blob);
             const a   = document.createElement('a');
             a.href     = url;
             a.download = filename;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            toast(`${filename} 저장 완료!`, 'success');
+            if (btn) { btn.textContent = '📥 저장'; btn.disabled = false; }
+            toast(filename + ' 저장 완료!', 'success');
           }, 'image/png');
+          return; // toBlob은 비동기이므로 finally에서 버튼 복원하지 않음
 
         } else {
           // ── cross-origin: DB에서 HTML 가져와서 캡처 시도 ──
