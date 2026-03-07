@@ -9914,8 +9914,6 @@
 
       // HTML 렌더링
       body.innerHTML = ytRenderCompareHTML(enriched);
-      // 레이더 차트 렌더링
-      setTimeout(() => ytRenderCompareRadar(enriched), 100);
       // AI 비교 분석 (비동기 — 로딩 후 채워짐)
       ytRunAiCompare(enriched);
     }
