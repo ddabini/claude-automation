@@ -16084,6 +16084,9 @@ ${metaText}
 
     /* ─── 속성값 적용 ─── */
     function drEditApplyProp(prop) {
+      // 패널 업데이트 중이면 실행하지 않음 (input type=color의 .value 설정이
+      // 일부 브라우저에서 oninput을 발생시켜 요소에 배경색이 잘못 적용되는 문제 방지)
+      if (drEditState._updatingPanel) return;
       var el = drEditState.selectedElement;
       var iDoc = drEditState.iframeDoc;
       if (!el || !iDoc) return;
