@@ -15613,12 +15613,107 @@ ${metaText}
       var hexEl = document.getElementById('drEditBgHex');
       if (colorEl) colorEl.value = curBg;
       if (hexEl) hexEl.value = curBg;
+
+      // 배경색 프리뷰도 동기화
+      drEditSyncBgPreview(curBg);
     }
 
-    /* ─── 배경 속성 적용 — 배경색 변경 ─── */
+    /* ─── 자동 배경 선택 — body/html 클릭 시 가장 적합한 배경 요소를 자동으로 찾아 선택 ─── */
+    function drEditSelectBgAuto() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc || !iDoc.body) return;
+      // body의 첫 번째 자식이 있으면 그걸 배경으로, 없으면 body 자체를 배경으로
+      var bgTarget = iDoc.body.children[0] || iDoc.body;
+      drEditSelectBg(bgTarget);
+    }
+
+    /* ─── 배경색 프리뷰 초기화 — 디자인 로드 시 현재 배경색을 읽어서 미리보기에 표시 ─── */
+    function drEditInitBgPreview() {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc || !iDoc.body) return;
+
+      // 배경색을 찾을 대상: body 첫 번째 자식 → body 순으로 확인
+      var bgTarget = iDoc.body.children[0] || iDoc.body;
+      var cs = iDoc.defaultView.getComputedStyle(bgTarget);
+      var curBg = drRgbToHex(cs.backgroundColor) || '#ffffff';
+
+      // transparent(rgba(0,0,0,0))이면 body 자체 확인
+      if (curBg === '#000000' && cs.backgroundColor.indexOf('0)') >= 0) {
+        var bodyCs = iDoc.defaultView.getComputedStyle(iDoc.body);
+        curBg = drRgbToHex(bodyCs.backgroundColor) || '#ffffff';
+      }
+
+      drEditSyncBgPreview(curBg);
+
+      // 프리셋 컬러 칩 생성 (자주 쓰이는 배경색들)
+      var presetRow = document.getElementById('drEditBgPresetRow');
+      if (presetRow && !presetRow.hasChildNodes()) {
+        var presets = ['#ffffff','#f8f9fa','#f1f3f5','#e9ecef','#dee2e6','#000000','#1a1a2e','#16213e','#0f3460','#e94560',
+                       '#ffeaa7','#dfe6e9','#fab1a0','#a29bfe','#00cec9','#fd79a8','#636e72','#2d3436','#6c5ce7','#00b894'];
+        presets.forEach(function(hex) {
+          var chip = document.createElement('div');
+          chip.style.cssText = 'width:24px; height:24px; border-radius:4px; border:2px solid var(--border); cursor:pointer; flex-shrink:0; background:' + hex + ';';
+          chip.title = hex;
+          chip.onclick = function() { drEditApplyBgQuick(hex); };
+          presetRow.appendChild(chip);
+        });
+      }
+    }
+
+    /* ─── 배경색 프리뷰 색상 동기화 ─── */
+    function drEditSyncBgPreview(hex) {
+      var preview = document.getElementById('drEditBgPreview');
+      if (preview) preview.style.background = hex;
+      var quickInput = document.getElementById('drEditBgColorQuick');
+      if (quickInput) quickInput.value = hex;
+    }
+
+    /* ─── 배경색 선택 버튼 클릭 — 네이티브 컬러 피커 열기 ─── */
+    function drEditOpenBgColor() {
+      var quickInput = document.getElementById('drEditBgColorQuick');
+      if (quickInput) quickInput.click();
+    }
+
+    /* ─── 네이티브 컬러 피커에서 배경색 실시간 변경 ─── */
+    function drEditQuickBgColor(hex) {
+      var iDoc = drEditState.iframeDoc;
+      if (!iDoc || !iDoc.body) return;
+
+      // 배경 대상: bgElement가 있으면 그것, 없으면 body 첫 번째 자식 or body
+      var bgTarget = drEditState.bgElement || iDoc.body.children[0] || iDoc.body;
+      bgTarget.style.backgroundColor = hex;
+
+      // body 자체에도 적용 (여백 영역까지 채우기 위해)
+      iDoc.body.style.backgroundColor = hex;
+
+      drEditSyncBgPreview(hex);
+
+      // 속성 패널의 배경 컬러 피커도 동기화
+      var colorEl = document.getElementById('drEditBgColor');
+      var hexEl = document.getElementById('drEditBgHex');
+      if (colorEl) colorEl.value = hex;
+      if (hexEl) hexEl.value = hex;
+
+      drEditMarkChanged();
+    }
+
+    /* ─── 프리셋 컬러 칩 클릭으로 배경색 즉시 변경 ─── */
+    function drEditApplyBgQuick(hex) {
+      drEditQuickBgColor(hex);
+    }
+
+    /* ─── 배경 속성 적용 — 배경색 변경 (기존 속성 패널용) ─── */
     function drEditApplyBgProp(prop) {
       var el = drEditState.bgElement;
-      if (!el) return;
+      if (!el) {
+        // bgElement가 없으면 자동으로 찾기
+        var iDoc = drEditState.iframeDoc;
+        if (iDoc && iDoc.body) {
+          el = iDoc.body.children[0] || iDoc.body;
+          drEditState.bgElement = el;
+        }
+        if (!el) return;
+      }
 
       var colorEl = document.getElementById('drEditBgColor');
       var hexEl = document.getElementById('drEditBgHex');
@@ -15628,6 +15723,10 @@ ${metaText}
         var val = colorEl ? colorEl.value : '#000000';
         el.style.backgroundColor = val;
         if (hexEl) hexEl.value = val;
+        // body에도 적용
+        var iDoc2 = drEditState.iframeDoc;
+        if (iDoc2 && iDoc2.body) iDoc2.body.style.backgroundColor = val;
+        drEditSyncBgPreview(val);
         drEditMarkChanged();
       }
       if (prop === 'bgHex') {
