@@ -16046,6 +16046,8 @@ ${metaText}
       }
 
       // 현재 색상을 컬러픽커에 반영
+      // _updatingPanel 플래그로 oninput 이벤트 실행 방지
+      drEditState._updatingPanel = true;
       var colorEl = document.getElementById('drEditPropColor');
       var bgEl = document.getElementById('drEditPropBg');
       if (colorEl) {
@@ -16055,6 +16057,7 @@ ${metaText}
         var bgc = cs.backgroundColor;
         bgEl.value = (bgc === 'rgba(0, 0, 0, 0)' || bgc === 'transparent') ? '#ffffff' : (drRgbToHex(bgc) || '#ffffff');
       }
+      drEditState._updatingPanel = false;
 
       // 텍스트 편집 영역
       var textWrap = document.getElementById('drEditPropTextWrap');
