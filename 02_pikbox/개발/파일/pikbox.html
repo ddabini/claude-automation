@@ -15740,27 +15740,15 @@ ${metaText}
       var hexEl = document.getElementById('drEditBgHex');
 
       if (prop === 'bgColor') {
-        // 컬러 피커에서 선택 → 배경색 변경 + hex 텍스트 동기화
+        // 컬러 피커에서 선택 → 배경색 강제 변경
         var val = colorEl ? colorEl.value : '#000000';
-        el.style.backgroundColor = val;
-        if (hexEl) hexEl.value = val;
-        // body에도 적용
-        var iDoc2 = drEditState.iframeDoc;
-        if (iDoc2 && iDoc2.body) iDoc2.body.style.backgroundColor = val;
-        drEditSyncBgPreview(val);
-        drEditMarkChanged();
+        drEditQuickBgColor(val);
       }
       if (prop === 'bgHex') {
-        // hex 텍스트 직접 입력 → 배경색 변경 + 컬러 피커 동기화
+        // hex 텍스트 직접 입력 → 배경색 강제 변경
         var hex = hexEl ? hexEl.value.trim() : '';
         if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
-          el.style.backgroundColor = hex;
-          if (colorEl) colorEl.value = hex;
-          // body에도 적용
-          var iDoc3 = drEditState.iframeDoc;
-          if (iDoc3 && iDoc3.body) iDoc3.body.style.backgroundColor = hex;
-          drEditSyncBgPreview(hex);
-          drEditMarkChanged();
+          drEditQuickBgColor(hex);
         }
       }
     }
