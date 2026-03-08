@@ -1,0 +1,9 @@
+{
+  "name": "deepdig-report-generator",
+  "version": "1.0.0",
+  "description": "DeepDig 보고서 자동 생성 — Anthropic API 직접 호출",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.50.0"
+  }
+}
