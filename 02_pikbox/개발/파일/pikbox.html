@@ -15688,24 +15688,52 @@ ${metaText}
       var iDoc = drEditState.iframeDoc;
       if (!iDoc || !iDoc.body) return;
 
-      // 배경 대상: bgElement가 있으면 그것, 없으면 body 첫 번째 자식 or body
-      var bgTarget = drEditState.bgElement || iDoc.body.children[0] || iDoc.body;
-      drEditForceBg(bgTarget, hex);
-
-      // body 자체에도 적용 (여백 영역까지 채우기 위해)
+      // 1) html, body 강제 적용
+      drEditForceBg(iDoc.documentElement, hex);
       drEditForceBg(iDoc.body, hex);
 
-      // html 요소에도 적용 (일부 디자인은 html에 배경 지정)
-      drEditForceBg(iDoc.documentElement, hex);
+      // 2) 디자인 내부의 모든 그라데이션 요소를 찾아서 강제 오버라이드
+      //    gradient가 있는 요소 = 배경의 일부로 간주
+      var allEls = iDoc.body.querySelectorAll('*');
+      var gradientSelectors = []; // CSS 선택자 수집용
+      for (var i = 0; i < allEls.length; i++) {
+        var el = allEls[i];
+        // 에디터 주입 요소는 건너뛰기
+        if (el.id === 'pkb-editor-style' || el.id === 'pkb-hbox' || el.id === 'pkb-bg-override') continue;
+        if (el.closest && el.closest('#pkb-hbox')) continue;
 
-      // iframe 내부에 style 태그로도 강제 주입 (인라인보다 확실)
+        var cs = iDoc.defaultView.getComputedStyle(el);
+        var bgImg = cs.backgroundImage || '';
+        var bgShort = cs.background || '';
+
+        // gradient가 포함된 요소 발견 → 강제 오버라이드
+        if (bgImg.indexOf('gradient') >= 0 || bgShort.indexOf('gradient') >= 0) {
+          drEditForceBg(el, hex);
+          // CSS 선택자도 생성 (style 태그 주입용)
+          if (el.id) {
+            gradientSelectors.push('#' + el.id);
+          } else if (el.className && typeof el.className === 'string') {
+            var cls = el.className.split(' ').filter(function(c) { return c && c !== 'pkb-sel'; })[0];
+            if (cls) gradientSelectors.push('.' + cls);
+          }
+        }
+      }
+
+      // 3) style 태그로 강제 주입 — 모든 그라데이션 요소 + 기본 배경 요소
       var overrideStyle = iDoc.getElementById('pkb-bg-override');
       if (!overrideStyle) {
         overrideStyle = iDoc.createElement('style');
         overrideStyle.id = 'pkb-bg-override';
         iDoc.head.appendChild(overrideStyle);
       }
-      overrideStyle.textContent = 'html, body, body > *:first-child { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
+      // 기본 셀렉터 + 그라데이션이 발견된 요소 셀렉터 합치기
+      var selectors = ['html', 'body', 'body > *:first-child'];
+      for (var j = 0; j < gradientSelectors.length; j++) {
+        if (selectors.indexOf(gradientSelectors[j]) < 0) {
+          selectors.push(gradientSelectors[j]);
+        }
+      }
+      overrideStyle.textContent = selectors.join(', ') + ' { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
 
       drEditSyncBgPreview(hex);
 
