@@ -42,3 +42,27 @@
 - 카메라 응시 방지 (S1~S2): "eyes fixed on TV screen, never looks at camera"
 - 상상 장면(S3~S4)은 색감/조명이 확 달라야 함 (네온, 스모그, 무대 조명)
 - 엔딩(S6)은 뒷모습 클로즈업 — 꼬리와 귀만 보이게
+
+## I2V 영상 프롬프트
+
+### S1-S2: 소파에서 TV 보기 (시작이미지: bbakgom-smtm-sofa-blank.png)
+```
+The baby polar bear sits completely still on the sofa, eyes fixed on the TV screen showing a hip-hop show. Absolutely no body movement — only the TV light flickers and changes color on the bear's face. The bear blinks once slowly, mouth stays closed, completely emotionless expression. Warm living room ambient light, TV glow shifting between purple and blue. Static camera, no camera movement, real-time speed.
+```
+
+### S3-S4: 상상 속 무대 (시작이미지: bbakgom-smtm-stage-rap.png)
+```
+The baby polar bear on a hip-hop concert stage bounces energetically to the beat, holding a microphone, mouth opening and closing as if rapping with intense passion. The bear jumps slightly, waves one paw in the air, full of energy. Dramatic neon spotlights sweep across the stage, confetti falls, fog machines create atmospheric haze, crowd silhouettes cheer with raised hands. Dynamic concert lighting, quick snappy movements, real-time speed, energetic vibrant mood, never looks at camera.
+```
+
+### S6: 엔딩 꼬리+귀 움찔 (시작이미지: bbakgom-smtm-ending-back.png)
+```
+The baby polar bear sits motionless on the sofa, seen from behind. After a brief moment of stillness, the tiny round tail twitches once subtly, then the right ear flicks once — a tiny involuntary movement betraying hidden excitement. The rest of the body remains completely still. Warm cozy living room lighting, TV glow from the front. Static camera from behind, no camera movement, real-time speed, subtle movement only.
+```
+
+## 시작 이미지 목록
+| 파일 | 장면 | 상태 |
+|------|------|------|
+| bbakgom-smtm-sofa-blank.png | S1-S2 소파 무표정 | ✅ 완료 |
+| bbakgom-smtm-stage-rap.png | S3-S4 상상 무대 | ✅ 완료 |
+| bbakgom-smtm-ending-back.png | S6 엔딩 뒷모습 | ✅ 완료 |
