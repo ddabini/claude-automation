@@ -15674,6 +15674,15 @@ ${metaText}
       if (quickInput) quickInput.click();
     }
 
+    /* ─── 배경색 강제 적용 — !important로 모든 CSS 오버라이드 ─── */
+    function drEditForceBg(el, hex) {
+      if (!el) return;
+      // setProperty로 !important 강제 적용 (기존 CSS의 !important도 오버라이드)
+      el.style.setProperty('background-color', hex, 'important');
+      el.style.setProperty('background-image', 'none', 'important');
+      el.style.setProperty('background', hex, 'important');
+    }
+
     /* ─── 네이티브 컬러 피커에서 배경색 실시간 변경 ─── */
     function drEditQuickBgColor(hex) {
       var iDoc = drEditState.iframeDoc;
@@ -15681,10 +15690,22 @@ ${metaText}
 
       // 배경 대상: bgElement가 있으면 그것, 없으면 body 첫 번째 자식 or body
       var bgTarget = drEditState.bgElement || iDoc.body.children[0] || iDoc.body;
-      bgTarget.style.backgroundColor = hex;
+      drEditForceBg(bgTarget, hex);
 
       // body 자체에도 적용 (여백 영역까지 채우기 위해)
-      iDoc.body.style.backgroundColor = hex;
+      drEditForceBg(iDoc.body, hex);
+
+      // html 요소에도 적용 (일부 디자인은 html에 배경 지정)
+      drEditForceBg(iDoc.documentElement, hex);
+
+      // iframe 내부에 style 태그로도 강제 주입 (인라인보다 확실)
+      var overrideStyle = iDoc.getElementById('pkb-bg-override');
+      if (!overrideStyle) {
+        overrideStyle = iDoc.createElement('style');
+        overrideStyle.id = 'pkb-bg-override';
+        iDoc.head.appendChild(overrideStyle);
+      }
+      overrideStyle.textContent = 'html, body, body > *:first-child { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
 
       drEditSyncBgPreview(hex);
 
