@@ -15605,7 +15605,8 @@ ${metaText}
       var bgGrid = document.getElementById('drEditBgGrid');
       if (bgGrid) bgGrid.style.display = 'block';
 
-      // 현재 배경색 읽기
+      // 현재 배경색 읽기 (_updatingPanel으로 oninput 이벤트 방지)
+      drEditState._updatingPanel = true;
       var iDoc = drEditState.iframeDoc;
       var cs = iDoc.defaultView.getComputedStyle(target);
       var curBg = drRgbToHex(cs.backgroundColor) || '#000000';
@@ -15613,6 +15614,7 @@ ${metaText}
       var hexEl = document.getElementById('drEditBgHex');
       if (colorEl) colorEl.value = curBg;
       if (hexEl) hexEl.value = curBg;
+      drEditState._updatingPanel = false;
 
       // 배경색 프리뷰도 동기화
       drEditSyncBgPreview(curBg);
