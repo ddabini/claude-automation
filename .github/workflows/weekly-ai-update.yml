@@ -94,7 +94,7 @@ jobs:
                 `- **실행 로그**: [Actions Run #${context.runId}](${runUrl})`,
                 ``,
                 `### 확인 사항`,
-                `- [ ] \`ANTHROPIC_API_KEY\` 시크릿이 유효한지 확인`,
+                `- [ ] \`GEMINI_API_KEY\` 시크릿이 유효한지 확인`,
                 `- [ ] \`FIREBASE_TOKEN\` 시크릿이 만료되지 않았는지 확인`,
                 `- [ ] \`scripts/generate-report.mjs\` 스크립트 정상 동작 확인`,
                 `- [ ] 워크플로우 타임아웃(10분)에 걸린 것은 아닌지 확인`,
