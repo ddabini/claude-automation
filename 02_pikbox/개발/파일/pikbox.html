@@ -15735,6 +15735,10 @@ ${metaText}
         if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
           el.style.backgroundColor = hex;
           if (colorEl) colorEl.value = hex;
+          // body에도 적용
+          var iDoc3 = drEditState.iframeDoc;
+          if (iDoc3 && iDoc3.body) iDoc3.body.style.backgroundColor = hex;
+          drEditSyncBgPreview(hex);
           drEditMarkChanged();
         }
       }
