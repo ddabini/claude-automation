@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // =========================================================
 // DeepDig 보고서 자동 생성 스크립트
-// Anthropic API를 직접 호출하여 조사 → HTML 보고서 → registry.js 업데이트
+// Google Gemini API (REST) + Google Search Grounding 사용
+// — npm 패키지 의존성 없음 (Node.js 20 내장 fetch 사용)
 //
 // 사용법:
 //   node generate-report.mjs --type <보고서유형> --date <YYYY-MM-DD>
@@ -13,18 +14,22 @@
 //   weekly-ai-update   — AI 최신 현황 위클리
 //
 // 환경변수:
-//   ANTHROPIC_API_KEY  — Anthropic API 인증 키
+//   GEMINI_API_KEY  — Google Gemini API 인증 키
 // =========================================================
 
-import Anthropic from '@anthropic-ai/sdk';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from 'fs';
 import { join } from 'path';
 
-// ── Anthropic API 클라이언트 (환경변수에서 키를 자동으로 읽음) ──
-const client = new Anthropic();
+// ── Gemini API 설정 ──
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) {
+  console.error('❌ GEMINI_API_KEY 환경변수가 설정되지 않았습니다.');
+  process.exit(1);
+}
 
-// 사용할 AI 모델 (Sonnet = 빠르고 품질 좋음, 비용 효율적)
-const MODEL = 'claude-sonnet-4-6';
+// Gemini 2.5 Flash — 빠르고 품질 좋음, Google Search 지원
+const MODEL = 'gemini-2.5-flash-preview-05-20';
+const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 // 프로젝트 루트 (GitHub Actions에서는 체크아웃된 저장소 위치)
 const ROOT = process.cwd();
@@ -142,49 +147,76 @@ function parseArgs() {
 }
 
 // =========================================================
-// Anthropic API 호출 함수
+// Gemini API 호출 함수
 // =========================================================
 
-// 웹 검색 도구를 사용하여 조사하는 함수
-// Anthropic 서버가 자동으로 웹 검색을 실행하고 결과를 Claude에게 전달함
-async function research(prompt) {
-  console.log('   → API 호출 중 (web_search 포함)...');
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 10 }],
-    messages: [{ role: 'user', content: prompt }],
-  });
+// Gemini API 호출 (Google Search 그라운딩 옵션)
+// useSearch=true이면 Google 검색으로 최신 정보를 가져와 답변
+async function callGemini(prompt, useSearch = false) {
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      maxOutputTokens: 16000,
+      temperature: 0.7,
+    },
+  };
 
-  // 응답에서 텍스트 블록만 추출 (검색 결과는 Claude가 이미 소화한 상태)
-  const texts = response.content
-    .filter(block => block.type === 'text')
-    .map(block => block.text);
-
-  if (texts.length === 0) {
-    throw new Error('API 응답에 텍스트가 없습니다. 응답: ' + JSON.stringify(response.content.map(b => b.type)));
+  // Google Search Grounding — 실시간 웹 검색 결과를 AI가 참고하여 답변
+  if (useSearch) {
+    body.tools = [{ google_search: {} }];
   }
 
-  console.log(`   → 완료 (토큰: 입력 ${response.usage.input_tokens} / 출력 ${response.usage.output_tokens})`);
-  return texts.join('\n');
-}
+  const url = `${API_BASE}/models/${MODEL}:generateContent?key=${API_KEY}`;
 
-// 일반 텍스트 생성 함수 (웹 검색 없이)
-async function generate(prompt) {
-  console.log('   → API 호출 중...');
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
 
-  const text = response.content
-    .filter(block => block.type === 'text')
-    .map(block => block.text)
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  // 응답에서 텍스트 추출
+  const parts = data.candidates?.[0]?.content?.parts;
+  if (!parts || parts.length === 0) {
+    throw new Error('Gemini 응답에 콘텐츠가 없습니다: ' + JSON.stringify(data));
+  }
+
+  const text = parts
+    .filter(p => p.text)
+    .map(p => p.text)
     .join('\n');
 
-  console.log(`   → 완료 (토큰: 입력 ${response.usage.input_tokens} / 출력 ${response.usage.output_tokens})`);
+  if (!text) {
+    throw new Error('Gemini 응답에 텍스트가 없습니다');
+  }
+
+  // 토큰 사용량 로그
+  const usage = data.usageMetadata;
+  if (usage) {
+    console.log(`   → 완료 (토큰: 입력 ${usage.promptTokenCount || '?'} / 출력 ${usage.candidatesTokenCount || '?'})`);
+  } else {
+    console.log('   → 완료');
+  }
+
   return text;
+}
+
+// 웹 검색 포함 조사 함수
+async function research(prompt) {
+  console.log('   → Gemini API 호출 중 (Google Search 포함)...');
+  return callGemini(prompt, true);
+}
+
+// 일반 텍스트 생성 함수 (검색 없이)
+async function generate(prompt) {
+  console.log('   → Gemini API 호출 중...');
+  return callGemini(prompt, false);
 }
 
 // =========================================================
@@ -372,9 +404,10 @@ async function main() {
   console.log(`   날짜: ${date}`);
   console.log(`   제목: ${title}`);
   console.log(`   파일: 04_deepdig/${config.folderPath}${fileName}`);
+  console.log(`   모델: ${MODEL} (Google Search Grounding)`);
   console.log('═══════════════════════════════════════');
 
-  // ── Step 1: 웹 검색으로 최신 뉴스/데이터 조사 ──
+  // ── Step 1: Google Search로 최신 뉴스/데이터 조사 ──
   console.log('\n🔍 Step 1/3: 웹 검색 조사');
   const researchResult = await research(`
 오늘은 ${date}입니다. 아래 주제들에 대해 최신 뉴스와 데이터를 검색하여 조사해주세요.
@@ -450,7 +483,7 @@ ${researchResult}
     html = html.replace(/^```(?:html)?\n?/, '').replace(/\n?```$/, '').trim();
   }
 
-  // <!DOCTYPE html>이 없으면 문제 — 에러 로그
+  // <!DOCTYPE html>이 없으면 경고
   if (!html.includes('<!DOCTYPE html>') && !html.includes('<!doctype html>')) {
     console.warn('⚠️ HTML에 DOCTYPE이 없습니다. 그대로 저장합니다.');
   }
@@ -481,7 +514,7 @@ ${researchResult}
   const maxNum = rptNumbers.length > 0 ? Math.max(...rptNumbers) : 0;
   const newId = `rpt_${String(maxNum + 1).padStart(3, '0')}`;
 
-  // API에게 registry 항목 생성 요청
+  // Gemini에게 registry 항목 생성 요청
   const entryText = await generate(`
 아래 조사 요약을 바탕으로 registry.js에 추가할 보고서 항목을 생성해주세요.
 
@@ -524,7 +557,6 @@ ${researchResult.substring(0, 2000)}
 
   // { 로 시작하는지 확인
   if (!entry.startsWith('{')) {
-    // { 부터 추출 시도
     const braceIdx = entry.indexOf('{');
     if (braceIdx >= 0) {
       entry = entry.substring(braceIdx);
@@ -533,6 +565,12 @@ ${researchResult.substring(0, 2000)}
       console.error('응답:', entry.substring(0, 200));
       process.exit(1);
     }
+  }
+
+  // } 이후 불필요한 텍스트 제거
+  const lastBrace = entry.lastIndexOf('}');
+  if (lastBrace >= 0) {
+    entry = entry.substring(0, lastBrace + 1);
   }
 
   // reports: [ 뒤에 새 항목 삽입 (배열 맨 앞 = 최신순)
@@ -568,15 +606,12 @@ ${researchResult.substring(0, 2000)}
       `file_name=${fileName}`,
       `title=${title}`,
     ];
-    const fs = await import('fs');
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, outputLines.join('\n') + '\n');
+    appendFileSync(process.env.GITHUB_OUTPUT, outputLines.join('\n') + '\n');
   }
 }
 
 // 실행
 main().catch(err => {
   console.error('\n❌ 보고서 생성 실패:', err.message);
-  if (err.status) console.error('   HTTP 상태:', err.status);
-  if (err.error) console.error('   에러 상세:', JSON.stringify(err.error));
   process.exit(1);
 });
