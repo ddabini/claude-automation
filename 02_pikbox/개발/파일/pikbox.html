@@ -15731,15 +15731,17 @@ ${metaText}
       // contenteditable 중이면 텍스트 선택 허용
       if (target.contentEditable === 'true') return;
 
-      // body/html 클릭 → 선택 해제
+      // body/html 클릭 → 배경으로 간주하여 배경 편집 패널 표시
       if (target === iDoc.body || target === iDoc.documentElement) {
-        drEditDeselectAll();
+        e.preventDefault();
+        e.stopPropagation();
+        drEditSelectBgAuto();
         return;
       }
 
-      // 배경 컨테이너 클릭 — body 직속 자식이면서 자식 요소가 2개 이상이면
-      // "배경"으로 간주 → 배경 편집 패널 표시 (이동은 불가, 색상 변경만 가능)
-      if (target.parentElement === iDoc.body && target.children.length >= 2) {
+      // 배경 컨테이너 클릭 — body 직속 자식이면 배경으로 간주
+      // (페이지 래퍼, 섹션 등 큰 컨테이너)
+      if (target.parentElement === iDoc.body) {
         e.preventDefault();
         e.stopPropagation();
         drEditSelectBg(target);
