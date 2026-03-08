@@ -453,27 +453,25 @@ const PRODUCTIONS = [
 속마음은 힙합 무대 위에서 폭발하는 솔로 콘서트.<br>
 엔딩에 유일한 외부 반응 = 작은 꼬리 + 귀 한쪽 움찔.<br><br>
 <strong>제목 후보:</strong> 내적댄스 (추천 — 4글자, 직장인 공감) / 겉곰속곰 / 혼자콘서트`,
-    scenes: [
-      {num:'1',env:'ENV-01 소파',action:'소파에 앉아 리모컨으로 TV 켬',dialogue:'—',emotion:'무표정',sec:'3초'},
-      {num:'2',env:'ENV-01 소파',action:'TV(쇼미더머니) 멍하니 바라봄',dialogue:'"..."',emotion:'무표정',sec:'4초'},
-      {num:'3',env:'상상 속 무대',action:'마이크 들고 래퍼 포즈, 무대 조명',dialogue:'♪',emotion:'열광',sec:'5초'},
-      {num:'4',env:'상상 속 무대',action:'관객 환호 속 손 번쩍, 바운스',dialogue:'♪♪♪',emotion:'폭발',sec:'5초'},
-      {num:'5',env:'ENV-01 소파',action:'컷백 — 여전히 무표정 앉아있음',dialogue:'"...괜찮은 프로그램이네"',emotion:'무표정',sec:'4초'},
-      {num:'6',env:'ENV-01 소파 뒷모습',action:'꼬리 미세 움찔 + 귀 한쪽 떨림',dialogue:'—',emotion:'미세 흥분',sec:'3초'}
+    storyboard: [
+      {num:'1',env:'ENV-01 소파',action:'소파에 앉아 리모컨으로 TV 켬',dialogue:'—',emotion:'무표정'},
+      {num:'2',env:'ENV-01 소파',action:'TV(쇼미더머니) 멍하니 바라봄',dialogue:'"..."',emotion:'무표정'},
+      {num:'3',env:'상상 속 무대',action:'마이크 들고 래퍼 포즈, 무대 조명',dialogue:'♪',emotion:'열광'},
+      {num:'4',env:'상상 속 무대',action:'관객 환호 속 손 번쩍, 바운스',dialogue:'♪♪♪',emotion:'폭발'},
+      {num:'5',env:'ENV-01 소파',action:'컷백 — 여전히 무표정 앉아있음',dialogue:'"...괜찮은 프로그램이네"',emotion:'무표정'},
+      {num:'6',env:'ENV-01 소파 뒷모습',action:'꼬리 미세 움찔 + 귀 한쪽 떨림',dialogue:'—',emotion:'미세 흥분'}
     ],
     subtitles: [
-      {scene:'S2',text:'(자막 없음 — TV 소리만)'},
-      {scene:'S3~S4',text:'(상상 장면이므로 자막 없이 음악만)'},
-      {scene:'S5',text:'"...괜찮은 프로그램이네"'},
-      {scene:'S6',text:'(자막 없음 — 꼬리+귀만 보여줌)'}
-    ],
-    soundNotes: [
-      'S1~S2: TV에서 힙합 비트 작게 흘러나옴',
-      'S3~S4: 비트 폭발 + 관객 환호 (쇼미더머니 무대 분위기)',
-      'S5: 비트 뚝 끊김 → 조용한 거실 소리 (시계, 에어컨)',
-      'S6: 짧은 "삐릿" 효과음 (귀 떨릴 때)'
+      '(TV 소리만)',
+      '...',
+      '(상상 — 음악만)',
+      '...괜찮은 프로그램이네',
+      '(꼬리+귀만 보여줌)'
     ]
   },
+
+  // ---- 통계 ----
+  stats: { images: 11, hailuo: 6, flow: 12, cost: '~$4.8' },
 
   scenes: [
     {
