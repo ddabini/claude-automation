@@ -16156,10 +16156,14 @@ ${metaText}
         el.style.fontWeight = fwVal;
       }
       if (prop === 'color') {
-        el.style.color = document.getElementById('drEditPropColor').value;
+        // !important로 CSS 규칙 오버라이드
+        el.style.setProperty('color', document.getElementById('drEditPropColor').value, 'important');
       }
       if (prop === 'bgColor') {
-        el.style.backgroundColor = document.getElementById('drEditPropBg').value;
+        // !important로 CSS 규칙 오버라이드 (디자인 CSS에 !important가 있을 수 있음)
+        var bgVal = document.getElementById('drEditPropBg').value;
+        el.style.setProperty('background-color', bgVal, 'important');
+        el.style.setProperty('background', bgVal, 'important');
       }
       if (prop === 'text') {
         var newText = document.getElementById('drEditPropText').value;
