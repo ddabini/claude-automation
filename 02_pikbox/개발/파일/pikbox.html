@@ -16830,11 +16830,13 @@ ${metaText}
       var iDoc = drEditState.iframeDoc;
       if (!iDoc) return;
 
-      // 에디터 요소 임시 분리
+      // 에디터 요소 임시 분리 (저장 시 에디터 전용 요소가 포함되지 않도록)
       var styleEl = iDoc.getElementById('pkb-editor-style');
       var hbox = iDoc.getElementById('pkb-hbox');
+      var bgOverride = iDoc.getElementById('pkb-bg-override');
       if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
       if (hbox && hbox.parentNode) hbox.parentNode.removeChild(hbox);
+      if (bgOverride && bgOverride.parentNode) bgOverride.parentNode.removeChild(bgOverride);
       var selEls = iDoc.querySelectorAll('.pkb-sel');
       selEls.forEach(function(e) { e.classList.remove('pkb-sel'); });
 
@@ -16844,6 +16846,7 @@ ${metaText}
       // 에디터 요소 복원
       if (styleEl) iDoc.head.appendChild(styleEl);
       if (hbox) iDoc.body.appendChild(hbox);
+      if (bgOverride) iDoc.head.appendChild(bgOverride);
       selEls.forEach(function(e) { e.classList.add('pkb-sel'); });
 
       try {
