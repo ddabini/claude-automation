@@ -1,0 +1,161 @@
+# =========================================================
+# AI 최신 현황 위클리 자동 생성 워크플로우
+# 매주 수요일 KST 09:00 (UTC 0:00 수요일)에 GitHub 서버에서 실행
+# → PC가 꺼져 있어도 자동으로 보고서 생성 + Firebase 배포
+# 카테고리: cat_006 (AI 최신 현황 위클리)
+# =========================================================
+name: AI 최신 현황 위클리 자동 생성
+
+on:
+  schedule:
+    # 매주 수요일 KST 09:00 = UTC 00:00 수요일
+    - cron: "0 0 * * 3"
+  workflow_dispatch: # 수동 실행 버튼 (언제든지 즉시 실행 가능)
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    # 타임아웃: 15분 초과 시 자동 중단 (무한 루프 방지)
+    timeout-minutes: 15
+    permissions:
+      contents: write  # 파일 커밋·푸시 권한
+      issues: write    # 에러 발생 시 이슈 생성 권한
+
+    steps:
+      # 저장소 최신 코드 가져오기
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # KST 기준 날짜·주차 정보 생성 (보고서 파일명·제목에 사용)
+      - name: 날짜 설정 (KST 기준)
+        id: date
+        run: |
+          # 한국 시간(KST, UTC+9) 기준으로 날짜·주차 계산
+          export TZ='Asia/Seoul'
+          echo "today=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          # YYYYWW 형식: 연도 + ISO 주차 (예: 202610 = 2026년 10주차)
+          echo "year_week=$(date +%Y%V)" >> $GITHUB_OUTPUT
+          # 월 (숫자만, 앞에 0 없음)
+          echo "month=$(date +%-m)" >> $GITHUB_OUTPUT
+          # ISO 주차에서 해당 월의 몇 번째 주인지 계산
+          WEEK_NUM=$(( ($(date +%-d) - 1) / 7 + 1 ))
+          echo "week_num=${WEEK_NUM}" >> $GITHUB_OUTPUT
+          # 제목용 태그: "3월2주차" 형식
+          echo "week_tag=$(date +%-m)월${WEEK_NUM}주차" >> $GITHUB_OUTPUT
+          echo "오늘 날짜(KST): $(date)"
+
+      # Node.js 20 + Firebase CLI 설치 (보고서 배포에 필요)
+      - name: Node.js 및 Firebase CLI 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install -g firebase-tools
+
+      # Claude가 조사 → 보고서 생성 → 커밋 → Firebase 배포까지 한 번에 처리
+      - name: Claude로 보고서 생성 + 배포
+        id: claude
+        timeout-minutes: 15
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 허용 도구: 웹검색, 웹페이지 읽기, 명령 실행, 파일 읽기/쓰기/편집/검색
+          claude_args: "--allowedTools WebSearch,WebFetch,Bash,Read,Write,Edit,Glob,Grep --max-turns 40"
+          show_full_output: true
+          prompt: |
+            오늘(${{ steps.date.outputs.today }}) AI 최신 현황 위클리 보고서를 자동 생성해줘.
+
+            ## 1단계: AI 업계 주간 동향 조사 (WebSearch 사용)
+            아래 항목들을 각각 검색해서 이번 주 핵심 이슈를 파악해줘.
+
+            - AI 모델 출시/업데이트: GPT, Claude, Gemini, Llama, Qwen 등 주요 모델 신규 출시·업데이트·벤치마크
+            - OpenAI 동향: 새 모델, API 변경, 가격 변동, 서비스 업데이트
+            - Anthropic 동향: Claude 업데이트, Claude Code, 기업 협력, 안전성 연구
+            - Google AI 동향: Gemini, Nano Banana, DeepMind, AI 검색, Vertex AI
+            - Meta AI 동향: Llama, AI 연구, 오픈소스 모델
+            - AI 규제/정책: 각국 AI 규제 동향, EU AI Act, 미국 행정명령
+            - AI 도구·서비스 신규 출시: Cursor, Windsurf, Devin, Replit, Perplexity 등 AI 코딩·생산성 도구
+            - AI 스타트업/투자: 주요 AI 기업 투자·인수·기업가치 변동
+
+            ## 2단계: HTML 보고서 생성
+            다음 조건에 맞춰 HTML 보고서를 작성해줘.
+
+            - 파일명: ai-update-weekly-${{ steps.date.outputs.year_week }}.html
+            - 저장위치: 04_deepdig/07_AI최신현황위클리/report/
+            - 제목: [${{ steps.date.outputs.week_tag }}]AI 최신 현황 위클리
+            - CSS 스타일: 04_deepdig/01_소비자앱서비스트렌드조사/report/consumer-app-usage-2025-20260227.html 과 완전히 동일한 스타일 사용
+              (흰색 배경, Noto Sans KR 폰트, 브런치 스타일, 900px 최대 너비)
+            - 내용 구성: 요약 박스 → 모델 업데이트 → OpenAI → Anthropic → Google → Meta → AI 규제 → AI 도구 → 스타트업/투자 → 종합 전망
+
+            ## 3단계: registry.js 업데이트
+            04_deepdig/registry.js 파일의 reports 배열 맨 앞(첫 번째)에 새 보고서 항목을 추가해줘.
+
+            추가할 항목 형식 (id 채번: registry.js를 Read로 읽고, reports 배열에서 "rpt_" 숫자가 가장 큰 것 +1, 3자리 zero-padding):
+            {
+              id: "rpt_XXX",
+              categoryId: "cat_006",
+              title: "[${{ steps.date.outputs.week_tag }}]AI 최신 현황 위클리",
+              date: "${{ steps.date.outputs.today }}",
+              period: "2026년 ${{ steps.date.outputs.week_tag }}",
+              folderPath: "07_AI최신현황위클리/report/",
+              fileName: "ai-update-weekly-${{ steps.date.outputs.year_week }}.html",
+              summary: "조사한 내용 기반으로 2-3문장 요약",
+              summaryPoints: ["핵심 포인트 5개 배열"],
+              sources: { total: N, gradeA: N, gradeB: N, gradeC: N },
+              tags: ["관련 태그 10개"]
+            }
+
+            ## 4단계: Git 커밋 & 푸시
+            Bash로 아래 명령 실행:
+            ```
+            git config user.email "action@github.com"
+            git config user.name "GitHub Actions"
+            git add "04_deepdig/07_AI최신현황위클리/report/ai-update-weekly-${{ steps.date.outputs.year_week }}.html"
+            git add 04_deepdig/registry.js
+            git commit -m "Auto: [${{ steps.date.outputs.week_tag }}] AI 최신 현황 위클리 자동 생성"
+            git push
+            ```
+
+            ## 5단계: Firebase 배포
+            Bash로 아래 명령 실행:
+            ```
+            firebase deploy --only hosting:deepdig --token "$FIREBASE_TOKEN" --project did-ads --non-interactive
+            ```
+
+            모든 단계가 완료되면 최종 결과를 간략히 요약해줘.
+        env:
+          # Firebase 배포 인증 토큰 (GitHub 시크릿에서 불러옴)
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      # Claude step 실패 시 자동으로 GitHub Issue 생성 (API 키 만료, 타임아웃 등 감지)
+      - name: 실패 시 GitHub Issue 자동 생성
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = '${{ steps.date.outputs.today }}';
+            const weekTag = '${{ steps.date.outputs.week_tag }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[자동알림] AI 최신 현황 위클리 생성 실패 (${weekTag})`,
+              body: [
+                `## AI 최신 현황 위클리 자동 생성 실패`,
+                ``,
+                `- **날짜**: ${today}`,
+                `- **주차**: ${weekTag}`,
+                `- **실행 로그**: [Actions Run #${context.runId}](${runUrl})`,
+                ``,
+                `### 확인 사항`,
+                `- [ ] \`ANTHROPIC_API_KEY\` 시크릿이 유효한지 확인`,
+                `- [ ] \`FIREBASE_TOKEN\` 시크릿이 만료되지 않았는지 확인`,
+                `- [ ] Claude API 할당량(Rate Limit)이 초과되지 않았는지 확인`,
+                `- [ ] 워크플로우 타임아웃(15분)에 걸린 것은 아닌지 확인`,
+                ``,
+                `> 이 이슈는 GitHub Actions 워크플로우에서 자동 생성되었습니다.`
+              ].join('\n'),
+              labels: ['bug', 'automated']
+            });
