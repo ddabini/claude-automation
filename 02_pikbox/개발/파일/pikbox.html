@@ -15688,71 +15688,40 @@ ${metaText}
       var iDoc = drEditState.iframeDoc;
       if (!iDoc || !iDoc.body) return;
 
-      // 1) html, body 강제 적용
+      // 1) html, body 인라인 스타일 강제 적용
       drEditForceBg(iDoc.documentElement, hex);
       drEditForceBg(iDoc.body, hex);
 
-      // 2) 디자인 내부의 모든 그라데이션 요소를 찾아서 강제 오버라이드
-      //    gradient가 있는 요소 = 배경의 일부로 간주
-      var allEls = iDoc.body.querySelectorAll('*');
-      var gradientSelectors = []; // CSS 선택자 수집용
-      for (var i = 0; i < allEls.length; i++) {
-        var el = allEls[i];
-        // 에디터 주입 요소는 건너뛰기
-        if (el.id === 'pkb-editor-style' || el.id === 'pkb-hbox' || el.id === 'pkb-bg-override') continue;
-        if (el.closest && el.closest('#pkb-hbox')) continue;
-
-        var cs = iDoc.defaultView.getComputedStyle(el);
-        var bgImg = cs.backgroundImage || '';
-        var bgShort = cs.background || '';
-
-        // gradient가 포함된 요소 발견 → 강제 오버라이드
-        if (bgImg.indexOf('gradient') >= 0 || bgShort.indexOf('gradient') >= 0) {
-          drEditForceBg(el, hex);
-          // CSS 선택자도 생성 (style 태그 주입용)
-          if (el.id) {
-            gradientSelectors.push('#' + el.id);
-          } else if (el.className && typeof el.className === 'string') {
-            var cls = el.className.split(' ').filter(function(c) { return c && c !== 'pkb-sel'; })[0];
-            if (cls) gradientSelectors.push('.' + cls);
-          }
-        }
+      // 2) body 직속 컨테이너(.poster 등)의 인라인 style도 직접 변경
+      var children = iDoc.body.children;
+      for (var c = 0; c < children.length; c++) {
+        var child = children[c];
+        if (child.id === 'pkb-editor-style' || child.id === 'pkb-hbox' || child.id === 'pkb-bg-override') continue;
+        drEditForceBg(child, hex);
       }
 
-      // 3) style 태그로 강제 주입 — 모든 그라데이션 요소 + 기본 배경 요소
+      // 3) style 태그로 전면 강제 주입
       var overrideStyle = iDoc.getElementById('pkb-bg-override');
       if (!overrideStyle) {
         overrideStyle = iDoc.createElement('style');
         overrideStyle.id = 'pkb-bg-override';
         iDoc.head.appendChild(overrideStyle);
       }
-      // 기본 셀렉터 + 그라데이션이 발견된 요소 셀렉터 합치기
-      var selectors = ['html', 'body', 'body > *:first-child'];
-      for (var j = 0; j < gradientSelectors.length; j++) {
-        if (selectors.indexOf(gradientSelectors[j]) < 0) {
-          selectors.push(gradientSelectors[j]);
-        }
-      }
-      var mainRule = selectors.join(', ') + ' { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
 
-      // ::before, ::after 가상 요소의 그라데이션도 제거
-      // (JS로는 가상 요소를 직접 조작할 수 없으므로 CSS로만 가능)
-      var pseudoSelectors = [];
-      for (var p = 0; p < selectors.length; p++) {
-        pseudoSelectors.push(selectors[p] + '::before');
-        pseudoSelectors.push(selectors[p] + '::after');
-      }
-      // 그라데이션 요소의 가상 요소도 추가
-      for (var q = 0; q < gradientSelectors.length; q++) {
-        pseudoSelectors.push(gradientSelectors[q] + '::before');
-        pseudoSelectors.push(gradientSelectors[q] + '::after');
-      }
-      var pseudoRule = pseudoSelectors.join(', ') + ' { background: transparent !important; background-image: none !important; }';
+      // 배경 관련 모든 CSS 변수를 선택한 색으로 오버라이드
+      var cssRules = [];
 
-      // CSS 변수도 오버라이드 (디자인이 var(--bg-primary) 등을 사용하는 경우)
-      var varRule = ':root { --bg-primary: ' + hex + ' !important; --bg-secondary: ' + hex + ' !important; }';
+      // (a) CSS 변수 오버라이드 — 디자인이 var(--bg-primary) 등을 사용하는 경우
+      cssRules.push(':root { --bg-primary: ' + hex + ' !important; --bg-secondary: ' + hex + ' !important; }');
 
-      overrideStyle.textContent = mainRule + '\n' + pseudoRule + '\n' + varRule;
+      // (b) html, body, body 직속 자식의 배경색 강제 변경
+      cssRules.push('html, body, body > * { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }');
+
+      // (c) 모든 요소의 ::before, ::after 가상 요소의 그라데이션 제거
+      //     (예: .poster::before의 radial-gradient)
+      cssRules.push('*::before, *::after { background: transparent !important; background-image: none !important; }');
+
+      overrideStyle.textContent = cssRules.join('\n');
 
       drEditSyncBgPreview(hex);
 
