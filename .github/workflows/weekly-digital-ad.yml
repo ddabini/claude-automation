@@ -2,7 +2,7 @@
 # 디지털 광고·마케팅 위클리 자동 생성 워크플로우
 # 매주 월요일 KST 09:00 (UTC 00:00 월요일)에 GitHub 서버에서 실행
 # → PC가 꺼져 있어도 자동으로 보고서 생성 + Firebase 배포
-# claude-code-action 대신 node scripts/generate-report.mjs 직접 호출
+# Gemini API + Google Search Grounding으로 보고서 자동 생성
 # 카테고리: cat_005 (디지털 광고·마케팅 위클리)
 # =========================================================
 name: 디지털 광고·마케팅 위클리 자동 생성
