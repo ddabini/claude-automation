@@ -15739,6 +15739,7 @@ ${metaText}
 
     /* ─── 배경 속성 적용 — 배경색 변경 (기존 속성 패널용) ─── */
     function drEditApplyBgProp(prop) {
+      if (drEditState._updatingPanel) return;
       var el = drEditState.bgElement;
       if (!el) {
         // bgElement가 없으면 자동으로 찾기
