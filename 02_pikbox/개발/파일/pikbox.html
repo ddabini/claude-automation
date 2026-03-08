@@ -15708,18 +15708,16 @@ ${metaText}
         iDoc.head.appendChild(overrideStyle);
       }
 
-      // 배경 관련 모든 CSS 변수를 선택한 색으로 오버라이드
+      // 배경 관련 CSS만 정확하게 타겟팅 (내부 콘텐츠 요소는 건드리지 않음)
       var cssRules = [];
 
-      // (a) CSS 변수 오버라이드 — 디자인이 var(--bg-primary) 등을 사용하는 경우
-      cssRules.push(':root { --bg-primary: ' + hex + ' !important; --bg-secondary: ' + hex + ' !important; }');
-
-      // (b) html, body, body 직속 자식의 배경색 강제 변경
+      // (a) html, body, body 직속 자식(포스터 컨테이너)의 배경색만 변경
       cssRules.push('html, body, body > * { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }');
 
-      // (c) 모든 요소의 ::before, ::after 가상 요소의 그라데이션 제거
-      //     (예: .poster::before의 radial-gradient)
-      cssRules.push('*::before, *::after { background: transparent !important; background-image: none !important; }');
+      // (b) body 직속 자식의 ::before, ::after 가상 요소만 투명화
+      //     (예: .poster::before의 radial-gradient 제거)
+      //     * 와일드카드는 사용하지 않음 — 내부 콘텐츠의 가상 요소를 깨뜨림
+      cssRules.push('body > *::before, body > *::after { background: transparent !important; background-image: none !important; }');
 
       overrideStyle.textContent = cssRules.join('\n');
 
