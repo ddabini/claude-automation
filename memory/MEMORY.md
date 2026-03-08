@@ -1,4 +1,44 @@
-# 프로젝트 메모리 (2026-03-06 세션 16 기준)
+# 프로젝트 메모리 (2026-03-08 세션 17 기준)
+
+## 최근 세션 요약 (2026-03-08 세션 17 - Pikbox 디자인 리뷰 편집 버그 수정)
+
+### 핵심 작업 (1가지)
+**Pikbox 디자인 리뷰 편집 모드 치명적 버그 수정 — pkb-hbox 불투명 덮개 + CSS !important 오버라이드**
+
+**문제**:
+- 디자인 리뷰 편집 모드에서 요소(텍스트, 버튼 등)를 클릭하면 흰색 배경이 적용되어 요소가 완전히 사라짐
+- 사용자가 "지금 신청하기 박스가 클릭하면 사라져요" 보고
+
+**근본 원인 3가지 발견 및 수정**:
+
+1. **pkb-hbox 불투명 덮개 (핵심 원인)**: 배경색 변경 CSS 규칙 `body > *`이 에디터 선택 하이라이트 박스(`#pkb-hbox`, z-index: 999999)에도 배경색 적용 → 불투명 박스가 선택된 요소 위를 완전 가림
+   - **수정**: `body > *:not([id^="pkb-"])` 선택자 + `#pkb-hbox { background: transparent !important }`
+
+2. **pkb-bg-override 스타일 태그 잔류**: 자동 저장 시 `pkb-editor-style`, `pkb-hbox` 제거했지만 `pkb-bg-override` 누락 → 이전 세션의 깨진 CSS가 Firebase에 저장됨
+   - **수fix**: `drEditDoAutoSave()` + `drEditSave()` 모두에 `pkb-bg-override` 제거 추가 + 에디터 초기화 시 잔류 태그 정리
+
+3. **CSS !important 오버라이드 실패**: `drEditApplyProp('bgColor')`가 `el.style.backgroundColor = value` (일반 인라인) 사용 → 디자인 CSS의 `!important` 규칙 오버라이드 불가
+   - **수정**: `el.style.setProperty('background', val, 'important')` + `el.style.setProperty('background-color', val, 'important')` 사용
+
+**중간 시행착오**:
+- `oninput` → `onchange` 변경 시도 → 실시간 컬러 프리뷰 불가 부작용 발생 → `oninput` 복원
+- Playwright evaluate로 iframe 내부 DOM 직접 조사하여 `.headline` 요소가 backgroundColor 미적용(rgba(0,0,0,0)) 확인 → 버그의 정체가 pkb-hbox 덮개임을 규명
+
+**검증** (Playwright):
+- 헤드라인, 로고, CTA 버튼, 본문, 서브헤드라인 5개 요소 클릭 → 모두 정상 표시
+- CTA 버튼 배경색 변경 (#000000 → #ff0000) → 즉시 적용 확인
+
+**파일 변경**: `02_pikbox/개발/파일/pikbox.html`
+**배포 완료**: https://pikbox-app.web.app
+
+**학습 포인트**:
+- **CSS `body > *` 선택자**: 에디터 전용 요소(pkb-*)까지 영향주므로 `not([id^="pkb-"])` 패턴 필수
+- **iframe 내 z-index 999999 요소**: 배경색이 투명이 아니면 아래 콘텐츠 완전 가림
+- **자동저장 직렬화**: 에디터 전용 요소 모두 제거 필수 (pkb-editor-style, pkb-hbox, pkb-bg-override)
+- **`onchange` vs `oninput`**: input[type=color]에서 onchange는 다이얼로그 닫을 때만 발화 → `oninput` 필수
+- **CSS !important 오버라이드**: `el.style.backgroundColor = val`은 !important CSS 오버라이드 실패 → `setProperty(..., 'important')` 필수
+
+---
 
 ## 최근 세션 요약 (2026-03-06 세션 16 - Pinterest API 완전 전환)
 
