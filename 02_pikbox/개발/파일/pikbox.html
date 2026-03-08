@@ -15518,6 +15518,11 @@ ${metaText}
       var design = drState.currentDesignData || {};
       var lockH = ((design.height || 1080) * (design.pages || 1));
 
+      // 이전 세션에서 잘못 저장된 pkb-bg-override 스타일 태그 정리
+      // (자동 저장 시 제거되어야 하지만, 이전 버전에서 누락된 경우 대비)
+      var staleBgOverride = iDoc.getElementById('pkb-bg-override');
+      if (staleBgOverride) staleBgOverride.remove();
+
       // 에디터 스타일 주입
       var existing = iDoc.getElementById('pkb-editor-style');
       if (existing) existing.remove();
