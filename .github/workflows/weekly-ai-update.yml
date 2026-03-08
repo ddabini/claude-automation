@@ -9,8 +9,8 @@ name: AI 최신 현황 위클리 자동 생성
 
 on:
   schedule:
-    # 매주 수요일 KST 09:00 = UTC 00:00 수요일
-    - cron: "0 0 * * 3"
+    # 매주 금요일 KST 09:00 = UTC 00:00 금요일
+    - cron: "0 0 * * 5"
   workflow_dispatch: # 수동 실행 버튼 (언제든지 즉시 실행 가능)
 
 jobs:
