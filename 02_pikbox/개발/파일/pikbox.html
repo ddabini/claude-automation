@@ -15733,7 +15733,26 @@ ${metaText}
           selectors.push(gradientSelectors[j]);
         }
       }
-      overrideStyle.textContent = selectors.join(', ') + ' { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
+      var mainRule = selectors.join(', ') + ' { background: ' + hex + ' !important; background-color: ' + hex + ' !important; background-image: none !important; }';
+
+      // ::before, ::after 가상 요소의 그라데이션도 제거
+      // (JS로는 가상 요소를 직접 조작할 수 없으므로 CSS로만 가능)
+      var pseudoSelectors = [];
+      for (var p = 0; p < selectors.length; p++) {
+        pseudoSelectors.push(selectors[p] + '::before');
+        pseudoSelectors.push(selectors[p] + '::after');
+      }
+      // 그라데이션 요소의 가상 요소도 추가
+      for (var q = 0; q < gradientSelectors.length; q++) {
+        pseudoSelectors.push(gradientSelectors[q] + '::before');
+        pseudoSelectors.push(gradientSelectors[q] + '::after');
+      }
+      var pseudoRule = pseudoSelectors.join(', ') + ' { background: transparent !important; background-image: none !important; }';
+
+      // CSS 변수도 오버라이드 (디자인이 var(--bg-primary) 등을 사용하는 경우)
+      var varRule = ':root { --bg-primary: ' + hex + ' !important; --bg-secondary: ' + hex + ' !important; }';
+
+      overrideStyle.textContent = mainRule + '\n' + pseudoRule + '\n' + varRule;
 
       drEditSyncBgPreview(hex);
 
