@@ -5,10 +5,20 @@
   "targets": {
     "did-ads": {
       "hosting": {
-        "deepdig": ["deepdig-app"],
-        "pikbox": ["pikbox-app"],
-        "didadmin": ["did-ad-manager"]
+        "deepdig": [
+          "deepdig-app"
+        ],
+        "pikbox": [
+          "pikbox-app"
+        ],
+        "didadmin": [
+          "did-ad-manager"
+        ],
+        "bbakgom": [
+          "bbakgom-production"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }
