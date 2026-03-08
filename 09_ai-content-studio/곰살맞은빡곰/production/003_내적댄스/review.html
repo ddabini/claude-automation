@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>003_내적댄스 - 프로덕션 리뷰</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+/* ========== 기본 스타일 ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Pretendard Variable', -apple-system, sans-serif;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  line-height: 1.6;
+}
+
+/* ========== 헤더 ========== */
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e7;
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.header h1 span { color: #86868b; font-weight: 400; margin-left: 8px; }
+.header-nav {
+  display: flex;
+  gap: 6px;
+}
+.header-nav button {
+  padding: 6px 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.header-nav button:hover, .header-nav button.active {
+  background: #1d1d1f;
+  color: #fff;
+  border-color: #1d1d1f;
+}
+
+/* ========== 메인 컨테이너 ========== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* ========== 개요 섹션 ========== */
+.overview {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.overview h2 { font-size: 24px; margin-bottom: 16px; }
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.stat-card {
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card .number {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0071e3;
+}
+.stat-card .label {
+  font-size: 13px;
+  color: #86868b;
+  margin-top: 4px;
+}
+
+/* ========== 스토리보드 ========== */
+.storyboard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.storyboard h2 { font-size: 20px; margin-bottom: 20px; }
+
+/* 장면 흐름 테이블 */
+.scene-flow-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.scene-flow-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #86868b;
+  border-bottom: 2px solid #e5e5e7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.scene-flow-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f2;
+  vertical-align: middle;
+}
+.scene-flow-table tr:last-child td { border-bottom: none; }
+.scene-flow-table .scene-num-cell {
+  font-weight: 700;
+  color: #0071e3;
+  width: 40px;
+}
+.scene-flow-table .env-cell { color: #86868b; font-size: 13px; }
+.scene-flow-table .emotion-cell {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.emotion-blank { background: #f0f0f2; color: #86868b; }
+.emotion-fire { background: #fef3c7; color: #92400e; }
+.emotion-explode { background: #fee2e2; color: #991b1b; }
+.emotion-micro { background: #dbeafe; color: #1e40af; }
+
+/* ========== 장면 카드 ========== */
+.scene-section { margin-bottom: 24px; }
+.scene-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.scene-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid #f0f0f2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.scene-number {
+  background: #0071e3;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.scene-number.alt { background: #8b5cf6; }
+.scene-title { font-size: 18px; font-weight: 600; }
+.scene-desc { font-size: 13px; color: #86868b; margin-top: 2px; }
+.scene-badges {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-hailuo { background: #e8f5e9; color: #2e7d32; }
+.badge-flow { background: #e3f2fd; color: #1565c0; }
+.badge-image { background: #fff3e0; color: #e65100; }
+
+.scene-body { padding: 24px 32px; }
+
+/* ========== 프롬프트 섹션 ========== */
+.prompt-section {
+  margin-bottom: 24px;
+}
+.prompt-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.prompt-section h3::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+}
+.prompt-section h3.img-prompt::before { background: #ff9500; }
+.prompt-section h3.vid-prompt::before { background: #0071e3; }
+.prompt-section h3.vid-prompt-alt::before { background: #8b5cf6; }
+
+.prompt-box {
+  background: #f5f5f7;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  color: #424245;
+  position: relative;
+  border-left: 3px solid #d2d2d7;
+  word-break: break-word;
+}
+.prompt-box.vid-prompt-box { border-left-color: #0071e3; }
+.prompt-box .copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #fff;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.prompt-box:hover .copy-btn { opacity: 1; }
+.prompt-box .copy-btn:active { background: #e5e5e7; }
+
+/* ========== 미디어 그리드 ========== */
+.media-row {
+  display: grid;
+  gap: 20px;
+  margin-top: 16px;
+}
+.media-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.media-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.media-row.cols-1 { grid-template-columns: 1fr; max-width: 400px; }
+
+.media-item { position: relative; }
+.media-item .media-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #86868b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.media-item .platform-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.dot-hailuo { background: #4caf50; }
+.dot-flow { background: #2196f3; }
+.dot-image { background: #ff9500; }
+
+.media-item img, .media-item video {
+  width: 100%;
+  border-radius: 10px;
+  background: #f0f0f2;
+}
+.media-item img {
+  aspect-ratio: 9/16;
+  object-fit: cover;
+}
+.media-item video {
+  aspect-ratio: 9/16;
+  object-fit: contain;
+  background: #000;
+}
+.media-meta {
+  font-size: 11px;
+  color: #86868b;
+  margin-top: 6px;
+}
+
+/* ========== 비교 하이라이트 ========== */
+.compare-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+  margin-left: 8px;
+}
+
+/* ========== 대사/자막 섹션 ========== */
+.dialogue-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.dialogue-section h2 { font-size: 20px; margin-bottom: 20px; }
+.dialogue-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f2;
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+}
+.dialogue-item:last-child { border-bottom: none; }
+.dialogue-scene { font-weight: 700; color: #0071e3; width: 40px; flex-shrink: 0; }
+.dialogue-text { font-size: 15px; }
+.dialogue-text em { font-style: normal; color: #86868b; }
+
+/* ========== 음향 노트 ========== */
+.sound-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.sound-section h2 { font-size: 20px; margin-bottom: 20px; }
+.sound-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 14px;
+}
+.sound-item:last-child { border-bottom: none; }
+.sound-item strong { color: #0071e3; }
+
+/* ========== 비용 요약 ========== */
+.cost-summary {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-top: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.cost-summary h2 { font-size: 20px; margin-bottom: 20px; }
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cost-table th, .cost-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 14px;
+}
+.cost-table th {
+  font-weight: 600;
+  color: #86868b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cost-table tr:last-child td { border-bottom: none; }
+.cost-table .total-row { font-weight: 700; background: #f5f5f7; }
+.cost-table .total-row td { border-radius: 8px; }
+
+/* ========== 프롬프트 노트 ========== */
+.prompt-notes {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  margin-top: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.prompt-notes h2 { font-size: 20px; margin-bottom: 16px; }
+.note-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 14px;
+}
+.note-item:last-child { border-bottom: none; }
+.note-item strong { color: #0071e3; }
+
+/* ========== 반응형 ========== */
+@media (max-width: 768px) {
+  .media-row.cols-2, .media-row.cols-3 {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+  .scene-header { flex-wrap: wrap; }
+  .scene-badges { margin-left: 0; margin-top: 8px; }
+  .header-inner { flex-direction: column; gap: 12px; }
+}
+
+/* ========== 숨김 ========== */
+.hidden { display: none !important; }
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<!-- ===== 상단 헤더 ===== -->
+<div class="header">
+  <div class="header-inner">
+    <h1>003_내적댄스 <span>프로덕션 리뷰</span></h1>
+    <div class="header-nav">
+      <button class="active" onclick="filterScenes('all')">전체</button>
+      <button onclick="filterScenes('compare')">비교 장면</button>
+      <button onclick="filterScenes('hailuo')">Hailuo만</button>
+      <button onclick="filterScenes('flow')">Flow만</button>
+      <button onclick="scrollToEl('.cost-summary')">비용</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 메인 컨테이너 ===== -->
+<div class="container">
+
+  <!-- 개요 -->
+  <div class="overview">
+    <h2>프로젝트 개요</h2>
+    <p style="color:#86868b; margin-bottom:4px;">쇼미더머니를 보는 빡곰 — 겉은 무표정, 속은 콘서트</p>
+    <p style="font-size:13px; color:#86868b;">채널: @곰살맞은빡곰 / 시리즈: 현대곰이 자주 겪는 기이현상 / 포맷: Shorts 30~45초 + 풀버전 50초~1분</p>
+    <div class="overview-grid">
+      <div class="stat-card">
+        <div class="number">11</div>
+        <div class="label">시작 이미지</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">6</div>
+        <div class="label">Hailuo 영상</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">12</div>
+        <div class="label">Flow 영상</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">~$4.8</div>
+        <div class="label">총 비용</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스토리보드 (장면 흐름) -->
+  <div class="storyboard">
+    <h2>장면 구성</h2>
+    <table class="scene-flow-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>환경</th>
+          <th>행동</th>
+          <th>대사</th>
+          <th>감정</th>
+          <th>초</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="scene-num-cell">1</td>
+          <td class="env-cell">ENV-01 소파</td>
+          <td>소파에 앉아 리모컨으로 TV 켬</td>
+          <td>—</td>
+          <td><span class="emotion-cell emotion-blank">무표정</span></td>
+          <td>3초</td>
+        </tr>
+        <tr>
+          <td class="scene-num-cell">2</td>
+          <td class="env-cell">ENV-01 소파</td>
+          <td>TV(쇼미더머니) 멍하니 바라봄</td>
+          <td>"..."</td>
+          <td><span class="emotion-cell emotion-blank">무표정</span></td>
+          <td>4초</td>
+        </tr>
+        <tr>
+          <td class="scene-num-cell">3</td>
+          <td class="env-cell">상상 속 무대</td>
+          <td>마이크 들고 래퍼 포즈, 무대 조명</td>
+          <td style="font-size:18px">&#9834;</td>
+          <td><span class="emotion-cell emotion-fire">열광</span></td>
+          <td>5초</td>
+        </tr>
+        <tr>
+          <td class="scene-num-cell">4</td>
+          <td class="env-cell">상상 속 무대</td>
+          <td>관객 환호 속 손 번쩍, 바운스</td>
+          <td style="font-size:18px">&#9834;&#9834;&#9834;</td>
+          <td><span class="emotion-cell emotion-explode">폭발</span></td>
+          <td>5초</td>
+        </tr>
+        <tr>
+          <td class="scene-num-cell">5</td>
+          <td class="env-cell">ENV-01 소파</td>
+          <td>컷백 — 여전히 무표정 앉아있음</td>
+          <td>"...괜찮은 프로그램이네"</td>
+          <td><span class="emotion-cell emotion-blank">무표정</span></td>
+          <td>4초</td>
+        </tr>
+        <tr>
+          <td class="scene-num-cell">6</td>
+          <td class="env-cell">ENV-01 소파 뒷모습</td>
+          <td>꼬리 미세 움찔 + 귀 한쪽 떨림</td>
+          <td>—</td>
+          <td><span class="emotion-cell emotion-micro">미세 흥분</span></td>
+          <td>3초</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== 장면별 상세 ===== -->
+  <div id="scenesContainer"></div>
+
+  <!-- ===== 대사/자막 ===== -->
+  <div class="dialogue-section">
+    <h2>자막 / 대사</h2>
+    <div class="dialogue-item">
+      <div class="dialogue-scene">S2</div>
+      <div class="dialogue-text"><em>(자막 없음 — TV 소리만)</em></div>
+    </div>
+    <div class="dialogue-item">
+      <div class="dialogue-scene">S3~4</div>
+      <div class="dialogue-text"><em>(상상 장면이므로 자막 없이 음악만)</em></div>
+    </div>
+    <div class="dialogue-item">
+      <div class="dialogue-scene">S5</div>
+      <div class="dialogue-text">"...괜찮은 프로그램이네"</div>
+    </div>
+    <div class="dialogue-item">
+      <div class="dialogue-scene">S6</div>
+      <div class="dialogue-text"><em>(자막 없음 — 꼬리+귀만 보여줌)</em></div>
+    </div>
+  </div>
+
+  <!-- ===== 음향 노트 ===== -->
+  <div class="sound-section">
+    <h2>음향 노트</h2>
+    <div class="sound-item"><strong>S1~S2:</strong> TV에서 힙합 비트 작게 흘러나옴</div>
+    <div class="sound-item"><strong>S3~S4:</strong> 비트 폭발 + 관객 환호 (쇼미더머니 무대 분위기)</div>
+    <div class="sound-item"><strong>S5:</strong> 비트 뚝 끊김 → 조용한 거실 소리 (시계, 에어컨)</div>
+    <div class="sound-item"><strong>S6:</strong> 짧은 "삐릿" 효과음 (귀 떨릴 때)</div>
+  </div>
+
+  <!-- ===== 프롬프트 작성 규칙 ===== -->
+  <div class="prompt-notes">
+    <h2>프롬프트 작성 규칙 (모든 장면 공통)</h2>
+    <div class="note-item"><strong>슬로우모션 방지</strong> — "quick snappy movements, real-time speed, not slow motion"</div>
+    <div class="note-item"><strong>카메라 응시 방지</strong> — "eyes fixed on [대상], never looks at camera"</div>
+    <div class="note-item"><strong>Flow 전용</strong> — "MUST stay standing upright on two legs like a human, never walk on four legs, never transform into adult bear, maintain small baby bear cub proportions"</div>
+    <div class="note-item"><strong>Hailuo 전용</strong> — "smooth natural fluid movements, avoid jerky or robotic motion, maintain consistent natural expression throughout"</div>
+    <div class="note-item"><strong>Hailuo 콘텐츠 필터</strong> — "involuntary", "twitches", "betraying" 등 자극적 단어 사용 금지 → "wiggles", "moves slightly" 등 부드러운 표현 사용</div>
+    <div class="note-item"><strong>행동 제한</strong> — 한 장면에 행동 2~3개 이내</div>
+    <div class="note-item"><strong>조명</strong> — "slightly dim warm lighting, controlled exposure" (과노출 방지)</div>
+  </div>
+
+  <!-- ===== 비용 요약 ===== -->
+  <div class="cost-summary">
+    <h2>비용 요약</h2>
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>도구</th>
+          <th>사용량</th>
+          <th>단가</th>
+          <th>잔여</th>
+          <th>금액</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>MCP Gemini (이미지)</td>
+          <td>~15회 API 호출</td>
+          <td>무료 티어</td>
+          <td>일 제한 내</td>
+          <td>$0</td>
+        </tr>
+        <tr>
+          <td>Hailuo AI (I2V)</td>
+          <td>~7회 x 15 = 105 크레딧</td>
+          <td>15크레딧/회</td>
+          <td>~700 크레딧</td>
+          <td>$0</td>
+        </tr>
+        <tr>
+          <td>Google Flow (I2V)</td>
+          <td>6회 x 40 = 240 크레딧</td>
+          <td>40크레딧/회 (x2 생성)</td>
+          <td>확인 필요</td>
+          <td>~$4.8</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="4">총 실비용</td>
+          <td>~$4.8</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ========== 장면 데이터 ==========
+// 각 장면의 이미지, 프롬프트, 영상 정보를 정의
+var scenes = [
+  {
+    id: 'S1-2',
+    title: '소파에서 TV 시청',
+    desc: '힙합 프로그램을 멍하니 보는 빡곰. 리모컨 들고 완전 무표정. TV 빛이 얼굴에 반사.',
+    env: 'ENV-01 소파',
+    category: 'compare',
+    isAlt: false,
+    images: [
+      { file: 'bbakgom-smtm-sofa-front-sit.png', label: '소파 정면 앉기' },
+      { file: 'bbakgom-smtm-sofa-v2.png', label: '소파 v2' },
+      { file: 'bbakgom-smtm-sofa-v4.png', label: '소파 v4' }
+    ],
+    videoPrompt: 'The baby polar bear sits completely still on the sofa, eyes fixed on the TV screen showing a hip-hop show. Absolutely no body movement \u2014 only the TV light flickers and changes color on the bear\'s face. The bear blinks once slowly, mouth stays closed, completely emotionless expression. Warm living room ambient light, TV glow shifting between purple and blue. Static camera, no camera movement, real-time speed.',
+    hailuo: [
+      { file: 'bbakgom-smtm-sofa-hailuo-v1.mp4', size: '968KB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-sofa-flow-v1.mp4', size: '3.3MB', res: '720p' },
+      { file: 'bbakgom-smtm-sofa-flow-v2.mp4', size: '3.5MB', res: '720p' }
+    ]
+  },
+  {
+    id: 'S3-4',
+    title: '\uc0c1\uc0c1 \uc18d \ubb34\ub300 (\ub798\ud551)',
+    desc: '\ub9c8\uc774\ud06c \ub4e4\uace0 \uc5f4\uad11\ud558\ub294 \ub798\ud37c \ube61\uace4! \ub124\uc628 \uc870\uba85, \ucee8\ud398\ud2f0, \uad00\uac1d \ud658\ud638.',
+    env: '\uc0c1\uc0c1 \uc18d \ud799\ud569 \ubb34\ub300',
+    category: 'compare',
+    isAlt: false,
+    images: [
+      { file: 'bbakgom-smtm-stage-crouch.png', label: '\ubb34\ub300 \uc6c5\ud06c\ub9ac\uae30' },
+      { file: 'bbakgom-smtm-stage-v3.png', label: '\ubb34\ub300 v3' },
+      { file: 'bbakgom-smtm-stage-twerk.png', label: '\ubb34\ub300 \ud140\uc6cc\ud06c' }
+    ],
+    videoPrompt: 'The baby polar bear on a hip-hop concert stage bounces energetically to the beat, holding a microphone, mouth opening and closing as if rapping with intense passion. The bear jumps slightly, waves one paw in the air, full of energy. Dramatic neon spotlights sweep across the stage, confetti falls, fog machines create atmospheric haze, crowd silhouettes cheer with raised hands. Dynamic concert lighting, quick snappy movements, real-time speed, energetic vibrant mood, never looks at camera.',
+    hailuo: [
+      { file: 'bbakgom-smtm-stage-hailuo-v1.mp4', size: '2.1MB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-stage-flow-v1.mp4', size: '6.7MB', res: '720p' },
+      { file: 'bbakgom-smtm-stage-flow-v2.mp4', size: '7.5MB', res: '720p' }
+    ]
+  },
+  {
+    id: 'S3-4b',
+    title: '\uc0c1\uc0c1 \uc18d \ubb34\ub300 (Victory)',
+    desc: '\ub9c8\uc774\ud06c \ub4e4\uace0 \ub798\ud504\ub97c \uc990\uae30\uba70 \uc2b9\ub9ac \ud3ec\uc988. \uc790\uc2e0\uac10 \ub118\uce58\ub294 \uc2a4\uc6e8\uac70.',
+    env: '\uc0c1\uc0c1 \uc18d \ud799\ud569 \ubb34\ub300',
+    category: 'compare',
+    isAlt: true,
+    images: [
+      { file: 'bbakgom-smtm-stage-victory.png', label: 'Victory \ud3ec\uc988' }
+    ],
+    videoPrompt: 'The baby polar bear on a hip-hop concert stage bounces energetically to the beat, holding a microphone, enjoying the rap performance with confident swagger. The bear bobs head to the rhythm, pumps one paw in victory pose, full of joy and energy. Dramatic neon spotlights, confetti, fog machines, crowd silhouettes cheering. Dynamic concert lighting, quick snappy movements, real-time speed, energetic vibrant mood, never looks at camera.',
+    hailuo: [
+      { file: 'bbakgom-smtm-stage-victory-hailuo-v1.mp4', size: '3.0MB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-stage-victory-flow-v1.mp4', size: '6.1MB', res: '720p' },
+      { file: 'bbakgom-smtm-stage-victory-flow-v2.mp4', size: '6.2MB', res: '720p' }
+    ]
+  },
+  {
+    id: 'S6a',
+    title: '\uc5d4\ub529 \ub4b7\ubaa8\uc2b5 (\uaf2c\ub9ac+\uadc0 \uc6c0\ucc14)',
+    desc: '\ub2e4\uc2dc \uc18c\ud30c. \ub4b7\ubaa8\uc2b5\ub9cc \ubcf4\uc774\ub294\ub370 \uc791\uc740 \uaf2c\ub9ac\uc640 \uadc0 \ud55c\ucabd\uc774 \ubbf8\uc138\ud558\uac8c \uc6c0\ucc14.',
+    env: 'ENV-01 \uc18c\ud30c \ub4b7\ubaa8\uc2b5',
+    category: 'compare',
+    isAlt: false,
+    images: [
+      { file: 'bbakgom-smtm-ending-back.png', label: '\ub4b7\ubaa8\uc2b5 (\uc549\uc740 \uc790\uc138)' }
+    ],
+    videoPrompt: 'The baby polar bear sits motionless on the sofa, seen from behind. After a brief moment of stillness, the tiny round tail twitches once subtly, then the right ear flicks once. The rest of the body remains completely still. Warm cozy living room lighting, TV glow from the front. Static camera from behind, no camera movement, real-time speed, gentle subtle animation only.',
+    hailuo: [
+      { file: 'bbakgom-smtm-ending-back-hailuo-v2.mp4', size: '621KB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-ending-back-flow-v3.mp4', size: '3.4MB', res: '720p' },
+      { file: 'bbakgom-smtm-ending-back-flow-v4.mp4', size: '3.1MB', res: '720p' }
+    ]
+  },
+  {
+    id: 'S6b',
+    title: '\uc5d4\ub529 (\ubc1c \uae4c\ub2e5+\uadc0 \uc6c0\ucc14)',
+    desc: '\uc18c\ud30c\uc5d0 \ub204\uc6b4 \ub4b7\ubaa8\uc2b5. \ubc1c\uc774 \ub9ac\ub4ec\uc5d0 \ub9de\ucdb0 \uae4c\ub2e5\uae4c\ub2e5, \uadc0 \ud55c\ucabd \uc6c0\ucc14.',
+    env: 'ENV-01 \uc18c\ud30c (\ub204\uc6b4 \uc790\uc138)',
+    category: 'compare',
+    isAlt: true,
+    images: [
+      { file: 'bbakgom-smtm-ending-v2.png', label: '\ub4b7\ubaa8\uc2b5 (\ub204\uc6b4 \uc790\uc138)' }
+    ],
+    videoPrompt: 'The baby polar bear lies comfortably on the sofa, seen from behind at an angle. The small round feet wiggle and kick gently back and forth to a rhythm, while one ear shifts slightly. The rest of the body stays relaxed and still. Warm cozy living room lighting, TV glow from the front. Static camera, no camera movement, real-time speed, gentle playful animation.',
+    hailuo: [
+      { file: 'bbakgom-smtm-ending-v2-hailuo-v1.mp4', size: '1.0MB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-ending-v2-flow-v1.mp4', size: '2.2MB', res: '720p' },
+      { file: 'bbakgom-smtm-ending-v2-flow-v2.mp4', size: '2.1MB', res: '720p' }
+    ]
+  },
+  {
+    id: 'S6c',
+    title: '\uc5d4\ub529 (\uc6d0\ubcf8 \uc544\uc774\ub514\uc5b4)',
+    desc: '\uc18c\ud30c \ub4b7\ubaa8\uc2b5 \ucd08\uae30 \ubc84\uc804. \ub2e4\uc591\ud55c \ud3ec\uc988/\uad6c\ub3c4 \ud6c4\ubcf4 \uc774\ubbf8\uc9c0.',
+    env: 'ENV-01 \uc18c\ud30c',
+    category: 'compare',
+    isAlt: true,
+    images: [
+      { file: 'bbakgom-smtm-ending-v3.png', label: '\uc5d4\ub529 v3' },
+      { file: 'bbakgom-smtm-ending-v4.png', label: '\uc5d4\ub529 v4' }
+    ],
+    videoPrompt: 'The baby polar bear sits motionless on the sofa, seen from behind. After a brief moment of stillness, the tiny round tail twitches once subtly, then the right ear flicks once \u2014 a tiny involuntary movement betraying hidden excitement. The rest of the body remains completely still. Warm cozy living room lighting, TV glow from the front. Static camera from behind, no camera movement, real-time speed, subtle movement only.',
+    hailuo: [
+      { file: 'bbakgom-smtm-ending-hailuo-v1.mp4', size: '764KB', res: '768p' }
+    ],
+    flow: [
+      { file: 'bbakgom-smtm-ending-flow-v1.mp4', size: '2.6MB', res: '720p' },
+      { file: 'bbakgom-smtm-ending-flow-v2.mp4', size: '2.3MB', res: '720p' }
+    ]
+  }
+];
+
+// ========== 장면 카드 렌더링 ==========
+function renderScenes() {
+  var container = document.getElementById('scenesContainer');
+  container.innerHTML = scenes.map(function(s) {
+    // 뱃지 생성
+    var badges = [];
+    if (s.images.length > 0) badges.push('<span class="badge badge-image">IMG x' + s.images.length + '</span>');
+    if (s.hailuo.length > 0) badges.push('<span class="badge badge-hailuo">Hailuo x' + s.hailuo.length + '</span>');
+    if (s.flow.length > 0) badges.push('<span class="badge badge-flow">Flow x' + s.flow.length + '</span>');
+    var isCompare = s.hailuo.length > 0 && s.flow.length > 0;
+    var totalVideos = s.hailuo.length + s.flow.length;
+    var hasVideo = totalVideos > 0;
+
+    // 미디어 컬럼 수
+    var colClass = totalVideos >= 3 ? 'cols-3' : totalVideos === 2 ? 'cols-2' : 'cols-1';
+    var imgColClass = s.images.length >= 3 ? 'cols-3' : s.images.length === 2 ? 'cols-2' : 'cols-1';
+
+    var html = '<div class="scene-section" id="scene-' + s.id + '" data-category="' + s.category + '">';
+    html += '<div class="scene-card">';
+
+    // 헤더
+    html += '<div class="scene-header">';
+    html += '<div class="scene-number' + (s.isAlt ? ' alt' : '') + '">' + s.id + '</div>';
+    html += '<div>';
+    html += '<div class="scene-title">' + s.title + (isCompare ? ' <span class="compare-badge">VS \ube44\uad50</span>' : '') + '</div>';
+    html += '<div class="scene-desc">' + s.desc + ' / ' + s.env + '</div>';
+    html += '</div>';
+    html += '<div class="scene-badges">' + badges.join('') + '</div>';
+    html += '</div>';
+
+    // 바디
+    html += '<div class="scene-body">';
+
+    // 시작 이미지
+    html += '<div class="prompt-section">';
+    html += '<h3 class="img-prompt">\uc2dc\uc791 \uc774\ubbf8\uc9c0</h3>';
+    html += '<div class="media-row ' + imgColClass + '">';
+    s.images.forEach(function(img) {
+      html += '<div class="media-item">';
+      html += '<div class="media-label"><span class="platform-dot dot-image"></span> ' + img.label + '</div>';
+      html += '<img src="' + img.file + '" alt="' + img.label + '" loading="lazy">';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    // I2V 프롬프트
+    if (hasVideo) {
+      html += '<div class="prompt-section" style="margin-top:24px">';
+      html += '<h3 class="vid-prompt">I2V \uc601\uc0c1 \ud504\ub86c\ud504\ud2b8</h3>';
+      html += '<div class="prompt-box vid-prompt-box">';
+      html += '<button class="copy-btn" onclick="copyPrompt(this)">\ubcf5\uc0ac</button>';
+      html += escapeHtml(s.videoPrompt);
+      html += '</div></div>';
+
+      // 영상 결과물
+      html += '<div class="prompt-section">';
+      html += '<h3 class="vid-prompt">\uc601\uc0c1 \uacb0\uacfc\ubb3c ' + (isCompare ? '(Hailuo vs Flow)' : '') + '</h3>';
+      html += '<div class="media-row ' + colClass + '">';
+      s.hailuo.forEach(function(v) {
+        html += '<div class="media-item">';
+        html += '<div class="media-label"><span class="platform-dot dot-hailuo"></span> Hailuo ' + v.res + '</div>';
+        html += '<video src="' + v.file + '" controls preload="metadata" playsinline></video>';
+        html += '<div class="media-meta">' + v.res + ' / 6s / ' + v.size + ' / \uc6cc\ud130\ub9c8\ud06c \uc788\uc74c</div>';
+        html += '</div>';
+      });
+      s.flow.forEach(function(v) {
+        html += '<div class="media-item">';
+        html += '<div class="media-label"><span class="platform-dot dot-flow"></span> Flow ' + v.res + '</div>';
+        html += '<video src="' + v.file + '" controls preload="metadata" playsinline></video>';
+        html += '<div class="media-meta">' + v.res + ' / 5s / ' + v.size + ' / \uc6cc\ud130\ub9c8\ud06c \uc5c6\uc74c</div>';
+        html += '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    html += '</div></div></div>';
+    return html;
+  }).join('');
+}
+
+// ========== 유틸 ==========
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function copyPrompt(btn) {
+  var box = btn.parentElement;
+  var text = box.innerText.replace('\ubcf5\uc0ac', '').trim();
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '\ubcf5\uc0ac\ub428!';
+    setTimeout(function() { btn.textContent = '\ubcf5\uc0ac'; }, 1500);
+  });
+}
+
+function scrollToEl(selector) {
+  document.querySelector(selector).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ========== 필터 ==========
+function filterScenes(type) {
+  document.querySelectorAll('.header-nav button').forEach(function(b) { b.classList.remove('active'); });
+  event.target.classList.add('active');
+
+  document.querySelectorAll('.scene-section').forEach(function(sec) {
+    if (type === 'all') {
+      sec.classList.remove('hidden');
+    } else if (type === 'compare') {
+      sec.classList.remove('hidden');
+    } else if (type === 'hailuo') {
+      // Hailuo 영상이 있는 장면만
+      var hasHailuo = sec.querySelector('.dot-hailuo');
+      sec.classList.toggle('hidden', !hasHailuo);
+    } else if (type === 'flow') {
+      var hasFlow = sec.querySelector('.dot-flow');
+      sec.classList.toggle('hidden', !hasFlow);
+    }
+  });
+}
+
+// ========== 초기화 ==========
+renderScenes();
+</script>
+
+</body>
+</html>
