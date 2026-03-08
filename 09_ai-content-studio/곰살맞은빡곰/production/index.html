@@ -437,6 +437,178 @@ const PRODUCTIONS = [
     {tool:'Google Flow (I2V)',usage:'3회 x 40 = 120 크레딧',unit:'40크레딧/회 (x2 생성)',remain:'~880/1,000',price:'~$2.4'}
   ]
 }
+// 003 내적댄스
+,{
+  id: '003',
+  folder: '003_내적댄스',
+  title: '내적댄스',
+  status: '제작중',
+  date: '2026-03-08',
+  category: 'B. 혼자일상 + C. 바이럴 포텐셜',
+  series: '현대곰이 자주 겪는 기이현상',
+  targetLength: 'Shorts 30~45초 / 풀버전 50초~1분',
+
+  planning: {
+    concept: `<strong>콘셉트:</strong> 쇼미더머니를 보는 빡곰. 겉으로는 소파에 무표정으로 앉아있는데,<br>
+속마음은 힙합 무대 위에서 폭발하는 솔로 콘서트.<br>
+엔딩에 유일한 외부 반응 = 작은 꼬리 + 귀 한쪽 움찔.<br><br>
+<strong>제목 후보:</strong> 내적댄스 (추천 — 4글자, 직장인 공감) / 겉곰속곰 / 혼자콘서트`,
+    scenes: [
+      {num:'1',env:'ENV-01 소파',action:'소파에 앉아 리모컨으로 TV 켬',dialogue:'—',emotion:'무표정',sec:'3초'},
+      {num:'2',env:'ENV-01 소파',action:'TV(쇼미더머니) 멍하니 바라봄',dialogue:'"..."',emotion:'무표정',sec:'4초'},
+      {num:'3',env:'상상 속 무대',action:'마이크 들고 래퍼 포즈, 무대 조명',dialogue:'♪',emotion:'열광',sec:'5초'},
+      {num:'4',env:'상상 속 무대',action:'관객 환호 속 손 번쩍, 바운스',dialogue:'♪♪♪',emotion:'폭발',sec:'5초'},
+      {num:'5',env:'ENV-01 소파',action:'컷백 — 여전히 무표정 앉아있음',dialogue:'"...괜찮은 프로그램이네"',emotion:'무표정',sec:'4초'},
+      {num:'6',env:'ENV-01 소파 뒷모습',action:'꼬리 미세 움찔 + 귀 한쪽 떨림',dialogue:'—',emotion:'미세 흥분',sec:'3초'}
+    ],
+    subtitles: [
+      {scene:'S2',text:'(자막 없음 — TV 소리만)'},
+      {scene:'S3~S4',text:'(상상 장면이므로 자막 없이 음악만)'},
+      {scene:'S5',text:'"...괜찮은 프로그램이네"'},
+      {scene:'S6',text:'(자막 없음 — 꼬리+귀만 보여줌)'}
+    ],
+    soundNotes: [
+      'S1~S2: TV에서 힙합 비트 작게 흘러나옴',
+      'S3~S4: 비트 폭발 + 관객 환호 (쇼미더머니 무대 분위기)',
+      'S5: 비트 뚝 끊김 → 조용한 거실 소리 (시계, 에어컨)',
+      'S6: 짧은 "삐릿" 효과음 (귀 떨릴 때)'
+    ]
+  },
+
+  scenes: [
+    {
+      id:'S1-2', title:'소파에서 TV 시청',
+      desc:'힙합 프로그램을 멍하니 보는 빡곰. 리모컨 들고 완전 무표정.',
+      env:'ENV-01 소파', hasCompare:true,
+      images:[
+        {file:'bbakgom-smtm-sofa-front-sit.png',label:'정면 앉기'},
+        {file:'bbakgom-smtm-sofa-v2.png',label:'소파 v2'},
+        {file:'bbakgom-smtm-sofa-v4.png',label:'소파 v4'}
+      ],
+      imgPrompt:{
+        en:`Sitting on a gray sofa with TV remote in one paw, completely blank expressionless face, staring straight at TV screen. TV light reflecting purple/blue on face.\n\nWarm dim living room, gray sofa with cushions, TV remote, stand lamp, slightly dim warm lighting.\n\nMedium shot, eye level, 50mm lens, photorealistic, cozy home photography.`,
+        kr:`회색 소파에 앉아 한쪽 앞발에 리모컨, 완전 무표정으로 TV를 멍하니 응시. TV 빛이 보라/파란색으로 얼굴에 반사.\n\n따뜻하고 어두운 거실, 회색 소파+쿠션, 리모컨, 스탠드 조명.\n\n미디엄 샷, 눈높이 앵글, 50mm 렌즈, 포토리얼리스틱, 아늑한 홈 촬영.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear sits completely still on the sofa, eyes fixed on the TV screen showing a hip-hop show. Absolutely no body movement — only the TV light flickers and changes color on the bear's face. The bear blinks once slowly, mouth stays closed, completely emotionless expression. Warm living room ambient light, TV glow shifting between purple and blue. Static camera, no camera movement, real-time speed.`,
+        kr:`아기 북극곰이 소파에 완전히 가만히 앉아 힙합 프로그램이 나오는 TV를 응시. 몸 움직임 전혀 없음 — TV 빛만 얼굴에서 깜빡이며 색이 변함. 천천히 한 번 눈 깜빡임, 입은 다문 채, 완전 무표정. 따뜻한 거실 조명, TV 빛 보라↔파란 변환. 고정 카메라, 실시간 속도.`
+      },
+      hailuo:[{file:'bbakgom-smtm-sofa-hailuo-v1.mp4',size:'968KB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-sofa-flow-v1.mp4',size:'3.3MB',res:'720p'},
+        {file:'bbakgom-smtm-sofa-flow-v2.mp4',size:'3.5MB',res:'720p'}
+      ]
+    },
+    {
+      id:'S3-4', title:'상상 속 무대 (래핑)',
+      desc:'마이크 들고 열광하는 래퍼 빡곰! 네온 조명, 컨페티, 관객 환호.',
+      env:'상상 속 힙합 무대', hasCompare:true,
+      images:[
+        {file:'bbakgom-smtm-stage-crouch.png',label:'웅크리기'},
+        {file:'bbakgom-smtm-stage-v3.png',label:'무대 v3'},
+        {file:'bbakgom-smtm-stage-twerk.png',label:'턴워크'}
+      ],
+      imgPrompt:{
+        en:`On a hip-hop concert stage, holding a microphone in one paw, rapping with intense passion. Mouth wide open, energetic pose.\n\nDramatic concert stage with neon spotlights (pink, blue, purple), confetti, fog machine haze, silhouetted crowd with raised hands.\n\nMedium shot, slightly low angle, 35mm lens, photorealistic, concert photography.`,
+        kr:`힙합 콘서트 무대 위에서 한쪽 앞발에 마이크를 들고 열정적으로 래핑. 입 크게 벌리고 역동적 포즈.\n\n네온 스포트라이트(핑크/블루/퍼플), 컨페티, 포그머신 연기, 관객 실루엣이 손 들고 있음.\n\n미디엄 샷, 살짝 로우앵글, 35mm 렌즈, 포토리얼리스틱, 콘서트 촬영.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear on a hip-hop concert stage bounces energetically to the beat, holding a microphone, mouth opening and closing as if rapping with intense passion. The bear jumps slightly, waves one paw in the air, full of energy. Dramatic neon spotlights sweep across the stage, confetti falls, fog machines create atmospheric haze, crowd silhouettes cheer with raised hands. Dynamic concert lighting, quick snappy movements, real-time speed, energetic vibrant mood, never looks at camera.`,
+        kr:`아기 북극곰이 힙합 콘서트 무대에서 비트에 맞춰 에너지 넘치게 바운스. 마이크를 들고 열정적으로 래핑하듯 입을 열었다 닫았다. 살짝 점프, 한쪽 앞발을 공중에 흔들며 에너지 폭발. 네온 스포트라이트가 무대를 쓸고, 컨페티가 떨어지고, 포그머신 연기, 관객 실루엣 환호. 빠르고 경쾌한 움직임, 실시간 속도, 카메라 안 봄.`
+      },
+      hailuo:[{file:'bbakgom-smtm-stage-hailuo-v1.mp4',size:'2.1MB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-stage-flow-v1.mp4',size:'6.7MB',res:'720p'},
+        {file:'bbakgom-smtm-stage-flow-v2.mp4',size:'7.5MB',res:'720p'}
+      ]
+    },
+    {
+      id:'S3-4b', title:'상상 속 무대 (Victory)',
+      desc:'마이크 들고 래프를 즐기며 승리 포즈. 자신감 넘치는 스웨거.',
+      env:'상상 속 힙합 무대', hasCompare:true,
+      images:[{file:'bbakgom-smtm-stage-victory.png',label:'Victory 포즈'}],
+      imgPrompt:{
+        en:`On a hip-hop concert stage, holding a microphone, pumping one paw in a victory pose, confident swagger expression.\n\nDramatic concert stage with neon spotlights, confetti, fog machine haze, silhouetted crowd cheering.\n\nMedium shot, slightly low angle, 35mm lens, photorealistic, concert photography.`,
+        kr:`힙합 콘서트 무대 위에서 마이크를 들고 한쪽 앞발로 승리 포즈, 자신감 넘치는 표정.\n\n네온 스포트라이트, 컨페티, 포그머신 연기, 관객 실루엣 환호.\n\n미디엄 샷, 살짝 로우앵글, 35mm 렌즈, 포토리얼리스틱, 콘서트 촬영.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear on a hip-hop concert stage bounces energetically to the beat, holding a microphone, enjoying the rap performance with confident swagger. The bear bobs head to the rhythm, pumps one paw in victory pose, full of joy and energy. Dramatic neon spotlights, confetti, fog machines, crowd silhouettes cheering. Dynamic concert lighting, quick snappy movements, real-time speed, energetic vibrant mood, never looks at camera.`,
+        kr:`아기 북극곰이 힙합 무대에서 비트에 맞춰 바운스. 마이크 들고 자신감 넘치는 스웨거로 래프 즐기는 중. 머리를 리듬에 맞춰 끄덕이고, 한쪽 앞발 승리 포즈. 네온 스포트라이트, 컨페티, 포그머신, 관객 환호. 빠르고 경쾌한 움직임, 실시간 속도, 카메라 안 봄.`
+      },
+      hailuo:[{file:'bbakgom-smtm-stage-victory-hailuo-v1.mp4',size:'3.0MB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-stage-victory-flow-v1.mp4',size:'6.1MB',res:'720p'},
+        {file:'bbakgom-smtm-stage-victory-flow-v2.mp4',size:'6.2MB',res:'720p'}
+      ]
+    },
+    {
+      id:'S6a', title:'엔딩 뒷모습 (꼬리+귀 움찔)',
+      desc:'다시 소파. 뒷모습만 보이는데 작은 꼬리와 귀 한쪽이 미세하게 움찔.',
+      env:'ENV-01 소파 뒷모습', hasCompare:true,
+      images:[{file:'bbakgom-smtm-ending-back.png',label:'뒷모습 (앉은 자세)'}],
+      imgPrompt:{
+        en:`Seen from behind, sitting on gray sofa watching TV. Back of head, tiny round ears, barely visible tiny round tail. Warm cozy living room, TV glow from the front.\n\nMedium shot from behind, eye level, 50mm lens, photorealistic, cozy home photography.`,
+        kr:`뒤에서 본 모습, 회색 소파에 앉아 TV 시청 중. 뒷머리, 작은 둥근 귀, 거의 안 보이는 작은 둥근 꼬리. 따뜻하고 아늑한 거실, TV 빛이 앞에서 비침.\n\n미디엄 샷, 뒤에서 촬영, 눈높이, 50mm 렌즈, 포토리얼리스틱.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear sits motionless on the sofa, seen from behind. After a brief moment of stillness, the tiny round tail twitches once subtly, then the right ear flicks once. The rest of the body remains completely still. Warm cozy living room lighting, TV glow from the front. Static camera from behind, no camera movement, real-time speed, gentle subtle animation only.`,
+        kr:`아기 북극곰이 소파에 꼼짝 않고 앉아있음 (뒤에서 촬영). 잠시 정적 후 작은 둥근 꼬리가 한 번 살짝 움찔, 이어서 오른쪽 귀가 한 번 씰룩. 나머지 몸은 완전히 가만히. 따뜻한 거실 조명, TV 빛 앞에서 비침. 고정 카메라, 실시간 속도.`
+      },
+      hailuo:[{file:'bbakgom-smtm-ending-back-hailuo-v2.mp4',size:'621KB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-ending-back-flow-v3.mp4',size:'3.4MB',res:'720p'},
+        {file:'bbakgom-smtm-ending-back-flow-v4.mp4',size:'3.1MB',res:'720p'}
+      ]
+    },
+    {
+      id:'S6b', title:'엔딩 (발 까닥+귀 움찔)',
+      desc:'소파에 누운 뒷모습. 발이 리듬에 맞춰 까닥까닥, 귀 한쪽 움찔.',
+      env:'ENV-01 소파 (누운 자세)', hasCompare:true,
+      images:[{file:'bbakgom-smtm-ending-v2.png',label:'뒷모습 (누운 자세)'}],
+      imgPrompt:{
+        en:`Seen from behind at an angle, lying comfortably on gray sofa, small round feet visible sticking out. Warm cozy living room, TV glow from the front.\n\nMedium shot from behind, slightly above eye level, 50mm lens, photorealistic, cozy home photography.`,
+        kr:`비스듬히 뒤에서 본 모습, 회색 소파에 편하게 누워있음, 작은 둥근 발이 밖으로 보임. 따뜻한 거실, TV 빛 앞에서 비침.\n\n미디엄 샷, 살짝 위에서, 50mm 렌즈, 포토리얼리스틱.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear lies comfortably on the sofa, seen from behind at an angle. The small round feet wiggle and kick gently back and forth to a rhythm, while one ear shifts slightly. The rest of the body stays relaxed and still. Warm cozy living room lighting, TV glow from the front. Static camera, no camera movement, real-time speed, gentle playful animation.`,
+        kr:`아기 북극곰이 소파에 편하게 누워있음 (비스듬히 뒤에서 촬영). 작은 둥근 발이 리듬에 맞춰 앞뒤로 까닥까닥 움직이고, 귀 한쪽이 살짝 움직임. 나머지 몸은 릴렉스 상태로 가만히. 따뜻한 거실 조명, TV 빛 앞에서 비침. 고정 카메라, 실시간 속도.`
+      },
+      hailuo:[{file:'bbakgom-smtm-ending-v2-hailuo-v1.mp4',size:'1.0MB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-ending-v2-flow-v1.mp4',size:'2.2MB',res:'720p'},
+        {file:'bbakgom-smtm-ending-v2-flow-v2.mp4',size:'2.1MB',res:'720p'}
+      ]
+    },
+    {
+      id:'S6c', title:'엔딩 (원본 아이디어)',
+      desc:'소파 뒷모습 초기 버전. 다양한 포즈/구도 후보 이미지.',
+      env:'ENV-01 소파', hasCompare:true,
+      images:[
+        {file:'bbakgom-smtm-ending-v3.png',label:'엔딩 v3'},
+        {file:'bbakgom-smtm-ending-v4.png',label:'엔딩 v4'}
+      ],
+      imgPrompt:{
+        en:`Seen from behind on sofa, subtle movement — tail twitch and ear flick.\n\nWarm cozy living room, TV glow.\n\nMedium shot from behind, photorealistic.`,
+        kr:`소파에서 뒤에서 본 모습, 미세한 움직임 — 꼬리 움찔, 귀 씰룩.\n\n따뜻한 거실, TV 빛.\n\n미디엄 샷, 뒤에서 촬영.`
+      },
+      vidPrompt:{
+        en:`The baby polar bear sits motionless on the sofa, seen from behind. After a brief moment of stillness, the tiny round tail twitches once subtly, then the right ear flicks once — a tiny involuntary movement betraying hidden excitement. The rest of the body remains completely still. Warm cozy living room lighting, TV glow from the front. Static camera from behind, no camera movement, real-time speed, subtle movement only.`,
+        kr:`아기 북극곰이 소파에 꼼짝 않고 앉아있음 (뒤에서 촬영). 잠시 정적 후 꼬리 한 번 움찔, 귀 한 번 씰룩 — 숨겨진 흥분을 드러내는 미세한 움직임. 나머지 몸은 완전히 가만히. 따뜻한 거실 조명, TV 빛 앞에서 비침. 고정 카메라, 실시간 속도.`
+      },
+      hailuo:[{file:'bbakgom-smtm-ending-hailuo-v1.mp4',size:'764KB',res:'768p'}],
+      flow:[
+        {file:'bbakgom-smtm-ending-flow-v1.mp4',size:'2.6MB',res:'720p'},
+        {file:'bbakgom-smtm-ending-flow-v2.mp4',size:'2.3MB',res:'720p'}
+      ]
+    }
+  ],
+
+  costs: [
+    {tool:'MCP Gemini (이미지)',usage:'~15회 API 호출',unit:'무료 티어',remain:'일 제한 내',price:'$0'},
+    {tool:'Hailuo AI (I2V)',usage:'~7회 x 15 = 105 크레딧',unit:'15크레딧/회',remain:'~700 크레딧',price:'$0'},
+    {tool:'Google Flow (I2V)',usage:'6회 x 40 = 240 크레딧',unit:'40크레딧/회 (x2 생성)',remain:'확인 필요',price:'~$4.8'}
+  ]
+}
 // 새 프로덕션은 여기에 추가
 ];
 
