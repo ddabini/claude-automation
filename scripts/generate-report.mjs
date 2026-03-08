@@ -28,7 +28,7 @@ if (!API_KEY) {
 }
 
 // Gemini 2.5 Flash — 빠르고 품질 좋음, Google Search 지원
-const MODEL = 'gemini-2.5-flash-preview-05-20';
+const MODEL = 'gemini-2.5-flash';
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 // 프로젝트 루트 (GitHub Actions에서는 체크아웃된 저장소 위치)
