@@ -46,17 +46,13 @@ jobs:
         with:
           node-version: '20'
 
-      # generate-report.mjs가 사용하는 npm 패키지 설치
-      - name: 스크립트 의존성 설치
-        run: cd scripts && npm install
-
-      # Anthropic API로 AI 업계 동향 조사 → HTML 보고서 생성 → registry.js 업데이트
+      # Gemini API로 AI 업계 동향 조사 → HTML 보고서 생성 → registry.js 업데이트
       - name: 보고서 생성
         id: report
         timeout-minutes: 10
         run: node scripts/generate-report.mjs --type weekly-ai-update --date ${{ steps.date.outputs.today }}
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       # Firebase CLI 설치 (배포에 필요)
       - name: Firebase CLI 설치
