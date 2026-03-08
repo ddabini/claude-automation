@@ -15565,6 +15565,9 @@ ${metaText}
       if (hintEl) hintEl.style.display = 'block';
       var gridEl = document.getElementById('drEditPropGrid');
       if (gridEl) gridEl.style.display = 'none';
+
+      // 배경색 프리뷰 초기화 — 현재 디자인의 배경색을 읽어와 미리보기에 반영
+      drEditInitBgPreview();
     }
 
     /* ─── 선택 해제 ─── */
