@@ -47,11 +47,13 @@ jobs:
 
       # Claude가 뉴스 조사 → 보고서 생성 → 커밋 → Firebase 배포까지 한 번에 처리
       - name: Claude로 보고서 생성 + 배포
+        id: claude
+        timeout-minutes: 15
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--max-turns 50"
+          claude_args: "--max-turns 50 --allowedTools WebSearch WebFetch Bash Read Write Edit Glob Grep"
           show_full_output: true
           prompt: |
             오늘(${{ steps.date.outputs.today }}) 투자 데일리 브리핑을 자동 생성해줘.
