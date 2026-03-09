@@ -120,13 +120,16 @@ function yearWeek(dateStr) {
 }
 
 // 날짜 문자열 → 월/일/주차 정보 객체
+// ⚠️ Date 객체의 getDate()는 로컬 타임존(GitHub Actions=UTC) 기준이라
+//    KST 오프셋 Date에서 하루 전 날짜가 반환되는 버그 발생
+//    → 문자열에서 직접 파싱하여 타임존 무관하게 정확한 값 사용
 function dateInfo(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00+09:00');
+  const [year, month, day] = dateStr.split('-').map(Number);
   return {
-    year: d.getFullYear(),
-    month: d.getMonth() + 1,
-    day: d.getDate(),
-    weekNum: Math.ceil(d.getDate() / 7),
+    year,
+    month,
+    day,
+    weekNum: Math.ceil(day / 7),
   };
 }
 
