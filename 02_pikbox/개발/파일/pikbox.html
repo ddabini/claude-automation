@@ -15697,12 +15697,18 @@ ${metaText}
     }
 
     /* ─── 배경색 강제 적용 — !important로 모든 CSS 오버라이드 ─── */
-    function drEditForceBg(el, hex) {
+    /* keepGradient=true면 그라데이션(background-image)은 건드리지 않고 배경색만 변경 */
+    function drEditForceBg(el, hex, keepGradient) {
       if (!el) return;
-      // setProperty로 !important 강제 적용 (기존 CSS의 !important도 오버라이드)
-      el.style.setProperty('background-color', hex, 'important');
-      el.style.setProperty('background-image', 'none', 'important');
-      el.style.setProperty('background', hex, 'important');
+      if (keepGradient) {
+        // 그라데이션 유지 → background-color만 변경 (그라데이션 아래 깔리는 색)
+        el.style.setProperty('background-color', hex, 'important');
+      } else {
+        // 기존 동작: 전체 배경을 단색으로 교체
+        el.style.setProperty('background-color', hex, 'important');
+        el.style.setProperty('background-image', 'none', 'important');
+        el.style.setProperty('background', hex, 'important');
+      }
     }
 
     /* ─── 네이티브 컬러 피커에서 배경색 실시간 변경 ─── */
