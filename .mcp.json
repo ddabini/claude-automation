@@ -4,7 +4,7 @@
       "command": "npx",
       "args": ["-y", "mcp-image"],
       "env": {
-        "GEMINI_API_KEY": "AIzaSyDqVxZQHqcbXsoasJJb1LLkIp5Z1_qlfgw",
+        "GEMINI_API_KEY": "AIzaSyA3TRlUl0oZeUXDvchE3eFoB2u-F9MCHE4",
         "IMAGE_OUTPUT_DIR": "/Users/dabin/Library/Mobile Documents/com~apple~CloudDocs/클로드/mcp-images",
         "IMAGE_QUALITY": "balanced"
       }
