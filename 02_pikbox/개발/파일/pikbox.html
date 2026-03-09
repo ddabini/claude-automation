@@ -17325,6 +17325,26 @@ ${metaText}
       <div class="dr-var-label">광고 사이즈 프리셋</div>
       <div class="dr-var-grid" id="drVarGrid"></div>
 
+      <!-- 리사이즈 모드 선택 (미리캔버스 스타일 — Fill/Align/Original) -->
+      <div class="dr-var-label" style="margin-top:4px;">리사이즈 모드</div>
+      <div id="drVarModeGroup" style="display:flex; gap:8px; margin-bottom:16px;">
+        <label class="dr-var-mode-card selected" onclick="drVarSelectMode(this)">
+          <input type="radio" name="drVarMode" value="fill" checked style="display:none;">
+          <div style="font-weight:600; font-size:12px;">채우기</div>
+          <div style="font-size:10px; color:var(--text-muted); line-height:1.3;">비율 유지하며 캔버스에 맞춤</div>
+        </label>
+        <label class="dr-var-mode-card" onclick="drVarSelectMode(this)">
+          <input type="radio" name="drVarMode" value="align" style="display:none;">
+          <div style="font-weight:600; font-size:12px;">정렬</div>
+          <div style="font-size:10px; color:var(--text-muted); line-height:1.3;">위치 유지, 잘림 허용</div>
+        </label>
+        <label class="dr-var-mode-card" onclick="drVarSelectMode(this)">
+          <input type="radio" name="drVarMode" value="original" style="display:none;">
+          <div style="font-weight:600; font-size:12px;">원본 유지</div>
+          <div style="font-size:10px; color:var(--text-muted); line-height:1.3;">원본 크기 가운데 배치</div>
+        </label>
+      </div>
+
       <!-- 커스텀 사이즈 입력 -->
       <div class="dr-var-label">커스텀 사이즈</div>
       <div class="dr-var-custom">
