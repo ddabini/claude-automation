@@ -111,12 +111,13 @@ const CONFIGS = {
 // =========================================================
 
 // 날짜 문자열(YYYY-MM-DD) → 연도+주차 문자열(YYYYWW)
+// 타임존 무관하게 UTC 자정 기준으로 계산
 function yearWeek(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00+09:00'); // KST 기준
-  const year = d.getFullYear();
-  const jan1 = new Date(year, 0, 1);
-  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${year}${String(week).padStart(2, '0')}`;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const jan1 = new Date(Date.UTC(y, 0, 1));
+  const week = Math.ceil(((date - jan1) / 86400000 + jan1.getUTCDay() + 1) / 7);
+  return `${y}${String(week).padStart(2, '0')}`;
 }
 
 // 날짜 문자열 → 월/일/주차 정보 객체
