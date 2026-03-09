@@ -15904,12 +15904,25 @@ ${metaText}
         return;
       }
 
-      // 배경 컨테이너 클릭 — body 직속 자식이면 배경으로 간주
-      // (페이지 래퍼, 섹션 등 큰 컨테이너)
+      // body 직속 자식 클릭 — 요소로 선택 (이동/리사이즈 가능) + 배경 편집도 가능
+      // 미리캔버스처럼 배경 컨테이너도 드래그로 이동/크기 조절 가능
       if (target.parentElement === iDoc.body) {
         e.preventDefault();
         e.stopPropagation();
-        drEditSelectBg(target);
+        // 요소로 선택 (핸들 표시 → 이동/리사이즈 가능)
+        drEditSelectElement(target);
+        // 배경 편집 패널도 함께 표시 (듀얼 모드: 요소 속성 + 배경 색상/그라데이션)
+        drEditState.bgElement = target;
+        var bgGrid = document.getElementById('drEditBgGrid');
+        if (bgGrid) bgGrid.style.display = 'block';
+        drEditInitBgForElement(target);
+        // 드래그 시작 (이동 가능)
+        var t = drEditGetTranslate(target);
+        var zoom = drEditGetZoom();
+        drEditState.dragState = {
+          type: 'move', startX: e.clientX, startY: e.clientY,
+          tx: t.tx, ty: t.ty, zoom: zoom
+        };
         return;
       }
 
