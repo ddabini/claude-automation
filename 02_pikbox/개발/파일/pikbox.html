@@ -4140,6 +4140,13 @@
         <!-- 배경 편집 패널 — 배경 클릭 시 표시 -->
         <div id="drEditBgGrid" style="display:none;">
           <div class="dr-edit-prop-tag">🎨 배경</div>
+          <!-- 그라데이션 감지 시 표시 — 프리뷰 + 각 색상 스톱 편집 가능 -->
+          <div id="drEditGradInfo" style="display:none; margin-bottom:10px;">
+            <div style="font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">그라데이션</div>
+            <div id="drEditGradPreview" style="height:24px; border-radius:6px; border:1px solid var(--border); margin-bottom:8px;"></div>
+            <div id="drEditGradStops" style="margin-bottom:8px;"></div>
+            <button class="dr-btn" onclick="drEditReplaceBgWithSolid()" style="width:100%; font-size:11px; padding:5px 8px;">단색으로 교체</button>
+          </div>
           <div class="dr-edit-prop-row" style="grid-template-columns: auto 1fr;">
             <label>배경색</label>
             <input type="color" id="drEditBgColor" oninput="drEditApplyBgProp('bgColor')" style="width:100%; height:32px; border:1px solid var(--border); border-radius:6px; cursor:pointer; padding:2px;">
